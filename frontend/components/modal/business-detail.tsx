@@ -1,0 +1,155 @@
+/**
+ * * Business modal
+ */
+import { forwardRef, useCallback, useRef } from "react";
+
+import CustomModal from "./default";
+import DefaultButton from "../button/default";
+
+import SendIcon from "@/assets/svg/send.svg";
+
+interface Message {
+  userName: string;
+  message: string;
+}
+
+interface Detail {
+  company_name?: string;
+  phone?: string;
+  messages?: Message[];
+  [key: string]: any; // For extra fields from backend
+}
+
+interface Props {
+  detail?: Detail;
+  isOpen: boolean;
+  closeLabel: string;
+  confirmLabel: string;
+  isSendingMessage: boolean;
+  onClose: () => void;
+  sendMessage: (_message: { message: string; detail?: Detail }) => void;
+}
+
+const BusinessDetailModal = ({
+  detail,
+  isOpen,
+  closeLabel,
+  confirmLabel,
+  isSendingMessage,
+  onClose,
+  sendMessage,
+}: Props) => {
+  const messageRef = useRef<HTMLTextAreaElement | null>(null);
+
+  const onMessage = useCallback(() => {
+    if (!messageRef.current) return;
+    const message = messageRef.current.value.trim();
+    if (!message) return;
+
+    sendMessage({
+      message,
+      detail,
+    });
+
+    onClose();
+    messageRef.current.value = "";
+  }, [sendMessage, detail, onClose]);
+
+  return (
+    <CustomModal isOpen={isOpen} onClose={onClose}>
+      <div className="py-10 px-3 w-full flex flex-col items-center bg-white gap-4">
+        {detail && (
+          <div className="px-10 w-full flex-1 flex flex-col gap-4 text-left">
+            <h4 className="text-base md:text-xl">
+              株式会社{detail.company_name ?? ""}
+            </h4>
+            <div className="w-full text-primary-default text-base flex flex-col">
+              <span>職種：</span>
+              <span>電話番号：{detail.phone ?? ""}</span>
+            </div>
+          </div>
+        )}
+
+        <div className="px-6 py-3 w-full flex flex-col gap-3">
+          <span className="text-left">メッセージ :</span>
+          <div className="flex flex-col gap-2">
+            {detail?.messages?.length ? (
+              detail.messages.map((msg, i) => (
+                <div key={i}>
+                  <strong>{msg.userName}:</strong> {msg.message}
+                </div>
+              ))
+            ) : (
+              <span className="text-gray-500">メッセージはありません。</span>
+            )}
+          </div>
+
+          <MessageboxTextarea
+            ref={messageRef}
+            placeholder=""
+            onSendMessage={onMessage}
+            isSendingMessage={isSendingMessage}
+          />
+        </div>
+
+        <div className="mt-4 grid grid-cols-2 gap-4 md:gap-8">
+          <button
+            className="px-8 py-2 bg-[#868282] text-lg text-white rounded-lg hover:bg-gray-300"
+            onClick={onClose}
+          >
+            {closeLabel}
+          </button>
+          <DefaultButton
+            label={confirmLabel}
+            variant="primary"
+            rounded={false}
+            className="text-lg"
+            onClick={onMessage}
+          />
+        </div>
+      </div>
+    </CustomModal>
+  );
+};
+
+export default BusinessDetailModal;
+BusinessDetailModal.displayName = "BusinessDetailModal";
+
+interface InputProps {
+  placeholder: string;
+  hasError?: boolean;
+  rows?: number;
+  className?: string;
+  isSendingMessage: boolean;
+  onSendMessage: () => void;
+}
+
+const MessageboxTextarea = forwardRef<HTMLTextAreaElement, InputProps>(
+  (
+    { placeholder, hasError, rows, className, isSendingMessage, onSendMessage },
+    ref
+  ) => {
+    return (
+      <div className="w-full relative">
+        <textarea
+          ref={ref}
+          placeholder={placeholder}
+          rows={rows ?? 5}
+          className={`px-4 py-3 w-full border border-border-default rounded-lg focus:outline-none focus:border-primary-active ${
+            hasError ? "border-red-20" : ""
+          } ${className ?? ""}`}
+        />
+        <button
+          type="button"
+          className="hover:text-orange-300"
+          disabled={isSendingMessage}
+          onClick={onSendMessage}
+        >
+          <SendIcon className="absolute right-2 bottom-4 w-8 h-6 cursor-pointer" />
+        </button>
+      </div>
+    );
+  }
+);
+
+MessageboxTextarea.displayName = "MessageboxTextarea";
