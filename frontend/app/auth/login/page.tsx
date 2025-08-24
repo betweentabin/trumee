@@ -91,7 +91,7 @@ export default function LoginPage() {
       if (result.user.role === 'company') {
         router.push('/company');
       } else {
-        router.push('/dashboard');
+        router.push('/seeker/dashboard');
       }
     } catch (error: any) {
       console.error('Login error:', error);
