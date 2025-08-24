@@ -9,7 +9,26 @@ import {
   PURGE,
   REGISTER
 } from 'redux-persist';
-import storage from 'redux-persist/lib/storage';
+import createWebStorage from 'redux-persist/lib/storage/createWebStorage';
+
+// Create a safe storage that works with SSR
+const createNoopStorage = () => {
+  return {
+    getItem(_key: string) {
+      return Promise.resolve(null);
+    },
+    setItem(_key: string, value: any) {
+      return Promise.resolve(value);
+    },
+    removeItem(_key: string) {
+      return Promise.resolve();
+    },
+  };
+};
+
+const storage = typeof window !== 'undefined' 
+  ? createWebStorage('local') 
+  : createNoopStorage();
 import experienceReducer from './experienceSlice';
 import skillReducer from './skillSlice';
 import profileReducer from './profileSlice';

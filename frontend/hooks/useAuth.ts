@@ -23,6 +23,9 @@ export const useAuth = () => {
 
   // Check if user is authenticated on mount
   useEffect(() => {
+    // Only run on client side
+    if (typeof window === 'undefined') return;
+    
     const token = localStorage.getItem('token');
     const userEmail = localStorage.getItem('userEmail');
     const uid = localStorage.getItem('uid');
@@ -124,12 +127,14 @@ export const useAuth = () => {
 
   // Check authentication status
   const checkAuth = () => {
+    if (typeof window === 'undefined') return false;
     const token = localStorage.getItem('token');
     return !!token && authState.isAuthenticated;
   };
 
   // Get auth headers
   const getAuthHeaders = () => {
+    if (typeof window === 'undefined') return {};
     const token = authState.token || localStorage.getItem('token');
     return token ? { 'Authorization': `Bearer ${token}` } : {};
   };
