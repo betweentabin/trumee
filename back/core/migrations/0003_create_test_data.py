@@ -1,11 +1,10 @@
 # Generated manually for creating test data
 
 from django.db import migrations
-from django.contrib.auth import get_user_model
 from datetime import datetime
 
 def create_test_data(apps, schema_editor):
-    User = get_user_model()
+    User = apps.get_model('core', 'User')
     SeekerProfile = apps.get_model('core', 'SeekerProfile')
     Resume = apps.get_model('core', 'Resume')
     Experience = apps.get_model('core', 'Experience')
@@ -122,7 +121,7 @@ def create_test_data(apps, schema_editor):
 
 
 def reverse_test_data(apps, schema_editor):
-    User = get_user_model()
+    User = apps.get_model('core', 'User')
     # テストデータを削除
     test_emails = [
         'admin@truemee.jp',
