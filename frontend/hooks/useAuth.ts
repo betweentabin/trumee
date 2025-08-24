@@ -141,20 +141,22 @@ export const useAuth = () => {
 
   // Require auth (redirect if not authenticated)
   const requireAuth = (redirectTo: string = '/auth/login') => {
-    useEffect(() => {
-      if (!checkAuth()) {
-        router.push(redirectTo);
-      }
-    }, [authState.isAuthenticated]);
+    // Only run on client side
+    if (typeof window === 'undefined') return;
+    
+    if (!checkAuth()) {
+      router.push(redirectTo);
+    }
   };
 
   // Require guest (redirect if authenticated)
   const requireGuest = (redirectTo: string = '/users') => {
-    useEffect(() => {
-      if (checkAuth()) {
-        router.push(redirectTo);
-      }
-    }, [authState.isAuthenticated]);
+    // Only run on client side
+    if (typeof window === 'undefined') return;
+    
+    if (checkAuth()) {
+      router.push(redirectTo);
+    }
   };
 
   return {

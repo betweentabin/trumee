@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { API_CONFIG, buildApiUrl, handleApiError } from '@/config/api';
@@ -34,8 +34,10 @@ export default function RegisterPage() {
   const { requireGuest } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   
-  // Redirect if already authenticated
-  requireGuest();
+  // Redirect if already authenticated - moved to useEffect to prevent SSR issues
+  useEffect(() => {
+    requireGuest();
+  }, []);
   const [showCampaignCode, setShowCampaignCode] = useState(false);
   const [formData, setFormData] = useState<FormData>({
     email: '',
