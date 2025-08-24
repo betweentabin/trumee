@@ -139,7 +139,10 @@ export default function RegisterPage() {
 
     try {
       // Register user
-      const response = await fetch(buildApiUrl(API_CONFIG.endpoints.register), {
+      const apiUrl = buildApiUrl(API_CONFIG.endpoints.register);
+      console.log('Registering user with API URL:', apiUrl); // デバッグ用ログ
+      
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -178,8 +181,15 @@ export default function RegisterPage() {
       }
     } catch (error: any) {
       console.error('Registration error:', error);
-      setErrors({ general: handleApiError(error) });
-      toast.error('登録に失敗しました');
+      
+      // ネットワークエラーの詳細な処理
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        setErrors({ general: 'サーバーに接続できませんでした。しばらく時間をおいて再度お試しください。' });
+        toast.error('サーバーに接続できませんでした');
+      } else {
+        setErrors({ general: handleApiError(error) });
+        toast.error('登録に失敗しました');
+      }
     } finally {
       setIsLoading(false);
     }
