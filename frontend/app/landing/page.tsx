@@ -111,7 +111,7 @@ export default function Home() {
             </div>
             <img
               src={"/images/peoples.png"}
-              className="w-full aspect-16/7 object-cover z-20 opacity-100"
+              className="w-full aspect-16/7 object-contain z-20 opacity-100"
               alt=""
             />
             <div className="absolute -bottom-16 right-0 w-1/2 aspect-square z-0 opacity-50">
@@ -299,7 +299,7 @@ export default function Home() {
         <div className="absolute inset-0">
           <img
             src={"/images/resume.png"}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-contain"
             alt=""
           />
         </div>
@@ -381,7 +381,7 @@ export default function Home() {
         <div className="absolute inset-0">
           <img
             src={"/images/resume.png"}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-contain"
             alt=""
           />
         </div>
