@@ -188,9 +188,16 @@ class Command(BaseCommand):
                 user.save()
                 
                 # プロフィール作成
+                profile_data = seeker_data['profile']
                 profile = SeekerProfile.objects.create(
                     user=user,
-                    **seeker_data['profile']
+                    first_name=user.full_name.split()[1] if ' ' in user.full_name else user.full_name,
+                    last_name=user.full_name.split()[0] if ' ' in user.full_name else '',
+                    first_name_kana='タロウ' if '太郎' in user.full_name else 'ハナコ' if '花子' in user.full_name else 'ジロウ',
+                    last_name_kana='タナカ' if '田中' in user.full_name else 'スズキ' if '鈴木' in user.full_name else 'ヤマダ',
+                    birthday=datetime.strptime(profile_data['birth_date'], '%Y-%m-%d').date(),
+                    prefecture=profile_data['prefecture'],
+                    desired_salary=str(profile_data['desired_salary']),
                 )
                 
                 # 履歴書作成
@@ -306,7 +313,7 @@ class Command(BaseCommand):
                         company=company,
                         defaults={
                             'status': random.choice(['pending', 'viewed', 'accepted', 'rejected']),
-                            'cover_letter': 'この度は貴社の求人を拝見し、応募させていただきました。',
+                            'notes': 'この度は貴社の求人を拝見し、応募させていただきました。',
                         }
                     )
                     if created:
