@@ -33,8 +33,9 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:3001",
     "http://127.0.0.1:3000",
     "http://127.0.0.1:3001",
-    "https://trumee-h7ygmkzis-taiga1226s-projects.vercel.app",  # 旧URL
-    "https://trumee-3msjm6bnn-taiga1226s-projects.vercel.app",  # 新URL
+    "https://trumee-h7ygmkzis-taiga1226s-projects.vercel.app",  # 旧URL1
+    "https://trumee-3msjm6bnn-taiga1226s-projects.vercel.app",  # 旧URL2
+    "https://trumee-3jps5yj06-taiga1226s-projects.vercel.app",  # 最新URL
 ]
 
 CORS_ALLOW_CREDENTIALS = True
