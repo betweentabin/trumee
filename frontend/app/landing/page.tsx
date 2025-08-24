@@ -193,7 +193,7 @@ export default function Home() {
           </div>
         </div>
       </section>
-      <section className="py-12 bg-primary-500 w-full flex flex-col items-center">
+      <section className="py-12 bg-primary-600 w-full flex flex-col items-center">
         <div className="px-10 md:px-0 md:w-[700px] lg:w-[1000px] xl:w-[1200px] 2xl:w-[1400px] flex flex-col items-center gap-4">
           <img src={"/images/card.png"} className="w-10 h-10" alt="" />
           <div className="flex flex-col text-white font-semibold lg:text-xl xl:text-xl 2xl:text-2xl items-center gap-1">
@@ -295,7 +295,7 @@ export default function Home() {
           />
         </div>
 
-        <div className="absolute inset-0 bg-primary-600 opacity-70 z-10" />
+                    <div className="absolute inset-0 bg-primary-800 opacity-70 z-10" />
         <div className="absolute inset-0">
           <img
             src={"/images/resume.png"}
