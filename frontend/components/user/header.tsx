@@ -1,8 +1,9 @@
 "use client";
 import React from "react";
 import { useRouter } from "next/navigation";
-import { getAuth, signOut } from "firebase/auth";
-import { firebaseApp } from "@/lib/firebase"; // Make sure this points to your Firebase config
+// Firebase imports removed - using Django auth only
+// import { getAuth, signOut } from "firebase/auth";
+// import { firebaseApp } from "@/lib/firebase";
 
 const Header = () => {
   const router = useRouter();
