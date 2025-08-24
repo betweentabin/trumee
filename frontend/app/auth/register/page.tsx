@@ -8,8 +8,9 @@ import toast from 'react-hot-toast';
 import Layout from '@/components/auth/layout';
 import Image from 'next/image';
 import { useAuth } from '@/hooks/useAuth';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
+// Firebase imports removed - using Django auth only
+// import { createUserWithEmailAndPassword } from 'firebase/auth';
+// import { auth } from '@/lib/firebase';
 
 interface FormData {
   email: string;

@@ -10,8 +10,9 @@ import {
   updateUser,
   clearError 
 } from '@/app/redux/authSlice';
-import { signOut } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
+// Firebase imports removed - using Django auth only
+// import { signOut } from 'firebase/auth';
+// import { auth } from '@/lib/firebase';
 import { API_CONFIG, buildApiUrl } from '@/config/api';
 import toast from 'react-hot-toast';
 
@@ -39,22 +40,16 @@ export const useAuth = () => {
     }
   }, [dispatch, authState.isAuthenticated]);
 
-  // Login function
+  // Login function - Django auth only
   const login = async (email: string, password: string) => {
     dispatch(loginStart());
 
     try {
-      // First authenticate with Firebase
-      const { signInWithEmailAndPassword } = await import('firebase/auth');
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const idToken = await userCredential.user.getIdToken();
-
-      // Then authenticate with backend
+      // Authenticate with Django backend only
       const response = await fetch(buildApiUrl(API_CONFIG.endpoints.login), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${idToken}`,
         },
         body: JSON.stringify({ email, password }),
       });
@@ -107,10 +102,7 @@ export const useAuth = () => {
   // Logout function
   const logout = async () => {
     try {
-      // Sign out from Firebase
-      await signOut(auth);
-      
-      // Clear localStorage
+      // Clear localStorage only (no Firebase signout needed)
       localStorage.removeItem('token');
       localStorage.removeItem('userEmail');
       localStorage.removeItem('uid');
