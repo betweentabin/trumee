@@ -19,7 +19,7 @@ import search, { applyScout, cancelScout } from "../api/api";
 
 export default function Search() {
   const [resultList, setResultList] = useState<any[]>([]);
-  const [results, setResults] = useState([]);
+  const [results, setResults] = useState<any[]>([]);
   const [isScouting, setIsScouting] = useState<boolean>(false);
 
   const [showPrefectureModal, setShowPrefectureModal] = useState(false);
@@ -426,7 +426,7 @@ export default function Search() {
           />
         </div>
       </div>
-      {results.length > 0
+      {results && results.length > 0
         ? results.map((_seeker: any) => (
             <SeekerCard
               detail={_seeker}

@@ -294,8 +294,17 @@ class PaymentViewSet(viewsets.ModelViewSet):
 @permission_classes([IsAuthenticated])
 def search_seekers(request):
     """求職者検索API"""
+    print(f"DEBUG: User email: {request.user.email}, Role: {request.user.role}, Is authenticated: {request.user.is_authenticated}")
+    print(f"DEBUG: User model class: {request.user.__class__.__name__}")
+    print(f"DEBUG: User role type: {type(request.user.role)}, value: '{request.user.role}'")
+    
     if request.user.role != 'company':
-        return Response({'error': 'Permission denied'}, status=status.HTTP_403_FORBIDDEN)
+        return Response({
+            'error': 'Permission denied', 
+            'user_role': request.user.role,
+            'user_email': request.user.email,
+            'expected_role': 'company'
+        }, status=status.HTTP_403_FORBIDDEN)
     
     query = request.GET.get('q', '')
     skills = request.GET.get('skills', '')

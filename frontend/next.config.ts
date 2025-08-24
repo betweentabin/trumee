@@ -21,20 +21,6 @@ const nextConfig: NextConfig = {
     ]
   },
 
-  // Environment variables validation
-  env: {
-    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
-    NEXT_PUBLIC_ENV: process.env.NEXT_PUBLIC_ENV,
-  },
-
-  // Experimental features for better performance
-  experimental: {
-    optimizePackageImports: ['lucide-react', 'react-icons'],
-  },
-
-  // Trailing slash configuration
-  trailingSlash: false,
-
   // Skip validation during build
   eslint: {
     ignoreDuringBuilds: true,

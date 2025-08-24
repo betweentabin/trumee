@@ -11,19 +11,28 @@ SECRET_KEY = os.getenv(
     "django-insecure-393(t6slr73(5fzwgvp!^_rigkc0a74=$($0(gq=&)n8%^u(o)"
 )
 
-DEBUG = True
+DEBUG = os.getenv("DEBUG", "True").lower() == "true"
 
 STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY", "")
 
 # Firebase設定は削除（SQLiteのみ使用）
 
 # ====== Allowed Hosts ======
-ALLOWED_HOSTS = ["85.131.248.214", "localhost", "127.0.0.1", "0.0.0.0"]
+ALLOWED_HOSTS = [
+    "85.131.248.214", 
+    "localhost", 
+    "127.0.0.1", 
+    "0.0.0.0",
+    ".railway.app",  # Railway domains
+    ".onrender.com",  # Render domains
+]
 
 # ====== CORS Settings ======
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
+    "http://localhost:3001",
     "http://127.0.0.1:3000",
+    "http://127.0.0.1:3001",
     "https://your-vercel-app.vercel.app",  # 本番環境のURL
 ]
 
