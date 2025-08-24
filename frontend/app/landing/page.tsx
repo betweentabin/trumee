@@ -104,14 +104,14 @@ export default function Home() {
         </div>
       </section>
       <section id="about-us" className={`w-full flex flex-col items-center`}>
-        <div className="px-10 pb-10 md:pb-0 md:px-0 md:w-[700px]  lg:w-[1000px] xl:w-[1200px] 2xl:w-[1400px] grid grid-cols-1 md:grid-cols-2">
-          <div className="py-20 pr-6 relative">
+        <div className="px-10 pb-10 md:pb-0 md:px-0 md:w-[700px]  lg:w-[1000px] xl:w-[1200px] 2xl:w-[1400px] grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="py-20 relative flex items-center justify-center">
             <div className="absolute -top-16 left-0 w-1/2 aspect-square z-0 opacity-50">
               <img src={"/images/circle.png"} className="" alt="" />
             </div>
             <img
               src={"/images/peoples.png"}
-              className="w-full h-auto object-contain z-20 opacity-100"
+              className="w-full max-w-none h-auto object-contain z-20 opacity-100"
               alt=""
             />
             <div className="absolute -bottom-16 right-0 w-1/2 aspect-square z-0 opacity-50">
@@ -142,12 +142,12 @@ export default function Home() {
             職務経歴書のよくある悩み
           </h3>
           <div className="w-full flex flex-col md:grid md:grid-cols-3 gap-y-4 gap-x-6">
-              <img src={"/images/Group 425.png"} className="" alt="" />
-              <img src={"/images/Group 426.png"} className="" alt="" />
-              <img src={"/images/Group 427.png"} className="" alt="" />
-              <img src={"/images/Group 428.png"} className="" alt="" />
-              <img src={"/images/Group 429.png"} className="" alt="" />
-              <img src={"/images/Group 430.png"} className="" alt="" />
+              <img src={"/images/Group 425.png"} className="w-full h-auto object-contain" alt="" />
+              <img src={"/images/Group 426.png"} className="w-full h-auto object-contain" alt="" />
+              <img src={"/images/Group 427.png"} className="w-full h-auto object-contain" alt="" />
+              <img src={"/images/Group 428.png"} className="w-full h-auto object-contain" alt="" />
+              <img src={"/images/Group 429.png"} className="w-full h-auto object-contain" alt="" />
+              <img src={"/images/Group 430.png"} className="w-full h-auto object-contain" alt="" />
           </div>
         </div>
       </section>
