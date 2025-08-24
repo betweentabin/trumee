@@ -52,7 +52,7 @@ const images = [
   "/images/Group 430.png",
 ];
 
-export default function Home() {
+export default function Dashboard() {
   return (
     <>
       <HeroSection />
