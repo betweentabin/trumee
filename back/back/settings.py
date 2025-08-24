@@ -38,7 +38,7 @@ CORS_ALLOWED_ORIGINS = [
 
 CORS_ALLOW_CREDENTIALS = True
 
-CORS_ALLOW_ALL_ORIGINS = DEBUG  # 開発環境でのみ全てのオリジンを許可
+CORS_ALLOW_ALL_ORIGINS = True  # 一時的に全てのオリジンを許可（テスト用）
 
 # ====== Application definition ======
 DJANGO_APPS = [
