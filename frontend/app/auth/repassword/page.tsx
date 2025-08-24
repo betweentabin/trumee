@@ -3,8 +3,9 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { sendPasswordResetEmail } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
+// Firebase imports removed - using Django auth only
+// import { sendPasswordResetEmail } from 'firebase/auth';
+// import { auth } from '@/lib/firebase';
 import toast from 'react-hot-toast';
 import Layout from '@/components/auth/layout';
 import Image from 'next/image';
@@ -39,23 +40,13 @@ export default function PasswordResetPage() {
     setIsLoading(true);
 
     try {
-      // Send password reset email through Firebase
-      await sendPasswordResetEmail(auth, email);
-      
+      // TODO: Implement Django password reset API
+      // For now, show a success message
       setEmailSent(true);
-      toast.success('パスワードリセットメールを送信しました');
+      toast.success('パスワードリセット機能は現在準備中です。お問い合わせください。');
     } catch (error: any) {
       console.error('Password reset error:', error);
-      
-      if (error.code === 'auth/user-not-found') {
-        setError('このメールアドレスは登録されていません');
-      } else if (error.code === 'auth/invalid-email') {
-        setError('無効なメールアドレスです');
-      } else if (error.code === 'auth/too-many-requests') {
-        setError('リクエストが多すぎます。しばらくしてからお試しください');
-      } else {
-        setError('パスワードリセットメールの送信に失敗しました');
-      }
+      setError('パスワードリセット機能は現在準備中です。お問い合わせください。');
       
       toast.error('メール送信に失敗しました');
     } finally {
