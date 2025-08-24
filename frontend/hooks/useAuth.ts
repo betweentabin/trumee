@@ -82,13 +82,11 @@ export const useAuth = () => {
 
         toast.success('ログインに成功しました');
 
-        // Redirect based on role and status
+        // Redirect based on role
         if (data.user?.role === 'company') {
           router.push('/company');
-        } else if (data.user?.hasResume) {
-          router.push('/users');
         } else {
-          router.push('/auth/step/step1-profile');
+          router.push('/users');
         }
 
         return { success: true };
