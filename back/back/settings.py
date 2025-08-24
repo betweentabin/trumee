@@ -36,7 +36,8 @@ CORS_ALLOWED_ORIGINS = [
     "https://trumee-h7ygmkzis-taiga1226s-projects.vercel.app",  # 旧URL1
     "https://trumee-3msjm6bnn-taiga1226s-projects.vercel.app",  # 旧URL2
     "https://trumee-3jps5yj06-taiga1226s-projects.vercel.app",  # 旧URL3
-    "https://trumeee-8ygeu8cmc-taiga1226s-projects.vercel.app",  # 新パブリックURL
+    "https://trumeee-8ygeu8cmc-taiga1226s-projects.vercel.app",  # 旧パブリックURL
+    "https://trumeee-mtm37527p-taiga1226s-projects.vercel.app",  # 最新パブリックURL
 ]
 
 CORS_ALLOW_CREDENTIALS = True
