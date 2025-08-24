@@ -56,32 +56,33 @@ export const useAuth = () => {
 
       const data = await response.json();
 
-      if (response.ok && data.token) {
-        // Store in localStorage
-        localStorage.setItem('token', data.token);
+      if (response.ok && data.tokens) {
+        // Store in localStorage (Django format)
+        localStorage.setItem('token', data.tokens.access);
+        localStorage.setItem('refresh_token', data.tokens.refresh);
         localStorage.setItem('userEmail', email);
-        if (data.uid) {
-          localStorage.setItem('uid', data.uid);
+        if (data.user?.id) {
+          localStorage.setItem('uid', data.user.id);
         }
 
         // Update Redux state
         dispatch(loginSuccess({
           user: {
-            uid: data.uid,
+            uid: data.user?.id,
             email,
-            role: data.role || 'user',
-            hasResume: data.hasResume,
-            name: data.name,
+            role: data.user?.role || 'user',
+            hasResume: data.user?.hasResume,
+            name: data.user?.full_name,
           },
-          token: data.token,
+          token: data.tokens.access,
         }));
 
         toast.success('ログインに成功しました');
 
         // Redirect based on role and status
-        if (data.role === 'company') {
+        if (data.user?.role === 'company') {
           router.push('/company');
-        } else if (data.hasResume) {
+        } else if (data.user?.hasResume) {
           router.push('/users');
         } else {
           router.push('/auth/step/step1-profile');
