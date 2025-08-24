@@ -136,8 +136,8 @@ export default function Home() {
           </div>
         </div>
       </section>
-      <section className="py-10 w-full gradient-background text-gray-light flex flex-col items-center">
-        <div className="w-full px-4 md:px-6 xl:px-0 max-w-screen-xl text-gray-light flex flex-col items-center gap-6">
+      <section className="py-10 w-full bg-gradient-to-br from-secondary-100 to-secondary-200 text-secondary-700 flex flex-col items-center">
+        <div className="w-full px-4 md:px-6 xl:px-0 max-w-screen-xl text-secondary-700 flex flex-col items-center gap-6">
           <h3 className="text-2xl md:text-3xl font-semibold text-center">
             職務経歴書のよくある悩み
           </h3>
@@ -152,12 +152,12 @@ export default function Home() {
         </div>
       </section>
       <section className="py-10 px-10 md:px-0 w-full flex flex-col items-center gap-6">
-        <h3 className="text-2xl text-[#FF733E] font-semibold text-primary-active">
+        <h3 className="text-2xl text-primary-600 font-semibold">
           Trumeeならそのお悩み、解決できます
         </h3>
         <div className="px-10 md:px-0 w-full md:w-[700px] lg:w-[1000px] xl:w-[1200px] 2xl:w-[1400px] flex flex-col md:flex-row items-center gap-10">
           <div className="py-12 px-10 md:px-0 w-full md:w-unset md:basis-1/3 relative">
-            <div className="w-3/5 bg-[#FF733E] rounded-2xl bg-primary-active aspect-3/4 self-center justify-self-center" />
+            <div className="w-3/5 bg-primary-600 rounded-2xl aspect-3/4 self-center justify-self-center" />
             <img
               src={"/images/group_02.png"}
               className="absolute right-0 bottom-0 w-3/5 aspect-3/4"
@@ -193,7 +193,7 @@ export default function Home() {
           </div>
         </div>
       </section>
-      <section className="py-12 bg-[#FF9871] w-full bg-orange-main flex flex-col items-center">
+      <section className="py-12 bg-primary-500 w-full flex flex-col items-center">
         <div className="px-10 md:px-0 md:w-[700px] lg:w-[1000px] xl:w-[1200px] 2xl:w-[1400px] flex flex-col items-center gap-4">
           <img src={"/images/card.png"} className="w-10 h-10" alt="" />
           <div className="flex flex-col text-white font-semibold lg:text-xl xl:text-xl 2xl:text-2xl items-center gap-1">
@@ -214,7 +214,7 @@ export default function Home() {
                 className="px-4 py-8 rounded-xl bg-white flex flex-col gap-3 shadow-sm"
               >
                 <div className="flex flex-row items-center gap-2">
-                  <div className="flex-none w-12 h-12 rounded-full bg-[#FFE3D9] text-primary-active flex items-center justify-center">
+                  <div className="flex-none w-12 h-12 rounded-full bg-primary-100 text-primary-600 flex items-center justify-center">
                     <Image
                       src={service.icon}
                       alt=""
@@ -247,7 +247,7 @@ export default function Home() {
           </div>
         </div>
       </section>
-      <section className="pt-12 pb-16 w-full bg-[#F7E6E1] flex flex-col items-center">
+      <section className="pt-12 pb-16 w-full bg-primary-50 flex flex-col items-center">
         <div className="px-10 md:px-0 md:w-[700px] lg:w-[1000px] xl:w-[1200px] 2xl:w-[1400px] flex flex-col items-center gap-4">
           <img
             src={"/images/50000_mobile.png"}
@@ -261,7 +261,7 @@ export default function Home() {
           />
           <div className="flex flex-col md:flex-row gap-1">
             <span>皆さまの転職活動の成功に</span>
-            <span className="px-1 font-semibold text-primary-active bg-white">
+            <span className="px-1 font-semibold text-primary-600 bg-white">
               コミットできる自信
             </span>
             <span>があるからこそ、実施できる特典です。</span>
@@ -295,7 +295,7 @@ export default function Home() {
           />
         </div>
 
-        <div className="absolute inset-0 bg-primary-active opacity-70 z-10 bg-[#E69070]" />
+        <div className="absolute inset-0 bg-primary-600 opacity-70 z-10" />
         <div className="absolute inset-0">
           <img
             src={"/images/resume.png"}
@@ -321,7 +321,7 @@ export default function Home() {
           </div>
         </div>
       </section>
-      <section id="success-stories" className="py-12 w-full bg-[#FCF9F4] flex flex-col items-center">
+      <section id="success-stories" className="py-12 w-full bg-secondary-50 flex flex-col items-center">
         <div className="px-10 md:px-0 md:w-[700px] lg:w-[1000px] xl:w-[1200px] 2xl:w-[1400px] flex flex-col items-center gap-6 z-100">
           <div className="flex flex-col items-center gap-1">
           <img
@@ -341,7 +341,7 @@ export default function Home() {
           </div>
         </div>
       </section>
-      <section id="FAQ" className="py-12 w-full bg-secondary-20 flex flex-col items-center">
+      <section id="FAQ" className="py-12 w-full bg-secondary-100 flex flex-col items-center">
         <div className="px-2 w-full md:w-[700px] lg:w-[1000px] xl:w-[1200px] 2xl:w-[1400px] flex flex-col items-center gap-3 z-100">
           <div className="flex flex-col items-center gap-1">
             <img src={"/images/card.png"} className="w-10 h-10" alt="" />
@@ -377,7 +377,7 @@ export default function Home() {
           />
         </div>
 
-        <div className="absolute inset-0 bg-[#E69373] opacity-70 z-10" />
+        <div className="absolute inset-0 bg-primary-700 opacity-70 z-10" />
         <div className="absolute inset-0">
           <img
             src={"/images/resume.png"}
@@ -408,7 +408,7 @@ const HeroSection = () => {
   }, [width]);
 
   return (
-    <section className="px-0 py-6 w-full bg-orange-90 overflow-hidden">
+    <section className="px-0 py-6 w-full bg-primary-100 overflow-hidden">
       <div className="w-ful flex flex-col gap-8 relative">
         <div className={`absolute inset-0 md:flex md:flex-row justify-between hidden `}>
           {
@@ -467,7 +467,7 @@ const HeroSection = () => {
           paddingRight: `${isMobile ? 24 : whiteCardWidth}px`,
           height: `${whiteCardHeight}px`
         }}>
-        <div className="text-primary-default font-bold flex flex-col gap-3 justify-end px-4 md:px-0 items-start">
+        <div className="text-secondary-800 font-bold flex flex-col gap-3 justify-end px-4 md:px-0 items-start">
             {[
               { text: "もう悩まない。", w: "w-full " },
               { text: "伝わる。", w: "w-[70%]" },
@@ -475,7 +475,7 @@ const HeroSection = () => {
             ].map(({ text, w }, index) => (
               <div
                 key={`header-text-${index}`}
-                className={`border border-[#A3A3A3] bg-white px-4 py-2 ${w}
+                className={`border border-secondary-400 bg-white px-4 py-2 ${w}
                   text-[18px] sm:text-[22px] md:text-[24px] lg:text-[28px] xl:text-[32px] 2xl:text-[34px]
                   whitespace-nowrap overflow-hidden`}
               >
@@ -543,19 +543,19 @@ const section_testimonials: any[] = [
     shortDesc: (
       <>
         正社員経験のない、かつ
-        <span className="text-[#FF733E]">
+        <span className="text-primary-600">
           子持ちで条件の多い私のサポートをするのは非常に難しく
         </span>
         、エージェントとしては全くうまみの無いタイプの求職者であることに自覚がありました。大手のエージェントでは、そもそものサポートを断られたり、最初の面談以降にほとんど連絡のないまま放置されることが多かったです。御社は、最初からこのような立場の私でも
-        <span className="text-[#FF733E]">
+        <span className="text-primary-600">
           非常に親身になってくださり、職務経歴書の添削を丁寧にしてくださいました。
         </span>
         その添削以降、書類に通過することも増えたように思います。添削では、
-        <span className="text-[#FF733E]">
+        <span className="text-primary-600">
           自分では気づかない深いところまで突っ込んで聞いてくださったおかげで、内容にとても説得力が生まれました。
         </span>
         そして、自分の中でも今までの仕事に対してしっかり振り返れたことで、その後の面接などで面接官にいろいろ聞かれても自信をもって答えられました。
-        <span className="text-[#FF733E]">
+        <span className="text-primary-600">
           職務経歴書の添削が面接でも役に立つとは
         </span>
         思っておらず、非常に感謝しております。
@@ -576,7 +576,7 @@ const section_testimonials: any[] = [
     shortDesc: (
       <>
         はじめにオンライン面談でヒアリングしていただき、
-        <span className="text-[#FF733E]">
+        <span className="text-primary-600">
           今後のキャリアプランの立て方や転職先の方向性を一緒に考えていただく
         </span>
         ところから始まり、書類選考を突破するための職務経歴書の添削、面接対策として企業の志望理由の確認も行っていただき、最初から最後までしっかりとしたサポートを
@@ -586,7 +586,7 @@ const section_testimonials: any[] = [
     longDesc: (
       <>
         はじめにオンライン面談でヒアリングしていただき、
-        <span className="text-[#FF733E]">
+        <span className="text-primary-600">
           今後のキャリアプランの立て方や転職先の方向性を一緒に考えていただく
         </span>
         ところから始まり、書類選考を突破するための職務経歴書の添削、面接対策として企業の志望理由の確認も行っていただき、最初から最後までしっかりとしたサポートを
