@@ -26,7 +26,7 @@ export const useAuth = () => {
     // Only run on client side
     if (typeof window === 'undefined') return;
     
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('access_token');
     const userEmail = localStorage.getItem('userEmail');
     const uid = localStorage.getItem('uid');
 
@@ -61,7 +61,7 @@ export const useAuth = () => {
 
       if (response.ok && data.tokens) {
         // Store in localStorage (Django format)
-        localStorage.setItem('token', data.tokens.access);
+        localStorage.setItem('access_token', data.tokens.access);
         localStorage.setItem('refresh_token', data.tokens.refresh);
         localStorage.setItem('userEmail', email);
         if (data.user?.id) {
@@ -107,7 +107,7 @@ export const useAuth = () => {
   const logout = async () => {
     try {
       // Clear localStorage only (no Firebase signout needed)
-      localStorage.removeItem('token');
+      localStorage.removeItem('access_token');
       localStorage.removeItem('userEmail');
       localStorage.removeItem('uid');
       
@@ -128,14 +128,14 @@ export const useAuth = () => {
   // Check authentication status
   const checkAuth = () => {
     if (typeof window === 'undefined') return false;
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('access_token');
     return !!token && authState.isAuthenticated;
   };
 
   // Get auth headers
   const getAuthHeaders = () => {
     if (typeof window === 'undefined') return {};
-    const token = authState.token || localStorage.getItem('token');
+    const token = authState.token || localStorage.getItem('access_token');
     return token ? { 'Authorization': `Bearer ${token}` } : {};
   };
 
