@@ -10,16 +10,7 @@ const nextConfig: NextConfig = {
     return config;
   },
 
-  // Redirects configuration
-  async redirects() {
-    return [
-      {
-        source: '/',
-        destination: '/dashboard',
-        permanent: false,
-      },
-    ]
-  },
+  // Redirects configuration removed - using client-side routing instead
 
   // Skip validation during build
   eslint: {
