@@ -11,9 +11,9 @@ export default function ServiceCards() {
         <h2 className="font-bold text-sm mb-4">各サービスを利用する</h2>
         <div className="space-y-3">
           {[
-            { text: '職務経歴書に関するアドバイス', href: '/career/preview' },
-            { text: '面接に関するアドバイス', href: '/interview/1' },
-            { text: '企業からのスカウト確認', href: '/scouts/company' },
+            { text: '職務経歴書に関するアドバイス', href: '/career' },
+            { text: '面接に関するアドバイス', href: '/interview' },
+            { text: '企業からのスカウト確認', href: '/scouts' },
           ].map(({ text, href }, idx) => (
             <Link href={href} key={idx}>
               <button className="w-full flex items-center justify-between px-4 py-2 border rounded-md text-sm hover:bg-gray-50">
@@ -30,10 +30,10 @@ export default function ServiceCards() {
         <h2 className="font-bold text-sm mb-4">登録情報について</h2>
         <div className="grid grid-cols-2 gap-3 text-sm">
           {[
-            { label: 'プロフィール', href: '/users/myinfo/registerdata#name' },
-            { label: '経歴', href: '/users/myinfo/registerdata#history' },
-            { label: '希望条件', href: '/users/myinfo/registerdata#hope' },
-            { label: '履歴書', href: '/users/myinfo/registerdata#resume' },
+            { label: 'プロフィール', href: '/auth/step/step1-profile' },
+            { label: '経歴', href: '/auth/step/step3-experience' },
+            { label: '希望条件', href: '/auth/step/step4-preference' },
+            { label: '履歴書', href: '/resumes' },
           ].map(({ label, href }, idx) => (
             <Link href={href} key={idx}>
               <button className="flex items-center justify-between px-4 py-2 border rounded-md hover:bg-gray-50 w-full">
