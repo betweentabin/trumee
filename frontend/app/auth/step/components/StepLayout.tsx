@@ -2,11 +2,12 @@ import React from 'react';
 
 interface StepLayoutProps {
   children: React.ReactNode;
+  currentStep?: number;
   title?: string;
   description?: string;
 }
 
-export default function StepLayout({ children, title, description }: StepLayoutProps) {
+export default function StepLayout({ children, currentStep, title, description }: StepLayoutProps) {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-4xl mx-auto px-4 py-8">

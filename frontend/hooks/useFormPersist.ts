@@ -229,6 +229,7 @@ export const useFormPersist = () => {
 
   return {
     ...formState,
+    formState,
     updateProfile: (data: any) => dispatch(updateProfile(data)),
     updateEducation: (data: any) => dispatch(updateEducation(data)),
     setExperiences: (data: any) => dispatch(setExperiences(data)),
@@ -238,6 +239,7 @@ export const useFormPersist = () => {
     updatePreference: (data: any) => dispatch(updatePreference(data)),
     updateSkills: (data: string) => dispatch(updateSkills(data)),
     updateSelfPR: (data: string) => dispatch(updateSelfPR(data)),
+    markStepCompleted: (step: number) => dispatch(markStepCompleted(step)),
     goToStep,
     goToNextStep,
     goToPreviousStep,

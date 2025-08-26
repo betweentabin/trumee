@@ -71,12 +71,14 @@ export default function Step4PreferencePage() {
     formState,
     updatePreference,
     markStepCompleted,
-    navigateToStep,
+    goToStep,
     saveToLocalStorage,
   } = useFormPersist();
 
   // Redirect if not authenticated
-  requireAuth();
+  useEffect(() => {
+    requireAuth();
+  }, []);
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [formData, setFormData] = useState({
@@ -154,14 +156,14 @@ export default function Step4PreferencePage() {
       markStepCompleted(4);
       saveToLocalStorage();
       toast.success('希望条件を保存しました');
-      navigateToStep(5);
+      router.push('/auth/step/step5-confirm');
     }
   };
 
   const handleBack = () => {
     updatePreference(formData);
     saveToLocalStorage();
-    navigateToStep(3);
+    router.push('/auth/step/step3-experience');
   };
 
   const handleSave = () => {

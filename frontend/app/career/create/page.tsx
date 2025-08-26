@@ -138,13 +138,38 @@ export default function CreateResumePage() {
   const handleSubmit = async () => {
     try {
       const token = localStorage.getItem('access_token');
-      const response = await fetch('http://localhost:8000/api/resumes/', {
+      
+      // バックエンドのResumeモデルに合わせてデータを変換
+      const apiData = {
+        desired_job: resumeData.desiredPosition || '',
+        desired_industries: [],
+        desired_locations: [],
+        skills: resumeData.skills.filter(s => s).join(', '),
+        self_pr: resumeData.summary || '',
+        // 追加データをJSONFieldとして保存
+        extra_data: {
+          title: resumeData.title,
+          fullName: resumeData.fullName,
+          email: resumeData.email,
+          phone: resumeData.phone,
+          address: resumeData.address,
+          birthDate: resumeData.birthDate,
+          desiredSalary: resumeData.desiredSalary,
+          workExperiences: resumeData.workExperiences,
+          education: resumeData.education,
+          certifications: resumeData.certifications,
+          languages: resumeData.languages
+        }
+      };
+
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+      const response = await fetch(`${apiUrl}/api/v1/resumes/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify(resumeData)
+        body: JSON.stringify(apiData)
       });
 
       if (response.ok) {
@@ -152,7 +177,9 @@ export default function CreateResumePage() {
         toast.success('職務経歴書を作成しました');
         router.push(`/career/view/${data.id}`);
       } else {
-        toast.error('作成に失敗しました');
+        const errorData = await response.json();
+        console.error('API Error:', errorData);
+        toast.error(errorData.message || '作成に失敗しました');
       }
     } catch (error) {
       console.error('Failed to create resume:', error);

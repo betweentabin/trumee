@@ -1,62 +1,86 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import toast from 'react-hot-toast';
-import { FaEdit, FaPlus, FaEye } from 'react-icons/fa';
-import { getAuthHeaders } from '@/utils/auth';
-import { buildApiUrl } from '@/config/api';
+import { useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
+import { FaPrint, FaEdit, FaDownload, FaArrowLeft } from 'react-icons/fa';
 
 interface Resume {
   id: string;
   title: string;
-  created_at: string;
-  updated_at: string;
-  is_active: boolean;
+  fullName: string;
+  email: string;
+  phone: string;
+  address: string;
+  birthDate: string;
+  summary: string;
+  desiredPosition: string;
+  desiredSalary: string;
+  workExperiences: Array<{
+    company: string;
+    position: string;
+    startDate: string;
+    endDate: string;
+    description: string;
+    achievements: string[];
+  }>;
+  education: Array<{
+    school: string;
+    degree: string;
+    field: string;
+    graduationDate: string;
+  }>;
+  skills: string[];
+  certifications: string[];
+  languages: Array<{ language: string; level: string }>;
 }
 
 export default function PreviewPage() {
   const router = useRouter();
-  const [resumes, setResumes] = useState<Resume[]>([]);
+  const searchParams = useSearchParams();
+  const resumeId = searchParams.get('id');
+  const [resume, setResume] = useState<Resume | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchResumes();
-  }, []);
+    if (!resumeId) {
+      router.push('/career');
+      return;
+    }
+    fetchResume();
+  }, [resumeId]);
 
-  const fetchResumes = async () => {
+  const fetchResume = async () => {
     try {
-      const response = await fetch(buildApiUrl('/resumes/'), {
-        headers: getAuthHeaders(),
+      const token = localStorage.getItem('access_token');
+      const response = await fetch(`http://localhost:8000/api/v1/resumes/${resumeId}/`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
       });
       
       if (response.ok) {
         const data = await response.json();
-        setResumes(data.results || data);
-      } else if (response.status === 401) {
-        toast.error('ログインが必要です');
-        router.push('/auth/login');
+        setResume(data);
       } else {
-        toast.error('職務経歴書の取得に失敗しました');
+        console.error('Failed to fetch resume');
+        router.push('/career');
       }
     } catch (error) {
-      console.error('Failed to fetch resumes:', error);
-      toast.error('読み込みに失敗しました');
+      console.error('Error fetching resume:', error);
+      router.push('/career');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleCreateNew = () => {
-    router.push('/career/create');
-  };
-
-  const handleViewResume = (id: string) => {
-    router.push(`/career/view/${id}`);
-  };
-
-  const handleEditResume = (id: string) => {
-    router.push(`/career/edit/${id}`);
+  const formatDate = (dateString: string) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('ja-JP', {
+      year: 'numeric',
+      month: 'long'
+    });
   };
 
   if (loading) {

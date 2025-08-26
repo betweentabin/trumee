@@ -51,12 +51,15 @@ export default function Step1ProfilePage() {
   useEffect(() => {
     // Redux formStateから読み込み
     if (formState.stepData.profile) {
-      setFormData({
-        ...formData,
+      setFormData(prev => ({
+        ...prev,
         ...formState.stepData.profile,
-      });
+      }));
     }
-    
+  }, [formState.stepData.profile]);
+
+  // Load user profile from API
+  useEffect(() => {
     // APIから取得したプロフィールデータを反映
     if (userProfile) {
       setFormData(prev => ({
@@ -65,12 +68,15 @@ export default function Step1ProfilePage() {
         // APIのフィールド名に合わせて調整が必要
       }));
     }
-    
+  }, [userProfile]);
+
+  // Set initial email from auth
+  useEffect(() => {
     // 認証情報から初期値設定
     if (authState.user?.email && !formData.email) {
-      setFormData(prev => ({ ...prev, email: authState.user!.email }));
+      setFormData(prev => ({ ...prev, email: authState.user.email }));
     }
-  }, [formState.stepData.profile, userProfile, authState.user]);
+  }, [authState.user]);
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
