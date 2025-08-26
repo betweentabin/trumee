@@ -114,6 +114,9 @@ class Resume(models.Model):
     # 自己PR
     self_pr = models.TextField(blank=True)
     
+    # 詳細データ（フロントエンドからの追加情報）
+    extra_data = models.JSONField(default=dict, blank=True)
+    
     # 機械学習用フィールド
     resume_vector = models.JSONField(default=list, blank=True)  # 履歴書全体の特徴ベクトル
     match_score = models.FloatField(default=0.0)  # マッチングスコア
