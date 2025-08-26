@@ -9,6 +9,7 @@ import { useForm } from "react-hook-form";
 import { useMessages, useScoutBusinesses } from "../queries/query";
 import { useMessage } from "../queries/mutation";
 import axios from "axios";
+import { getAuthHeaders } from "@/utils/auth";
 
 interface Message {
   id: string;
@@ -135,13 +136,9 @@ export default function SeekerTabs({
 
   useEffect(() => {
     const fetchMessage = async () => {
-      const token = localStorage.getItem("token");
       try {
         const res = await axios.get<Message[]>("http://85.131.248.214:9000/api/get_all_message/", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
+          headers: getAuthHeaders(),
         });
 
         const messages = res.data || [];

@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import Link from "next/link";
 import { FaUsers, FaBars, FaTimes, FaSignOutAlt } from "react-icons/fa";
+import { clearAuthData } from '@/utils/auth';
 
 import AdminHeader from "@/components/admin/admin";
 
@@ -21,7 +22,7 @@ export default function Layout({
 
   const handleLogout = () => {
     // Clear auth tokens or session storage as needed
-    localStorage.removeItem("token");
+    clearAuthData();
     // Optionally clear other stored data here
 
     // Redirect to login page or home

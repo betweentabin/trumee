@@ -14,6 +14,14 @@ import {
 // import { signOut } from 'firebase/auth';
 // import { auth } from '@/lib/firebase';
 import { API_CONFIG, buildApiUrl } from '@/config/api';
+import { 
+  getAccessToken, 
+  setAuthTokens, 
+  clearAuthData, 
+  isAuthenticated as checkAuthStatus,
+  getAuthHeaders as getHeaders,
+  migrateLegacyTokens 
+} from '@/utils/auth';
 import toast from 'react-hot-toast';
 
 export const useAuth = () => {
@@ -26,7 +34,10 @@ export const useAuth = () => {
     // Only run on client side
     if (typeof window === 'undefined') return;
     
-    const token = localStorage.getItem('access_token');
+    // Migrate any legacy tokens first
+    migrateLegacyTokens();
+    
+    const token = getAccessToken();
     const userEmail = localStorage.getItem('userEmail');
     const uid = localStorage.getItem('uid');
 
@@ -60,13 +71,14 @@ export const useAuth = () => {
       const data = await response.json();
 
       if (response.ok && data.tokens) {
-        // Store in localStorage (Django format)
-        localStorage.setItem('access_token', data.tokens.access);
-        localStorage.setItem('refresh_token', data.tokens.refresh);
-        localStorage.setItem('userEmail', email);
-        if (data.user?.id) {
-          localStorage.setItem('uid', data.user.id);
-        }
+        // Store in localStorage (Django format) using utility
+        setAuthTokens({
+          access: data.tokens.access,
+          refresh: data.tokens.refresh,
+          userEmail: email,
+          uid: data.user?.id,
+          role: data.user?.role,
+        });
 
         // Update Redux state
         dispatch(loginSuccess({
@@ -104,16 +116,11 @@ export const useAuth = () => {
   // Logout function
   const logout = async () => {
     try {
-      // Clear localStorage only (no Firebase signout needed)
-      localStorage.removeItem('access_token');
-      localStorage.removeItem('userEmail');
-      localStorage.removeItem('uid');
+      // Clear all auth data using utility
+      clearAuthData();
       
       // Clear Redux state
       dispatch(logoutAction());
-      
-      // Clear persisted state
-      localStorage.removeItem('persist:root');
       
       toast.success('ログアウトしました');
       router.push('/');
@@ -125,16 +132,12 @@ export const useAuth = () => {
 
   // Check authentication status
   const checkAuth = () => {
-    if (typeof window === 'undefined') return false;
-    const token = localStorage.getItem('access_token');
-    return !!token && authState.isAuthenticated;
+    return checkAuthStatus() && authState.isAuthenticated;
   };
 
   // Get auth headers
   const getAuthHeaders = () => {
-    if (typeof window === 'undefined') return {};
-    const token = authState.token || localStorage.getItem('access_token');
-    return token ? { 'Authorization': `Bearer ${token}` } : {};
+    return getHeaders();
   };
 
   // Require auth (redirect if not authenticated)

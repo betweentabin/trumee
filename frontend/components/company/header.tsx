@@ -2,6 +2,7 @@
 import React from "react";
 import { useRouter } from 'next/navigation';
 import Link from "next/link";
+import { clearAuthData } from '@/utils/auth';
 
 
 const Header = () => {
@@ -11,7 +12,7 @@ const Header = () => {
     router.push('/companyinfo');
   }
   const logout = () => {
-    localStorage.removeItem('token'); // Clear the token
+    clearAuthData(); // Clear all auth data
     router.push('/dashboard');        // Redirect to dashboard or login page
   };
   const search = () => {

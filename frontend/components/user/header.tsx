@@ -1,6 +1,7 @@
 "use client";
 import React from "react";
 import { useRouter } from "next/navigation";
+import { clearAuthData } from "@/utils/auth";
 // Firebase imports removed - using Django auth only
 // import { getAuth, signOut } from "firebase/auth";
 // import { firebaseApp } from "@/lib/firebase";
@@ -16,7 +17,7 @@ const Header = () => {
     try {
       // const auth = getAuth(firebaseApp);
       // await signOut(auth); // 🔹 Sign out from Firebase
-      localStorage.removeItem("token"); // Clear local token
+      clearAuthData(); // Clear all auth data
       router.push("/dashboard"); // Redirect after logout
     } catch (error) {
       console.error("Logout failed:", error);
