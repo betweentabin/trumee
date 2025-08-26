@@ -94,7 +94,12 @@ export default function LoginPage() {
         router.push('/users');
       }
     } catch (error: any) {
-      console.error('Login error:', error);
+      console.error('Login error:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+        url: error.config?.url
+      });
       
       if (error.response?.status === 401) {
         setErrors(prev => ({

@@ -5,8 +5,10 @@
     "buildCommand": "pip install -r requirements.txt"
   },
   "deploy": {
-    "startCommand": "python manage.py migrate && python manage.py create_specific_users && python manage.py collectstatic --noinput && gunicorn back.wsgi --bind 0.0.0.0:$PORT",
+    "startCommand": "./start.sh",
     "healthcheckPath": "/api/v1/",
-    "healthcheckTimeout": 100
+    "healthcheckTimeout": 300,
+    "restartPolicyType": "ON_FAILURE",
+    "restartPolicyMaxRetries": 3
   }
 }

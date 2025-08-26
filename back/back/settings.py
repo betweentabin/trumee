@@ -23,8 +23,7 @@ ALLOWED_HOSTS = [
     "localhost", 
     "127.0.0.1", 
     "0.0.0.0",
-    ".railway.app",  # Railway domains
-    ".onrender.com",  # Render domains
+    "*",  # 一時的に全て許可（デプロイ成功後に制限する）
 ]
 
 # ====== CORS Settings ======
