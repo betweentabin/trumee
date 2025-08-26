@@ -98,12 +98,14 @@ WSGI_APPLICATION = 'back.wsgi.application'
 
 # ====== Database ======
 # Railway環境で自動的にPostgreSQLを使用
-if 'RAILWAY_ENVIRONMENT' in os.environ:
+DATABASE_URL = os.environ.get('DATABASE_URL')
+if DATABASE_URL:
     import dj_database_url
     DATABASES = {
-        'default': dj_database_url.parse(os.environ.get('DATABASE_URL'))
+        'default': dj_database_url.parse(DATABASE_URL)
     }
 else:
+    # ローカル環境またはDATABASE_URLが設定されていない場合はSQLiteを使用
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',

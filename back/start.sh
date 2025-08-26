@@ -3,6 +3,13 @@ set -e
 
 echo "🚀 Starting Railway deployment..."
 
+# Check database configuration
+if [ -z "$DATABASE_URL" ]; then
+    echo "⚠️ DATABASE_URL not set, using SQLite as fallback"
+else
+    echo "✅ DATABASE_URL found: PostgreSQL will be used"
+fi
+
 # Run migrations
 echo "📦 Running database migrations..."
 python manage.py migrate --noinput
@@ -11,7 +18,7 @@ python manage.py migrate --noinput
 echo "👤 Creating test users..."
 python manage.py create_specific_users || echo "Test users already exist or creation skipped"
 
-# Collect static files (already done in build phase, but ensuring it's complete)
+# Collect static files
 echo "📁 Collecting static files..."
 python manage.py collectstatic --noinput --clear
 
