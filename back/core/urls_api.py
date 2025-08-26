@@ -6,7 +6,7 @@ from rest_framework_simplejwt.views import (
 )
 
 from .views_api import (
-    RegisterView, LoginView, LogoutView, UserProfileView,
+    health_check, RegisterView, LoginView, LogoutView, UserProfileView,
     SeekerProfileViewSet, ResumeViewSet, ExperienceViewSet,
     ApplicationViewSet, ScoutViewSet, MessageViewSet,
     PaymentViewSet, search_seekers, dashboard_stats,
@@ -24,6 +24,9 @@ router.register(r'messages', MessageViewSet, basename='message')
 router.register(r'payments', PaymentViewSet, basename='payment')
 
 urlpatterns = [
+    # ヘルスチェック（認証不要）
+    path('', health_check, name='health-check'),
+    
     # 認証
     path('auth/register/', RegisterView.as_view(), name='api-register'),
     path('auth/login/', LoginView.as_view(), name='api-login'),

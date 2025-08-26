@@ -8,10 +8,12 @@ dj-rest-auth==6.0.0
 django-allauth==0.61.1
 
 # Database (SQLite is built-in with Python)
-# psycopg2-binary==2.9.9  # Uncomment for PostgreSQL
+psycopg2-binary==2.9.9  # PostgreSQL for Railway
+dj-database-url==2.1.0  # Database URL parsing for Railway
 
 # Server
 gunicorn==22.0.0
+whitenoise==6.6.0  # Static file serving for Railway
 
 # Authentication & Security
 cryptography==45.0.2

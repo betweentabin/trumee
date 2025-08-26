@@ -68,6 +68,7 @@ INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # Railway用静的ファイル配信
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -97,12 +98,19 @@ TEMPLATES = [
 WSGI_APPLICATION = 'back.wsgi.application'
 
 # ====== Database ======
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+# Railway環境で自動的にPostgreSQLを使用
+if 'RAILWAY_ENVIRONMENT' in os.environ:
+    import dj_database_url
+    DATABASES = {
+        'default': dj_database_url.parse(os.environ.get('DATABASE_URL'))
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 # ====== Authentication ======
 AUTH_USER_MODEL = 'core.User'
@@ -132,6 +140,10 @@ USE_TZ = True
 # ====== Static files (CSS, JavaScript, Images) ======
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+# WhiteNoise設定（Railway用）
+if 'RAILWAY_ENVIRONMENT' in os.environ:
+    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # ====== Media files ======
 MEDIA_URL = '/media/'

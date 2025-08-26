@@ -8,6 +8,7 @@ from django.contrib.auth import login
 from django.shortcuts import get_object_or_404
 from django.db.models import Q
 from datetime import datetime
+from django.http import JsonResponse
 
 from .models import (
     User, SeekerProfile, Resume, Experience,
@@ -19,6 +20,17 @@ from .serializers import (
     ResumeCreateSerializer, ExperienceSerializer, ApplicationSerializer,
     ScoutSerializer, MessageSerializer, PaymentSerializer
 )
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def health_check(request):
+    """ヘルスチェック用API（認証不要）"""
+    return Response({
+        'status': 'ok',
+        'message': 'Resume Truemee API is running',
+        'timestamp': datetime.now().isoformat(),
+    }, status=status.HTTP_200_OK)
 
 
 class RegisterView(APIView):
