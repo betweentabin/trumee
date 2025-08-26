@@ -37,6 +37,8 @@ CORS_ALLOWED_ORIGINS = [
     "https://trumee-3jps5yj06-taiga1226s-projects.vercel.app",  # 旧URL3
     "https://trumeee-8ygeu8cmc-taiga1226s-projects.vercel.app",  # 旧パブリックURL
     "https://trumeee-mtm37527p-taiga1226s-projects.vercel.app",  # 最新パブリックURL
+    "https://trumeee-7u59x8kzt-taiga1226s-projects.vercel.app", # 新しいURL
+    "https://trumeee.vercel.app",  # カスタムドメイン
 ]
 
 CORS_ALLOW_CREDENTIALS = True
