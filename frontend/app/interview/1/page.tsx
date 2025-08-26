@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { FaSave, FaReset, FaLightbulb } from 'react-icons/fa';
-import { getAuthHeaders } from '@/utils/auth';
+import { getAuthHeaders } from '../../utils/auth';
 
 export default function InterviewPage1() {
   const router = useRouter();
