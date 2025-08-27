@@ -7,7 +7,7 @@ import {
   FaPlay, 
   FaPause, 
   FaStop, 
-  FaReset, 
+  FaRedo, 
   FaLightbulb, 
   FaClock, 
   FaMicrophone,
@@ -392,7 +392,7 @@ export default function InterviewPage3() {
                     onClick={resetTimer}
                     className="bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-lg flex items-center gap-2 transition-colors"
                   >
-                    <FaReset />
+                    <FaRedo />
                     リセット
                   </button>
                 </div>
