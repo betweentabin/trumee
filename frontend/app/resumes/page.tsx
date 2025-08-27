@@ -37,10 +37,23 @@ export default function ResumesPage() {
   const fetchResumes = async () => {
     try {
       const response = await apiClient.getResumes();
-      setResumes(response);
+      console.log('Resume API response:', response); // デバッグ用ログ
+      
+      // レスポンスがページネーション形式の場合とそうでない場合に対応
+      const resumeList = response.results || response;
+      console.log('Resume list:', resumeList); // デバッグ用ログ
+      
+      if (Array.isArray(resumeList)) {
+        setResumes(resumeList);
+      } else {
+        console.error('Resume list is not an array:', resumeList);
+        setResumes([]);
+        toast.error('履歴書データの形式が正しくありません');
+      }
     } catch (error) {
       console.error('Failed to fetch resumes:', error);
       toast.error('履歴書の取得に失敗しました');
+      setResumes([]); // エラー時は空配列を設定
     } finally {
       setLoading(false);
     }
