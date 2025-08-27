@@ -180,7 +180,7 @@ export default function PersonalInfoLicensePage() {
               <div className="bg-gray-50 rounded-lg p-4">
                 <p>個人情報の取り扱いに関するお問い合わせは、以下の窓口までご連絡ください：</p>
                 <div className="mt-3">
-                  <p>株式会社TruMeee 個人情報保護管理者</stopper>
+                  <p>株式会社TruMeee 個人情報保護管理者</p>
                   <p>メール: privacy@trumeee.com</p>
                   <p>電話: 03-1234-5678（平日 9:00-18:00）</p>
                   <p>住所: 〒100-0001 東京都千代田区千代田1-1-1</p>
