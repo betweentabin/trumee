@@ -4,9 +4,11 @@ import Header from "./header"
 import Headertitle from "./headertitle"
 
 export default function Layout({
-  children
+  children,
+  headertitle
 }: {
-  children: React.ReactNode, headertitle: string
+  children: React.ReactNode;
+  headertitle?: string;
 }) {
   return (
     <div>
