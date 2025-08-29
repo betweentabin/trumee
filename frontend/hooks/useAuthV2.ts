@@ -65,7 +65,22 @@ export const useAuthV2 = () => {
       }
     },
     onError: (error: any) => {
-      const errorMessage = error.response?.data?.detail || 'ログインに失敗しました';
+      console.error('Login error details:', error);
+      console.error('Error response:', error.response);
+      console.error('Error data:', error.response?.data);
+      
+      let errorMessage = 'ログインに失敗しました';
+      
+      if (error.response?.data) {
+        if (error.response.data.detail) {
+          errorMessage = error.response.data.detail;
+        } else if (error.response.data.non_field_errors) {
+          errorMessage = error.response.data.non_field_errors[0];
+        } else if (typeof error.response.data === 'string') {
+          errorMessage = error.response.data;
+        }
+      }
+      
       dispatch(loginFailure(errorMessage));
       toast.error(errorMessage);
     },
