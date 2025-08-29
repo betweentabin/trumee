@@ -41,11 +41,19 @@ export default function NewResumePage() {
   // 認証チェック
   useEffect(() => {
     initializeAuth();
-    if (!isAuthenticated) {
-      console.log('未認証のため、ログインページにリダイレクト');
-      router.push('/auth/login');
-    }
-  }, [isAuthenticated, initializeAuth, router]);
+  }, [initializeAuth]);
+
+  useEffect(() => {
+    // 認証の初期化が完了してから判定
+    const timer = setTimeout(() => {
+      if (!isAuthenticated) {
+        console.log('未認証のため、ログインページにリダイレクト');
+        router.push('/auth/login');
+      }
+    }, 1000); // 1秒待ってから判定
+
+    return () => clearTimeout(timer);
+  }, [isAuthenticated, router]);
 
   const createResumeV2 = useCreateResume();
 

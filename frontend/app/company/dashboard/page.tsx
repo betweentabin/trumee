@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAppSelector } from '@/app/redux/hooks';
+import useAuthV2 from '@/hooks/useAuthV2';
 import { 
   useDashboardStats, 
   useSearchSeekers, 
@@ -18,20 +19,30 @@ import toast from 'react-hot-toast';
 export default function CompanyDashboard() {
   const router = useRouter();
   const authState = useAppSelector(state => state.auth);
+  const { isAuthenticated, currentUser, initializeAuth } = useAuthV2();
   const { data: stats, isLoading: statsLoading } = useDashboardStats();
   const { data: unreadCount } = useUnreadCount();
 
+  // API v2認証の初期化
+  useEffect(() => {
+    initializeAuth();
+  }, [initializeAuth]);
+
   // 認証チェック
   useEffect(() => {
-    if (!authState.isAuthenticated) {
-      router.push('/auth/login');
-      return;
-    }
-    if (authState.user?.role !== 'company') {
-      router.push('/');
-      toast.error('企業アカウントでログインしてください');
-    }
-  }, [authState, router]);
+    const timer = setTimeout(() => {
+      if (!isAuthenticated) {
+        router.push('/auth/login');
+        return;
+      }
+      if (currentUser?.role !== 'company') {
+        router.push('/');
+        toast.error('企業アカウントでログインしてください');
+      }
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [isAuthenticated, currentUser, router]);
 
   const [activeTab, setActiveTab] = useState<'overview' | 'applications' | 'scouts' | 'messages'>('overview');
 

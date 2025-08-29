@@ -1,7 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import apiClient from '@/lib/api-client';
+import useAuthV2 from '@/hooks/useAuthV2';
 import toast from 'react-hot-toast';
 import { 
   FaUserTie, 
@@ -28,13 +30,30 @@ interface Scout {
 }
 
 export default function ScoutsPage() {
+  const router = useRouter();
   const [scouts, setScouts] = useState<Scout[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<string>('all');
+  const { isAuthenticated, initializeAuth } = useAuthV2();
+
+  // 認証チェック
+  useEffect(() => {
+    initializeAuth();
+  }, [initializeAuth]);
 
   useEffect(() => {
-    fetchScouts();
-  }, []);
+    // 認証の初期化が完了してから判定
+    const timer = setTimeout(() => {
+      if (isAuthenticated) {
+        fetchScouts();
+      } else {
+        console.log('未認証のため、ログインページにリダイレクト');
+        router.push('/auth/login');
+      }
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [isAuthenticated, router]);
 
   const fetchScouts = async () => {
     try {

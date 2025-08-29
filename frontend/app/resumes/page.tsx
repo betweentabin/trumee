@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import apiClient from '@/lib/api-client';
+import useAuthV2 from '@/hooks/useAuthV2';
 import toast from 'react-hot-toast';
 import { 
   FaPlus, 
@@ -29,10 +30,26 @@ export default function ResumesPage() {
   const router = useRouter();
   const [resumes, setResumes] = useState<Resume[]>([]);
   const [loading, setLoading] = useState(true);
+  const { isAuthenticated, initializeAuth } = useAuthV2();
+
+  // 認証チェック
+  useEffect(() => {
+    initializeAuth();
+  }, [initializeAuth]);
 
   useEffect(() => {
-    fetchResumes();
-  }, []);
+    // 認証の初期化が完了してから判定
+    const timer = setTimeout(() => {
+      if (isAuthenticated) {
+        fetchResumes();
+      } else {
+        console.log('未認証のため、ログインページにリダイレクト');
+        router.push('/auth/login');
+      }
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [isAuthenticated, router]);
 
   const fetchResumes = async () => {
     try {
