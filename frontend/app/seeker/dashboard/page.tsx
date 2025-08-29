@@ -53,12 +53,12 @@ export default function SeekerDashboard() {
 
   // API v2 フック
   const { isAuthenticated: isV2Authenticated, currentUser: v2User, initializeAuth } = useAuthV2();
-  const { data: v2Stats, isLoading: v2StatsLoading } = useDashboardStats(
-    useV2API && isV2Authenticated ? {} : { enabled: false }
-  );
-  const { data: v2UserProfile, isLoading: v2UserLoading } = useUserProfile(
-    useV2API && isV2Authenticated ? {} : { enabled: false }
-  );
+  const { data: v2Stats, isLoading: v2StatsLoading } = useDashboardStats({
+    enabled: useV2API && isV2Authenticated
+  });
+  const { data: v2UserProfile, isLoading: v2UserLoading } = useUserProfile({
+    enabled: useV2API && isV2Authenticated
+  });
 
   useEffect(() => {
     if (useV2API) {
