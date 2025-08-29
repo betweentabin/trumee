@@ -44,14 +44,21 @@ export default function NewResumePage() {
   }, [initializeAuth]);
 
   useEffect(() => {
-    // 認証の初期化が完了してから判定
-    const timer = setTimeout(() => {
-      if (!isAuthenticated) {
+    // より堅牢な認証チェック
+    const checkAuth = () => {
+      // localStorageにトークンがあるか確認
+      const hasStoredToken = typeof window !== 'undefined' && 
+        localStorage.getItem('auth_token_v2') && 
+        localStorage.getItem('drf_token_v2');
+      
+      if (!hasStoredToken && !isAuthenticated) {
         console.log('未認証のため、ログインページにリダイレクト');
         router.push('/auth/login');
       }
-    }, 1000); // 1秒待ってから判定
+    };
 
+    // 少し遅延して認証チェック
+    const timer = setTimeout(checkAuth, 500);
     return () => clearTimeout(timer);
   }, [isAuthenticated, router]);
 

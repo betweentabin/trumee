@@ -38,16 +38,22 @@ export default function ResumesPage() {
   }, [initializeAuth]);
 
   useEffect(() => {
-    // 認証の初期化が完了してから判定
-    const timer = setTimeout(() => {
-      if (isAuthenticated) {
+    // より堅牢な認証チェック
+    const checkAuthAndFetch = () => {
+      // localStorageにトークンがあるか確認
+      const hasStoredToken = typeof window !== 'undefined' && 
+        localStorage.getItem('auth_token_v2') && 
+        localStorage.getItem('drf_token_v2');
+      
+      if (hasStoredToken || isAuthenticated) {
         fetchResumes();
       } else {
         console.log('未認証のため、ログインページにリダイレクト');
         router.push('/auth/login');
       }
-    }, 1000);
+    };
 
+    const timer = setTimeout(checkAuthAndFetch, 500);
     return () => clearTimeout(timer);
   }, [isAuthenticated, router]);
 
