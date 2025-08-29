@@ -34,6 +34,7 @@ import skillReducer from './skillSlice';
 import profileReducer from './profileSlice';
 import jobReducer from './jobSlice';
 import authReducer from './authSlice';
+import authV2Reducer from './authV2Slice';
 import formReducer from './formSlice';
 
 // Persist configuration
@@ -41,7 +42,7 @@ const persistConfig = {
   key: 'root',
   version: 1,
   storage,
-  whitelist: ['experience', 'skill', 'profile', 'job', 'auth', 'form'], // Slices to persist
+  whitelist: ['experience', 'skill', 'profile', 'job', 'auth', 'authV2', 'form'], // Slices to persist
   blacklist: [] // Slices to not persist
 };
 
@@ -52,6 +53,7 @@ const rootReducer = combineReducers({
   profile: profileReducer,
   job: jobReducer,
   auth: authReducer,
+  authV2: authV2Reducer,
   form: formReducer,
 });
 

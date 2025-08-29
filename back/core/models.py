@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.utils import timezone
+from django.core.validators import MinValueValidator, MaxValueValidator
 import uuid
 
 
@@ -65,6 +66,7 @@ class User(AbstractUser):
 
 class SeekerProfile(models.Model):
     """求職者詳細プロフィール"""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='seeker_profile')
     
     # 個人情報
@@ -80,7 +82,7 @@ class SeekerProfile(models.Model):
     graduation_year = models.IntegerField(null=True, blank=True)
     
     # キャリア情報
-    experience_years = models.IntegerField(default=0)
+    experience_years = models.IntegerField(default=0, validators=[MinValueValidator(0), MaxValueValidator(50)])
     current_salary = models.CharField(max_length=50, blank=True)
     desired_salary = models.CharField(max_length=50, blank=True)
     
@@ -92,26 +94,132 @@ class SeekerProfile(models.Model):
     
     class Meta:
         db_table = 'seeker_profiles'
+        indexes = [
+            models.Index(fields=['prefecture']),
+            models.Index(fields=['experience_years']),
+            models.Index(fields=['graduation_year']),
+        ]
     
     def __str__(self):
         return f"{self.last_name} {self.first_name}"
+    
+    @property
+    def full_name(self):
+        return f"{self.last_name} {self.first_name}"
+    
+    @property
+    def full_name_kana(self):
+        return f"{self.last_name_kana} {self.first_name_kana}"
+
+
+class CompanyProfile(models.Model):
+    """企業詳細プロフィール"""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='company_profile')
+    
+    # 企業基本情報
+    company_name = models.CharField(max_length=200, db_index=True)
+    capital = models.BigIntegerField(null=True, blank=True, validators=[MinValueValidator(0)])
+    company_url = models.URLField(blank=True, max_length=500)
+    campaign_code = models.CharField(max_length=50, blank=True)
+    employee_count = models.IntegerField(null=True, blank=True, validators=[MinValueValidator(1)])
+    founded_year = models.IntegerField(null=True, blank=True, validators=[MinValueValidator(1800)])
+    industry = models.CharField(max_length=100, blank=True, db_index=True)
+    company_description = models.TextField(blank=True)
+    headquarters = models.CharField(max_length=200, blank=True)
+    
+    # 担当者情報
+    contact_person = models.CharField(max_length=100, blank=True)
+    contact_department = models.CharField(max_length=100, blank=True)
+    
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        db_table = 'company_profiles'
+        indexes = [
+            models.Index(fields=['company_name']),
+            models.Index(fields=['industry']),
+            models.Index(fields=['employee_count']),
+            models.Index(fields=['founded_year']),
+        ]
+    
+    def __str__(self):
+        return self.company_name
+
+
+class Education(models.Model):
+    """学歴"""
+    EDUCATION_TYPES = [
+        ('high_school', '高等学校'),
+        ('vocational', '専門学校'),
+        ('junior_college', '短期大学'),
+        ('university', '大学'),
+        ('graduate', '大学院'),
+        ('other', 'その他'),
+    ]
+    
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    resume = models.ForeignKey('Resume', on_delete=models.CASCADE, related_name='educations')
+    
+    school_name = models.CharField(max_length=200)
+    faculty = models.CharField(max_length=100, blank=True)
+    major = models.CharField(max_length=100, blank=True)
+    graduation_date = models.DateField(null=True, blank=True)
+    education_type = models.CharField(max_length=20, choices=EDUCATION_TYPES)
+    
+    order = models.IntegerField(default=0)
+    
+    class Meta:
+        db_table = 'educations'
+        ordering = ['order', '-graduation_date']
+    
+    def __str__(self):
+        return f"{self.school_name} - {self.faculty}"
+
+
+class Certification(models.Model):
+    """資格・免許"""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    resume = models.ForeignKey('Resume', on_delete=models.CASCADE, related_name='certifications')
+    
+    name = models.CharField(max_length=200)
+    issuer = models.CharField(max_length=200, blank=True)
+    obtained_date = models.DateField(null=True, blank=True)
+    expiry_date = models.DateField(null=True, blank=True)
+    
+    order = models.IntegerField(default=0)
+    
+    class Meta:
+        db_table = 'certifications'
+        ordering = ['order', '-obtained_date']
+    
+    def __str__(self):
+        return self.name
+    
+    @property
+    def is_expired(self):
+        if self.expiry_date:
+            return timezone.now().date() > self.expiry_date
+        return False
 
 
 class Resume(models.Model):
     """履歴書・職務経歴書"""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='resumes')
-    submitted_at = models.DateTimeField(default=timezone.now)
-    is_active = models.BooleanField(default=True)
     
-    # 希望職種
+    # 基本情報
+    title = models.CharField(max_length=200, default='履歴書')
+    description = models.TextField(blank=True)
+    objective = models.TextField(blank=True)  # 志望動機
+    
+    # 希望職種・条件
     desired_job = models.CharField(max_length=100, blank=True)
     desired_industries = models.JSONField(default=list, blank=True)
     desired_locations = models.JSONField(default=list, blank=True)
     
-    # スキル
+    # スキル・自己PR
     skills = models.TextField(blank=True)
-    
-    # 自己PR
     self_pr = models.TextField(blank=True)
     
     # 詳細データ（フロントエンドからの追加情報）
@@ -119,20 +227,30 @@ class Resume(models.Model):
     
     # 機械学習用フィールド
     resume_vector = models.JSONField(default=list, blank=True)  # 履歴書全体の特徴ベクトル
-    match_score = models.FloatField(default=0.0)  # マッチングスコア
+    match_score = models.FloatField(default=0.0, validators=[MinValueValidator(0.0), MaxValueValidator(100.0)])  # マッチングスコア
     
+    # ステータス
+    is_active = models.BooleanField(default=True)
+    submitted_at = models.DateTimeField(default=timezone.now)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
     class Meta:
         db_table = 'resumes'
         indexes = [
+            models.Index(fields=['user', 'is_active']),
             models.Index(fields=['-submitted_at']),
             models.Index(fields=['is_active']),
+            models.Index(fields=['-match_score']),
         ]
     
     def __str__(self):
-        return f"{self.user.email} - {self.submitted_at.strftime('%Y-%m-%d')}"
+        return f"{self.title} - {self.user.email}"
+    
+    @property
+    def is_complete(self):
+        """履歴書が完成しているかチェック"""
+        return bool(self.skills and self.self_pr and self.experiences.exists())
 
 
 class Experience(models.Model):
@@ -142,21 +260,31 @@ class Experience(models.Model):
         ('contract', '契約社員'),
         ('parttime', 'パート・アルバイト'),
         ('dispatch', '派遣'),
+        ('freelance', 'フリーランス'),
+        ('internship', 'インターンシップ'),
         ('other', 'その他'),
     ]
     
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     resume = models.ForeignKey(Resume, on_delete=models.CASCADE, related_name='experiences')
     
+    # 基本情報
     company = models.CharField(max_length=200)
     period_from = models.DateField()
     period_to = models.DateField(null=True, blank=True)  # nullの場合は現在
     employment_type = models.CharField(max_length=20, choices=EMPLOYMENT_TYPES)
     position = models.CharField(max_length=100, blank=True)
-    business = models.TextField(blank=True)
-    capital = models.CharField(max_length=50, blank=True)
-    team_size = models.CharField(max_length=50, blank=True)
-    tasks = models.TextField()
-    industry = models.CharField(max_length=100, blank=True)
+    
+    # 企業・職務詳細
+    business = models.TextField(blank=True)  # 事業内容
+    capital = models.CharField(max_length=50, blank=True)  # 資本金
+    team_size = models.CharField(max_length=50, blank=True)  # チーム規模
+    tasks = models.TextField()  # 職務内容
+    industry = models.CharField(max_length=100, blank=True, db_index=True)
+    
+    # 成果・実績
+    achievements = models.TextField(blank=True)  # 成果・実績
+    technologies_used = models.JSONField(default=list, blank=True)  # 使用技術
     
     # 機械学習用フィールド
     experience_embeddings = models.JSONField(default=dict, blank=True)  # 職歴の埋め込み表現
@@ -167,9 +295,51 @@ class Experience(models.Model):
     class Meta:
         db_table = 'experiences'
         ordering = ['order', '-period_from']
+        indexes = [
+            models.Index(fields=['resume', 'order']),
+            models.Index(fields=['industry']),
+            models.Index(fields=['employment_type']),
+            models.Index(fields=['period_from', 'period_to']),
+        ]
     
     def __str__(self):
-        return f"{self.company} ({self.period_from})"
+        return f"{self.company} - {self.position} ({self.period_from})"
+    
+    @property
+    def duration_months(self):
+        """勤務期間（月数）を計算"""
+        from datetime import date
+        
+        # period_fromが文字列の場合は日付に変換
+        if isinstance(self.period_from, str):
+            try:
+                period_from = date.fromisoformat(self.period_from)
+            except ValueError:
+                return 1
+        else:
+            period_from = self.period_from
+        
+        # period_toの処理
+        if self.period_to is None:
+            end_date = timezone.now().date()
+        elif isinstance(self.period_to, str):
+            try:
+                end_date = date.fromisoformat(self.period_to)
+            except ValueError:
+                end_date = timezone.now().date()
+        else:
+            end_date = self.period_to
+        
+        if not period_from:
+            return 1
+            
+        delta = end_date - period_from
+        return max(1, delta.days // 30)  # 最低1ヶ月
+    
+    @property
+    def is_current(self):
+        """現在の職場かどうか"""
+        return self.period_to is None
 
 
 class Application(models.Model):
@@ -178,23 +348,30 @@ class Application(models.Model):
         ('pending', '未確認'),
         ('viewed', '確認済み'),
         ('accepted', '選考中'),
+        ('interview', '面接中'),
+        ('offered', '内定'),
         ('rejected', '不採用'),
         ('hired', '採用'),
+        ('withdrawn', '辞退'),
     ]
     
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     applicant = models.ForeignKey(User, on_delete=models.CASCADE, related_name='applications')
     company = models.ForeignKey(User, on_delete=models.CASCADE, related_name='received_applications')
-    resume = models.ForeignKey(Resume, on_delete=models.CASCADE, null=True)
+    resume = models.ForeignKey(Resume, on_delete=models.SET_NULL, null=True, blank=True)
     
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending', db_index=True)
     applied_at = models.DateTimeField(auto_now_add=True)
     viewed_at = models.DateTimeField(null=True, blank=True)
+    responded_at = models.DateTimeField(null=True, blank=True)
     
     # 機械学習用フィールド
-    match_score = models.FloatField(default=0.0)  # AIによるマッチングスコア
-    recommendation_rank = models.IntegerField(null=True, blank=True)  # 推薦順位
+    match_score = models.FloatField(default=0.0, validators=[MinValueValidator(0.0), MaxValueValidator(100.0)])
+    recommendation_rank = models.IntegerField(null=True, blank=True)
     
+    # 詳細情報
     notes = models.TextField(blank=True)
+    rejection_reason = models.TextField(blank=True)
     
     class Meta:
         db_table = 'applications'
@@ -203,10 +380,12 @@ class Application(models.Model):
             models.Index(fields=['status', '-applied_at']),
             models.Index(fields=['company', 'status']),
             models.Index(fields=['applicant', '-applied_at']),
+            models.Index(fields=['-match_score']),
         ]
     
     def __str__(self):
-        return f"{self.applicant.email} → {self.company.company_name}"
+        company_name = getattr(self.company, 'company_name', self.company.email)
+        return f"{self.applicant.email} → {company_name}"
 
 
 class Scout(models.Model):

@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth import authenticate
 from .models import (
-    User, SeekerProfile, Resume, Experience, 
+    User, SeekerProfile, CompanyProfile, Resume, Experience, Education, Certification,
     Application, Scout, Message, Payment,
     ActivityLog, MLModel, MLPrediction
 )
@@ -91,59 +91,178 @@ class LoginSerializer(serializers.Serializer):
 
 class SeekerProfileSerializer(serializers.ModelSerializer):
     """求職者プロフィールシリアライザー"""
+    full_name = serializers.CharField(read_only=True)
+    full_name_kana = serializers.CharField(read_only=True)
+    
     class Meta:
         model = SeekerProfile
-        fields = '__all__'
-        read_only_fields = ['user']
+        fields = [
+            'id', 'user', 'first_name', 'last_name', 'first_name_kana', 'last_name_kana',
+            'full_name', 'full_name_kana', 'birthday', 'prefecture', 'faculty',
+            'graduation_year', 'experience_years', 'current_salary', 'desired_salary',
+            'skill_vector', 'profile_embeddings', 'updated_at'
+        ]
+        read_only_fields = ['user', 'full_name', 'full_name_kana', 'updated_at']
+
+
+class CompanyProfileSerializer(serializers.ModelSerializer):
+    """企業プロフィールシリアライザー"""
+    class Meta:
+        model = CompanyProfile
+        fields = [
+            'id', 'user', 'company_name', 'capital', 'company_url', 'campaign_code',
+            'employee_count', 'founded_year', 'industry', 'company_description',
+            'headquarters', 'contact_person', 'contact_department', 'updated_at'
+        ]
+        read_only_fields = ['user', 'updated_at']
+
+
+class EducationSerializer(serializers.ModelSerializer):
+    """学歴シリアライザー"""
+    class Meta:
+        model = Education
+        fields = [
+            'id', 'resume', 'school_name', 'faculty', 'major',
+            'graduation_date', 'education_type', 'order'
+        ]
+        read_only_fields = ['resume']
+
+
+class CertificationSerializer(serializers.ModelSerializer):
+    """資格シリアライザー"""
+    is_expired = serializers.BooleanField(read_only=True)
+    
+    class Meta:
+        model = Certification
+        fields = [
+            'id', 'resume', 'name', 'issuer', 'obtained_date',
+            'expiry_date', 'is_expired', 'order'
+        ]
+        read_only_fields = ['resume', 'is_expired']
 
 
 class ExperienceSerializer(serializers.ModelSerializer):
     """職歴シリアライザー"""
+    duration_months = serializers.IntegerField(read_only=True)
+    is_current = serializers.BooleanField(read_only=True)
+    
     class Meta:
         model = Experience
         fields = [
-            'id', 'company', 'period_from', 'period_to',
-            'employment_type', 'position', 'business',
-            'capital', 'team_size', 'tasks', 'industry',
-            'order', 'skill_tags'
+            'id', 'resume', 'company', 'period_from', 'period_to',
+            'employment_type', 'position', 'business', 'capital', 'team_size',
+            'tasks', 'industry', 'achievements', 'technologies_used',
+            'duration_months', 'is_current', 'order', 'skill_tags',
+            'experience_embeddings'
         ]
+        read_only_fields = ['resume', 'duration_months', 'is_current']
 
 
 class ResumeSerializer(serializers.ModelSerializer):
     """履歴書シリアライザー"""
     experiences = ExperienceSerializer(many=True, read_only=True)
+    educations = EducationSerializer(many=True, read_only=True)
+    certifications = CertificationSerializer(many=True, read_only=True)
     user_email = serializers.EmailField(source='user.email', read_only=True)
+    is_complete = serializers.BooleanField(read_only=True)
     
     class Meta:
         model = Resume
         fields = [
-            'id', 'user', 'user_email', 'submitted_at', 'is_active',
-            'desired_job', 'desired_industries', 'desired_locations',
-            'skills', 'self_pr', 'experiences', 'match_score',
-            'created_at', 'updated_at'
+            'id', 'user', 'user_email', 'title', 'description', 'objective',
+            'submitted_at', 'is_active', 'desired_job', 'desired_industries', 
+            'desired_locations', 'skills', 'self_pr', 'experiences', 'educations',
+            'certifications', 'match_score', 'is_complete', 'extra_data',
+            'resume_vector', 'created_at', 'updated_at'
         ]
-        read_only_fields = ['user', 'created_at', 'updated_at']
+        read_only_fields = ['user', 'is_complete', 'created_at', 'updated_at']
 
 
 class ResumeCreateSerializer(serializers.ModelSerializer):
     """履歴書作成シリアライザー"""
     experiences = ExperienceSerializer(many=True, required=False)
+    educations = EducationSerializer(many=True, required=False)
+    certifications = CertificationSerializer(many=True, required=False)
     
     class Meta:
         model = Resume
         fields = [
-            'desired_job', 'desired_industries', 'desired_locations',
-            'skills', 'self_pr', 'experiences'
+            'title', 'description', 'objective', 'desired_job', 
+            'desired_industries', 'desired_locations',
+            'skills', 'self_pr', 'experiences', 'educations', 'certifications'
         ]
     
     def create(self, validated_data):
         experiences_data = validated_data.pop('experiences', [])
+        educations_data = validated_data.pop('educations', [])
+        certifications_data = validated_data.pop('certifications', [])
+        
         resume = Resume.objects.create(**validated_data)
         
-        for exp_data in experiences_data:
+        # 職歴作成
+        for i, exp_data in enumerate(experiences_data):
+            exp_data['order'] = i
             Experience.objects.create(resume=resume, **exp_data)
         
+        # 学歴作成
+        for i, edu_data in enumerate(educations_data):
+            edu_data['order'] = i
+            Education.objects.create(resume=resume, **edu_data)
+        
+        # 資格作成
+        for i, cert_data in enumerate(certifications_data):
+            cert_data['order'] = i
+            Certification.objects.create(resume=resume, **cert_data)
+        
         return resume
+
+
+class ResumeUpdateSerializer(serializers.ModelSerializer):
+    """履歴書更新シリアライザー"""
+    experiences = ExperienceSerializer(many=True, required=False)
+    educations = EducationSerializer(many=True, required=False)
+    certifications = CertificationSerializer(many=True, required=False)
+    
+    class Meta:
+        model = Resume
+        fields = [
+            'title', 'description', 'objective', 'desired_job', 
+            'desired_industries', 'desired_locations',
+            'skills', 'self_pr', 'is_active', 'experiences', 'educations', 'certifications'
+        ]
+    
+    def update(self, instance, validated_data):
+        experiences_data = validated_data.pop('experiences', None)
+        educations_data = validated_data.pop('educations', None)
+        certifications_data = validated_data.pop('certifications', None)
+        
+        # 基本情報更新
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        
+        # 職歴更新
+        if experiences_data is not None:
+            instance.experiences.all().delete()
+            for i, exp_data in enumerate(experiences_data):
+                exp_data['order'] = i
+                Experience.objects.create(resume=instance, **exp_data)
+        
+        # 学歴更新
+        if educations_data is not None:
+            instance.educations.all().delete()
+            for i, edu_data in enumerate(educations_data):
+                edu_data['order'] = i
+                Education.objects.create(resume=instance, **edu_data)
+        
+        # 資格更新
+        if certifications_data is not None:
+            instance.certifications.all().delete()
+            for i, cert_data in enumerate(certifications_data):
+                cert_data['order'] = i
+                Certification.objects.create(resume=instance, **cert_data)
+        
+        return instance
 
 
 class ApplicationSerializer(serializers.ModelSerializer):

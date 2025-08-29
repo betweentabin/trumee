@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
@@ -9,12 +9,15 @@ import Image from 'next/image';
 import { useLogin } from '@/hooks/useApi';
 import { useAppDispatch } from '@/app/redux/hooks';
 import { setUser, setToken } from '@/app/redux/authSlice';
+import { setUser as setUserV2, setTokens as setTokensV2 } from '@/app/redux/authV2Slice';
+import apiClient from '@/lib/api-client';
 
 export default function CompanyLoginPage() {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const loginMutation = useLogin();
   const [isLoading, setIsLoading] = useState(false);
+  const [useV2Api, setUseV2Api] = useState(false);
   
   const [formData, setFormData] = useState({
     email: '',
@@ -25,6 +28,13 @@ export default function CompanyLoginPage() {
     password: '',
     general: '',
   });
+
+  useEffect(() => {
+    const savedApiVersion = localStorage.getItem('useV2Api');
+    if (savedApiVersion === 'true') {
+      setUseV2Api(true);
+    }
+  }, []);
 
   const validateForm = () => {
     const newErrors = {
@@ -64,6 +74,13 @@ export default function CompanyLoginPage() {
     }
   };
 
+  const handleToggleApiVersion = () => {
+    const newValue = !useV2Api;
+    setUseV2Api(newValue);
+    localStorage.setItem('useV2Api', newValue.toString());
+    toast.success(`API ${newValue ? 'v2' : 'v1'} に切り替えました`);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -75,17 +92,49 @@ export default function CompanyLoginPage() {
     setErrors({ email: '', password: '', general: '' });
 
     try {
-      const result = await loginMutation.mutateAsync({
-        email: formData.email,
-        password: formData.password,
-      });
+      if (useV2Api) {
+        // API v2を使用
+        const response = await apiClient.loginV2(formData.email, formData.password);
+        
+        // 企業ユーザーかチェック
+        if (response.user.role !== 'company') {
+          setErrors(prev => ({
+            ...prev,
+            general: '企業アカウントでログインしてください',
+          }));
+          return;
+        }
+        
+        // Reduxストアを更新（v2）
+        dispatch(setUserV2(response.user));
+        dispatch(setTokensV2(response.tokens));
+        
+        toast.success('ログインに成功しました（API v2）');
+      } else {
+        // API v1を使用（既存のロジック）
+        const result = await loginMutation.mutateAsync({
+          email: formData.email,
+          password: formData.password,
+        });
 
-      // Reduxストアを更新
-      dispatch(setUser(result.user));
-      dispatch(setToken({
-        access: result.tokens.access,
-        refresh: result.tokens.refresh,
-      }));
+        // 企業ユーザーかチェック
+        if (result.user.role !== 'company') {
+          setErrors(prev => ({
+            ...prev,
+            general: '企業アカウントでログインしてください',
+          }));
+          return;
+        }
+
+        // Reduxストアを更新（v1）
+        dispatch(setUser(result.user));
+        dispatch(setToken({
+          access: result.tokens.access,
+          refresh: result.tokens.refresh,
+        }));
+        
+        toast.success('ログインに成功しました（API v1）');
+      }
 
       // 企業向けダッシュボードにリダイレクト
       router.push('/company/dashboard');
@@ -216,6 +265,28 @@ export default function CompanyLoginPage() {
               </Link>
             </div>
           </form>
+
+          {/* API切り替えボタン */}
+          <div className="mt-6 flex justify-center">
+            <button
+              type="button"
+              onClick={handleToggleApiVersion}
+              className="inline-flex items-center px-3 py-1.5 border border-gray-300 text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#FF733E]"
+            >
+              <svg
+                className={`mr-2 h-4 w-4 ${useV2Api ? 'text-green-500' : 'text-gray-400'}`}
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                  clipRule="evenodd"
+                />
+              </svg>
+              API {useV2Api ? 'v2' : 'v1'} 使用中
+            </button>
+          </div>
         </div>
       </div>
     </Layout>

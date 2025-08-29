@@ -31,3 +31,14 @@ tzdata==2025.2
 
 # Payment
 stripe==12.4.0
+
+# Development & Testing
+django-extensions==3.2.3  # Additional Django commands
+django-debug-toolbar==4.4.6  # Debug toolbar for development
+
+# Caching (Redis support for future)
+redis==5.2.1
+django-redis==5.4.0
+
+# Environment management
+python-decouple==3.8  # Better environment variable handling

@@ -7,6 +7,7 @@ from django.urls import path, include
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    # 統一されたREST APIエンドポイント
-    path('api/v1/', include('core.urls_api')),
+    # REST APIエンドポイント
+    path('api/v1/', include('core.urls_api')),  # 既存API（互換性用）
+    path('api/v2/', include('core.urls_api_v2')),  # 新しいAPI
 ]

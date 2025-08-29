@@ -9,12 +9,15 @@ import Image from 'next/image';
 import { useLogin } from '@/hooks/useApi';
 import { useAppDispatch } from '@/app/redux/hooks';
 import { setUser, setToken } from '@/app/redux/authSlice';
+import useAuthV2 from '@/hooks/useAuthV2';
 
 export default function LoginPage() {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const loginMutation = useLogin();
+  const { login: loginV2, isLoginPending: isV2Loading, initializeAuth } = useAuthV2();
   const [isLoading, setIsLoading] = useState(false);
+  const [useV2API, setUseV2API] = useState(false);
   
   const [formData, setFormData] = useState({
     email: '',
@@ -71,49 +74,58 @@ export default function LoginPage() {
       return;
     }
 
-    setIsLoading(true);
-    setErrors({ email: '', password: '', general: '' });
-
-    try {
-      const result = await loginMutation.mutateAsync({
+    if (useV2API) {
+      // API v2を使用
+      loginV2({
         email: formData.email,
         password: formData.password,
       });
+    } else {
+      // 従来のAPIを使用
+      setIsLoading(true);
+      setErrors({ email: '', password: '', general: '' });
 
-      // Reduxストアを更新
-      dispatch(setUser(result.user));
-      dispatch(setToken({
-        access: result.tokens.access,
-        refresh: result.tokens.refresh,
-      }));
+      try {
+        const result = await loginMutation.mutateAsync({
+          email: formData.email,
+          password: formData.password,
+        });
 
-      // ロール別のリダイレクト
-      if (result.user.role === 'company') {
-        router.push('/company');
-      } else {
-        router.push('/users');
-      }
-    } catch (error: any) {
-      console.error('Login error:', {
-        message: error.message,
-        response: error.response?.data,
-        status: error.response?.status,
-        url: error.config?.url
-      });
-      
-      if (error.response?.status === 401) {
-        setErrors(prev => ({
-          ...prev,
-          general: 'メールアドレスまたはパスワードが正しくありません',
+        // Reduxストアを更新
+        dispatch(setUser(result.user));
+        dispatch(setToken({
+          access: result.tokens.access,
+          refresh: result.tokens.refresh,
         }));
-      } else {
-        setErrors(prev => ({
-          ...prev,
-          general: 'ログインに失敗しました。しばらく時間をおいて再度お試しください',
-        }));
+
+        // ロール別のリダイレクト
+        if (result.user.role === 'company') {
+          router.push('/company');
+        } else {
+          router.push('/users');
+        }
+      } catch (error: any) {
+        console.error('Login error:', {
+          message: error.message,
+          response: error.response?.data,
+          status: error.response?.status,
+          url: error.config?.url
+        });
+        
+        if (error.response?.status === 401) {
+          setErrors(prev => ({
+            ...prev,
+            general: 'メールアドレスまたはパスワードが正しくありません',
+          }));
+        } else {
+          setErrors(prev => ({
+            ...prev,
+            general: 'ログインに失敗しました。しばらく時間をおいて再度お試しください',
+          }));
+        }
+      } finally {
+        setIsLoading(false);
       }
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -220,11 +232,30 @@ export default function LoginPage() {
             <div>
               <button
                 type="submit"
-                disabled={isLoading}
+                disabled={useV2API ? isV2Loading : isLoading}
                 className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-[#FF733E] hover:bg-[#e9632e] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#FF733E] disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isLoading ? 'ログイン中...' : 'ログイン'}
+                {(useV2API ? isV2Loading : isLoading) ? 'ログイン中...' : 'ログイン'}
               </button>
+            </div>
+
+            {/* API v2 テスト切り替え */}
+            <div className="flex items-center justify-center space-x-2 py-2">
+              <span className="text-sm text-gray-600">API v1</span>
+              <button
+                type="button"
+                onClick={() => setUseV2API(!useV2API)}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                  useV2API ? 'bg-blue-600' : 'bg-gray-300'
+                }`}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    useV2API ? 'translate-x-6' : 'translate-x-1'
+                  }`}
+                />
+              </button>
+              <span className="text-sm text-gray-600">API v2</span>
             </div>
 
             <div className="text-center">
@@ -243,6 +274,29 @@ export default function LoginPage() {
                   企業として登録
                 </Link>
               </div>
+              
+              {/* テストアカウント情報 */}
+              {useV2API && (
+                <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-md text-left">
+                  <p className="text-xs font-medium text-blue-800 mb-2">🧪 API v2 テストアカウント</p>
+                  <div className="text-xs text-blue-700 space-y-1">
+                    <p>Email: test_new_329d5794@example.com</p>
+                    <p>Password: testpass123</p>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFormData({
+                          email: 'test_new_329d5794@example.com',
+                          password: 'testpass123'
+                        });
+                      }}
+                      className="text-blue-600 underline hover:text-blue-800"
+                    >
+                      自動入力
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </form>
         </div>

@@ -15,7 +15,20 @@ DEBUG = os.getenv("DEBUG", "True").lower() == "true"
 
 STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY", "")
 
-# Firebase設定は削除（SQLiteのみ使用）
+# ====== Firebase Configuration ======
+FIREBASE_CREDENTIAL_PATH = os.getenv("FIREBASE_CREDENTIAL_PATH", "firebase_key.json")
+
+# Firebase Admin SDK settings
+FIREBASE_CONFIG = {
+    "type": "service_account",
+    "project_id": os.getenv("FIREBASE_PROJECT_ID", ""),
+    "private_key_id": os.getenv("FIREBASE_PRIVATE_KEY_ID", ""),
+    "private_key": os.getenv("FIREBASE_PRIVATE_KEY", "").replace("\\n", "\n"),
+    "client_email": os.getenv("FIREBASE_CLIENT_EMAIL", ""),
+    "client_id": os.getenv("FIREBASE_CLIENT_ID", ""),
+    "auth_uri": os.getenv("FIREBASE_AUTH_URI", "https://accounts.google.com/o/oauth2/auth"),
+    "token_uri": os.getenv("FIREBASE_TOKEN_URI", "https://oauth2.googleapis.com/token"),
+}
 
 # ====== Allowed Hosts ======
 ALLOWED_HOSTS = [
@@ -56,7 +69,11 @@ DJANGO_APPS = [
 ]
 
 THIRD_PARTY_APPS = [
+    'daphne',  # WebSocket用 (ASGIサーバー)
+    'channels',  # WebSocket通信
     'rest_framework',
+    'rest_framework.authtoken',  # DRF Token認証
+    'rest_framework_simplejwt',  # JWT認証
     'corsheaders',
 ]
 
@@ -98,16 +115,49 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'back.wsgi.application'
 
+# Channels用ASGI設定
+ASGI_APPLICATION = 'back.asgi.application'
+
+# Channelsレイヤー設定（開発環境用）
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels.layers.InMemoryChannelLayer'  # 開発環境用
+        # 本番環境では以下を使用
+        # 'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        # 'CONFIG': {
+        #     "hosts": [('127.0.0.1', 6379)],
+        # },
+    },
+}
+
 # ====== Database ======
-# Railway環境で自動的にPostgreSQLを使用
+# 環境変数による動的データベース設定
 DATABASE_URL = os.environ.get('DATABASE_URL')
+DB_ENGINE = os.environ.get('DB_ENGINE', 'sqlite')
+
 if DATABASE_URL:
+    # Railway環境やHerokuなどでDATABASE_URLが設定されている場合
     import dj_database_url
     DATABASES = {
         'default': dj_database_url.parse(DATABASE_URL)
     }
+elif DB_ENGINE == 'postgresql':
+    # ローカルPostgreSQL環境
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.environ.get('DB_NAME', 'resume_truemee'),
+            'USER': os.environ.get('DB_USER', 'resume_user'),
+            'PASSWORD': os.environ.get('DB_PASSWORD', 'resume_password_2024'),
+            'HOST': os.environ.get('DB_HOST', 'localhost'),
+            'PORT': os.environ.get('DB_PORT', '5432'),
+            'OPTIONS': {
+                'charset': 'utf8',
+            },
+        }
+    }
 else:
-    # ローカル環境またはDATABASE_URLが設定されていない場合はSQLiteを使用
+    # デフォルト：SQLite（開発・テスト用）
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
@@ -208,6 +258,15 @@ else:
     EMAIL_USE_TLS = True
     EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
     EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
+
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'noreply@trumeee.com')
+SERVER_EMAIL = os.getenv('SERVER_EMAIL', 'noreply@trumeee.com')
+
+# フロントエンドURL（メール内のリンク用）
+FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://localhost:3000')
+
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'noreply@trumeee.com')
+FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://localhost:3000')
 
 # ====== Cache Configuration ======
 CACHES = {

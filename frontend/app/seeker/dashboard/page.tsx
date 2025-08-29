@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import apiClient from '@/lib/api-client';
+import { useDashboardStats, useUserProfile } from '@/hooks/useApiV2';
+import useAuthV2 from '@/hooks/useAuthV2';
 import toast from 'react-hot-toast';
 import { 
   FaFileAlt, 
@@ -36,14 +38,76 @@ interface RecentActivity {
 
 export default function SeekerDashboard() {
   const router = useRouter();
+  const [useV2API, setUseV2API] = useState(false); // API v2切り替え用
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [userName, setUserName] = useState('');
   const [recentActivities, setRecentActivities] = useState<RecentActivity[]>([]);
 
+  // API v2 フック
+  const { isAuthenticated: isV2Authenticated, currentUser: v2User, initializeAuth } = useAuthV2();
+  const { data: v2Stats, isLoading: v2StatsLoading } = useDashboardStats({
+    enabled: useV2API && isV2Authenticated,
+  });
+  const { data: v2UserProfile, isLoading: v2UserLoading } = useUserProfile({
+    enabled: useV2API && isV2Authenticated,
+  });
+
   useEffect(() => {
-    fetchDashboardData();
-  }, []);
+    if (useV2API) {
+      initializeAuth();
+    } else {
+      fetchDashboardData();
+    }
+  }, [useV2API, initializeAuth]);
+
+  // API v2データの処理
+  useEffect(() => {
+    if (useV2API && v2Stats && v2UserProfile) {
+      setStats({
+        resumes_count: v2Stats.resumes_count || 0,
+        applications_count: v2Stats.applications_count || 0,
+        scouts_count: v2Stats.scouts_received_count || 0,
+        messages_count: 0, // v2では未実装
+        unread_messages: 0, // v2では未実装
+        profile_completion: 80, // 仮の値
+      });
+      setUserName(v2UserProfile.full_name || v2UserProfile.email);
+      setLoading(false);
+
+      // API v2用のアクティビティ（モックデータ）
+      setRecentActivities([
+        {
+          type: 'resume',
+          title: 'API v2で履歴書データを取得',
+          description: `${v2Stats.active_resumes_count}件のアクティブな履歴書`,
+          time: '数秒前',
+          status: 'success'
+        },
+        {
+          type: 'application',
+          title: 'API v2統計データ',
+          description: `${v2Stats.applications_count}件の応募`,
+          time: '数秒前',
+          status: 'info'
+        },
+        {
+          type: 'scout',
+          title: 'スカウト受信状況',
+          description: `${v2Stats.scouts_received_count}件のスカウト`,
+          time: '数秒前',
+          status: 'info'
+        }
+      ]);
+    }
+  }, [useV2API, v2Stats, v2UserProfile]);
+
+  // ローディング状態の管理
+  useEffect(() => {
+    if (useV2API) {
+      setLoading(v2StatsLoading || v2UserLoading);
+    }
+  }, [useV2API, v2StatsLoading, v2UserLoading]);
 
   const fetchDashboardData = async () => {
     try {
@@ -174,12 +238,40 @@ export default function SeekerDashboard() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">
-            こんにちは、{userName}さん
-          </h1>
-          <p className="mt-2 text-gray-600">
-            転職活動の進捗を確認しましょう
-          </p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">
+                こんにちは、{userName}さん
+              </h1>
+              <p className="mt-2 text-gray-600">
+                転職活動の進捗を確認しましょう
+              </p>
+            </div>
+            
+            {/* API v2 切り替えコントロール */}
+            <div className="flex items-center space-x-3 bg-white rounded-lg shadow px-4 py-2">
+              <span className="text-sm text-gray-600">API v1</span>
+              <button
+                type="button"
+                onClick={() => setUseV2API(!useV2API)}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                  useV2API ? 'bg-blue-600' : 'bg-gray-300'
+                }`}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    useV2API ? 'translate-x-6' : 'translate-x-1'
+                  }`}
+                />
+              </button>
+              <span className="text-sm text-gray-600">API v2</span>
+              {useV2API && (
+                <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
+                  🧪 テスト中
+                </span>
+              )}
+            </div>
+          </div>
         </div>
 
         {/* プロフィール完成度 */}

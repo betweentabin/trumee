@@ -20,6 +20,18 @@ from .serializers import (
     ResumeCreateSerializer, ExperienceSerializer, ApplicationSerializer,
     ScoutSerializer, MessageSerializer, PaymentSerializer
 )
+from .notifications import (
+    send_scout_notification,
+    send_application_notification,
+    send_application_status_update,
+    send_message_notification
+)
+from .notifications import (
+    send_scout_notification,
+    send_application_notification,
+    send_application_status_update,
+    send_message_notification
+)
 
 
 @api_view(['GET'])
@@ -196,7 +208,9 @@ class ApplicationViewSet(viewsets.ModelViewSet):
         return Application.objects.none()
     
     def perform_create(self, serializer):
-        serializer.save(applicant=self.request.user)
+        application = serializer.save(applicant=self.request.user)
+        # 応募通知を送信
+        send_application_notification(application)
     
     @action(detail=True, methods=['post'])
     def update_status(self, request, pk=None):
@@ -205,10 +219,16 @@ class ApplicationViewSet(viewsets.ModelViewSet):
         new_status = request.data.get('status')
         
         if new_status in dict(Application.STATUS_CHOICES):
+            old_status = application.status
             application.status = new_status
             if new_status == 'viewed' and not application.viewed_at:
                 application.viewed_at = datetime.now()
             application.save()
+            
+            # ステータス変更通知を送信（初回閲覧以外）
+            if old_status != new_status and new_status != 'pending':
+                send_application_status_update(application)
+            
             return Response({'message': 'Status updated'})
         
         return Response({'error': 'Invalid status'}, status=status.HTTP_400_BAD_REQUEST)
@@ -230,7 +250,9 @@ class ScoutViewSet(viewsets.ModelViewSet):
         return Scout.objects.none()
     
     def perform_create(self, serializer):
-        serializer.save(company=self.request.user)
+        scout = serializer.save(company=self.request.user)
+        # スカウト通知を送信
+        send_scout_notification(scout)
     
     @action(detail=True, methods=['post'])
     def view(self, request, pk=None):
@@ -264,7 +286,9 @@ class MessageViewSet(viewsets.ModelViewSet):
         ).order_by('-created_at')
     
     def perform_create(self, serializer):
-        serializer.save(sender=self.request.user)
+        message = serializer.save(sender=self.request.user)
+        # メッセージ通知を送信
+        send_message_notification(message)
     
     @action(detail=False, methods=['get'])
     def unread_count(self, request):

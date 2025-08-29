@@ -1,0 +1,70 @@
+version: '3.8'
+
+services:
+  # PostgreSQL データベース
+  postgres:
+    image: postgres:15
+    container_name: resume_truemee_db
+    environment:
+      POSTGRES_DB: resume_truemee
+      POSTGRES_USER: resume_user
+      POSTGRES_PASSWORD: resume_password_2024
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init:/docker-entrypoint-initdb.d
+    ports:
+      - "5432:5432"
+    networks:
+      - resume_network
+    restart: unless-stopped
+    command: >
+      postgres 
+      -c shared_preload_libraries=pg_stat_statements
+      -c pg_stat_statements.track=all
+      -c max_connections=200
+      -c log_statement=all
+      -c log_min_duration_statement=1000
+
+  # Redis (将来のキャッシュ・セッション管理用)
+  redis:
+    image: redis:7-alpine
+    container_name: resume_truemee_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - resume_network
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+
+  # pgAdmin (開発用データベース管理ツール)
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: resume_truemee_pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@resume-truemee.com
+      PGADMIN_DEFAULT_PASSWORD: admin123
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    ports:
+      - "8080:80"
+    networks:
+      - resume_network
+    restart: unless-stopped
+    depends_on:
+      - postgres
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  pgadmin_data:
+    driver: local
+
+networks:
+  resume_network:
+    driver: bridge

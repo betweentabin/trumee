@@ -50,8 +50,16 @@ export default function ResumesPage() {
         setResumes([]);
         toast.error('履歴書データの形式が正しくありません');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to fetch resumes:', error);
+      
+      // 認証エラーの場合はログインページにリダイレクト
+      if (error?.response?.status === 401) {
+        toast.error('ログインが必要です');
+        router.push('/auth/login');
+        return;
+      }
+      
       toast.error('履歴書の取得に失敗しました');
       setResumes([]); // エラー時は空配列を設定
     } finally {

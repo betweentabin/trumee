@@ -1,0 +1,56 @@
+# ====== Django設定 ======
+DJANGO_SECRET_KEY=your-secret-key-here
+DEBUG=True
+ALLOWED_HOSTS=localhost,127.0.0.1,0.0.0.0
+
+# ====== データベース設定 ======
+# 使用するデータベースエンジン: sqlite | postgresql
+DB_ENGINE=postgresql
+
+# PostgreSQL設定（DB_ENGINE=postgresqlの場合）
+DB_NAME=resume_truemee
+DB_USER=resume_user
+DB_PASSWORD=resume_password_2024
+DB_HOST=localhost
+DB_PORT=5432
+
+# 本番環境用（Railway等）
+# DATABASE_URL=postgresql://user:password@host:port/database
+
+# ====== 外部サービス ======
+# Stripe決済
+STRIPE_SECRET_KEY=sk_test_your_stripe_secret_key
+STRIPE_PUBLISHABLE_KEY=pk_test_your_stripe_publishable_key
+
+# Firebase（既存のFirestore連携用）
+FIREBASE_PROJECT_ID=your-firebase-project-id
+FIREBASE_PRIVATE_KEY_ID=your-private-key-id
+FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nyour-private-key\n-----END PRIVATE KEY-----\n"
+FIREBASE_CLIENT_EMAIL=your-service-account@your-project.iam.gserviceaccount.com
+FIREBASE_CLIENT_ID=your-client-id
+FIREBASE_AUTH_URI=https://accounts.google.com/o/oauth2/auth
+FIREBASE_TOKEN_URI=https://oauth2.googleapis.com/token
+
+# JWT設定
+JWT_SECRET_KEY=your-jwt-secret-key-here
+JWT_ALGORITHM=HS256
+JWT_EXPIRATION_HOURS=24
+
+# ====== メール設定 ======
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=587
+EMAIL_HOST_USER=your-email@gmail.com
+EMAIL_HOST_PASSWORD=your-app-password
+
+# ====== Redis設定（将来使用） ======
+REDIS_URL=redis://localhost:6379/0
+
+# ====== その他 ======
+# アップロードファイルの最大サイズ（MB）
+MAX_UPLOAD_SIZE=10
+
+# セッション有効期限（秒）
+SESSION_COOKIE_AGE=86400
+
+# CORS設定（開発用）
+CORS_ALLOW_ALL_ORIGINS=True
