@@ -38,7 +38,7 @@ interface RecentActivity {
 
 export default function SeekerDashboard() {
   const router = useRouter();
-  const [useV2API, setUseV2API] = useState(false); // API v2切り替え用
+  const [useV2API, setUseV2API] = useState(true); // API v2をデフォルトに設定
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [userName, setUserName] = useState('');

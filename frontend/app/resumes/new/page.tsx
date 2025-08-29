@@ -27,7 +27,7 @@ interface ResumeFormData {
 export default function NewResumePage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [useV2API, setUseV2API] = useState(false); // API v2 切り替え
+  const [useV2API, setUseV2API] = useState(true); // API v2をデフォルトに設定
   const createResumeV2 = useCreateResume();
 
   const [formData, setFormData] = useState<ResumeFormData>({

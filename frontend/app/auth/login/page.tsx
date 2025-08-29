@@ -17,7 +17,7 @@ export default function LoginPage() {
   const loginMutation = useLogin();
   const { login: loginV2, isLoginPending: isV2Loading, initializeAuth } = useAuthV2();
   const [isLoading, setIsLoading] = useState(false);
-  const [useV2API, setUseV2API] = useState(false);
+  const [useV2API, setUseV2API] = useState(true); // API v2をデフォルトに設定
   
   const [formData, setFormData] = useState({
     email: '',
