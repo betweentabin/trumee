@@ -30,17 +30,25 @@ export default function CompanyDashboard() {
 
   // 認証チェック
   useEffect(() => {
-    const timer = setTimeout(() => {
-      if (!isAuthenticated) {
+    const checkAuth = () => {
+      // localStorageにトークンがあるか確認
+      const hasStoredToken = typeof window !== 'undefined' && 
+        localStorage.getItem('auth_token_v2') && 
+        localStorage.getItem('drf_token_v2');
+      
+      if (!hasStoredToken && !isAuthenticated) {
         router.push('/auth/login');
         return;
       }
-      if (currentUser?.role !== 'company') {
+      
+      // ユーザー情報が読み込まれていて、企業でない場合のみリダイレクト
+      if (currentUser && currentUser.role !== 'company') {
         router.push('/');
         toast.error('企業アカウントでログインしてください');
       }
-    }, 1000);
+    };
 
+    const timer = setTimeout(checkAuth, 500);
     return () => clearTimeout(timer);
   }, [isAuthenticated, currentUser, router]);
 
