@@ -60,6 +60,7 @@ CORS_ALLOW_ALL_ORIGINS = True  # 一時的に全てのオリジンを許可（�
 
 # ====== Application definition ======
 DJANGO_APPS = [
+    'daphne',  # WebSocket用 (ASGIサーバー) - staticfilesより前に配置必須
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -69,7 +70,6 @@ DJANGO_APPS = [
 ]
 
 THIRD_PARTY_APPS = [
-    'daphne',  # WebSocket用 (ASGIサーバー)
     'channels',  # WebSocket通信
     'rest_framework',
     'rest_framework.authtoken',  # DRF Token認証
