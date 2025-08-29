@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import apiClient from '@/lib/api-client';
 import { useCreateResume } from '@/hooks/useApiV2';
+import useAuthV2 from '@/hooks/useAuthV2';
 import { CreateResumeRequest, ExperienceFormData, EducationFormData, CertificationFormData } from '@/types/api-v2';
 import toast from 'react-hot-toast';
 import { FaSave, FaArrowLeft, FaPlus, FaTrash } from 'react-icons/fa';
@@ -28,6 +29,7 @@ export default function NewResumePage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [useV2API, setUseV2API] = useState(true); // API v2をデフォルトに設定
+  const { isAuthenticated, initializeAuth } = useAuthV2();
   
   // localStorageにAPI v2設定を保存
   useEffect(() => {
@@ -35,6 +37,16 @@ export default function NewResumePage() {
       localStorage.setItem('useV2Api', 'true');
     }
   }, []);
+
+  // 認証チェック
+  useEffect(() => {
+    initializeAuth();
+    if (!isAuthenticated) {
+      console.log('未認証のため、ログインページにリダイレクト');
+      router.push('/auth/login');
+    }
+  }, [isAuthenticated, initializeAuth, router]);
+
   const createResumeV2 = useCreateResume();
 
   const [formData, setFormData] = useState<ResumeFormData>({
