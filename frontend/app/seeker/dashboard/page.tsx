@@ -39,6 +39,13 @@ interface RecentActivity {
 export default function SeekerDashboard() {
   const router = useRouter();
   const [useV2API, setUseV2API] = useState(true); // API v2をデフォルトに設定
+  
+  // localStorageにAPI v2設定を保存
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('useV2Api', 'true');
+    }
+  }, []);
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [userName, setUserName] = useState('');
@@ -46,12 +53,12 @@ export default function SeekerDashboard() {
 
   // API v2 フック
   const { isAuthenticated: isV2Authenticated, currentUser: v2User, initializeAuth } = useAuthV2();
-  const { data: v2Stats, isLoading: v2StatsLoading } = useDashboardStats({
-    enabled: useV2API && isV2Authenticated,
-  });
-  const { data: v2UserProfile, isLoading: v2UserLoading } = useUserProfile({
-    enabled: useV2API && isV2Authenticated,
-  });
+  const { data: v2Stats, isLoading: v2StatsLoading } = useDashboardStats(
+    useV2API && isV2Authenticated ? {} : { enabled: false }
+  );
+  const { data: v2UserProfile, isLoading: v2UserLoading } = useUserProfile(
+    useV2API && isV2Authenticated ? {} : { enabled: false }
+  );
 
   useEffect(() => {
     if (useV2API) {
@@ -64,41 +71,44 @@ export default function SeekerDashboard() {
   // API v2データの処理
   useEffect(() => {
     if (useV2API && v2Stats && v2UserProfile) {
-      setStats({
-        resumes_count: v2Stats.resumes_count || 0,
-        applications_count: v2Stats.applications_count || 0,
-        scouts_count: v2Stats.scouts_received_count || 0,
-        messages_count: 0, // v2では未実装
-        unread_messages: 0, // v2では未実装
-        profile_completion: 80, // 仮の値
-      });
+      // 求職者用の統計データかチェック
+      if ('resumes_count' in v2Stats) {
+        setStats({
+          resumes_count: v2Stats.resumes_count || 0,
+          applications_count: v2Stats.applications_count || 0,
+          scouts_count: v2Stats.scouts_received_count || 0,
+          messages_count: 0, // v2では未実装
+          unread_messages: 0, // v2では未実装
+          profile_completion: 80, // 仮の値
+        });
+
+        // API v2用のアクティビティ（モックデータ）
+        setRecentActivities([
+          {
+            type: 'resume',
+            title: 'API v2で履歴書データを取得',
+            description: `${v2Stats.active_resumes_count}件のアクティブな履歴書`,
+            time: '数秒前',
+            status: 'success'
+          },
+          {
+            type: 'application',
+            title: 'API v2統計データ',
+            description: `${v2Stats.applications_count}件の応募`,
+            time: '数秒前',
+            status: 'info'
+          },
+          {
+            type: 'scout',
+            title: 'スカウト受信状況',
+            description: `${v2Stats.scouts_received_count}件のスカウト`,
+            time: '数秒前',
+            status: 'info'
+          }
+        ]);
+      }
       setUserName(v2UserProfile.full_name || v2UserProfile.email);
       setLoading(false);
-
-      // API v2用のアクティビティ（モックデータ）
-      setRecentActivities([
-        {
-          type: 'resume',
-          title: 'API v2で履歴書データを取得',
-          description: `${v2Stats.active_resumes_count}件のアクティブな履歴書`,
-          time: '数秒前',
-          status: 'success'
-        },
-        {
-          type: 'application',
-          title: 'API v2統計データ',
-          description: `${v2Stats.applications_count}件の応募`,
-          time: '数秒前',
-          status: 'info'
-        },
-        {
-          type: 'scout',
-          title: 'スカウト受信状況',
-          description: `${v2Stats.scouts_received_count}件のスカウト`,
-          time: '数秒前',
-          status: 'info'
-        }
-      ]);
     }
   }, [useV2API, v2Stats, v2UserProfile]);
 

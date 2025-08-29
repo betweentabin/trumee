@@ -28,6 +28,13 @@ export default function NewResumePage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [useV2API, setUseV2API] = useState(true); // API v2をデフォルトに設定
+  
+  // localStorageにAPI v2設定を保存
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('useV2Api', 'true');
+    }
+  }, []);
   const createResumeV2 = useCreateResume();
 
   const [formData, setFormData] = useState<ResumeFormData>({
@@ -69,9 +76,18 @@ export default function NewResumePage() {
         description: formData.description,
         objective: formData.objective,
         skills: formData.skills,
-        experiences: formData.experiences,
-        educations: formData.educations,
-        certifications: formData.certificationDetails,
+        experiences: formData.experiences.map((exp, index) => ({
+          ...exp,
+          order: index,  // インデックスをorderとして設定
+        })),
+        educations: formData.educations.map((edu, index) => ({
+          ...edu,
+          order: index,  // インデックスをorderとして設定
+        })),
+        certifications: formData.certificationDetails.map((cert, index) => ({
+          ...cert,
+          order: index,  // インデックスをorderとして設定
+        })),
       };
 
       createResumeV2.mutate(resumeData, {

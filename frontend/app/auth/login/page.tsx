@@ -19,6 +19,13 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [useV2API, setUseV2API] = useState(true); // API v2をデフォルトに設定
   
+  // localStorageにAPI v2設定を保存
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('useV2Api', 'true');
+    }
+  }, []);
+  
   const [formData, setFormData] = useState({
     email: '',
     password: '',
