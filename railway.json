@@ -5,7 +5,6 @@
     "dockerfilePath": "./back/Dockerfile"
   },
   "deploy": {
-    "startCommand": "cd back && python manage.py migrate && gunicorn back.wsgi --bind 0.0.0.0:$PORT",
     "healthcheckPath": "/api/v2/health/",
     "healthcheckTimeout": 300,
     "restartPolicyType": "ON_FAILURE",

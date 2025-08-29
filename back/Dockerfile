@@ -25,5 +25,5 @@ RUN python manage.py collectstatic --noinput || true
 # Expose port
 EXPOSE 8000
 
-# Run migrations and start server
-CMD ["sh", "-c", "python manage.py migrate && gunicorn back.wsgi --bind 0.0.0.0:${PORT:-8000}"]
+# Run migrations and start server with better error handling
+CMD ["sh", "-c", "echo 'Starting Django application...' && echo 'PORT: '${PORT:-8000} && python manage.py migrate --noinput && echo 'Migrations completed' && python manage.py collectstatic --noinput && echo 'Starting Gunicorn...' && gunicorn back.wsgi:application --bind 0.0.0.0:${PORT:-8000} --workers 2 --timeout 120 --log-level info --access-logfile - --error-logfile -"]

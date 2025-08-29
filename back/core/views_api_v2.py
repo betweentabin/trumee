@@ -68,10 +68,28 @@ def verify_jwt_token(token):
 @permission_classes([AllowAny])
 def health_check_v2(request):
     """ヘルスチェック API v2"""
+    import sys
+    from django.db import connection
+    
+    try:
+        # データベース接続チェック
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT 1")
+            db_status = "connected"
+    except Exception as e:
+        db_status = f"error: {str(e)}"
+    
     return Response({
         'status': 'OK',
         'version': 'v2',
-        'message': 'API v2 is working'
+        'message': 'API v2 is working',
+        'database': db_status,
+        'python_version': sys.version,
+        'environment': {
+            'DEBUG': os.getenv('DEBUG', 'not set'),
+            'DATABASE_URL': 'set' if os.getenv('DATABASE_URL') else 'not set',
+            'SECRET_KEY': 'set' if os.getenv('DJANGO_SECRET_KEY') or os.getenv('SECRET_KEY') else 'not set'
+        }
     }, status=status.HTTP_200_OK)
 
 # ============================================================================
