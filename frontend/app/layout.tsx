@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from 'react-hot-toast'
 import { Providers } from './providers';
+import ApiVersionProvider from '@/components/ApiVersionProvider';
 
 
 
@@ -32,7 +33,9 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <Providers>{children}</Providers>
+        <ApiVersionProvider>
+          <Providers>{children}</Providers>
+        </ApiVersionProvider>
         <Toaster position="top-right" reverseOrder={false} />
 
       </body>

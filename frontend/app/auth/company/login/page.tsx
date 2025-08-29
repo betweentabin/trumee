@@ -17,7 +17,7 @@ export default function CompanyLoginPage() {
   const dispatch = useAppDispatch();
   const loginMutation = useLogin();
   const [isLoading, setIsLoading] = useState(false);
-  const [useV2Api, setUseV2Api] = useState(false);
+  const [useV2Api, setUseV2Api] = useState(true); // API v2をデフォルトに設定
   
   const [formData, setFormData] = useState({
     email: '',
