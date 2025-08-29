@@ -495,3 +495,202 @@ def user_profile_v2(request):
         data['company_profile'] = CompanyProfileSerializer(user.company_profile).data
     
     return Response(data, status=status.HTTP_200_OK)
+
+
+# ====================================================================
+# ユーザープロフィール公開API（新規追加）
+# ====================================================================
+
+@api_view(['GET', 'PATCH'])
+@permission_classes([AllowAny])
+def user_public_profile(request, user_id):
+    """
+    公開ユーザープロフィール取得・更新
+    GET /api/v2/users/{user_id}/ - プロフィール取得（公開/非公開は自動判定）
+    PATCH /api/v2/users/{user_id}/ - プロフィール更新（本人のみ）
+    """
+    from .models import UserPrivacySettings, UserProfileExtension
+    
+    try:
+        user = User.objects.select_related(
+            'privacy_settings',
+            'profile_extension',
+            'seeker_profile'
+        ).prefetch_related(
+            'resumes'
+        ).get(id=user_id)
+    except User.DoesNotExist:
+        return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+    
+    if request.method == 'GET':
+        # プライバシー設定を確認（なければ作成）
+        if not hasattr(user, 'privacy_settings'):
+            UserPrivacySettings.objects.create(user=user)
+            user.refresh_from_db()
+        
+        # 本人かどうかチェック
+        is_owner = request.user.is_authenticated and str(request.user.id) == str(user_id)
+        
+        # レスポンスデータを構築
+        response_data = {
+            'id': str(user.id),
+            'full_name': user.full_name,
+            'role': user.role,
+        }
+        
+        if is_owner:
+            # 本人の場合は全情報を返す
+            response_data.update({
+                'email': user.email,
+                'phone': user.phone,
+                'created_at': user.created_at,
+                'updated_at': user.updated_at,
+            })
+            
+            # プライバシー設定
+            if hasattr(user, 'privacy_settings'):
+                response_data['privacy_settings'] = {
+                    'is_profile_public': user.privacy_settings.is_profile_public,
+                    'show_email': user.privacy_settings.show_email,
+                    'show_phone': user.privacy_settings.show_phone,
+                    'show_resumes': user.privacy_settings.show_resumes,
+                }
+        else:
+            # 他人の場合は公開設定を確認
+            if not user.privacy_settings.is_profile_public:
+                return Response({'error': 'This profile is private'}, status=status.HTTP_403_FORBIDDEN)
+            
+            # 公開設定に応じて情報を追加
+            if user.privacy_settings.show_email:
+                response_data['email'] = user.email
+            if user.privacy_settings.show_phone:
+                response_data['phone'] = user.phone
+        
+        # プロフィール拡張情報
+        if hasattr(user, 'profile_extension'):
+            response_data['profile_extension'] = {
+                'bio': user.profile_extension.bio,
+                'headline': user.profile_extension.headline,
+                'profile_image_url': user.profile_extension.profile_image_url,
+                'location': user.profile_extension.location,
+                'website_url': user.profile_extension.website_url,
+                'github_url': user.profile_extension.github_url,
+                'linkedin_url': user.profile_extension.linkedin_url,
+                'available_for_work': user.profile_extension.available_for_work,
+            }
+        
+        # 履歴書情報（公開設定がTrueの場合）
+        if user.privacy_settings.show_resumes or is_owner:
+            if is_owner:
+                # 本人は全履歴書を見れる
+                resumes = user.resumes.all()
+            else:
+                # 他人は公開履歴書のみ
+                resumes = user.resumes.filter(is_active=True)
+            
+            response_data['resumes'] = [{
+                'id': str(resume.id),
+                'title': resume.title,
+                'description': resume.description,
+                'is_active': resume.is_active,
+                'created_at': resume.created_at,
+            } for resume in resumes]
+        
+        # 求職者プロフィール（求職者の場合）
+        if user.role == 'user' and hasattr(user, 'seeker_profile'):
+            seeker_data = {
+                'experience_years': user.seeker_profile.experience_years,
+                'prefecture': user.seeker_profile.prefecture,
+            }
+            if is_owner:
+                seeker_data.update({
+                    'current_salary': user.seeker_profile.current_salary,
+                    'desired_salary': user.seeker_profile.desired_salary,
+                })
+            response_data['seeker_profile'] = seeker_data
+        
+        return Response(response_data, status=status.HTTP_200_OK)
+    
+    elif request.method == 'PATCH':
+        # 本人のみ更新可能
+        if not request.user.is_authenticated or str(request.user.id) != str(user_id):
+            return Response({'error': 'Unauthorized'}, status=status.HTTP_403_FORBIDDEN)
+        
+        # 更新可能なフィールドを制限
+        allowed_fields = ['full_name', 'phone']
+        update_data = {k: v for k, v in request.data.items() if k in allowed_fields}
+        
+        # ユーザー情報を更新
+        for field, value in update_data.items():
+            setattr(user, field, value)
+        user.save()
+        
+        # プロフィール拡張情報を更新
+        if 'profile_extension' in request.data:
+            profile_ext, created = UserProfileExtension.objects.get_or_create(user=user)
+            ext_data = request.data['profile_extension']
+            allowed_ext_fields = ['bio', 'headline', 'profile_image_url', 'location', 
+                                 'website_url', 'github_url', 'linkedin_url', 'available_for_work']
+            
+            for field in allowed_ext_fields:
+                if field in ext_data:
+                    setattr(profile_ext, field, ext_data[field])
+            profile_ext.save()
+        
+        # プライバシー設定を更新
+        if 'privacy_settings' in request.data:
+            privacy, created = UserPrivacySettings.objects.get_or_create(user=user)
+            privacy_data = request.data['privacy_settings']
+            allowed_privacy_fields = ['is_profile_public', 'show_email', 'show_phone', 'show_resumes']
+            
+            for field in allowed_privacy_fields:
+                if field in privacy_data:
+                    setattr(privacy, field, privacy_data[field])
+            privacy.save()
+        
+        return Response({'message': 'Profile updated successfully'}, status=status.HTTP_200_OK)
+
+
+@api_view(['GET', 'PUT'])
+@permission_classes([IsAuthenticated])
+def user_privacy_settings(request, user_id):
+    """
+    プライバシー設定の取得・更新
+    GET /api/v2/users/{user_id}/privacy/ - 設定取得
+    PUT /api/v2/users/{user_id}/privacy/ - 設定更新
+    """
+    from .models import UserPrivacySettings
+    
+    # 本人のみアクセス可能
+    if str(request.user.id) != str(user_id):
+        return Response({'error': 'Unauthorized'}, status=status.HTTP_403_FORBIDDEN)
+    
+    privacy_settings, created = UserPrivacySettings.objects.get_or_create(
+        user_id=user_id
+    )
+    
+    if request.method == 'GET':
+        data = {
+            'is_profile_public': privacy_settings.is_profile_public,
+            'show_email': privacy_settings.show_email,
+            'show_phone': privacy_settings.show_phone,
+            'show_resumes': privacy_settings.show_resumes,
+        }
+        return Response(data, status=status.HTTP_200_OK)
+    
+    elif request.method == 'PUT':
+        allowed_fields = ['is_profile_public', 'show_email', 'show_phone', 'show_resumes']
+        
+        for field in allowed_fields:
+            if field in request.data:
+                setattr(privacy_settings, field, request.data[field])
+        
+        privacy_settings.save()
+        
+        return Response({
+            'message': 'Privacy settings updated successfully',
+            'is_profile_public': privacy_settings.is_profile_public,
+            'show_email': privacy_settings.show_email,
+            'show_phone': privacy_settings.show_phone,
+            'show_resumes': privacy_settings.show_resumes,
+        }, status=status.HTTP_200_OK)

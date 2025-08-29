@@ -590,3 +590,61 @@ class MLPrediction(models.Model):
     
     def __str__(self):
         return f"{self.user.email} - {self.prediction_type}: {self.prediction_value}"
+
+
+# ============================================================
+# プロフィール関連モデル（ユーザープロフィール機能拡張用）
+# ============================================================
+
+class UserPrivacySettings(models.Model):
+    """ユーザープロフィール公開設定（シンプル版）"""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='privacy_settings')
+    
+    # 基本的な公開設定
+    is_profile_public = models.BooleanField(default=False, help_text='プロフィールを公開するか')
+    show_email = models.BooleanField(default=False, help_text='メールアドレスを公開するか')
+    show_phone = models.BooleanField(default=False, help_text='電話番号を公開するか')
+    show_resumes = models.BooleanField(default=True, help_text='履歴書を公開するか')
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        db_table = 'user_privacy_settings'
+        verbose_name = 'プライバシー設定'
+        verbose_name_plural = 'プライバシー設定'
+    
+    def __str__(self):
+        return f"{self.user.email} - Privacy Settings"
+
+
+class UserProfileExtension(models.Model):
+    """プロフィール拡張情報（シンプル版）"""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile_extension')
+    
+    # プロフィール基本情報
+    profile_image_url = models.URLField(max_length=500, blank=True, help_text='プロフィール画像URL')
+    bio = models.TextField(blank=True, help_text='自己紹介')
+    headline = models.CharField(max_length=200, blank=True, help_text='キャッチフレーズ')
+    location = models.CharField(max_length=100, blank=True, help_text='居住地')
+    
+    # SNSリンク
+    website_url = models.URLField(max_length=500, blank=True)
+    github_url = models.URLField(max_length=500, blank=True)
+    linkedin_url = models.URLField(max_length=500, blank=True)
+    
+    # ステータス
+    available_for_work = models.BooleanField(default=True, help_text='仕事を探しているか')
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        db_table = 'user_profile_extensions'
+        verbose_name = 'プロフィール拡張'
+        verbose_name_plural = 'プロフィール拡張'
+    
+    def __str__(self):
+        return f"{self.user.email} - Profile Extension"

@@ -37,6 +37,10 @@ urlpatterns = [
     # プロフィール
     path('profile/me/', views_api_v2.user_profile_v2, name='user-profile-v2'),
     
+    # ユーザープロフィール公開API（新規追加）
+    path('users/<uuid:user_id>/', views_api_v2.user_public_profile, name='user-public-profile'),
+    path('users/<uuid:user_id>/privacy/', views_api_v2.user_privacy_settings, name='user-privacy-settings'),
+    
     # ViewSet URLs
     path('', include(router.urls)),
 ]
