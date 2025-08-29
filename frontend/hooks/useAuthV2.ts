@@ -61,7 +61,7 @@ export const useAuthV2 = () => {
       if (data.user.role === 'company') {
         router.push('/company/dashboard');
       } else {
-        router.push('/dashboard');
+        router.push('/users');
       }
     },
     onError: (error: any) => {

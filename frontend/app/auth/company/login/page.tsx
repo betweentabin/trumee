@@ -9,7 +9,7 @@ import Image from 'next/image';
 import { useLogin } from '@/hooks/useApi';
 import { useAppDispatch } from '@/app/redux/hooks';
 import { setUser, setToken } from '@/app/redux/authSlice';
-import { setUser as setUserV2, setTokens as setTokensV2 } from '@/app/redux/authV2Slice';
+import { updateUser as setUserV2, setTokens as setTokensV2 } from '@/app/redux/authV2Slice';
 import apiClient from '@/lib/api-client';
 
 export default function CompanyLoginPage() {
