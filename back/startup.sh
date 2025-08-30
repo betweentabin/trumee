@@ -36,14 +36,6 @@ python manage.py migrate --noinput || echo "Migration failed, continuing anyway.
 echo "Collecting static files..."
 python manage.py collectstatic --noinput || echo "Collectstatic failed, continuing anyway..."
 
-# Start with a simple Gunicorn configuration
-echo "Starting Gunicorn on 0.0.0.0:${PORT:-8000}..."
-exec gunicorn back.wsgi:application \
-    --bind 0.0.0.0:${PORT:-8000} \
-    --workers 1 \
-    --timeout 120 \
-    --access-logfile - \
-    --error-logfile - \
-    --log-level debug \
-    --capture-output \
-    --enable-stdio-inheritance
+# Start with Daphne for WebSocket support
+echo "Starting Daphne on 0.0.0.0:${PORT:-8000}..."
+exec daphne -b 0.0.0.0 -p ${PORT:-8000} back.asgi:application

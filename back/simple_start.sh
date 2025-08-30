@@ -18,11 +18,6 @@ python manage.py migrate --noinput 2>&1
 echo "📦 Collecting static files..."
 python manage.py collectstatic --noinput 2>&1
 
-# Start Gunicorn with minimal configuration
-echo "🌐 Starting Gunicorn server on port ${PORT:-8000}..."
-exec gunicorn back.wsgi:application \
-    --bind 0.0.0.0:${PORT:-8000} \
-    --workers 2 \
-    --threads 4 \
-    --timeout 120 \
-    --log-level info
+# Start Daphne with minimal configuration for WebSocket support
+echo "🌐 Starting Daphne server on port ${PORT:-8000}..."
+exec daphne -b 0.0.0.0 -p ${PORT:-8000} back.asgi:application
