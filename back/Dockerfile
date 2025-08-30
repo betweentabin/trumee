@@ -33,4 +33,4 @@ ENV DJANGO_SETTINGS_MODULE=back.settings
 # Clean startup without debug output - force rebuild
 
 # Simple startup for testing
-CMD ["bash", "-c", "echo '=== TESTING DJANGO ===' && python -c 'import django; print(\"Django OK\")' && echo '=== TESTING WSGI ===' && python -c 'from back.wsgi import application; print(\"WSGI OK\")' && echo '=== STARTING GUNICORN ===' && exec gunicorn back.wsgi:application --bind 0.0.0.0:${PORT:-8000} --workers 1 --timeout 120 --log-level info --access-logfile - --error-logfile -"]
+CMD ["bash", "-c", "echo '=== '$(date)' TESTING DJANGO ===' && python -c 'import django; print(\"Django OK\")' && echo '=== '$(date)' TESTING WSGI ===' && python -c 'from back.wsgi import application; print(\"WSGI OK\")' && echo '=== '$(date)' STARTING GUNICORN ===' && echo 'PORT='${PORT:-8000} && exec gunicorn back.wsgi:application --bind 0.0.0.0:${PORT:-8000} --workers 1 --timeout 120 --log-level info --access-logfile - --error-logfile - --preload"]
