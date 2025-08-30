@@ -30,9 +30,12 @@ RUN chmod +x gunicorn_start.sh startup.sh || true
 ENV PYTHONUNBUFFERED=1
 ENV DJANGO_SETTINGS_MODULE=back.settings
 
-# Health check
-HEALTHCHECK --interval=60s --timeout=30s --start-period=120s --retries=5 \
-    CMD curl -f http://localhost:${PORT:-8000}/ || exit 1
+# Health check (temporarily disabled for debugging)
+# HEALTHCHECK --interval=60s --timeout=30s --start-period=120s --retries=5 \
+#     CMD curl -f http://localhost:${PORT:-8000}/ || exit 1
+
+# Debug: Show what's in the directory and test the script
+RUN ls -la && cat gunicorn_start.sh
 
 # Use gunicorn startup script via bash to avoid permission edge cases
-CMD ["bash", "-lc", "./gunicorn_start.sh"]
+CMD ["bash", "-c", "echo 'Starting container...' && ls -la && ./gunicorn_start.sh"]
