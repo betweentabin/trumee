@@ -36,6 +36,8 @@ ALLOWED_HOSTS = [
     "localhost", 
     "127.0.0.1", 
     "0.0.0.0",
+    ".railway.app",  # Railway domains
+    ".up.railway.app",  # Railway subdomains
     "*",  # 一時的に全て許可（デプロイ成功後に制限する）
 ]
 

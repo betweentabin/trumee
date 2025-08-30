@@ -15,11 +15,15 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy the rest of the application
 COPY . .
 
+# Create static directory
+RUN mkdir -p staticfiles
+
 # Make startup script executable
 RUN chmod +x startup.sh
 
-# Expose port (Railway will set PORT env var)
-EXPOSE 8000
+# Set environment variables
+ENV PYTHONUNBUFFERED=1
+ENV DJANGO_SETTINGS_MODULE=back.settings
 
 # Use startup script
 CMD ["./startup.sh"]
