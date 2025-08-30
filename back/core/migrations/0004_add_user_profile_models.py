@@ -73,43 +73,6 @@ class Migration(migrations.Migration):
                 'ordering': ['order', '-obtained_date'],
             },
         ),
-        migrations.CreateModel(
-            name='Experience',
-            fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('company_name', models.CharField(db_index=True, max_length=200)),
-                ('job_title', models.CharField(max_length=200)),
-                ('employment_type', models.CharField(choices=[('full_time', '正社員'), ('part_time', 'パート・アルバイト'), ('contract', '契約社員'), ('temporary', '派遣社員'), ('freelance', 'フリーランス'), ('internship', 'インターン'), ('other', 'その他')], max_length=20)),
-                ('industry', models.CharField(blank=True, max_length=100)),
-                ('job_description', models.TextField(blank=True)),
-                ('start_year', models.IntegerField()),
-                ('start_month', models.IntegerField()),
-                ('end_year', models.IntegerField(blank=True, null=True)),
-                ('end_month', models.IntegerField(blank=True, null=True)),
-                ('is_current', models.BooleanField(default=False)),
-                ('order', models.IntegerField(default=0)),
-                ('resume', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='experiences', to='core.resume')),
-            ],
-            options={
-                'db_table': 'experiences',
-                'ordering': ['order', '-start_year', '-start_month'],
-            },
-        ),
-        migrations.CreateModel(
-            name='Application',
-            fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('status', models.CharField(choices=[('applied', '応募済み'), ('screening', '書類選考中'), ('interview', '面接中'), ('offer', '内定'), ('rejected', '不採用'), ('withdrawn', '辞退')], default='applied', max_length=20)),
-                ('applied_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('notes', models.TextField(blank=True)),
-                ('company', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='received_applications', to=settings.AUTH_USER_MODEL)),
-                ('resume', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='applications', to='core.resume')),
-                ('seeker', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='applications', to=settings.AUTH_USER_MODEL)),
-            ],
-            options={
-                'db_table': 'applications',
-                'unique_together': {('seeker', 'company', 'resume')},
-            },
-        ),
+
+
     ]
