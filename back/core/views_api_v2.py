@@ -438,7 +438,7 @@ class ApplicationViewSet(viewsets.ModelViewSet):
         if self.request.user.role == 'user':
             return Application.objects.filter(applicant=self.request.user)
         elif self.request.user.role == 'company':
-            return Application.objects.filter(company=self.request.user)
+            return Application.objects.filter(company_id=self.request.user.id)
         return Application.objects.none()
     
     def perform_create(self, serializer):
@@ -457,9 +457,9 @@ class ScoutViewSet(viewsets.ModelViewSet):
     
     def get_queryset(self):
         if self.request.user.role == 'company':
-            return Scout.objects.filter(company=self.request.user)
+            return Scout.objects.filter(company_id=self.request.user.id)
         elif self.request.user.role == 'user':
-            return Scout.objects.filter(seeker=self.request.user)
+            return Scout.objects.filter(seeker_id=self.request.user.id)
         return Scout.objects.none()
     
     def perform_create(self, serializer):
