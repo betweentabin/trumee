@@ -32,5 +32,5 @@ ENV DJANGO_SETTINGS_MODULE=back.settings
 
 # Clean startup without debug output
 
-# Debug startup with detailed logging
-CMD ["bash", "-c", "echo '=== STARTING MIGRATIONS ===' && python manage.py flush --noinput && python manage.py migrate --noinput && echo '=== MIGRATIONS COMPLETE ===' && echo '=== TESTING DJANGO SETUP ===' && python -c 'import django; django.setup(); print(\"Django setup successful\")' && echo '=== STARTING GUNICORN ===' && gunicorn back.wsgi:application --bind 0.0.0.0:${PORT:-8000} --workers 2 --timeout 120 --log-level info --access-logfile - --error-logfile -"]
+# Create missing migrations and run them
+CMD ["bash", "-c", "echo '=== CREATING MIGRATIONS ===' && python manage.py makemigrations && echo '=== RUNNING MIGRATIONS ===' && python manage.py migrate --noinput && echo '=== MIGRATIONS COMPLETE ===' && echo '=== STARTING GUNICORN ===' && gunicorn back.wsgi:application --bind 0.0.0.0:${PORT:-8000} --workers 2 --timeout 120 --log-level info --access-logfile - --error-logfile -"]
