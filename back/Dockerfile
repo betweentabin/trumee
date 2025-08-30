@@ -22,16 +22,16 @@ COPY . .
 # Create static directory
 RUN mkdir -p staticfiles
 
-# Make startup script executable
-RUN chmod +x startup.sh
+# Make all startup scripts executable
+RUN chmod +x *.sh || true
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1
 ENV DJANGO_SETTINGS_MODULE=back.settings
 
-# Health check for API v2
+# Health check
 HEALTHCHECK --interval=60s --timeout=30s --start-period=120s --retries=5 \
-    CMD curl -f http://localhost:${PORT:-8000}/api/v2/health/ || exit 1
+    CMD curl -f http://localhost:${PORT:-8000}/ || exit 1
 
-# Use startup script
-CMD ["./startup.sh"]
+# Use gunicorn startup script
+CMD ["./gunicorn_start.sh"]
