@@ -1,22 +1,33 @@
 #!/bin/bash
 
-echo "=== Railway Deployment Debug Info ==="
-echo "PORT: ${PORT:-not set}"
-echo "DATABASE_URL: ${DATABASE_URL:-not set}"
-echo "DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-not set}"
-echo "SECRET_KEY: ${SECRET_KEY:-not set}"
-echo "PWD: $(pwd)"
-echo "LS: $(ls -la)"
-echo "====================================="
+echo "=== Railway Deployment Starting ==="
+echo "PORT: ${PORT:-8000}"
+echo "RAILWAY_ENVIRONMENT: ${RAILWAY_ENVIRONMENT:-not set}"
+echo "Working directory: $(pwd)"
+echo "Python version: $(python --version)"
+echo "==================================="
 
-# Run migrations
-echo "Running migrations..."
-python manage.py migrate --noinput || echo "Migration failed but continuing..."
+# Set environment variables for Railway
+export DJANGO_SETTINGS_MODULE=back.settings
+export PYTHONUNBUFFERED=1
 
-# Collect static files
-echo "Collecting static files..."
-python manage.py collectstatic --noinput || echo "Collectstatic failed but continuing..."
+# Skip migrations and collectstatic for now to focus on getting the app running
+echo "Skipping migrations for initial deployment..."
+# python manage.py migrate --noinput || true
 
-# Start Gunicorn
-echo "Starting Gunicorn on port ${PORT:-8000}..."
-exec gunicorn back.wsgi:application --bind 0.0.0.0:${PORT:-8000} --log-level debug
+echo "Skipping static files collection for initial deployment..."
+# python manage.py collectstatic --noinput || true
+
+# Start Gunicorn with Railway-specific settings
+echo "Starting Gunicorn on 0.0.0.0:${PORT:-8000}..."
+exec gunicorn back.wsgi:application \
+    --bind 0.0.0.0:${PORT:-8000} \
+    --workers 2 \
+    --threads 4 \
+    --worker-class sync \
+    --worker-tmp-dir /dev/shm \
+    --access-logfile - \
+    --error-logfile - \
+    --log-level info \
+    --timeout 120 \
+    --graceful-timeout 30
