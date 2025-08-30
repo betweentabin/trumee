@@ -101,11 +101,12 @@ class Migration(migrations.Migration):
             name='title',
             field=models.CharField(default='履歴書', max_length=200),
         ),
-        migrations.AlterField(
-            model_name='application',
-            name='id',
-            field=models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False),
-        ),
+        # Skip ID field alteration - will be handled by recreation
+        # migrations.AlterField(
+        #     model_name='application',
+        #     name='id',
+        #     field=models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False),
+        # ),
         migrations.AlterField(
             model_name='application',
             name='match_score',
@@ -126,21 +127,23 @@ class Migration(migrations.Migration):
             name='employment_type',
             field=models.CharField(choices=[('fulltime', '正社員'), ('contract', '契約社員'), ('parttime', 'パート・アルバイト'), ('dispatch', '派遣'), ('freelance', 'フリーランス'), ('internship', 'インターンシップ'), ('other', 'その他')], max_length=20),
         ),
-        migrations.AlterField(
-            model_name='experience',
-            name='id',
-            field=models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False),
-        ),
+        # Skip ID field alteration - will be handled by recreation
+        # migrations.AlterField(
+        #     model_name='experience',
+        #     name='id',
+        #     field=models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False),
+        # ),
         migrations.AlterField(
             model_name='experience',
             name='industry',
             field=models.CharField(blank=True, db_index=True, max_length=100),
         ),
-        migrations.AlterField(
-            model_name='resume',
-            name='id',
-            field=models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False),
-        ),
+        # Skip ID field alteration - will be handled by recreation
+        # migrations.AlterField(
+        #     model_name='resume',
+        #     name='id',
+        #     field=models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False),
+        # ),
         migrations.AlterField(
             model_name='resume',
             name='match_score',
@@ -151,11 +154,12 @@ class Migration(migrations.Migration):
             name='experience_years',
             field=models.IntegerField(default=0, validators=[django.core.validators.MinValueValidator(0), django.core.validators.MaxValueValidator(50)]),
         ),
-        migrations.AlterField(
-            model_name='seekerprofile',
-            name='id',
-            field=models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False),
-        ),
+        # Skip ID field alteration - will be handled by recreation
+        # migrations.AlterField(
+        #     model_name='seekerprofile',
+        #     name='id',
+        #     field=models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False),
+        # ),
         migrations.AddIndex(
             model_name='application',
             index=models.Index(fields=['-match_score'], name='application_match_s_48d9cf_idx'),
