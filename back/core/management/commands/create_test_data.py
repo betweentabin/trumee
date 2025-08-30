@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand
 from django.contrib.auth.hashers import make_password
-from core.models import User, SeekerProfile, CompanyProfile, Resume, Experience, Education
+from back.core.models import User, SeekerProfile, CompanyProfile, Resume, Experience, Education
 from datetime import datetime, date
 import random
 
