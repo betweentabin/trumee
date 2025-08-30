@@ -37,5 +37,5 @@ ENV DJANGO_SETTINGS_MODULE=back.settings
 # Debug: Show what's in the directory and test the script
 RUN ls -la && cat gunicorn_start.sh
 
-# Use gunicorn startup script via bash to avoid permission edge cases
-CMD ["bash", "-c", "echo 'Starting container...' && ls -la && ./gunicorn_start.sh"]
+# Direct gunicorn startup to bypass script issues
+CMD ["bash", "-c", "echo 'Starting Django server directly...' && echo 'PORT=${PORT:-8000}' && python manage.py collectstatic --noinput && gunicorn back.wsgi:application --bind 0.0.0.0:${PORT:-8000} --workers 2 --timeout 120"]
