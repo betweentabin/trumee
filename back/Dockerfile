@@ -22,8 +22,9 @@ COPY . .
 # Create static directory
 RUN mkdir -p staticfiles
 
-# Make all startup scripts executable
+# Make all startup scripts executable (explicitly include key scripts)
 RUN chmod +x *.sh || true
+RUN chmod +x gunicorn_start.sh startup.sh || true
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1
@@ -33,5 +34,5 @@ ENV DJANGO_SETTINGS_MODULE=back.settings
 HEALTHCHECK --interval=60s --timeout=30s --start-period=120s --retries=5 \
     CMD curl -f http://localhost:${PORT:-8000}/ || exit 1
 
-# Use gunicorn startup script
-CMD ["./gunicorn_start.sh"]
+# Use gunicorn startup script via bash to avoid permission edge cases
+CMD ["bash", "-lc", "./gunicorn_start.sh"]
