@@ -30,7 +30,7 @@ RUN chmod +x gunicorn_start.sh startup.sh || true
 ENV PYTHONUNBUFFERED=1
 ENV DJANGO_SETTINGS_MODULE=back.settings
 
-# Clean startup without debug output
+# Clean startup without debug output - force rebuild
 
 # Create missing migrations and run them
 CMD ["bash", "-c", "echo '=== CREATING MIGRATIONS ===' && python manage.py makemigrations && echo '=== RUNNING MIGRATIONS ===' && python manage.py migrate --noinput && echo '=== MIGRATIONS COMPLETE ===' && echo '=== STARTING GUNICORN ===' && gunicorn back.wsgi:application --bind 0.0.0.0:${PORT:-8000} --workers 2 --timeout 120 --log-level info --access-logfile - --error-logfile -"]
