@@ -1,13 +1,14 @@
 // API Configuration
 export const API_CONFIG = {
-  BASE_URL: process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'production' ? 'https://trumeee-backend.onrender.com' : 'http://localhost:8000'),
-  API_VERSION: '/api/v1',
+  BASE_URL: process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'production' ? 'https://trumee-production.up.railway.app' : 'http://localhost:8000'),
+  API_VERSION: '/api/v2',  // Updated to v2
   TIMEOUT: parseInt(process.env.NEXT_PUBLIC_API_TIMEOUT || '30000'),
   
   endpoints: {
-    // Authentication
+    // Authentication (API v2)
     login: '/auth/login/',
-    register: '/auth/register/',
+    registerUser: '/auth/register-user/',
+    registerCompany: '/auth/register-company/',
     logout: '/auth/logout/',
     refreshToken: '/auth/token/refresh/',
     verifyToken: '/auth/token/verify/',
