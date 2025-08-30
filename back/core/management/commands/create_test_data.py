@@ -54,8 +54,14 @@ class Command(BaseCommand):
         skills = ['Python', 'JavaScript', 'React', 'Django', 'Node.js', 'AWS', 'Docker', 'PostgreSQL']
         industries = ['IT・通信', '金融', '製造業', 'コンサルティング', '小売・流通']
         
+        # 既存のテストユーザーを削除
+        self.stdout.write('Deleting existing test users...')
+        User.objects.filter(email__contains='@example.com').delete()
+        
         for i in range(count):
             name, kana = sample_names[i % len(sample_names)]
+            first_name, last_name = name.split()[:2] if ' ' in name else (name[:1], name[1:])
+            first_kana, last_kana = kana.split()[:2] if ' ' in kana else (kana[:2], kana[2:])
             
             # ユーザー作成
             user = User.objects.create(
@@ -69,15 +75,19 @@ class Command(BaseCommand):
                 phone=f'090-{random.randint(1000,9999)}-{random.randint(1000,9999)}'
             )
             
-            # 求職者プロフィール作成
+            # 求職者プロフィール作成 (正しいフィールド名を使用)
             profile = SeekerProfile.objects.create(
                 user=user,
-                birth_date=date(1990 + random.randint(0, 10), random.randint(1, 12), random.randint(1, 28)),
-                preferred_salary=random.randint(300, 800) * 10000,
-                preferred_location='東京都',
-                preferred_industry=random.choice(industries),
-                skills=', '.join(random.sample(skills, random.randint(2, 4))),
-                bio=f'{name}です。{random.choice(industries)}業界での経験があります。'
+                first_name=first_name,
+                last_name=last_name,
+                first_name_kana=first_kana,
+                last_name_kana=last_kana,
+                birthday=date(1990 + random.randint(0, 10), random.randint(1, 12), random.randint(1, 28)),
+                prefecture='東京都',
+                desired_salary=f'{random.randint(300, 800)}万円',
+                experience_years=random.randint(1, 10),
+                faculty=random.choice(['情報工学科', '経済学部', 'デザイン学科']),
+                graduation_year=2020 + random.randint(0, 4)
             )
             
             # 経験を追加
@@ -104,41 +114,56 @@ class Command(BaseCommand):
 
     def create_test_companies(self, count):
         """テスト企業を作成"""
+        # 既存のテスト企業を削除
+        self.stdout.write('Deleting existing test companies...')
+        User.objects.filter(email__contains='company', email__contains='@example.com').delete()
+        
         company_names = [
             'テック株式会社',
             '株式会社イノベーション',
             'デジタルソリューションズ',
             '株式会社フューチャー',
-            'クリエイティブ・カンパニー'
+            'クリエイティブ・カンパニー',
+            'AI研究所株式会社',
+            'グローバル・システムズ',
+            'スタートアップ・ラボ'
         ]
         
         industries = ['IT・ソフトウェア', 'コンサルティング', '製造業', '金融・保険', 'メディア・広告']
         
         for i in range(count):
             company_name = company_names[i % len(company_names)]
+            capital_amount = random.randint(1000, 10000) * 10000
+            employee_count = random.randint(10, 1000)
+            founded_year = random.randint(2000, 2020)
+            industry = random.choice(industries)
             
-            # 企業ユーザー作成
+            # 企業ユーザー作成 (Userモデルの企業フィールドを使用)
             user = User.objects.create(
                 username=f'company{i+1}',
                 email=f'company{i+1}@example.com',
                 password=make_password('testpass123'),
                 role='company',
                 company_name=company_name,
-                capital=random.randint(1000, 10000) * 10000,
-                employee_count=random.randint(10, 1000),
-                founded_year=random.randint(2000, 2020),
-                industry=random.choice(industries),
-                company_description=f'{company_name}は{random.choice(industries)}業界のリーディングカンパニーです。',
+                capital=capital_amount,
+                employee_count=employee_count,
+                founded_year=founded_year,
+                industry=industry,
+                company_description=f'{company_name}は{industry}業界のリーディングカンパニーです。',
                 headquarters='東京都渋谷区',
                 phone=f'03-{random.randint(1000,9999)}-{random.randint(1000,9999)}'
             )
             
-            # 企業プロフィール作成
+            # CompanyProfileも作成 (正しいフィールド名を使用)
             CompanyProfile.objects.create(
                 user=user,
-                business_description=f'{company_name}の詳細な事業内容です。',
-                website_url=f'https://{company_name.lower().replace(" ", "")}.com',
-                benefits='各種社会保険完備、交通費支給、研修制度充実'
+                company_name=company_name,
+                capital=capital_amount,
+                employee_count=employee_count,
+                founded_year=founded_year,
+                industry=industry,
+                company_description=f'{company_name}は{industry}業界のリーディングカンパニーです。',
+                headquarters='東京都渋谷区'
             )
             
             self.stdout.write(f'Created company: {company_name} ({user.email})')
