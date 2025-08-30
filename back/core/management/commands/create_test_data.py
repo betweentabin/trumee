@@ -93,24 +93,32 @@ class Command(BaseCommand):
                 graduation_year=2020 + random.randint(0, 4)
             )
             
+            # 履歴書を作成
+            resume = Resume.objects.create(
+                user=user,
+                title=f'{first_name} {last_name}の履歴書',
+                is_public=True
+            )
+            
             # 経験を追加
             Experience.objects.create(
-                    user=user,
-                company_name=f'株式会社{random.choice(["サンプル", "テスト", "デモ"])}',
+                resume=resume,
+                company=f'株式会社{random.choice(["サンプル", "テスト", "デモ"])}',
                 position=random.choice(['エンジニア', 'デザイナー', 'マネージャー']),
-                start_date=date(2020, random.randint(1, 12), 1),
-                end_date=date(2023, random.randint(1, 12), 28),
-                description='サンプル業務経験です。'
+                period_from=date(2020, random.randint(1, 12), 1),
+                period_to=date(2023, random.randint(1, 12), 28),
+                employment_type='fulltime',
+                tasks='サンプル業務経験です。'
             )
             
             # 学歴を追加
             Education.objects.create(
-                user=user,
+                resume=resume,
                 school_name=f'{random.choice(["東京", "大阪", "名古屋"])}大学',
-                degree=random.choice(['学士', '修士']),
-                field_of_study=random.choice(['情報工学', '経済学', 'デザイン学']),
-                start_date=date(2016, 4, 1),
-                end_date=date(2020, 3, 31)
+                faculty=random.choice(['情報工学科', '経済学部', 'デザイン学科']),
+                major=random.choice(['情報工学', '経済学', 'デザイン学']),
+                education_type='university',
+                graduation_date=date(2020, 3, 31)
             )
             
             self.stdout.write(f'Created seeker: {name} ({user.email})')
