@@ -30,7 +30,7 @@ RUN chmod +x gunicorn_start.sh startup.sh || true
 ENV PYTHONUNBUFFERED=1
 ENV DJANGO_SETTINGS_MODULE=back.settings
 
-# Clean startup without debug output - force rebuild
+# Force rebuild with test data - v2.0
 
 # Simple startup for testing
 CMD ["bash", "-c", "echo '=== '$(date)' RUNNING MIGRATIONS ===' && python manage.py migrate --noinput && echo '=== '$(date)' CREATING TEST DATA ===' && python manage.py create_test_data --users 15 --companies 8 && echo '=== '$(date)' TESTING DJANGO ===' && python -c 'import django; print(\"Django OK\")' && echo '=== '$(date)' TESTING WSGI ===' && python -c 'from back.wsgi import application; print(\"WSGI OK\")' && echo '=== '$(date)' STARTING GUNICORN ===' && echo 'PORT='${PORT:-8000} && exec gunicorn back.wsgi:application --bind 0.0.0.0:${PORT:-8000} --workers 1 --timeout 120 --log-level info --access-logfile - --error-logfile - --preload"]
