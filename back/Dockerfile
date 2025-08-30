@@ -1,5 +1,8 @@
 FROM python:3.11-slim
 
+# Force complete rebuild - v4.0 - $(date)
+RUN echo "Forced rebuild at $(date)" > /rebuild.txt
+
 WORKDIR /app
 
 # Install system dependencies
