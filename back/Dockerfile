@@ -32,5 +32,5 @@ ENV DJANGO_SETTINGS_MODULE=back.settings
 
 # Clean startup without debug output - force rebuild
 
-# Create missing migrations and run them
-CMD ["bash", "-c", "echo '=== CREATING MIGRATIONS ===' && python manage.py makemigrations && echo '=== RUNNING MIGRATIONS ===' && python manage.py migrate --noinput && echo '=== MIGRATIONS COMPLETE ===' && echo '=== STARTING GUNICORN ===' && gunicorn back.wsgi:application --bind 0.0.0.0:${PORT:-8000} --workers 2 --timeout 120 --log-level info --access-logfile - --error-logfile -"]
+# Skip problematic migration and run fresh migrations
+CMD ["bash", "-c", "echo '=== MARKING MIGRATIONS AS APPLIED ===' && python manage.py migrate --fake core 0003 && python manage.py migrate --fake core 0005 && echo '=== RUNNING REMAINING MIGRATIONS ===' && python manage.py migrate --noinput && echo '=== MIGRATIONS COMPLETE ===' && echo '=== STARTING GUNICORN ===' && gunicorn back.wsgi:application --bind 0.0.0.0:${PORT:-8000} --workers 2 --timeout 120 --log-level info"]
