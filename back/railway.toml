@@ -2,7 +2,7 @@
 builder = "nixpacks"
 
 [deploy]
-startCommand = "echo '=== '$(date)' CONTAINER START ===' && echo 'Python version:' && python --version && echo '=== '$(date)' RUNNING MIGRATIONS ===' && python manage.py migrate --noinput && echo '=== '$(date)' TESTING DJANGO ===' && python -c 'import django; django.setup(); print(\"Django OK - Version:\", django.get_version())' && echo '=== '$(date)' TESTING WSGI ===' && python -c 'from back.wsgi import application; print(\"WSGI OK\")' && echo '=== '$(date)' STARTING GUNICORN ===' && echo 'PORT='${PORT:-8000} && echo 'Starting Gunicorn server...' && gunicorn back.wsgi:application --bind 0.0.0.0:${PORT:-8000} --workers 1 --timeout 120 --log-level info --access-logfile - --error-logfile - --preload"
+startCommand = "bash -c \"echo '=== CONTAINER START: '\\$(date)' ===' && echo 'Python version:' && python --version && echo '=== RUNNING MIGRATIONS: '\\$(date)' ===' && python manage.py migrate --noinput && echo '=== TESTING DJANGO: '\\$(date)' ===' && python -c 'import django; django.setup(); print(\\\"Django OK - Version:\\\", django.get_version())' && echo '=== TESTING WSGI: '\\$(date)' ===' && python -c 'from back.wsgi import application; print(\\\"WSGI OK\\\")' && echo '=== STARTING GUNICORN: '\\$(date)' ===' && echo 'PORT='\\${PORT:-8000} && echo 'Starting Gunicorn server...' && gunicorn back.wsgi:application --bind 0.0.0.0:\\${PORT:-8000} --workers 1 --timeout 120 --log-level info --access-logfile - --error-logfile - --preload\""
 # healthcheckPath = "/"  # Temporarily disabled for debugging
 # healthcheckTimeout = 600
 restartPolicyType = "on_failure"
