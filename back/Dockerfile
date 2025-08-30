@@ -33,7 +33,7 @@ RUN chmod +x gunicorn_start.sh startup.sh || true
 ENV PYTHONUNBUFFERED=1
 ENV DJANGO_SETTINGS_MODULE=back.settings
 
-# Force rebuild - v3.0 - New CMD with detailed logging
+# Force rebuild - v4.0 - Fixed indentation errors in create_test_data.py
 
 # Simple startup for testing
 CMD ["bash", "-c", "echo '=== CONTAINER START: '$(date)' ===' && echo 'Python version:' && python --version && echo '=== RUNNING MIGRATIONS: '$(date)' ===' && python manage.py migrate --noinput && echo '=== TESTING DJANGO: '$(date)' ===' && python -c 'import django; django.setup(); print(\"Django OK - Version:\", django.get_version())' && echo '=== TESTING WSGI: '$(date)' ===' && python -c 'from back.wsgi import application; print(\"WSGI OK\")' && echo '=== STARTING GUNICORN: '$(date)' ===' && echo 'PORT='${PORT:-8000} && echo 'Starting Gunicorn server...' && exec gunicorn back.wsgi:application --bind 0.0.0.0:${PORT:-8000} --workers 1 --timeout 120 --log-level info --access-logfile - --error-logfile -"]

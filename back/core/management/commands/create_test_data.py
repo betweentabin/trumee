@@ -79,8 +79,8 @@ class Command(BaseCommand):
             )
             
             # 求職者プロフィール作成 (正しいフィールド名を使用)
-                profile = SeekerProfile.objects.create(
-                    user=user,
+            profile = SeekerProfile.objects.create(
+                user=user,
                 first_name=first_name,
                 last_name=last_name,
                 first_name_kana=first_kana,
