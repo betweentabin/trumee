@@ -119,12 +119,16 @@ def register_user_v2(request):
                     show_resumes=True  # 履歴書はデフォルト公開
                 )
                 
-                token = generate_jwt_token(user)
+                # DRFトークン取得または作成
+                drf_token, created = Token.objects.get_or_create(user=user)
+                # JWTトークンも生成（互換性のため）
+                jwt_token = generate_jwt_token(user)
                 
                 return Response({
                     'message': 'User registered successfully',
                     'user': UserSerializer(user).data,
-                    'token': token
+                    'token': jwt_token,
+                    'drf_token': drf_token.key
                 }, status=status.HTTP_201_CREATED)
                 
         except Exception as e:
@@ -181,12 +185,16 @@ def register_company_v2(request):
                     show_resumes=False  # 履歴書は関係ない
                 )
                 
-                token = generate_jwt_token(user)
+                # DRFトークン取得または作成
+                drf_token, created = Token.objects.get_or_create(user=user)
+                # JWTトークンも生成（互換性のため）
+                jwt_token = generate_jwt_token(user)
                 
                 return Response({
                     'message': 'Company registered successfully',
                     'user': UserSerializer(user).data,
-                    'token': token
+                    'token': jwt_token,
+                    'drf_token': drf_token.key
                 }, status=status.HTTP_201_CREATED)
                 
         except Exception as e:

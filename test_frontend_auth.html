@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Frontend Auth Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+<body>
+    <h1>認証テスト</h1>
+    <div id="result"></div>
+    
+    <script>
+        const API_BASE = 'http://localhost:8000';
+        let authToken = null;
+        
+        async function testAuth() {
+            const resultDiv = document.getElementById('result');
+            
+            try {
+                // 1. ログイン
+                console.log('1. ログインテスト...');
+                const loginResponse = await axios.post(`${API_BASE}/api/v2/auth/login/`, {
+                    email: 'tanaka@example.com',
+                    password: 'user123',
+                    role: 'user'
+                });
+                
+                console.log('Login response:', loginResponse.data);
+                authToken = loginResponse.data.drf_token;
+                
+                resultDiv.innerHTML += `<p>✅ ログイン成功: DRF Token = ${authToken}</p>`;
+                
+                // 2. DRFトークンでAPIアクセス
+                console.log('2. DRFトークンでAPIアクセス...');
+                const profilesResponse = await axios.get(`${API_BASE}/api/v2/seeker-profiles/`, {
+                    headers: {
+                        'Authorization': `Token ${authToken}`
+                    }
+                });
+                
+                console.log('Profiles response:', profilesResponse.data);
+                resultDiv.innerHTML += `<p>✅ プロフィール取得成功: ${JSON.stringify(profilesResponse.data)}</p>`;
+                
+                // 3. 履歴書リスト取得
+                console.log('3. 履歴書リスト取得...');
+                const resumesResponse = await axios.get(`${API_BASE}/api/v2/resumes/`, {
+                    headers: {
+                        'Authorization': `Token ${authToken}`
+                    }
+                });
+                
+                console.log('Resumes response:', resumesResponse.data);
+                resultDiv.innerHTML += `<p>✅ 履歴書リスト取得成功: ${JSON.stringify(resumesResponse.data)}</p>`;
+                
+            } catch (error) {
+                console.error('Error:', error);
+                resultDiv.innerHTML += `<p>❌ エラー: ${error.message}</p>`;
+                if (error.response) {
+                    resultDiv.innerHTML += `<p>詳細: ${JSON.stringify(error.response.data)}</p>`;
+                }
+            }
+        }
+        
+        // テスト実行
+        testAuth();
+    </script>
+</body>
+</html>

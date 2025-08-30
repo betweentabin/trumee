@@ -11,6 +11,13 @@ echo "==================================="
 export DJANGO_SETTINGS_MODULE=back.settings
 export PYTHONUNBUFFERED=1
 
+# Check critical dependencies
+echo "Checking critical dependencies..."
+python -c "import django, rest_framework, jwt, psycopg2, gunicorn; print('All critical dependencies available')" || {
+    echo "Critical dependencies missing!"
+    exit 1
+}
+
 # Test if Django can start
 echo "Testing Django setup..."
 python -c "import django; django.setup(); print('Django setup successful')" || {

@@ -75,22 +75,25 @@ class ApiV2Client {
 
   async login(credentials: LoginRequest): Promise<LoginResponse> {
     const response = await this.client.post<LoginResponse>(API_ENDPOINTS.LOGIN, credentials);
-    const { token, user } = response.data;
-    this.setToken(token);
+    const { drf_token, token, user } = response.data as any;
+    // DRFトークンを優先的に使用、なければJWTトークンを使用
+    this.setToken(drf_token || token);
     return response.data;
   }
 
   async registerUser(userData: RegisterUserRequest): Promise<LoginResponse> {
     const response = await this.client.post<LoginResponse>(API_ENDPOINTS.REGISTER_USER, userData);
-    const { token } = response.data;
-    this.setToken(token);
+    const { drf_token, token } = response.data as any;
+    // DRFトークンを優先的に使用、なければJWTトークンを使用
+    this.setToken(drf_token || token);
     return response.data;
   }
 
   async registerCompany(companyData: RegisterCompanyRequest): Promise<LoginResponse> {
     const response = await this.client.post<LoginResponse>(API_ENDPOINTS.REGISTER_COMPANY, companyData);
-    const { token } = response.data;
-    this.setToken(token);
+    const { drf_token, token } = response.data as any;
+    // DRFトークンを優先的に使用、なければJWTトークンを使用
+    this.setToken(drf_token || token);
     return response.data;
   }
 
