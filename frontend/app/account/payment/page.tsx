@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAppSelector } from '@/app/redux/hooks';
+import { useAppSelector } from '../../redux/hooks';
 import { FaCreditCard, FaCalendarAlt, FaLock, FaPlus, FaTrash } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 

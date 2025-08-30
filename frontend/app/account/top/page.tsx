@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useAppSelector } from '@/app/redux/hooks';
+import { useAppSelector } from '../../redux/hooks';
 import { FaUser, FaLock, FaCreditCard, FaCrown, FaFileAlt, FaBriefcase, FaEnvelope, FaChartLine } from 'react-icons/fa';
 
 export default function AccountTopPage() {
