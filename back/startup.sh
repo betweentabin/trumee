@@ -13,7 +13,7 @@ export PYTHONUNBUFFERED=1
 
 # Check critical dependencies
 echo "Checking critical dependencies..."
-python -c "import django, rest_framework, jwt, psycopg2, gunicorn; print('All critical dependencies available')" || {
+python -c "import django, rest_framework, jwt, gunicorn; print('All critical dependencies available')" || {
     echo "Critical dependencies missing!"
     exit 1
 }
@@ -27,6 +27,14 @@ python -c "import django; django.setup(); print('Django setup successful')" || {
 
 # Create static directory if it doesn't exist
 mkdir -p staticfiles
+
+# Run migrations
+echo "Running database migrations..."
+python manage.py migrate --noinput || echo "Migration failed, continuing anyway..."
+
+# Collect static files
+echo "Collecting static files..."
+python manage.py collectstatic --noinput || echo "Collectstatic failed, continuing anyway..."
 
 # Start with a simple Gunicorn configuration
 echo "Starting Gunicorn on 0.0.0.0:${PORT:-8000}..."
