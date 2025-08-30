@@ -8,16 +8,16 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from . import views_api_v2
 
-# DRF Router設定（一時的に無効化）
-# router = DefaultRouter()
-# router.register(r'seeker-profiles', views_api_v2.SeekerProfileViewSet, basename='seekerprofile')
-# router.register(r'company-profiles', views_api_v2.CompanyProfileViewSet, basename='companyprofile')
-# router.register(r'resumes', views_api_v2.ResumeViewSet, basename='resume')
-# router.register(r'experiences', views_api_v2.ExperienceViewSet, basename='experience')
-# router.register(r'educations', views_api_v2.EducationViewSet, basename='education')
-# router.register(r'certifications', views_api_v2.CertificationViewSet, basename='certification')
-# router.register(r'applications', views_api_v2.ApplicationViewSet, basename='application')
-# router.register(r'scouts', views_api_v2.ScoutViewSet, basename='scout')
+# DRF Router設定
+router = DefaultRouter()
+router.register(r'seeker-profiles', views_api_v2.SeekerProfileViewSet, basename='seekerprofile')
+router.register(r'company-profiles', views_api_v2.CompanyProfileViewSet, basename='companyprofile')
+router.register(r'resumes', views_api_v2.ResumeViewSet, basename='resume')
+router.register(r'experiences', views_api_v2.ExperienceViewSet, basename='experience')
+router.register(r'educations', views_api_v2.EducationViewSet, basename='education')
+router.register(r'certifications', views_api_v2.CertificationViewSet, basename='certification')
+router.register(r'applications', views_api_v2.ApplicationViewSet, basename='application')
+router.register(r'scouts', views_api_v2.ScoutViewSet, basename='scout')
 
 urlpatterns = [
     # テスト用
@@ -41,6 +41,6 @@ urlpatterns = [
     path('users/<uuid:user_id>/', views_api_v2.user_public_profile, name='user-public-profile'),
     path('users/<uuid:user_id>/privacy/', views_api_v2.user_privacy_settings, name='user-privacy-settings'),
     
-    # ViewSet URLs - 一時的に無効化
-    # path('', include(router.urls)),
+    # ViewSet URLs
+    path('', include(router.urls)),
 ]

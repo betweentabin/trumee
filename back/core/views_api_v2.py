@@ -72,7 +72,7 @@ def health_check_v2(request):
         'status': 'OK',
         'version': 'v2',
         'message': 'API v2 is working',
-        'timestamp': datetime.now().isoformat(),
+        'timestamp': datetime.datetime.now().isoformat(),
     }, status=status.HTTP_200_OK)
 
 # ============================================================================
