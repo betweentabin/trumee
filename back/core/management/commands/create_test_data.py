@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand
 from django.contrib.auth.hashers import make_password
-from back.core.models import User, SeekerProfile, CompanyProfile, Resume, Experience, Education
+from core.models import User, SeekerProfile, CompanyProfile, Resume, Experience, Education
 from datetime import datetime, date
 import random
 
@@ -79,8 +79,8 @@ class Command(BaseCommand):
             )
             
             # 求職者プロフィール作成 (正しいフィールド名を使用)
-            profile = SeekerProfile.objects.create(
-                user=user,
+                profile = SeekerProfile.objects.create(
+                    user=user,
                 first_name=first_name,
                 last_name=last_name,
                 first_name_kana=first_kana,
@@ -95,7 +95,7 @@ class Command(BaseCommand):
             
             # 経験を追加
             Experience.objects.create(
-                user=user,
+                    user=user,
                 company_name=f'株式会社{random.choice(["サンプル", "テスト", "デモ"])}',
                 position=random.choice(['エンジニア', 'デザイナー', 'マネージャー']),
                 start_date=date(2020, random.randint(1, 12), 1),
