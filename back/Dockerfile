@@ -32,5 +32,5 @@ ENV DJANGO_SETTINGS_MODULE=back.settings
 
 # Clean startup without debug output
 
-# Simplified startup matching railway.toml start command
-CMD ["bash", "-c", "python manage.py migrate --noinput && gunicorn back.wsgi:application --bind 0.0.0.0:${PORT:-8000} --workers 2 --timeout 120"]
+# Reset database and run migrations
+CMD ["bash", "-c", "python manage.py flush --noinput && python manage.py migrate --noinput && gunicorn back.wsgi:application --bind 0.0.0.0:${PORT:-8000} --workers 2 --timeout 120"]
