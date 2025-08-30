@@ -3,8 +3,8 @@ builder = "nixpacks"
 
 [deploy]
 startCommand = "python manage.py migrate && gunicorn back.wsgi --bind 0.0.0.0:$PORT"
-healthcheckPath = "/"
-healthcheckTimeout = 600
+# healthcheckPath = "/"  # Temporarily disabled for debugging
+# healthcheckTimeout = 600
 restartPolicyType = "on_failure"
 restartPolicyMaxRetries = 15
 

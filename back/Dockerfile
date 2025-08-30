@@ -30,12 +30,8 @@ RUN chmod +x gunicorn_start.sh startup.sh || true
 ENV PYTHONUNBUFFERED=1
 ENV DJANGO_SETTINGS_MODULE=back.settings
 
-# Health check (temporarily disabled for debugging)
-# HEALTHCHECK --interval=60s --timeout=30s --start-period=120s --retries=5 \
-#     CMD curl -f http://localhost:${PORT:-8000}/ || exit 1
-
 # Debug: Show what's in the directory and test the script
-RUN ls -la && cat gunicorn_start.sh
+RUN ls -la && echo "=== gunicorn_start.sh content ===" && cat gunicorn_start.sh && echo "=== end of script ==="
 
 # Direct gunicorn startup to bypass script issues
-CMD ["bash", "-c", "echo 'Starting Django server directly...' && echo 'PORT=${PORT:-8000}' && python manage.py collectstatic --noinput && gunicorn back.wsgi:application --bind 0.0.0.0:${PORT:-8000} --workers 2 --timeout 120"]
+CMD ["bash", "-c", "echo '=== CONTAINER STARTING ===' && echo 'Working directory:' && pwd && echo 'Files in directory:' && ls -la && echo 'Environment variables:' && env | grep -E '(PORT|DJANGO|DATABASE)' && echo 'PORT=${PORT:-8000}' && echo '=== RUNNING COLLECTSTATIC ===' && python manage.py collectstatic --noinput && echo '=== STARTING GUNICORN ===' && gunicorn back.wsgi:application --bind 0.0.0.0:${PORT:-8000} --workers 2 --timeout 120 --log-level debug"]
