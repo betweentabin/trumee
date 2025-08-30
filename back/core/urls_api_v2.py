@@ -22,6 +22,7 @@ router.register(r'scouts', views_api_v2.ScoutViewSet, basename='scout')
 urlpatterns = [
     # テスト用
     path('health/', views_api_v2.health_check_v2, name='health-check-v2'),
+    path('', views_api_v2.health_check_v2, name='health-check-v2-root'),  # ルートレベルでもヘルスチェック
     
     # 認証関連
     path('auth/register-user/', views_api_v2.register_user_v2, name='register-user-v2'),
