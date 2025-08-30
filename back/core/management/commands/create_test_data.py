@@ -26,6 +26,11 @@ class Command(BaseCommand):
         users_count = options['users']
         companies_count = options['companies']
         
+        # 既存のテストデータを削除
+        self.stdout.write(self.style.WARNING('Deleting existing test data...'))
+        User.objects.filter(email__contains='@example.com').delete()
+        self.stdout.write(self.style.SUCCESS('Existing test data deleted.'))
+        
         self.stdout.write(self.style.SUCCESS(f'Creating {users_count} test users and {companies_count} test companies...'))
         
         # テスト求職者を作成
@@ -54,9 +59,7 @@ class Command(BaseCommand):
         skills = ['Python', 'JavaScript', 'React', 'Django', 'Node.js', 'AWS', 'Docker', 'PostgreSQL']
         industries = ['IT・通信', '金融', '製造業', 'コンサルティング', '小売・流通']
         
-        # 既存のテストユーザーを削除
-        self.stdout.write('Deleting existing test users...')
-        User.objects.filter(email__contains='@example.com').delete()
+
         
         for i in range(count):
             name, kana = sample_names[i % len(sample_names)]
@@ -114,10 +117,6 @@ class Command(BaseCommand):
 
     def create_test_companies(self, count):
         """テスト企業を作成"""
-        # 既存のテスト企業を削除
-        self.stdout.write('Deleting existing test companies...')
-        User.objects.filter(email__contains='company', email__contains='@example.com').delete()
-        
         company_names = [
             'テック株式会社',
             '株式会社イノベーション',
