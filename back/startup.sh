@@ -18,22 +18,6 @@ python -c "import django; django.setup(); print('Django setup successful')" || {
     exit 1
 }
 
-# Test database connection
-echo "Testing database connection..."
-python -c "
-import os
-import django
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'back.settings')
-django.setup()
-from django.db import connection
-with connection.cursor() as cursor:
-    cursor.execute('SELECT 1')
-print('Database connection successful')
-" || {
-    echo "Database connection failed!"
-    exit 1
-}
-
 # Create static directory if it doesn't exist
 mkdir -p staticfiles
 

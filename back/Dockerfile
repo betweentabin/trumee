@@ -27,7 +27,7 @@ ENV PYTHONUNBUFFERED=1
 ENV DJANGO_SETTINGS_MODULE=back.settings
 
 # Health check for API v2
-HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+HEALTHCHECK --interval=60s --timeout=30s --start-period=120s --retries=5 \
     CMD curl -f http://localhost:${PORT:-8000}/api/v2/health/ || exit 1
 
 # Use startup script

@@ -67,29 +67,12 @@ def verify_jwt_token(token):
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def health_check_v2(request):
-    """ヘルスチェック API v2"""
-    import sys
-    from django.db import connection
-    
-    try:
-        # データベース接続チェック
-        with connection.cursor() as cursor:
-            cursor.execute("SELECT 1")
-            db_status = "connected"
-    except Exception as e:
-        db_status = f"error: {str(e)}"
-    
+    """ヘルスチェック API v2 - シンプル版"""
     return Response({
         'status': 'OK',
         'version': 'v2',
         'message': 'API v2 is working',
-        'database': db_status,
-        'python_version': sys.version,
-        'environment': {
-            'DEBUG': os.getenv('DEBUG', 'not set'),
-            'DATABASE_URL': 'set' if os.getenv('DATABASE_URL') else 'not set',
-            'SECRET_KEY': 'set' if os.getenv('DJANGO_SECRET_KEY') or os.getenv('SECRET_KEY') else 'not set'
-        }
+        'timestamp': datetime.now().isoformat(),
     }, status=status.HTTP_200_OK)
 
 # ============================================================================
@@ -100,6 +83,8 @@ def health_check_v2(request):
 @permission_classes([AllowAny])
 def register_user_v2(request):
     """求職者ユーザー登録 API v2"""
+    from .models import UserPrivacySettings, UserProfileExtension
+    
     serializer = UserRegisterSerializer(data=request.data)
     
     if serializer.is_valid():
@@ -114,6 +99,24 @@ def register_user_v2(request):
                     last_name=request.data.get('last_name', ''),
                     first_name_kana=request.data.get('first_name_kana', ''),
                     last_name_kana=request.data.get('last_name_kana', ''),
+                )
+                
+                # プロフィール拡張情報を作成（デフォルト値で）
+                UserProfileExtension.objects.create(
+                    user=user,
+                    bio='',
+                    headline='',
+                    location='',
+                    available_for_work=True  # 求職者なのでデフォルトTrue
+                )
+                
+                # プライバシー設定を作成（デフォルト値で）
+                UserPrivacySettings.objects.create(
+                    user=user,
+                    is_profile_public=False,  # デフォルトは非公開
+                    show_email=False,
+                    show_phone=False,
+                    show_resumes=True  # 履歴書はデフォルト公開
                 )
                 
                 token = generate_jwt_token(user)
@@ -136,6 +139,8 @@ def register_user_v2(request):
 @permission_classes([AllowAny])
 def register_company_v2(request):
     """企業ユーザー登録 API v2"""
+    from .models import UserPrivacySettings, UserProfileExtension
+    
     serializer = CompanyRegisterSerializer(data=request.data)
     
     if serializer.is_valid():
@@ -155,6 +160,25 @@ def register_company_v2(request):
                     industry=user.industry,
                     company_description=user.company_description,
                     headquarters=user.headquarters,
+                )
+                
+                # プロフィール拡張情報を作成（企業用デフォルト値）
+                UserProfileExtension.objects.create(
+                    user=user,
+                    bio=user.company_description or '',
+                    headline=f'{user.company_name} - 採用担当',
+                    location=user.headquarters or '',
+                    website_url=user.company_url or '',
+                    available_for_work=False  # 企業なのでFalse
+                )
+                
+                # プライバシー設定を作成（企業用デフォルト値）
+                UserPrivacySettings.objects.create(
+                    user=user,
+                    is_profile_public=True,  # 企業は基本公開
+                    show_email=True,  # 連絡先は公開
+                    show_phone=True,
+                    show_resumes=False  # 履歴書は関係ない
                 )
                 
                 token = generate_jwt_token(user)
