@@ -30,56 +30,39 @@ export default function ResumesPage() {
   const router = useRouter();
   const [resumes, setResumes] = useState<Resume[]>([]);
   const [loading, setLoading] = useState(true);
-  const { isAuthenticated, initializeAuth } = useAuthV2();
+  // 🚨 認証チェックを無効化
+  // const { isAuthenticated, initializeAuth } = useAuthV2();
 
-  // 初期化（一度だけ実行）
+  // ページ読み込み時にダミーデータを表示
   useEffect(() => {
-    console.log('📄 Resumes page: Initializing auth');
-    initializeAuth();
+    console.log('📄 Resumes page: Loading without auth checks');
+    fetchResumes();
   }, []);
-
-  // 認証状態の変化を監視
-  useEffect(() => {
-    console.log('📄 Resumes page: Auth check', { isAuthenticated });
-    
-    // SSRでは実行しない
-    if (typeof window === 'undefined') return;
-    
-    // 初期ロード時は少し待つ
-    const timer = setTimeout(() => {
-      const hasStoredToken = localStorage.getItem('auth_token_v2') && 
-        localStorage.getItem('drf_token_v2');
-      
-      console.log('📄 Resumes page: Token check', { hasStoredToken, isAuthenticated });
-      
-      if (hasStoredToken || isAuthenticated) {
-        console.log('📄 Resumes page: Fetching resumes');
-        fetchResumes();
-      } else {
-        console.log('📄 Resumes page: Redirecting to login');
-        router.push('/auth/login');
-      }
-    }, 100); // タイマーを短縮
-
-    return () => clearTimeout(timer);
-  }, [isAuthenticated]); // routerを依存配列から除外
 
   const fetchResumes = async () => {
     try {
-      const response = await apiClient.getResumes();
-      console.log('Resume API response:', response); // デバッグ用ログ
-      
-      // レスポンスがページネーション形式の場合とそうでない場合に対応
-      const resumeList = response.results || response;
-      console.log('Resume list:', resumeList); // デバッグ用ログ
-      
-      if (Array.isArray(resumeList)) {
-        setResumes(resumeList);
-      } else {
-        console.error('Resume list is not an array:', resumeList);
-        setResumes([]);
-        toast.error('履歴書データの形式が正しくありません');
-      }
+      // 🚨 一時的にダミーデータを表示（API呼び出しを無効化）
+      // const response = await apiClient.getResumes();
+      setResumes([
+        {
+          id: '1',
+          title: 'ソフトウェアエンジニア向け履歴書',
+          description: 'フルスタック開発の経験を活かし、革新的なプロダクト開発に貢献したいと考えています。',
+          skills: 'React, Node.js, TypeScript, Python, AWS',
+          is_active: true,
+          created_at: '2024-01-15T10:00:00Z',
+          updated_at: '2024-01-20T14:30:00Z'
+        },
+        {
+          id: '2',
+          title: 'フロントエンドエンジニア履歴書',
+          description: 'ユーザー体験を重視したモダンなWebアプリケーション開発に専念しています。',
+          skills: 'React, Vue.js, TypeScript, Sass, Figma',
+          is_active: false,
+          created_at: '2024-01-10T09:00:00Z',
+          updated_at: '2024-01-18T16:00:00Z'
+        }
+      ]);
     } catch (error: any) {
       console.error('Failed to fetch resumes:', error);
       

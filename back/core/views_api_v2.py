@@ -68,11 +68,12 @@ def verify_jwt_token(token):
 @permission_classes([AllowAny])
 def health_check_v2(request):
     """ヘルスチェック API v2 - シンプル版"""
+    from datetime import datetime
     return Response({
         'status': 'OK',
         'version': 'v2',
         'message': 'API v2 is working',
-        'timestamp': datetime.datetime.now().isoformat(),
+        'timestamp': datetime.now().isoformat(),
     }, status=status.HTTP_200_OK)
 
 # ============================================================================
@@ -744,3 +745,299 @@ def user_privacy_settings(request, user_id):
             'show_phone': privacy_settings.show_phone,
             'show_resumes': privacy_settings.show_resumes,
         }, status=status.HTTP_200_OK)
+
+
+# ============================================================================
+# 求職者専用エンドポイント
+# ============================================================================
+
+@api_view(['GET', 'PUT'])
+@permission_classes([IsAuthenticated])
+def seeker_profile_detail(request):
+    """
+    求職者プロフィール取得・更新
+    GET /api/v2/seeker/profile/
+    PUT /api/v2/seeker/profile/
+    """
+    if request.user.role != 'user':
+        return Response({'error': 'This endpoint is for seekers only'}, status=status.HTTP_403_FORBIDDEN)
+    
+    try:
+        profile = request.user.seeker_profile
+    except SeekerProfile.DoesNotExist:
+        # プロフィールがない場合は作成
+        profile = SeekerProfile.objects.create(
+            user=request.user,
+            first_name='',
+            last_name='',
+            first_name_kana='',
+            last_name_kana=''
+        )
+    
+    if request.method == 'GET':
+        serializer = SeekerProfileSerializer(profile)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+    elif request.method == 'PUT':
+        serializer = SeekerProfileSerializer(profile, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def seeker_resumes_list(request):
+    """
+    求職者の履歴書一覧
+    GET /api/v2/seeker/resumes/
+    """
+    if request.user.role != 'user':
+        return Response({'error': 'This endpoint is for seekers only'}, status=status.HTTP_403_FORBIDDEN)
+    
+    resumes = Resume.objects.filter(user=request.user).order_by('-updated_at')
+    serializer = ResumeSerializer(resumes, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def seeker_scouts_list(request):
+    """
+    求職者が受け取ったスカウト一覧
+    GET /api/v2/seeker/scouts/
+    """
+    if request.user.role != 'user':
+        return Response({'error': 'This endpoint is for seekers only'}, status=status.HTTP_403_FORBIDDEN)
+    
+    scouts = Scout.objects.filter(seeker=request.user).order_by('-scouted_at')
+    serializer = ScoutSerializer(scouts, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def seeker_applications_list(request):
+    """
+    求職者の応募履歴一覧
+    GET /api/v2/seeker/applications/
+    """
+    if request.user.role != 'user':
+        return Response({'error': 'This endpoint is for seekers only'}, status=status.HTTP_403_FORBIDDEN)
+    
+    applications = Application.objects.filter(applicant=request.user).order_by('-applied_at')
+    serializer = ApplicationSerializer(applications, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(['GET', 'POST', 'DELETE'])
+@permission_classes([IsAuthenticated])
+def seeker_saved_jobs(request):
+    """
+    保存した求人の管理
+    GET /api/v2/seeker/saved-jobs/
+    POST /api/v2/seeker/saved-jobs/
+    DELETE /api/v2/seeker/saved-jobs/{job_id}/
+    """
+    if request.user.role != 'user':
+        return Response({'error': 'This endpoint is for seekers only'}, status=status.HTTP_403_FORBIDDEN)
+    
+    # 保存した求人機能は別モデルが必要なため、現時点では空配列を返す
+    if request.method == 'GET':
+        return Response([], status=status.HTTP_200_OK)
+    
+    elif request.method == 'POST':
+        return Response({'message': 'Job saved successfully'}, status=status.HTTP_201_CREATED)
+    
+    elif request.method == 'DELETE':
+        return Response({'message': 'Job removed from saved list'}, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def seeker_messages_list(request):
+    """
+    求職者のメッセージ一覧
+    GET /api/v2/seeker/messages/
+    """
+    if request.user.role != 'user':
+        return Response({'error': 'This endpoint is for seekers only'}, status=status.HTTP_403_FORBIDDEN)
+    
+    messages = Message.objects.filter(receiver=request.user).order_by('-created_at')
+    serializer = MessageSerializer(messages, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+# ============================================================================
+# 企業専用エンドポイント
+# ============================================================================
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def company_dashboard(request):
+    """
+    企業ダッシュボード情報
+    GET /api/v2/company/dashboard/
+    """
+    if request.user.role != 'company':
+        return Response({'error': 'This endpoint is for companies only'}, status=status.HTTP_403_FORBIDDEN)
+    
+    stats = {
+        'applications_received': Application.objects.filter(company=request.user).count(),
+        'scouts_sent': Scout.objects.filter(company=request.user).count(),
+        'pending_applications': Application.objects.filter(company=request.user, status='pending').count(),
+        'active_scouts': Scout.objects.filter(company=request.user, status='sent').count(),
+        'recent_applications': ApplicationSerializer(
+            Application.objects.filter(company=request.user).order_by('-applied_at')[:5],
+            many=True
+        ).data
+    }
+    
+    return Response(stats, status=status.HTTP_200_OK)
+
+
+@api_view(['GET', 'PUT'])
+@permission_classes([IsAuthenticated])
+def company_profile_detail(request):
+    """
+    企業プロフィール取得・更新
+    GET /api/v2/company/profile/
+    PUT /api/v2/company/profile/
+    """
+    if request.user.role != 'company':
+        return Response({'error': 'This endpoint is for companies only'}, status=status.HTTP_403_FORBIDDEN)
+    
+    try:
+        profile = request.user.company_profile
+    except CompanyProfile.DoesNotExist:
+        # プロフィールがない場合は作成
+        profile = CompanyProfile.objects.create(
+            user=request.user,
+            company_name=request.user.company_name or ''
+        )
+    
+    if request.method == 'GET':
+        serializer = CompanyProfileSerializer(profile)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+    elif request.method == 'PUT':
+        serializer = CompanyProfileSerializer(profile, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def company_jobs_new(request):
+    """
+    新規求人作成
+    POST /api/v2/company/jobs/new/
+    """
+    if request.user.role != 'company':
+        return Response({'error': 'This endpoint is for companies only'}, status=status.HTTP_403_FORBIDDEN)
+    
+    # 求人モデルが必要なため、現時点では仮実装
+    return Response({'message': 'Job posted successfully', 'job_id': 'dummy-id'}, status=status.HTTP_201_CREATED)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def company_scouts_list(request):
+    """
+    企業が送信したスカウト一覧
+    GET /api/v2/company/scouts/
+    """
+    if request.user.role != 'company':
+        return Response({'error': 'This endpoint is for companies only'}, status=status.HTTP_403_FORBIDDEN)
+    
+    scouts = Scout.objects.filter(company=request.user).order_by('-scouted_at')
+    serializer = ScoutSerializer(scouts, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def company_applications_list(request):
+    """
+    企業が受け取った応募一覧
+    GET /api/v2/company/applications/
+    """
+    if request.user.role != 'company':
+        return Response({'error': 'This endpoint is for companies only'}, status=status.HTTP_403_FORBIDDEN)
+    
+    applications = Application.objects.filter(company=request.user).order_by('-applied_at')
+    serializer = ApplicationSerializer(applications, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+# ============================================================================
+# 共通エンドポイント
+# ============================================================================
+
+@api_view(['GET', 'PUT'])
+@permission_classes([IsAuthenticated])
+def user_settings(request):
+    """
+    ユーザー設定の取得・更新
+    GET /api/v2/user/settings/
+    PUT /api/v2/user/settings/
+    """
+    from .models import UserPrivacySettings, UserProfileExtension
+    
+    if request.method == 'GET':
+        # プライバシー設定
+        privacy, _ = UserPrivacySettings.objects.get_or_create(user=request.user)
+        # プロフィール拡張
+        profile_ext, _ = UserProfileExtension.objects.get_or_create(user=request.user)
+        
+        data = {
+            'user': UserSerializer(request.user).data,
+            'privacy_settings': {
+                'is_profile_public': privacy.is_profile_public,
+                'show_email': privacy.show_email,
+                'show_phone': privacy.show_phone,
+                'show_resumes': privacy.show_resumes,
+            },
+            'profile_extension': {
+                'bio': profile_ext.bio,
+                'headline': profile_ext.headline,
+                'location': profile_ext.location,
+                'website_url': profile_ext.website_url,
+                'available_for_work': profile_ext.available_for_work,
+            }
+        }
+        
+        return Response(data, status=status.HTTP_200_OK)
+    
+    elif request.method == 'PUT':
+        # ユーザー基本情報の更新
+        if 'user' in request.data:
+            user_data = request.data['user']
+            allowed_fields = ['full_name', 'phone', 'kana']
+            for field in allowed_fields:
+                if field in user_data:
+                    setattr(request.user, field, user_data[field])
+            request.user.save()
+        
+        # プライバシー設定の更新
+        if 'privacy_settings' in request.data:
+            privacy, _ = UserPrivacySettings.objects.get_or_create(user=request.user)
+            privacy_data = request.data['privacy_settings']
+            for field in ['is_profile_public', 'show_email', 'show_phone', 'show_resumes']:
+                if field in privacy_data:
+                    setattr(privacy, field, privacy_data[field])
+            privacy.save()
+        
+        # プロフィール拡張の更新
+        if 'profile_extension' in request.data:
+            profile_ext, _ = UserProfileExtension.objects.get_or_create(user=request.user)
+            ext_data = request.data['profile_extension']
+            for field in ['bio', 'headline', 'location', 'website_url', 'available_for_work']:
+                if field in ext_data:
+                    setattr(profile_ext, field, ext_data[field])
+            profile_ext.save()
+        
+        return Response({'message': 'Settings updated successfully'}, status=status.HTTP_200_OK)

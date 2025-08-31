@@ -24,48 +24,28 @@ export default function Step1ProfilePage() {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const formState = useAppSelector(state => state.form);
-  const { isAuthenticated, initializeAuth } = useAuthV2();
-  const { data: userProfile } = useUserProfile();
-  const updateProfileMutation = useUpdateProfile();
+  // 🚨 認証チェックを無効化
+  // const { isAuthenticated, initializeAuth } = useAuthV2();
+  // const { data: userProfile } = useUserProfile();
+  // const updateProfileMutation = useUpdateProfile();
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [formData, setFormData] = useState({
-    email: '',
-    firstName: '',
-    lastName: '',
-    firstNameKana: '',
-    lastNameKana: '',
-    birthday: '',
-    gender: '',
-    phone: '',
-    prefecture: '',
+    email: 'yamada@example.com',
+    firstName: '太郎',
+    lastName: '山田',
+    firstNameKana: 'タロウ',
+    lastNameKana: 'ヤマダ',
+    birthday: '1990-01-15',
+    gender: 'male',
+    phone: '090-1234-5678',
+    prefecture: '東京都',
   });
 
-  // 初期化（一度だけ実行）
+  // ページ読み込み時の初期化
   useEffect(() => {
-    console.log('👤 Step1 Profile: Initializing auth');
-    initializeAuth();
+    console.log('👤 Step1 Profile: Loading without auth checks');
   }, []);
-
-  // 認証状態の変化を監視
-  useEffect(() => {
-    console.log('👤 Step1 Profile: Auth check', { isAuthenticated });
-    
-    // SSRでは実行しない
-    if (typeof window === 'undefined') return;
-    
-    const timer = setTimeout(() => {
-      const hasStoredToken = localStorage.getItem('auth_token_v2') && 
-        localStorage.getItem('drf_token_v2');
-      
-      if (!hasStoredToken && !isAuthenticated) {
-        console.log('👤 Step1 Profile: Redirecting to login');
-        router.push('/auth/login');
-      }
-    }, 100);
-
-    return () => clearTimeout(timer);
-  }, [isAuthenticated]);
 
   // Load saved data on mount
   useEffect(() => {

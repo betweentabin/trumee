@@ -41,6 +41,24 @@ urlpatterns = [
     path('users/<uuid:user_id>/', views_api_v2.user_public_profile, name='user-public-profile'),
     path('users/<uuid:user_id>/privacy/', views_api_v2.user_privacy_settings, name='user-privacy-settings'),
     
+    # 求職者専用エンドポイント
+    path('seeker/profile/', views_api_v2.seeker_profile_detail, name='seeker-profile-detail'),
+    path('seeker/resumes/', views_api_v2.seeker_resumes_list, name='seeker-resumes-list'),
+    path('seeker/scouts/', views_api_v2.seeker_scouts_list, name='seeker-scouts-list'),
+    path('seeker/applications/', views_api_v2.seeker_applications_list, name='seeker-applications-list'),
+    path('seeker/saved-jobs/', views_api_v2.seeker_saved_jobs, name='seeker-saved-jobs'),
+    path('seeker/messages/', views_api_v2.seeker_messages_list, name='seeker-messages-list'),
+    
+    # 企業専用エンドポイント
+    path('company/dashboard/', views_api_v2.company_dashboard, name='company-dashboard'),
+    path('company/profile/', views_api_v2.company_profile_detail, name='company-profile-detail'),
+    path('company/jobs/new/', views_api_v2.company_jobs_new, name='company-jobs-new'),
+    path('company/scouts/', views_api_v2.company_scouts_list, name='company-scouts-list'),
+    path('company/applications/', views_api_v2.company_applications_list, name='company-applications-list'),
+    
+    # 共通エンドポイント
+    path('user/settings/', views_api_v2.user_settings, name='user-settings'),
+    
     # ViewSet URLs
     path('', include(router.urls)),
 ]
