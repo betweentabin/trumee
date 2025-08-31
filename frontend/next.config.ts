@@ -7,6 +7,17 @@ const nextConfig: NextConfig = {
       test: /\.svg$/,
       use: ["@svgr/webpack"],
     });
+    
+    // Add path aliases
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      '@': __dirname,
+      '@/app': __dirname + '/app',
+      '@/components': __dirname + '/components',
+      '@/lib': __dirname + '/lib',
+      '@/utils': __dirname + '/utils',
+    };
+    
     return config;
   },
 
