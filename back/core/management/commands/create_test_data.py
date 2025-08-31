@@ -80,7 +80,7 @@ class Command(BaseCommand):
             
             # 求職者プロフィール作成 (正しいフィールド名を使用)
             profile = SeekerProfile.objects.create(
-                    user=user,
+                user=user,
                 first_name=first_name,
                 last_name=last_name,
                 first_name_kana=first_kana,
@@ -94,18 +94,18 @@ class Command(BaseCommand):
             )
             
             # 履歴書を作成
-                resume = Resume.objects.create(
-                    user=user,
-                    title=f'{first_name} {last_name}の履歴書',
-                    is_active=True,
-                    description=f'{first_name} {last_name}の職務経歴書です。',
-                    skills='Python, Django, JavaScript, React, HTML, CSS',
-                    self_pr='積極的に新しい技術を学び、チームワークを大切にして業務に取り組んでいます。'
-                )
+            resume = Resume.objects.create(
+                user=user,
+                title=f'{first_name} {last_name}の履歴書',
+                is_active=True,
+                description=f'{first_name} {last_name}の職務経歴書です。',
+                skills='Python, Django, JavaScript, React, HTML, CSS',
+                self_pr='積極的に新しい技術を学び、チームワークを大切にして業務に取り組んでいます。'
+            )
             
             # 経験を追加
-                    Experience.objects.create(
-                        resume=resume,
+            Experience.objects.create(
+                resume=resume,
                 company=f'株式会社{random.choice(["サンプル", "テスト", "デモ"])}',
                 position=random.choice(['エンジニア', 'デザイナー', 'マネージャー']),
                 period_from=date(2020, random.randint(1, 12), 1),
