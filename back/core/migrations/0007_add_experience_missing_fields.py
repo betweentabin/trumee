@@ -22,10 +22,5 @@ class Migration(migrations.Migration):
             name='technologies_used',
             field=models.JSONField(blank=True, default=list),
         ),
-        # Fix Experience.id to UUID
-        migrations.AlterField(
-            model_name='experience',
-            name='id',
-            field=models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False),
-        ),
+        # Note: Experience.id is already UUID in 0001_initial.py - no conversion needed
     ]

@@ -158,7 +158,7 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Experience',
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
                 ('company', models.CharField(max_length=200)),
                 ('period_from', models.DateField()),
                 ('period_to', models.DateField(blank=True, null=True)),
