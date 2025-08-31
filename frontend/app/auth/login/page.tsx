@@ -27,21 +27,27 @@ export default function LoginPage() {
     }
   }, []);
 
-  // 認証済みユーザーのリダイレクト処理（シンプル版）
+  // 認証済みユーザーのリダイレクト処理（厳密版）
   useEffect(() => {
     // SSRでは実行しない
     if (typeof window === 'undefined') return;
     
     console.log('🔐 Login page: Checking for existing auth');
     
-    // 単純なトークンチェックのみ
-    const hasStoredToken = localStorage.getItem('auth_token_v2') && 
-      localStorage.getItem('drf_token_v2');
+    // より厳密なトークンチェック
+    const authToken = localStorage.getItem('auth_token_v2');
+    const drfToken = localStorage.getItem('drf_token_v2');
     
-    if (hasStoredToken) {
-      console.log('🔐 Login page: Found stored tokens, redirecting to users');
-      // ロール判定なしで一律 /users にリダイレクト
-      router.push('/users');
+    if (authToken && drfToken) {
+      // トークンの有効性を簡易チェック（長さやフォーマット）
+      if (authToken.length > 10 && drfToken.length > 10) {
+        console.log('🔐 Login page: Valid tokens found, redirecting to users');
+        router.push('/users');
+      } else {
+        console.log('🔐 Login page: Invalid tokens, clearing storage');
+        localStorage.removeItem('auth_token_v2');
+        localStorage.removeItem('drf_token_v2');
+      }
     }
   }, []); // 一度だけ実行、認証状態は監視しない
   
