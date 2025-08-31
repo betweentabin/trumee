@@ -86,7 +86,7 @@ export default function CompanyRegisterPage() {
     // Company name kana validation
     if (!formData.company_name_kana) {
       newErrors.company_name_kana = '会社名（カナ）を入力してください';
-    } else if (!/^[ァ-ヶー　]+$/.test(formData.company_name_kana)) {
+    } else if (!/^[ァ-ヶー・\s]+$/.test(formData.company_name_kana)) {
       newErrors.company_name_kana = 'カタカナで入力してください';
     }
 
@@ -98,7 +98,7 @@ export default function CompanyRegisterPage() {
     // Representative kana validation
     if (!formData.representative_kana) {
       newErrors.representative_kana = '代表者名（カナ）を入力してください';
-    } else if (!/^[ァ-ヶー　]+$/.test(formData.representative_kana)) {
+    } else if (!/^[ァ-ヶー・\s]+$/.test(formData.representative_kana)) {
       newErrors.representative_kana = 'カタカナで入力してください';
     }
 
@@ -164,7 +164,7 @@ export default function CompanyRegisterPage() {
 
     try {
       // Register company
-      const response = await fetch(buildApiUrl(API_CONFIG.endpoints.register), {
+      const response = await fetch(buildApiUrl(API_CONFIG.endpoints.registerCompany), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -174,12 +174,12 @@ export default function CompanyRegisterPage() {
           password: formData.password,
           username: formData.email,
           company_name: formData.company_name,
-          capital: formData.employee_count, // 従業員数を資本金フィールドにマッピング
+          capital: parseInt(formData.employee_count) || 0,
           company_url: formData.website || '',
           phone: formData.phone,
           first_name: formData.representative_name.split(' ')[1] || formData.representative_name,
           last_name: formData.representative_name.split(' ')[0] || '',
-          role: 'company',
+          campaign_code: '',
         }),
       });
 

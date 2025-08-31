@@ -85,7 +85,7 @@ export default function RegisterPage() {
     // Kana validation
     if (!formData.kana) {
       newErrors.kana = 'カナを入力してください';
-    } else if (!/^[ァ-ヶー　]+$/.test(formData.kana)) {
+    } else if (!/^[ァ-ヶー・\s]+$/.test(formData.kana)) {
       newErrors.kana = 'カタカナで入力してください';
     }
 
@@ -141,7 +141,7 @@ export default function RegisterPage() {
 
     try {
       // Register user
-      const apiUrl = buildApiUrl(API_CONFIG.endpoints.register);
+      const apiUrl = buildApiUrl(API_CONFIG.endpoints.registerUser);
       console.log('Registering user with API URL:', apiUrl); // デバッグ用ログ
       
       const response = await fetch(apiUrl, {

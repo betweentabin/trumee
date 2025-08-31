@@ -92,10 +92,10 @@ export default function Step1ProfilePage() {
     if (!formData.prefecture) newErrors.prefecture = '都道府県を選択してください';
 
     // Validate kana
-    if (formData.firstNameKana && !/^[ァ-ヶー　]+$/.test(formData.firstNameKana)) {
+    if (formData.firstNameKana && !/^[ァ-ヶー・\s]+$/.test(formData.firstNameKana)) {
       newErrors.firstNameKana = 'カタカナで入力してください';
     }
-    if (formData.lastNameKana && !/^[ァ-ヶー　]+$/.test(formData.lastNameKana)) {
+    if (formData.lastNameKana && !/^[ァ-ヶー・\s]+$/.test(formData.lastNameKana)) {
       newErrors.lastNameKana = 'カタカナで入力してください';
     }
 
