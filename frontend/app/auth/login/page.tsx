@@ -31,14 +31,7 @@ export default function LoginPage() {
     }
   }, []);
 
-  // 🚨 緊急対応: 自動リダイレクトを完全に無効化
-  console.log('🔐 Login page: Loaded WITHOUT auto redirects');
-  console.log('🔐 Login page: Current URL:', typeof window !== 'undefined' ? window.location.href : 'SSR');
-  console.log('🔐 Login page: Local storage tokens:', typeof window !== 'undefined' ? {
-    auth_token_v2: localStorage.getItem('auth_token_v2'),
-    drf_token_v2: localStorage.getItem('drf_token_v2'),
-    users_page_visits: localStorage.getItem('users_page_visits')
-  } : 'SSR');
+  // 認証システム修正完了
   
   const [formData, setFormData] = useState({
     email: '',
@@ -178,9 +171,6 @@ export default function LoginPage() {
             </p>
           </div>
           <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-            <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded mb-4">
-              <p className="text-sm">🚨 デバッグモード: 自動リダイレクトを無効化中</p>
-            </div>
             {errors.general && (
               <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md text-sm">
                 {errors.general}
