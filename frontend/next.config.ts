@@ -16,6 +16,9 @@ const nextConfig: NextConfig = {
       '@/components': __dirname + '/components',
       '@/lib': __dirname + '/lib',
       '@/utils': __dirname + '/utils',
+      '@/types': __dirname + '/types',
+      '@/hooks': __dirname + '/hooks',
+      '@/config': __dirname + '/config',
     };
     
     return config;
