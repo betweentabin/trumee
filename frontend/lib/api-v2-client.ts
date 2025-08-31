@@ -261,6 +261,15 @@ class ApiV2Client {
     return response.data;
   }
 
+  async respondScout(id: string): Promise<Scout> {
+    const response = await this.client.post<Scout>(`${API_ENDPOINTS.SCOUTS}${id}/respond/`);
+    return response.data;
+  }
+
+  async delete(endpoint: string): Promise<void> {
+    await this.client.delete(endpoint);
+  }
+
   // ============================================================================
   // ダッシュボード・統計関連API
   // ============================================================================

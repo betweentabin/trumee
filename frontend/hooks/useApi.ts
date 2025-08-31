@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-hot-toast';
-import apiClient from '@/lib/api-client';
+import apiClient from '@/lib/api-v2-client';
 
 // React Query用のカスタムフック
 

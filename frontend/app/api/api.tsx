@@ -1,4 +1,4 @@
-import apiClient from '@/lib/api-client';
+import apiClient from '@/lib/api-v2-client';
 import { useRouter } from 'next/navigation';
 import toast from "react-hot-toast";
 

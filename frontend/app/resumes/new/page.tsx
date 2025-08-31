@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import apiClient from '@/lib/api-client';
+import apiClient from '@/lib/api-v2-client';
 import { useCreateResume } from '@/hooks/useApiV2';
 import useAuthV2 from '@/hooks/useAuthV2';
 import { CreateResumeRequest, ExperienceFormData, EducationFormData, CertificationFormData } from '@/types/api-v2';
