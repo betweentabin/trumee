@@ -176,7 +176,8 @@ class ExperienceSerializer(serializers.ModelSerializer):
 class ResumeSerializer(serializers.ModelSerializer):
     """履歴書シリアライザー"""
     experiences = ExperienceSerializer(many=True, read_only=True)
-    educations = EducationSerializer(many=True, read_only=True)
+    # 一時的にeducationsを除外（DBスキーマ不整合のため）
+    # educations = EducationSerializer(many=True, read_only=True)
     certifications = CertificationSerializer(many=True, read_only=True)
     user_email = serializers.EmailField(source='user.email', read_only=True)
     is_complete = serializers.BooleanField(read_only=True)
@@ -186,7 +187,7 @@ class ResumeSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'user', 'user_email', 'title', 'description', 'objective',
             'submitted_at', 'is_active', 'desired_job', 'desired_industries', 
-            'desired_locations', 'skills', 'self_pr', 'experiences', 'educations',
+            'desired_locations', 'skills', 'self_pr', 'experiences',
             'certifications', 'match_score', 'is_complete', 'extra_data',
             'resume_vector', 'created_at', 'updated_at'
         ]
@@ -196,7 +197,8 @@ class ResumeSerializer(serializers.ModelSerializer):
 class ResumeCreateSerializer(serializers.ModelSerializer):
     """履歴書作成シリアライザー"""
     experiences = ExperienceSerializer(many=True, required=False)
-    educations = EducationSerializer(many=True, required=False)
+    # 一時的にeducationsを除外（DBスキーマ不整合のため）
+    # educations = EducationSerializer(many=True, required=False)
     certifications = CertificationSerializer(many=True, required=False)
     
     class Meta:
@@ -204,12 +206,13 @@ class ResumeCreateSerializer(serializers.ModelSerializer):
         fields = [
             'title', 'description', 'objective', 'desired_job', 
             'desired_industries', 'desired_locations',
-            'skills', 'self_pr', 'experiences', 'educations', 'certifications'
+            'skills', 'self_pr', 'experiences', 'certifications'
         ]
     
     def create(self, validated_data):
         experiences_data = validated_data.pop('experiences', [])
-        educations_data = validated_data.pop('educations', [])
+        # 一時的にeducations処理を除外
+        # educations_data = validated_data.pop('educations', [])
         certifications_data = validated_data.pop('certifications', [])
         
         resume = Resume.objects.create(**validated_data)
@@ -219,10 +222,10 @@ class ResumeCreateSerializer(serializers.ModelSerializer):
             exp_data['order'] = i
             Experience.objects.create(resume=resume, **exp_data)
         
-        # 学歴作成
-        for i, edu_data in enumerate(educations_data):
-            edu_data['order'] = i
-            Education.objects.create(resume=resume, **edu_data)
+        # 学歴作成は一時的に無効化
+        # for i, edu_data in enumerate(educations_data):
+        #     edu_data['order'] = i
+        #     Education.objects.create(resume=resume, **edu_data)
         
         # 資格作成
         for i, cert_data in enumerate(certifications_data):
