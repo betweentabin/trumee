@@ -15,11 +15,13 @@ export default function ServiceCards() {
             { text: '面接に関するアドバイス', href: '/interview' },
             { text: '企業からのスカウト確認', href: '/scouts' },
           ].map(({ text, href }, idx) => (
-            <Link href={href} key={idx}>
-              <button className="w-full flex items-center justify-between px-4 py-2 border rounded-md text-sm hover:bg-gray-50">
-                <span>{text}</span>
-                <FaChevronRight className="text-gray-400 text-xs" />
-              </button>
+            <Link 
+              href={href} 
+              key={idx}
+              className="w-full flex items-center justify-between px-4 py-2 border rounded-md text-sm hover:bg-gray-50 cursor-pointer"
+            >
+              <span>{text}</span>
+              <FaChevronRight className="text-gray-400 text-xs" />
             </Link>
           ))}
         </div>
@@ -35,11 +37,13 @@ export default function ServiceCards() {
             { label: '希望条件', href: '/auth/step/step4-preference' },
             { label: '履歴書', href: '/resumes' },
           ].map(({ label, href }, idx) => (
-            <Link href={href} key={idx}>
-              <button className="flex items-center justify-between px-4 py-2 border rounded-md hover:bg-gray-50 w-full">
-                <span>{label}</span>
-                <FaChevronRight className="text-gray-400 text-xs" />
-              </button>
+            <Link 
+              href={href} 
+              key={idx}
+              className="flex items-center justify-between px-4 py-2 border rounded-md hover:bg-gray-50 w-full cursor-pointer"
+            >
+              <span>{label}</span>
+              <FaChevronRight className="text-gray-400 text-xs" />
             </Link>
           ))}
         </div>
