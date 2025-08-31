@@ -58,17 +58,18 @@ export default function Step1ProfilePage() {
     }
   }, [formState.stepData.profile]);
 
+  // 🚨 API関連処理を無効化
   // Load user profile from API
-  useEffect(() => {
-    // APIから取得したプロフィールデータを反映
-    if (userProfile) {
-      setFormData(prev => ({
-        ...prev,
-        email: userProfile.email || prev.email,
-        // APIのフィールド名に合わせて調整が必要
-      }));
-    }
-  }, [userProfile]);
+  // useEffect(() => {
+  //   // APIから取得したプロフィールデータを反映
+  //   if (userProfile) {
+  //     setFormData(prev => ({
+  //       ...prev,
+  //       email: userProfile.email || prev.email,
+  //       // APIのフィールド名に合わせて調整が必要
+  //     }));
+  //   }
+  // }, [userProfile]);
 
   // Set initial email from auth
   useEffect(() => {
@@ -133,7 +134,9 @@ export default function Step1ProfilePage() {
         // SeekerProfileモデル用のデータは別途作成する必要があるかも
       };
       
-      await updateProfileMutation.mutateAsync(apiData);
+      // 🚨 API呼び出しを無効化
+      // await updateProfileMutation.mutateAsync(apiData);
+      console.log('Profile data to save:', apiData);
       return true;
     } catch (error) {
       console.error('Failed to save profile:', error);

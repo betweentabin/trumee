@@ -34,7 +34,8 @@ const employmentTypes = [
 
 export default function Step3ExperiencePage() {
   const router = useRouter();
-  const { requireAuth } = useAuth();
+  // 🚨 認証チェックを無効化
+  // const { requireAuth } = useAuth();
   const {
     formState,
     setExperiences,
@@ -43,8 +44,8 @@ export default function Step3ExperiencePage() {
     saveToLocalStorage,
   } = useFormPersist();
 
-  // Redirect if not authenticated
-  requireAuth();
+  // 🚨 認証チェックを無効化
+  // requireAuth();
 
   const [experiences, setLocalExperiences] = useState<Experience[]>([]);
   const [errors, setErrors] = useState<Record<string, Record<string, string>>>({});

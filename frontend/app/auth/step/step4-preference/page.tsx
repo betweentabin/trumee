@@ -66,7 +66,8 @@ const prefectures = [
 
 export default function Step4PreferencePage() {
   const router = useRouter();
-  const { requireAuth } = useAuth();
+  // 🚨 認証チェックを無効化
+  // const { requireAuth } = useAuth();
   const {
     formState,
     updatePreference,
@@ -75,10 +76,10 @@ export default function Step4PreferencePage() {
     saveToLocalStorage,
   } = useFormPersist();
 
-  // Redirect if not authenticated
-  useEffect(() => {
-    requireAuth();
-  }, []);
+  // 🚨 認証チェックを無効化
+  // useEffect(() => {
+  //   requireAuth();
+  // }, []);
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [formData, setFormData] = useState({
