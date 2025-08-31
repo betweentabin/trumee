@@ -43,7 +43,7 @@ class Migration(migrations.Migration):
                 ('school_name', models.CharField(max_length=200)),
                 ('education_type', models.CharField(choices=[('high_school', '高等学校'), ('vocational', '専門学校'), ('junior_college', '短期大学'), ('university', '大学'), ('graduate', '大学院'), ('other', 'その他')], max_length=50)),
                 ('faculty', models.CharField(blank=True, max_length=100)),
-                ('department', models.CharField(blank=True, max_length=100)),
+                ('major', models.CharField(blank=True, max_length=100)),
                 ('graduation_status', models.CharField(choices=[('graduated', '卒業'), ('expected', '卒業予定'), ('dropped_out', '中退')], default='graduated', max_length=20)),
                 ('graduation_year', models.IntegerField(blank=True, null=True)),
                 ('graduation_month', models.IntegerField(blank=True, null=True)),

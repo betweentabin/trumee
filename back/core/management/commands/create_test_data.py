@@ -79,8 +79,8 @@ class Command(BaseCommand):
             )
             
             # 求職者プロフィール作成 (正しいフィールド名を使用)
-            profile = SeekerProfile.objects.create(
-                user=user,
+                profile = SeekerProfile.objects.create(
+                    user=user,
                 first_name=first_name,
                 last_name=last_name,
                 first_name_kana=first_kana,
@@ -94,7 +94,7 @@ class Command(BaseCommand):
             )
             
             # 履歴書を作成
-            resume = Resume.objects.create(
+                resume = Resume.objects.create(
                     user=user,
                     title=f'{first_name} {last_name}の履歴書',
                     is_active=True,
@@ -104,8 +104,8 @@ class Command(BaseCommand):
                 )
             
             # 経験を追加
-            Experience.objects.create(
-                resume=resume,
+                    Experience.objects.create(
+                        resume=resume,
                 company=f'株式会社{random.choice(["サンプル", "テスト", "デモ"])}',
                 position=random.choice(['エンジニア', 'デザイナー', 'マネージャー']),
                 period_from=date(2020, random.randint(1, 12), 1),
@@ -121,7 +121,8 @@ class Command(BaseCommand):
                 faculty=random.choice(['情報工学科', '経済学部', 'デザイン学科']),
                 major=random.choice(['情報工学', '経済学', 'デザイン学']),
                 education_type='university',
-                graduation_date=date(2020, 3, 31)
+                graduation_year=2020,
+                graduation_month=3
             )
             
             self.stdout.write(f'Created seeker: {name} ({user.email})')
