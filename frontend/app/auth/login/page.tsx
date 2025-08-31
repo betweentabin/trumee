@@ -31,8 +31,8 @@ export default function LoginPage() {
     }
   }, []);
 
-  // ログインページでは認証チェックを完全に無効化
-  // リダイレクトは手動ログイン成功時のみ実行
+  // 🚨 緊急対応: 自動リダイレクトを完全に無効化
+  console.log('🔐 Login page: Loaded WITHOUT auto redirects');
   
   const [formData, setFormData] = useState({
     email: '',
@@ -172,6 +172,9 @@ export default function LoginPage() {
             </p>
           </div>
           <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+            <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded mb-4">
+              <p className="text-sm">🚨 デバッグモード: 自動リダイレクトを無効化中</p>
+            </div>
             {errors.general && (
               <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md text-sm">
                 {errors.general}
