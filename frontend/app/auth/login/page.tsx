@@ -16,7 +16,7 @@ export default function LoginPage() {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const loginMutation = useLogin();
-  const { login: loginV2, isLoginPending: isV2Loading, initializeAuth } = useAuthV2();
+  const { login: loginV2, isLoginPending: isV2Loading, isAuthenticated, currentUser } = useAuthV2();
   const [isLoading, setIsLoading] = useState(false);
   const [useV2API, setUseV2API] = useState(true); // API v2をデフォルトに設定
   
@@ -26,6 +26,29 @@ export default function LoginPage() {
       localStorage.setItem('useV2Api', 'true');
     }
   }, []);
+
+  // 認証済みユーザーのリダイレクト処理
+  useEffect(() => {
+    console.log('🔐 Login page: Auth check', { isAuthenticated, currentUser });
+    
+    if (typeof window === 'undefined') return;
+    
+    const timer = setTimeout(() => {
+      const hasStoredToken = localStorage.getItem('auth_token_v2') && 
+        localStorage.getItem('drf_token_v2');
+      
+      if ((isAuthenticated && currentUser) || hasStoredToken) {
+        console.log('🔐 Login page: User already authenticated, redirecting');
+        if (currentUser?.role === 'company') {
+          router.push('/company/dashboard');
+        } else {
+          router.push('/users');
+        }
+      }
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, [isAuthenticated, currentUser]);
   
   const [formData, setFormData] = useState({
     email: '',

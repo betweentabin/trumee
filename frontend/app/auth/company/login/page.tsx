@@ -12,11 +12,13 @@ import logoBlack from '@/assets/logo/logo_black.png';
 import { setUser, setToken } from '@/app/redux/authSlice';
 import { updateUser as setUserV2, setTokens as setTokensV2 } from '@/app/redux/authV2Slice';
 import apiClient from '@/lib/api-v2-client';
+import useAuthV2 from '@/hooks/useAuthV2';
 
 export default function CompanyLoginPage() {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const loginMutation = useLogin();
+  const { isAuthenticated, currentUser } = useAuthV2();
   const [isLoading, setIsLoading] = useState(false);
   const [useV2Api, setUseV2Api] = useState(true); // API v2をデフォルトに設定
   
@@ -36,6 +38,29 @@ export default function CompanyLoginPage() {
       setUseV2Api(true);
     }
   }, []);
+
+  // 認証済みユーザーのリダイレクト処理
+  useEffect(() => {
+    console.log('🏢 Company login page: Auth check', { isAuthenticated, currentUser });
+    
+    if (typeof window === 'undefined') return;
+    
+    const timer = setTimeout(() => {
+      const hasStoredToken = localStorage.getItem('auth_token_v2') && 
+        localStorage.getItem('drf_token_v2');
+      
+      if ((isAuthenticated && currentUser) || hasStoredToken) {
+        console.log('🏢 Company login page: User already authenticated, redirecting');
+        if (currentUser?.role === 'company') {
+          router.push('/company/dashboard');
+        } else {
+          router.push('/users');
+        }
+      }
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, [isAuthenticated, currentUser]);
 
   const validateForm = () => {
     const newErrors = {

@@ -178,7 +178,7 @@ export const useAuthV2 = () => {
       console.log('🔧 Auth state changed, fetching profile');
       refetchProfile();
     }
-  }, [isAuthenticated, authTokens.drfToken, currentUser]);
+  }, [isAuthenticated, authTokens.drfToken, currentUser, refetchProfile]);
 
   // トークン保存
   useEffect(() => {
