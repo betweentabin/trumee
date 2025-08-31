@@ -137,7 +137,7 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Resume',
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
                 ('submitted_at', models.DateTimeField(default=django.utils.timezone.now)),
                 ('is_active', models.BooleanField(default=True)),
                 ('desired_job', models.CharField(blank=True, max_length=100)),

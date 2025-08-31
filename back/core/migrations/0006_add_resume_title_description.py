@@ -26,9 +26,4 @@ class Migration(migrations.Migration):
             name='objective',
             field=models.TextField(blank=True),
         ),
-        migrations.AlterField(
-            model_name='resume',
-            name='id',
-            field=models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False),
-        ),
     ]
