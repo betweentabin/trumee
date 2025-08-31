@@ -16,7 +16,7 @@ export default function LoginPage() {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const loginMutation = useLogin();
-  const { login: loginV2, isLoginPending: isV2Loading, isAuthenticated, currentUser } = useAuthV2();
+  const { login: loginV2, isLoginPending: isV2Loading } = useAuthV2();
   const [isLoading, setIsLoading] = useState(false);
   const [useV2API, setUseV2API] = useState(true); // API v2をデフォルトに設定
   
@@ -27,28 +27,23 @@ export default function LoginPage() {
     }
   }, []);
 
-  // 認証済みユーザーのリダイレクト処理
+  // 認証済みユーザーのリダイレクト処理（シンプル版）
   useEffect(() => {
-    console.log('🔐 Login page: Auth check', { isAuthenticated, currentUser });
-    
+    // SSRでは実行しない
     if (typeof window === 'undefined') return;
     
-    const timer = setTimeout(() => {
-      const hasStoredToken = localStorage.getItem('auth_token_v2') && 
-        localStorage.getItem('drf_token_v2');
-      
-      if ((isAuthenticated && currentUser) || hasStoredToken) {
-        console.log('🔐 Login page: User already authenticated, redirecting');
-        if (currentUser?.role === 'company') {
-          router.push('/company/dashboard');
-        } else {
-          router.push('/users');
-        }
-      }
-    }, 100);
-
-    return () => clearTimeout(timer);
-  }, [isAuthenticated, currentUser]);
+    console.log('🔐 Login page: Checking for existing auth');
+    
+    // 単純なトークンチェックのみ
+    const hasStoredToken = localStorage.getItem('auth_token_v2') && 
+      localStorage.getItem('drf_token_v2');
+    
+    if (hasStoredToken) {
+      console.log('🔐 Login page: Found stored tokens, redirecting to users');
+      // ロール判定なしで一律 /users にリダイレクト
+      router.push('/users');
+    }
+  }, []); // 一度だけ実行、認証状態は監視しない
   
   const [formData, setFormData] = useState({
     email: '',

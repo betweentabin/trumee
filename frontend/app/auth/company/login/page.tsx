@@ -18,7 +18,6 @@ export default function CompanyLoginPage() {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const loginMutation = useLogin();
-  const { isAuthenticated, currentUser } = useAuthV2();
   const [isLoading, setIsLoading] = useState(false);
   const [useV2Api, setUseV2Api] = useState(true); // API v2をデフォルトに設定
   
@@ -39,28 +38,22 @@ export default function CompanyLoginPage() {
     }
   }, []);
 
-  // 認証済みユーザーのリダイレクト処理
+  // 認証済みユーザーのリダイレクト処理（シンプル版）
   useEffect(() => {
-    console.log('🏢 Company login page: Auth check', { isAuthenticated, currentUser });
-    
+    // SSRでは実行しない
     if (typeof window === 'undefined') return;
     
-    const timer = setTimeout(() => {
-      const hasStoredToken = localStorage.getItem('auth_token_v2') && 
-        localStorage.getItem('drf_token_v2');
-      
-      if ((isAuthenticated && currentUser) || hasStoredToken) {
-        console.log('🏢 Company login page: User already authenticated, redirecting');
-        if (currentUser?.role === 'company') {
-          router.push('/company/dashboard');
-        } else {
-          router.push('/users');
-        }
-      }
-    }, 100);
-
-    return () => clearTimeout(timer);
-  }, [isAuthenticated, currentUser]);
+    console.log('🏢 Company login page: Checking for existing auth');
+    
+    // 単純なトークンチェックのみ
+    const hasStoredToken = localStorage.getItem('auth_token_v2') && 
+      localStorage.getItem('drf_token_v2');
+    
+    if (hasStoredToken) {
+      console.log('🏢 Company login page: Found stored tokens, redirecting to company dashboard');
+      router.push('/company/dashboard');
+    }
+  }, []); // 一度だけ実行、認証状態は監視しない
 
   const validateForm = () => {
     const newErrors = {
