@@ -52,8 +52,8 @@ export const useAuthV2 = () => {
         drfToken: data.drf_token,
       }));
       
-      // API クライアントにトークンを設定
-      apiV2Client.setToken(data.drf_token);
+      // API クライアントにトークンを設定（JWTトークンを使用）
+      apiV2Client.setToken(data.token);
       
       toast.success('ログインしました');
       
@@ -158,7 +158,8 @@ export const useAuthV2 = () => {
         drfToken: storedDrfToken,
       }));
       
-      apiV2Client.setToken(storedDrfToken);
+      // JWTトークンを使用
+      apiV2Client.setToken(storedToken);
       
       // ユーザー情報を取得
       refetchProfile();
@@ -197,8 +198,8 @@ export const useAuthV2 = () => {
   }, [logoutMutation]);
 
   const checkAuth = useCallback(() => {
-    return isAuthenticated && !!authTokens.drfToken;
-  }, [isAuthenticated, authTokens.drfToken]);
+    return isAuthenticated && !!authTokens.token;
+  }, [isAuthenticated, authTokens.token]);
 
   // 認証が必要なページでの認証チェック
   const requireAuth = useCallback((redirectTo = '/auth/login') => {
