@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import apiClient from '../../lib/api-client';
+import apiClient from '@/lib/api-client';
 import toast from 'react-hot-toast';
 import UserCard from './usercard';
 import JobSeekerDetailModal from '@/components/modal/jobseeker-detail';

@@ -13,13 +13,6 @@ const nextConfig: NextConfig = {
     config.resolve.alias = {
       ...config.resolve.alias,
       '@': path.resolve(__dirname),
-      '@/app': path.resolve(__dirname, 'app'),
-      '@/components': path.resolve(__dirname, 'components'),
-      '@/lib': path.resolve(__dirname, 'lib'),
-      '@/utils': path.resolve(__dirname, 'utils'),
-      '@/types': path.resolve(__dirname, 'types'),
-      '@/hooks': path.resolve(__dirname, 'hooks'),
-      '@/config': path.resolve(__dirname, 'config'),
     };
     
     return config;
