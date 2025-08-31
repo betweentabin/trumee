@@ -93,8 +93,8 @@ class Command(BaseCommand):
                 graduation_year=2020 + random.randint(0, 4)
             )
             
-                            # 履歴書を作成
-                resume = Resume.objects.create(
+            # 履歴書を作成
+            resume = Resume.objects.create(
                     user=user,
                     title=f'{first_name} {last_name}の履歴書',
                     is_active=True,
