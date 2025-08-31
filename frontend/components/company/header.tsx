@@ -3,6 +3,7 @@ import React from "react";
 import { useRouter } from 'next/navigation';
 import Link from "next/link";
 import { clearAuthData } from '@/utils/auth';
+import logoTop from '@/assets/logo/logo_top.png';
 
 
 const Header = () => {
@@ -26,7 +27,7 @@ const Header = () => {
           {/* Left Logo */}
           <div className="flex items-center">
           
-              <img src="/logo/logo_top.png" alt="Logo" className="h-10 w-[210px] mr-3 cursor-pointer" />
+              <img src={logoTop} alt="Logo" className="h-10 w-[210px] mr-3 cursor-pointer" />
           
         </div>
       
