@@ -33,6 +33,12 @@ export default function LoginPage() {
 
   // 🚨 緊急対応: 自動リダイレクトを完全に無効化
   console.log('🔐 Login page: Loaded WITHOUT auto redirects');
+  console.log('🔐 Login page: Current URL:', typeof window !== 'undefined' ? window.location.href : 'SSR');
+  console.log('🔐 Login page: Local storage tokens:', typeof window !== 'undefined' ? {
+    auth_token_v2: localStorage.getItem('auth_token_v2'),
+    drf_token_v2: localStorage.getItem('drf_token_v2'),
+    users_page_visits: localStorage.getItem('users_page_visits')
+  } : 'SSR');
   
   const [formData, setFormData] = useState({
     email: '',

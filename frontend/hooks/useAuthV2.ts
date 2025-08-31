@@ -134,18 +134,23 @@ export const useAuthV2 = () => {
   });
 
   // User Profile Query (認証後に自動実行)
-  const { 
-    data: userProfile, 
-    refetch: refetchProfile 
-  } = useUserProfile({
-    enabled: isAuthenticated && !!authTokens.drfToken,
-    onSuccess: (data) => {
-      // プロフィール情報が更新された場合はRedux状態も更新
-      if (currentUser && data.id === currentUser.id) {
-        dispatch(updateUser(data));
-      }
-    },
-  });
+  // 🚨 緊急対応: useUserProfile を一時的に無効化（無限ループ防止）
+  // const { 
+  //   data: userProfile, 
+  //   refetch: refetchProfile 
+  // } = useUserProfile({
+  //   enabled: isAuthenticated && !!authTokens.drfToken,
+  //   onSuccess: (data) => {
+  //     // プロフィール情報が更新された場合はRedux状態も更新
+  //     if (currentUser && data.id === currentUser.id) {
+  //       dispatch(updateUser(data));
+  //     }
+  //   },
+  // });
+
+  // 一時的なダミー関数
+  const userProfile = null;
+  const refetchProfile = () => Promise.resolve();
 
   // 初期化: ページリロード時のトークン復元
   const initializeAuth = useCallback(() => {

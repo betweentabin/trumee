@@ -14,7 +14,7 @@ const menuItems: MenuItem[] = [
   { label: '登録情報の確認・変更', href: '/users/myinfo/registerdata' },
   { label: 'パスワードの変更', href: '/users/myinfo/password' },
   { label: '支払い情報登録・変更', href: '/users/myinfo/payment' },
-  { label: '有料プラン', href: '/users/myinfo/PaidPlans' },
+  { label: '有料プラン', href: '/users/myinfo/paidplans' },
 ];
 
 export default function Leftpage() {
