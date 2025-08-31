@@ -11,6 +11,23 @@ const nextConfig: NextConfig = {
     domains: [],
   },
   
+  // Enable static file serving
+  async rewrites() {
+    return {
+      beforeFiles: [
+        // Serve static files from public directory
+        {
+          source: '/images/:path*',
+          destination: '/images/:path*',
+        },
+        {
+          source: '/logo/:path*',
+          destination: '/logo/:path*',
+        },
+      ],
+    };
+  },
+  
   // Webpack configuration
   webpack(config) {
     config.module.rules.push({
