@@ -30,46 +30,35 @@ export default function ResumesPage() {
   const router = useRouter();
   const [resumes, setResumes] = useState<Resume[]>([]);
   const [loading, setLoading] = useState(true);
-  // 🚨 認証チェックを無効化
-  // const { isAuthenticated, initializeAuth } = useAuthV2();
+  const { isAuthenticated, initializeAuth } = useAuthV2();
 
-  // ページ読み込み時にダミーデータを表示
+  // 認証状態をチェックして初期化
   useEffect(() => {
-    console.log('📄 Resumes page: Loading without auth checks');
-    fetchResumes();
+    const initialize = async () => {
+      await initializeAuth();
+    };
+    initialize();
   }, []);
+
+  // 認証が完了したら履歴書データを取得
+  useEffect(() => {
+    if (isAuthenticated) {
+      console.log('📄 Resumes page: Loading with DRF authentication');
+      fetchResumes();
+    } else if (isAuthenticated === false) {
+      // 認証されていない場合はログインページにリダイレクト
+      router.push('/auth/login');
+    }
+  }, [isAuthenticated, router]);
 
   const fetchResumes = async () => {
     try {
-      // 🚨 デバッグモード: localStorageから作成済みデータを取得
-      const storedResumes = localStorage.getItem('debug_resumes');
-      let createdResumes = storedResumes ? JSON.parse(storedResumes) : [];
+      // DRFトークン認証でAPI v2から履歴書データを取得
+      const response = await apiClient.get('/api/v2/resumes/');
+      const resumesData = response.data;
       
-      // デフォルトのダミーデータ
-      const defaultResumes = [
-        {
-          id: '1',
-          title: 'ソフトウェアエンジニア向け履歴書',
-          description: 'フルスタック開発の経験を活かし、革新的なプロダクト開発に貢献したいと考えています。',
-          skills: 'React, Node.js, TypeScript, Python, AWS',
-          is_active: true,
-          created_at: '2024-01-15T10:00:00Z',
-          updated_at: '2024-01-20T14:30:00Z'
-        },
-        {
-          id: '2',
-          title: 'フロントエンドエンジニア履歴書',
-          description: 'ユーザー体験を重視したモダンなWebアプリケーション開発に専念しています。',
-          skills: 'React, Vue.js, TypeScript, Sass, Figma',
-          is_active: false,
-          created_at: '2024-01-10T09:00:00Z',
-          updated_at: '2024-01-18T16:00:00Z'
-        }
-      ];
-      
-      // 作成済みデータとデフォルトデータを結合（作成済みを上に表示）
-      const allResumes = [...createdResumes, ...defaultResumes];
-      setResumes(allResumes);
+      console.log('Fetched resumes from API:', resumesData);
+      setResumes(resumesData || []);
     } catch (error: any) {
       console.error('Failed to fetch resumes:', error);
       
@@ -93,23 +82,33 @@ export default function ResumesPage() {
     }
 
     try {
-      await apiClient.deleteResume(id);
+      await apiClient.delete(`/api/v2/resumes/${id}/`);
       toast.success('履歴書を削除しました');
       fetchResumes();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to delete resume:', error);
-      toast.error('履歴書の削除に失敗しました');
+      if (error?.response?.status === 401) {
+        toast.error('ログインが必要です');
+        router.push('/auth/login');
+      } else {
+        toast.error('履歴書の削除に失敗しました');
+      }
     }
   };
 
   const handleActivate = async (id: string) => {
     try {
-      await apiClient.activateResume(id);
+      await apiClient.patch(`/api/v2/resumes/${id}/`, { is_active: true });
       toast.success('履歴書を有効化しました');
       fetchResumes();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to activate resume:', error);
-      toast.error('履歴書の有効化に失敗しました');
+      if (error?.response?.status === 401) {
+        toast.error('ログインが必要です');
+        router.push('/auth/login');
+      } else {
+        toast.error('履歴書の有効化に失敗しました');
+      }
     }
   };
 
