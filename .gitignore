@@ -140,3 +140,4 @@ firebase_key.json
 *~
 *.bak
 *.backup
+.vercel
