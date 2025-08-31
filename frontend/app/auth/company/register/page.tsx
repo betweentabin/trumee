@@ -211,13 +211,15 @@ export default function CompanyRegisterPage() {
         } else if (data.detail) {
           setErrors({ general: data.detail });
           throw new Error(data.detail);
-        } else if (data.errors) {
-          // バリデーションエラーの場合
+        } else if (typeof data === 'object' && data !== null && !data.detail) {
+          // DRFバリデーションエラーの場合（フィールド名をキーとするオブジェクト）
           const newErrors: Record<string, string> = {};
-          Object.keys(data.errors).forEach(field => {
-            newErrors[field] = Array.isArray(data.errors[field]) 
-              ? data.errors[field][0] 
-              : data.errors[field];
+          Object.keys(data).forEach(field => {
+            if (Array.isArray(data[field])) {
+              newErrors[field] = data[field][0];
+            } else {
+              newErrors[field] = data[field];
+            }
           });
           setErrors(newErrors);
           throw new Error('入力内容に問題があります');
