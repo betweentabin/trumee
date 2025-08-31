@@ -53,7 +53,7 @@ export default function PreviewPage() {
   const fetchResume = async () => {
     try {
       const token = localStorage.getItem('access_token');
-      const response = await fetch(`http://localhost:8000/api/v1/resumes/${resumeId}/`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://trumee-production.up.railway.app'}/api/v2/resumes/${resumeId}/`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
