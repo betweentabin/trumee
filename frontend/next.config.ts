@@ -11,20 +11,6 @@ const nextConfig: NextConfig = {
     domains: [],
   },
   
-  // Static file serving configuration
-  async rewrites() {
-    return [
-      {
-        source: '/images/:path*',
-        destination: '/images/:path*',
-      },
-      {
-        source: '/logo/:path*', 
-        destination: '/logo/:path*',
-      },
-    ];
-  },
-  
   // Webpack configuration
   webpack(config) {
     config.module.rules.push({

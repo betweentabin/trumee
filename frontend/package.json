@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "build": "next build",
-    "vercel-build": "next build && mkdir -p .next/static && cp -r public/* .next/static/",
+    "vercel-build": "next build",
     "start": "next start",
     "dev": "next dev",
     "lint": "next lint"
