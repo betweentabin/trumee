@@ -149,10 +149,13 @@ export const useAuthV2 = () => {
 
   // 初期化: ページリロード時のトークン復元
   const initializeAuth = useCallback(() => {
+    console.log('🔧 initializeAuth called', { isAuthenticated, hasToken: !!localStorage.getItem('auth_token_v2') });
+    
     const storedToken = localStorage.getItem('auth_token_v2');
     const storedDrfToken = localStorage.getItem('drf_token_v2');
     
     if (storedToken && storedDrfToken && !isAuthenticated) {
+      console.log('🔧 Restoring auth tokens');
       dispatch(setTokens({
         token: storedToken,
         drfToken: storedDrfToken,
@@ -160,13 +163,22 @@ export const useAuthV2 = () => {
       
       // JWTトークンを使用
       apiV2Client.setToken(storedToken);
-      
-      // ユーザー情報を取得（一度だけ）
-      if (typeof window !== 'undefined') {
-        refetchProfile();
-      }
+    } else {
+      console.log('🔧 Skip auth initialization', { 
+        hasStoredToken: !!storedToken, 
+        hasStoredDrfToken: !!storedDrfToken, 
+        isAuthenticated 
+      });
     }
   }, [dispatch, isAuthenticated]);
+
+  // 認証状態変化時にプロフィールを取得
+  useEffect(() => {
+    if (isAuthenticated && authTokens.drfToken && !currentUser) {
+      console.log('🔧 Auth state changed, fetching profile');
+      refetchProfile();
+    }
+  }, [isAuthenticated, authTokens.drfToken, currentUser]);
 
   // トークン保存
   useEffect(() => {

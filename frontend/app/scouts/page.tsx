@@ -38,11 +38,14 @@ export default function ScoutsPage() {
 
   // 初期化（一度だけ実行）
   useEffect(() => {
+    console.log('🕵️ Scouts page: Initializing auth');
     initializeAuth();
   }, []);
 
   // 認証状態の変化を監視
   useEffect(() => {
+    console.log('🕵️ Scouts page: Auth check', { isAuthenticated });
+    
     // SSRでは実行しない
     if (typeof window === 'undefined') return;
     
@@ -51,10 +54,13 @@ export default function ScoutsPage() {
       const hasStoredToken = localStorage.getItem('auth_token_v2') && 
         localStorage.getItem('drf_token_v2');
       
+      console.log('🕵️ Scouts page: Token check', { hasStoredToken, isAuthenticated });
+      
       if (hasStoredToken || isAuthenticated) {
+        console.log('🕵️ Scouts page: Fetching scouts');
         fetchScouts();
       } else {
-        console.log('未認証のため、ログインページにリダイレクト');
+        console.log('🕵️ Scouts page: Redirecting to login');
         router.push('/auth/login');
       }
     }, 100); // タイマーを短縮

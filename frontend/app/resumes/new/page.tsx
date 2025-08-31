@@ -38,29 +38,31 @@ export default function NewResumePage() {
     }
   }, []);
 
+  // 初期化（一度だけ実行）
+  useEffect(() => {
+    console.log('📝 New resume: Initializing auth');
+    initializeAuth();
+  }, []);
+
   // 認証チェック
   useEffect(() => {
-    initializeAuth();
-  }, [initializeAuth]);
-
-  useEffect(() => {
-    // より堅牢な認証チェック
-    const checkAuth = () => {
-      // localStorageにトークンがあるか確認
-      const hasStoredToken = typeof window !== 'undefined' && 
-        localStorage.getItem('auth_token_v2') && 
+    console.log('📝 New resume: Auth check', { isAuthenticated });
+    
+    // SSRでは実行しない
+    if (typeof window === 'undefined') return;
+    
+    const timer = setTimeout(() => {
+      const hasStoredToken = localStorage.getItem('auth_token_v2') && 
         localStorage.getItem('drf_token_v2');
       
       if (!hasStoredToken && !isAuthenticated) {
-        console.log('未認証のため、ログインページにリダイレクト');
+        console.log('📝 New resume: Redirecting to login');
         router.push('/auth/login');
       }
-    };
+    }, 100);
 
-    // 少し遅延して認証チェック
-    const timer = setTimeout(checkAuth, 500);
     return () => clearTimeout(timer);
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated]); // routerを依存配列から除外
 
   const createResumeV2 = useCreateResume();
 

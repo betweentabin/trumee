@@ -23,34 +23,39 @@ export default function CompanyDashboard() {
   const { data: stats, isLoading: statsLoading } = useDashboardStats();
   const { data: unreadCount } = useUnreadCount();
 
-  // API v2認証の初期化
+  // 初期化（一度だけ実行）
   useEffect(() => {
+    console.log('🏢 Company dashboard: Initializing auth');
     initializeAuth();
-  }, [initializeAuth]);
+  }, []);
 
   // 認証チェック
   useEffect(() => {
-    const checkAuth = () => {
-      // localStorageにトークンがあるか確認
-      const hasStoredToken = typeof window !== 'undefined' && 
-        localStorage.getItem('auth_token_v2') && 
+    console.log('🏢 Company dashboard: Auth check', { isAuthenticated, currentUser });
+    
+    // SSRでは実行しない
+    if (typeof window === 'undefined') return;
+    
+    const timer = setTimeout(() => {
+      const hasStoredToken = localStorage.getItem('auth_token_v2') && 
         localStorage.getItem('drf_token_v2');
       
       if (!hasStoredToken && !isAuthenticated) {
+        console.log('🏢 Company dashboard: Redirecting to login');
         router.push('/auth/login');
         return;
       }
       
       // ユーザー情報が読み込まれていて、企業でない場合のみリダイレクト
       if (currentUser && currentUser.role !== 'company') {
+        console.log('🏢 Company dashboard: User is not company, redirecting');
         router.push('/');
         toast.error('企業アカウントでログインしてください');
       }
-    };
+    }, 100);
 
-    const timer = setTimeout(checkAuth, 500);
     return () => clearTimeout(timer);
-  }, [isAuthenticated, currentUser, router]);
+  }, [isAuthenticated, currentUser]); // routerを依存配列から除外
 
   const [activeTab, setActiveTab] = useState<'overview' | 'applications' | 'scouts' | 'messages'>('overview');
 
