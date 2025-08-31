@@ -1,7 +1,7 @@
 FROM python:3.11-slim
 
 # Force complete rebuild - v4.0 - $(date)
-RUN echo "Forced rebuild at $(date) - CACHE_BUST_v11" > /rebuild.txt
+RUN echo "Forced rebuild at $(date) - CACHE_BUST_v12_MANUAL_TEST" > /rebuild.txt
 
 WORKDIR /app
 
