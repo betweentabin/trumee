@@ -93,12 +93,15 @@ class Command(BaseCommand):
                 graduation_year=2020 + random.randint(0, 4)
             )
             
-            # 履歴書を作成
-            resume = Resume.objects.create(
-                user=user,
-                title=f'{first_name} {last_name}の履歴書',
-                is_public=True
-            )
+                            # 履歴書を作成
+                resume = Resume.objects.create(
+                    user=user,
+                    title=f'{first_name} {last_name}の履歴書',
+                    is_active=True,
+                    description=f'{first_name} {last_name}の職務経歴書です。',
+                    skills='Python, Django, JavaScript, React, HTML, CSS',
+                    self_pr='積極的に新しい技術を学び、チームワークを大切にして業務に取り組んでいます。'
+                )
             
             # 経験を追加
             Experience.objects.create(
