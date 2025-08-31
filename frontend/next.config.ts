@@ -2,11 +2,14 @@ import type { NextConfig } from "next";
 import path from "path";
 
 const nextConfig: NextConfig = {
-  // Ensure static assets are served correctly
+  // Ensure static assets are served correctly  
   trailingSlash: false,
   
-  // Explicitly set the public directory
-  assetPrefix: '',
+  // Image optimization settings
+  images: {
+    unoptimized: true, // Allow all image formats
+    domains: [], // Add domains if needed
+  },
   
   // Webpack configuration
   webpack(config) {
