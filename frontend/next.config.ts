@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import path from "path";
 
 const nextConfig: NextConfig = {
   // Webpack configuration
@@ -8,17 +9,17 @@ const nextConfig: NextConfig = {
       use: ["@svgr/webpack"],
     });
     
-    // Add path aliases
+    // Add path aliases using path.resolve for better reliability
     config.resolve.alias = {
       ...config.resolve.alias,
-      '@': __dirname,
-      '@/app': __dirname + '/app',
-      '@/components': __dirname + '/components',
-      '@/lib': __dirname + '/lib',
-      '@/utils': __dirname + '/utils',
-      '@/types': __dirname + '/types',
-      '@/hooks': __dirname + '/hooks',
-      '@/config': __dirname + '/config',
+      '@': path.resolve(__dirname),
+      '@/app': path.resolve(__dirname, 'app'),
+      '@/components': path.resolve(__dirname, 'components'),
+      '@/lib': path.resolve(__dirname, 'lib'),
+      '@/utils': path.resolve(__dirname, 'utils'),
+      '@/types': path.resolve(__dirname, 'types'),
+      '@/hooks': path.resolve(__dirname, 'hooks'),
+      '@/config': path.resolve(__dirname, 'config'),
     };
     
     return config;
