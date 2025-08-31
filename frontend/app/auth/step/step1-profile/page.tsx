@@ -4,8 +4,9 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAppDispatch, useAppSelector } from '@/app/redux/hooks';
 import { updateStepData, markStepCompleted } from '@/app/redux/formSlice';
-import { useUpdateProfile, useUserProfile } from '@/hooks/useApi';
-import useAuthV2 from '@/hooks/useAuthV2';
+// 🚨 不要なimportを削除（Application error対策）
+// import { useUpdateProfile, useUserProfile } from '@/hooks/useApi';
+// import useAuthV2 from '@/hooks/useAuthV2';
 import StepNavigation from '../components/StepNavigation';
 import StepLayout from '../components/StepLayout';
 import toast from 'react-hot-toast';
@@ -71,13 +72,14 @@ export default function Step1ProfilePage() {
   //   }
   // }, [userProfile]);
 
+  // 🚨 authState参照を削除（Application error対策）
   // Set initial email from auth
-  useEffect(() => {
-    // 認証情報から初期値設定
-    if (authState.user?.email && !formData.email) {
-      setFormData(prev => ({ ...prev, email: authState.user.email }));
-    }
-  }, [authState.user]);
+  // useEffect(() => {
+  //   // 認証情報から初期値設定
+  //   if (authState.user?.email && !formData.email) {
+  //     setFormData(prev => ({ ...prev, email: authState.user.email }));
+  //   }
+  // }, [authState.user]);
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
