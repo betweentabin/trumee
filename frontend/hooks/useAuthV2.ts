@@ -152,7 +152,7 @@ export const useAuthV2 = () => {
     const storedToken = localStorage.getItem('auth_token_v2');
     const storedDrfToken = localStorage.getItem('drf_token_v2');
     
-    if (storedToken && storedDrfToken) {
+    if (storedToken && storedDrfToken && !isAuthenticated) {
       dispatch(setTokens({
         token: storedToken,
         drfToken: storedDrfToken,
@@ -161,10 +161,12 @@ export const useAuthV2 = () => {
       // JWTトークンを使用
       apiV2Client.setToken(storedToken);
       
-      // ユーザー情報を取得
-      refetchProfile();
+      // ユーザー情報を取得（一度だけ）
+      if (typeof window !== 'undefined') {
+        refetchProfile();
+      }
     }
-  }, [dispatch, refetchProfile]);
+  }, [dispatch, isAuthenticated]);
 
   // トークン保存
   useEffect(() => {

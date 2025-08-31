@@ -32,17 +32,19 @@ export default function ResumesPage() {
   const [loading, setLoading] = useState(true);
   const { isAuthenticated, initializeAuth } = useAuthV2();
 
-  // 認証チェック
+  // 初期化（一度だけ実行）
   useEffect(() => {
     initializeAuth();
-  }, [initializeAuth]);
+  }, []);
 
+  // 認証状態の変化を監視
   useEffect(() => {
-    // より堅牢な認証チェック
-    const checkAuthAndFetch = () => {
-      // localStorageにトークンがあるか確認
-      const hasStoredToken = typeof window !== 'undefined' && 
-        localStorage.getItem('auth_token_v2') && 
+    // SSRでは実行しない
+    if (typeof window === 'undefined') return;
+    
+    // 初期ロード時は少し待つ
+    const timer = setTimeout(() => {
+      const hasStoredToken = localStorage.getItem('auth_token_v2') && 
         localStorage.getItem('drf_token_v2');
       
       if (hasStoredToken || isAuthenticated) {
@@ -51,11 +53,10 @@ export default function ResumesPage() {
         console.log('未認証のため、ログインページにリダイレクト');
         router.push('/auth/login');
       }
-    };
+    }, 100); // タイマーを短縮
 
-    const timer = setTimeout(checkAuthAndFetch, 500);
     return () => clearTimeout(timer);
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated]); // routerを依存配列から除外
 
   const fetchResumes = async () => {
     try {
