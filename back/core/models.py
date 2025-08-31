@@ -158,23 +158,52 @@ class Education(models.Model):
         ('other', 'その他'),
     ]
     
+    GRADUATION_STATUS_CHOICES = [
+        ('graduated', '卒業'),
+        ('expected', '卒業見込み'),
+        ('enrolled', '在学中'),
+        ('dropped', '中退'),
+    ]
+    
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     resume = models.ForeignKey('Resume', on_delete=models.CASCADE, related_name='educations')
     
     school_name = models.CharField(max_length=200)
     faculty = models.CharField(max_length=100, blank=True)
-    major = models.CharField(max_length=100, blank=True)
-    graduation_date = models.DateField(null=True, blank=True)
+    department = models.CharField(max_length=100, blank=True)  # 実際のDBカラム
+    graduation_year = models.IntegerField(null=True, blank=True)  # 実際のDBカラム
+    graduation_month = models.IntegerField(null=True, blank=True)  # 実際のDBカラム
+    graduation_status = models.CharField(max_length=20, choices=GRADUATION_STATUS_CHOICES, blank=True)  # 実際のDBカラム
     education_type = models.CharField(max_length=20, choices=EDUCATION_TYPES)
     
     order = models.IntegerField(default=0)
     
     class Meta:
         db_table = 'educations'
-        ordering = ['order', '-graduation_date']
+        ordering = ['order', '-graduation_year', '-graduation_month']
     
     def __str__(self):
         return f"{self.school_name} - {self.faculty}"
+    
+    # 互換性のためのプロパティ
+    @property
+    def major(self):
+        return self.department
+    
+    @major.setter
+    def major(self, value):
+        self.department = value
+    
+    @property
+    def graduation_date(self):
+        if self.graduation_year:
+            try:
+                from datetime import date
+                month = self.graduation_month or 3
+                return date(self.graduation_year, month, 1)
+            except:
+                return None
+        return None
 
 
 class Certification(models.Model):

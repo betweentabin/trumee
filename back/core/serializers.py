@@ -119,6 +119,10 @@ class CompanyProfileSerializer(serializers.ModelSerializer):
 
 class EducationSerializer(serializers.ModelSerializer):
     """学歴シリアライザー"""
+    # 実際のDBスキーマに合わせてフィールドをマッピング
+    major = serializers.CharField(source='department', allow_blank=True, required=False)
+    graduation_date = serializers.SerializerMethodField()
+    
     class Meta:
         model = Education
         fields = [
@@ -126,6 +130,17 @@ class EducationSerializer(serializers.ModelSerializer):
             'graduation_date', 'education_type', 'order'
         ]
         read_only_fields = ['resume']
+    
+    def get_graduation_date(self, obj):
+        """graduation_year/monthから日付を構築"""
+        if hasattr(obj, 'graduation_year') and obj.graduation_year:
+            month = getattr(obj, 'graduation_month', 3)  # デフォルト3月
+            try:
+                from datetime import date
+                return date(obj.graduation_year, month, 1).isoformat()
+            except:
+                return None
+        return None
 
 
 class CertificationSerializer(serializers.ModelSerializer):
