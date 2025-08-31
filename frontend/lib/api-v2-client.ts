@@ -33,9 +33,8 @@ class ApiV2Client {
   this.client.interceptors.request.use((config) => {
     const token = this.getToken();
     if (token) {
-      // JWTトークンの場合はBearerを使用、DRFトークンの場合はTokenを使用
-      // API v2では主にJWTトークンを使用するためBearerに変更
-      config.headers.Authorization = `Bearer ${token}`;
+      // DRFトークン認証に切り替え
+      config.headers.Authorization = `Token ${token}`;
     }
     return config;
   });

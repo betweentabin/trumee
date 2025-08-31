@@ -52,8 +52,8 @@ export const useAuthV2 = () => {
         drfToken: data.drf_token,
       }));
       
-      // API クライアントにトークンを設定（JWTトークンを使用）
-      apiV2Client.setToken(data.token);
+      // API クライアントにトークンを設定（DRFトークンを使用）
+      apiV2Client.setToken(data.drf_token);
       
       toast.success('ログインしました');
       
@@ -166,8 +166,8 @@ export const useAuthV2 = () => {
         drfToken: storedDrfToken,
       }));
       
-      // JWTトークンを使用
-      apiV2Client.setToken(storedToken);
+      // DRFトークンを使用
+      apiV2Client.setToken(storedDrfToken);
     } else {
       console.log('🔧 Skip auth initialization', { 
         hasStoredToken: !!storedToken, 

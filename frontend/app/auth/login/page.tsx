@@ -171,6 +171,26 @@ export default function LoginPage() {
             </p>
           </div>
           <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+            {/* 🚨 デバッグ用テストアカウント */}
+            <div className="bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded-md text-sm">
+              <p className="font-medium mb-2">🧪 デバッグ用テストアカウント:</p>
+              <div className="flex gap-2 mb-2">
+                <button
+                  type="button"
+                  onClick={() => setFormData({ email: 'test@example.com', password: 'testpassword123' })}
+                  className="px-3 py-1 bg-blue-100 hover:bg-blue-200 rounded text-xs"
+                >
+                  ユーザーアカウント
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFormData({ email: 'company@example.com', password: 'testpassword123' })}
+                  className="px-3 py-1 bg-green-100 hover:bg-green-200 rounded text-xs"
+                >
+                  企業アカウント
+                </button>
+              </div>
+            </div>
             {errors.general && (
               <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md text-sm">
                 {errors.general}

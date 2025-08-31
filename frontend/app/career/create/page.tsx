@@ -183,8 +183,24 @@ export default function CreateResumePage() {
       //   toast.error(errorData.message || '作成に失敗しました');
       // }
 
-      // ダミー応答（デバッグモード）
+      // ダミー応答（デバッグモード）+ localStorageに保存
+      const newCareerResume = {
+        id: Date.now().toString(),
+        title: resumeData.title || '無題の職務経歴書',
+        fullName: resumeData.fullName,
+        email: resumeData.email,
+        desiredPosition: resumeData.desiredPosition,
+        createdAt: new Date().toISOString().split('T')[0],
+        updatedAt: new Date().toISOString().split('T')[0]
+      };
+      
+      const storedCareerResumes = localStorage.getItem('debug_career_resumes');
+      const existingResumes = storedCareerResumes ? JSON.parse(storedCareerResumes) : [];
+      const updatedResumes = [newCareerResume, ...existingResumes];
+      localStorage.setItem('debug_career_resumes', JSON.stringify(updatedResumes));
+      
       console.log('Resume data to create:', apiData);
+      console.log('Saved career resume to localStorage:', newCareerResume);
       toast.success('職務経歴書を作成しました（デバッグモード）');
       router.push('/career');
     } catch (error) {

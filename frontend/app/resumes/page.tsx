@@ -41,9 +41,12 @@ export default function ResumesPage() {
 
   const fetchResumes = async () => {
     try {
-      // 🚨 一時的にダミーデータを表示（API呼び出しを無効化）
-      // const response = await apiClient.getResumes();
-      setResumes([
+      // 🚨 デバッグモード: localStorageから作成済みデータを取得
+      const storedResumes = localStorage.getItem('debug_resumes');
+      let createdResumes = storedResumes ? JSON.parse(storedResumes) : [];
+      
+      // デフォルトのダミーデータ
+      const defaultResumes = [
         {
           id: '1',
           title: 'ソフトウェアエンジニア向け履歴書',
@@ -62,7 +65,11 @@ export default function ResumesPage() {
           created_at: '2024-01-10T09:00:00Z',
           updated_at: '2024-01-18T16:00:00Z'
         }
-      ]);
+      ];
+      
+      // 作成済みデータとデフォルトデータを結合（作成済みを上に表示）
+      const allResumes = [...createdResumes, ...defaultResumes];
+      setResumes(allResumes);
     } catch (error: any) {
       console.error('Failed to fetch resumes:', error);
       

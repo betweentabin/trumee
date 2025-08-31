@@ -3,9 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import apiClient from '@/lib/api-v2-client';
-// 🚨 不要なimportを削除（401エラー対策）
-// import { useCreateResume } from '@/hooks/useApiV2';
-// import useAuthV2 from '@/hooks/useAuthV2';
+import { useCreateResume } from '@/hooks/useApiV2';
+import useAuthV2 from '@/hooks/useAuthV2';
 import { CreateResumeRequest, ExperienceFormData, EducationFormData, CertificationFormData } from '@/types/api-v2';
 import toast from 'react-hot-toast';
 import { FaSave, FaArrowLeft, FaPlus, FaTrash } from 'react-icons/fa';
@@ -30,8 +29,7 @@ export default function NewResumePage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [useV2API, setUseV2API] = useState(true); // API v2をデフォルトに設定
-  // 🚨 認証チェックを無効化
-  // const { isAuthenticated, initializeAuth } = useAuthV2();
+  const { isAuthenticated, initializeAuth } = useAuthV2();
   
   // ページ読み込み時の初期化
   useEffect(() => {
@@ -41,8 +39,7 @@ export default function NewResumePage() {
     }
   }, []); // routerを依存配列から除外
 
-  // 🚨 API呼び出しを無効化
-  // const createResumeV2 = useCreateResume();
+  const createResumeV2 = useCreateResume();
 
   const [formData, setFormData] = useState<ResumeFormData>({
     title: '',
@@ -97,36 +94,40 @@ export default function NewResumePage() {
         })),
       };
 
-      // 🚨 API呼び出しを無効化（ダミー応答）
-      // createResumeV2.mutate(resumeData, {
-      //   onSuccess: (response) => {
-      //     toast.success('履歴書を作成しました (API v2)');
-      //     router.push(`/resumes/${response.id}`);
-      //   },
-      //   onError: (error) => {
-      //     console.error('Failed to create resume (v2):', error);
-      //     toast.error('履歴書の作成に失敗しました (API v2)');
-      //   }
-      // });
-      console.log('Resume data to create:', resumeData);
-      toast.success('履歴書を作成しました（デバッグモード）');
-      router.push('/resumes');
+      // DRFトークン認証でAPI v2を使用
+      createResumeV2.mutate(resumeData, {
+        onSuccess: (response) => {
+          toast.success('履歴書を作成しました');
+          router.push('/resumes');
+        },
+        onError: (error: any) => {
+          console.error('Failed to create resume:', error);
+          if (error.response?.status === 401) {
+            toast.error('ログインが必要です');
+            router.push('/auth/login');
+          } else {
+            toast.error('履歴書の作成に失敗しました');
+          }
+        }
+      });
     } else {
-      // 🚨 従来のAPI呼び出しも無効化
-      // setLoading(true);
-      // try {
-      //   const response = await apiClient.createResume(formData);
-      //   toast.success('履歴書を作成しました');
-      //   router.push(`/resumes/${response.id}`);
-      // } catch (error) {
-      //   console.error('Failed to create resume:', error);
-      //   toast.error('履歴書の作成に失敗しました');
-      // } finally {
-      //   setLoading(false);
-      // }
-      console.log('Resume data to create (v1):', formData);
-      toast.success('履歴書を作成しました（デバッグモード）');
-      router.push('/resumes');
+      // 従来のAPIもDRFトークンで呼び出し
+      setLoading(true);
+      try {
+        const response = await apiClient.createResume(formData);
+        toast.success('履歴書を作成しました');
+        router.push('/resumes');
+      } catch (error: any) {
+        console.error('Failed to create resume:', error);
+        if (error.response?.status === 401) {
+          toast.error('ログインが必要です');
+          router.push('/auth/login');
+        } else {
+          toast.error('履歴書の作成に失敗しました');
+        }
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
@@ -699,7 +700,7 @@ export default function NewResumePage() {
             </button>
             <button
               type="submit"
-              disabled={loading}
+              disabled={useV2API ? createResumeV2.isPending : loading}
               className={`inline-flex items-center px-4 py-2 text-white rounded-md disabled:opacity-50 disabled:cursor-not-allowed ${
                 useV2API 
                   ? 'bg-blue-600 hover:bg-blue-700' 
@@ -707,9 +708,11 @@ export default function NewResumePage() {
               }`}
             >
               <FaSave className="mr-2" />
-              {loading 
+              {(useV2API ? createResumeV2.isPending : loading) 
                 ? '作成中...' 
-                : '作成する（デバッグモード）'
+                : useV2API 
+                  ? '作成する (DRF認証)' 
+                  : '作成する'
               }
             </button>
           </div>

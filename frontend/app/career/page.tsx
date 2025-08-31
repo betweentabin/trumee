@@ -32,8 +32,12 @@ export default function CareerPage() {
 
   const fetchResumes = async () => {
     try {
-      // 🚨 一時的にダミーデータを表示（API呼び出しを無効化）
-      setResumes([
+      // 🚨 デバッグモード: localStorageから作成済みデータを取得
+      const storedCareerResumes = localStorage.getItem('debug_career_resumes');
+      let createdResumes = storedCareerResumes ? JSON.parse(storedCareerResumes) : [];
+      
+      // デフォルトのダミーデータ
+      const defaultResumes = [
         {
           id: '1',
           title: 'ソフトウェアエンジニア職務経歴書',
@@ -52,7 +56,11 @@ export default function CareerPage() {
           createdAt: '2024-01-10',
           updatedAt: '2024-01-18'
         }
-      ]);
+      ];
+      
+      // 作成済みデータとデフォルトデータを結合
+      const allResumes = [...createdResumes, ...defaultResumes];
+      setResumes(allResumes);
     } catch (error) {
       console.error('Error fetching resumes:', error);
     } finally {
