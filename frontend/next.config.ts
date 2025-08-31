@@ -5,10 +5,24 @@ const nextConfig: NextConfig = {
   // Ensure static assets are served correctly  
   trailingSlash: false,
   
-  // Image optimization settings
+  // Disable image optimization for better compatibility with Vercel
   images: {
-    unoptimized: true, // Allow all image formats
-    domains: [], // Add domains if needed
+    unoptimized: true,
+    domains: [],
+  },
+  
+  // Static file serving configuration
+  async rewrites() {
+    return [
+      {
+        source: '/images/:path*',
+        destination: '/images/:path*',
+      },
+      {
+        source: '/logo/:path*', 
+        destination: '/logo/:path*',
+      },
+    ];
   },
   
   // Webpack configuration
@@ -26,8 +40,6 @@ const nextConfig: NextConfig = {
     
     return config;
   },
-
-  // Redirects configuration removed - using client-side routing instead
 
   // Skip validation during build
   eslint: {
