@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useAppSelector } from '@/app/redux/hooks';
+import useAuthV2 from '@/hooks/useAuthV2';
 import toast from 'react-hot-toast';
 import { FaPlus, FaEdit, FaEye, FaPrint, FaTrash, FaClock, FaFileAlt } from 'react-icons/fa';
 
@@ -19,17 +19,38 @@ interface Resume {
 
 export default function CareerPage() {
   const router = useRouter();
-  const authState = useAppSelector(state => state.auth);
+  const { isAuthenticated, initializeAuth } = useAuthV2();
   const [resumes, setResumes] = useState<Resume[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // 初期化（一度だけ実行）
   useEffect(() => {
-    if (!authState.isAuthenticated) {
-      router.push('/auth/login');
-      return;
-    }
-    fetchResumes();
-  }, [authState, router]);
+    console.log('📄 Career page: Initializing auth');
+    initializeAuth();
+  }, []);
+
+  // 認証状態の変化を監視
+  useEffect(() => {
+    console.log('📄 Career page: Auth check', { isAuthenticated });
+    
+    // SSRでは実行しない
+    if (typeof window === 'undefined') return;
+    
+    const timer = setTimeout(() => {
+      const hasStoredToken = localStorage.getItem('auth_token_v2') && 
+        localStorage.getItem('drf_token_v2');
+      
+      if (hasStoredToken || isAuthenticated) {
+        console.log('📄 Career page: Fetching resumes');
+        fetchResumes();
+      } else {
+        console.log('📄 Career page: Redirecting to login');
+        router.push('/auth/login');
+      }
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, [isAuthenticated]);
 
   const fetchResumes = async () => {
     try {

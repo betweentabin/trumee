@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAppDispatch, useAppSelector } from '@/app/redux/hooks';
 import { updateStepData, markStepCompleted } from '@/app/redux/formSlice';
 import { useUpdateProfile, useUserProfile } from '@/hooks/useApi';
+import useAuthV2 from '@/hooks/useAuthV2';
 import StepNavigation from '../components/StepNavigation';
 import StepLayout from '../components/StepLayout';
 import toast from 'react-hot-toast';
@@ -23,7 +24,7 @@ export default function Step1ProfilePage() {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const formState = useAppSelector(state => state.form);
-  const authState = useAppSelector(state => state.auth);
+  const { isAuthenticated, initializeAuth } = useAuthV2();
   const { data: userProfile } = useUserProfile();
   const updateProfileMutation = useUpdateProfile();
 
@@ -40,12 +41,31 @@ export default function Step1ProfilePage() {
     prefecture: '',
   });
 
-  // 認証チェック
+  // 初期化（一度だけ実行）
   useEffect(() => {
-    if (!authState.isAuthenticated) {
-      router.push('/auth/login');
-    }
-  }, [authState.isAuthenticated, router]);
+    console.log('👤 Step1 Profile: Initializing auth');
+    initializeAuth();
+  }, []);
+
+  // 認証状態の変化を監視
+  useEffect(() => {
+    console.log('👤 Step1 Profile: Auth check', { isAuthenticated });
+    
+    // SSRでは実行しない
+    if (typeof window === 'undefined') return;
+    
+    const timer = setTimeout(() => {
+      const hasStoredToken = localStorage.getItem('auth_token_v2') && 
+        localStorage.getItem('drf_token_v2');
+      
+      if (!hasStoredToken && !isAuthenticated) {
+        console.log('👤 Step1 Profile: Redirecting to login');
+        router.push('/auth/login');
+      }
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, [isAuthenticated]);
 
   // Load saved data on mount
   useEffect(() => {
