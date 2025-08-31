@@ -2,15 +2,6 @@ import type { NextConfig } from "next";
 import path from "path";
 
 const nextConfig: NextConfig = {
-  // Ensure static assets are served correctly  
-  trailingSlash: false,
-  
-  // Disable image optimization for better compatibility with Vercel
-  images: {
-    unoptimized: true,
-    domains: [],
-  },
-  
   // Webpack configuration
   webpack(config) {
     config.module.rules.push({
