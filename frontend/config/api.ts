@@ -7,6 +7,7 @@ export const API_CONFIG = {
   endpoints: {
     // Authentication (API v2)
     login: '/auth/login/',
+    register: '/auth/register-user/', // Added missing register endpoint
     registerUser: '/auth/register-user/',
     registerCompany: '/auth/register-company/',
     logout: '/auth/logout/',
