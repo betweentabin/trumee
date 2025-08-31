@@ -121,8 +121,7 @@ class Command(BaseCommand):
                 faculty=random.choice(['情報工学科', '経済学部', 'デザイン学科']),
                 major=random.choice(['情報工学', '経済学', 'デザイン学']),
                 education_type='university',
-                graduation_year=2020,
-                graduation_month=3
+                graduation_date=date(2020, 3, 31)
             )
             
             self.stdout.write(f'Created seeker: {name} ({user.email})')
