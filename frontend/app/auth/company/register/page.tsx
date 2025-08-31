@@ -164,26 +164,32 @@ export default function CompanyRegisterPage() {
 
     try {
       // Register company
-      const response = await fetch(buildApiUrl(API_CONFIG.endpoints.registerCompany), {
+      const apiUrl = buildApiUrl(API_CONFIG.endpoints.registerCompany);
+      console.log('Registering company with API URL:', apiUrl); // デバッグ用ログ
+      const requestBody = {
+        email: formData.email,
+        password: formData.password,
+        username: formData.email,
+        company_name: formData.company_name,
+        capital: parseInt(formData.employee_count) || 0,
+        company_url: formData.website || '',
+        phone: formData.phone,
+        first_name: formData.representative_name.split(' ')[1] || formData.representative_name,
+        last_name: formData.representative_name.split(' ')[0] || '',
+        campaign_code: '',
+      };
+      console.log('Request body:', JSON.stringify(requestBody, null, 2)); // リクエストボディもログ出力
+      
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          email: formData.email,
-          password: formData.password,
-          username: formData.email,
-          company_name: formData.company_name,
-          capital: parseInt(formData.employee_count) || 0,
-          company_url: formData.website || '',
-          phone: formData.phone,
-          first_name: formData.representative_name.split(' ')[1] || formData.representative_name,
-          last_name: formData.representative_name.split(' ')[0] || '',
-          campaign_code: '',
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       const data = await response.json();
+      console.log('Company registration response:', { status: response.status, data }); // デバッグログ
 
       if (response.ok) {
         toast.success('企業登録が完了しました');
@@ -198,10 +204,25 @@ export default function CompanyRegisterPage() {
         // Redirect to company dashboard
         router.push('/company');
       } else {
+        console.error('Company registration failed:', { status: response.status, data }); // 詳細エラーログ
+        
         if (data.detail?.includes('already') || data.email) {
           setErrors({ email: 'このメールアドレスは既に登録されています' });
+        } else if (data.detail) {
+          setErrors({ general: data.detail });
+          throw new Error(data.detail);
+        } else if (data.errors) {
+          // バリデーションエラーの場合
+          const newErrors: Record<string, string> = {};
+          Object.keys(data.errors).forEach(field => {
+            newErrors[field] = Array.isArray(data.errors[field]) 
+              ? data.errors[field][0] 
+              : data.errors[field];
+          });
+          setErrors(newErrors);
+          throw new Error('入力内容に問題があります');
         } else {
-          throw new Error(data.detail || data.error || '登録に失敗しました');
+          throw new Error(JSON.stringify(data) || '登録に失敗しました');
         }
       }
     } catch (error: any) {

@@ -143,6 +143,16 @@ export default function RegisterPage() {
       // Register user
       const apiUrl = buildApiUrl(API_CONFIG.endpoints.registerUser);
       console.log('Registering user with API URL:', apiUrl); // デバッグ用ログ
+      console.log('Request body:', JSON.stringify({
+        email: formData.email,
+        password: formData.password,
+        username: formData.email,
+        full_name: formData.full_name,
+        kana: formData.kana,
+        phone: formData.phone,
+        gender: formData.gender === '男性' ? 'male' : formData.gender === '女性' ? 'female' : 'other',
+        role: formData.role,
+      }, null, 2)); // リクエストボディもログ出力
       
       const response = await fetch(apiUrl, {
         method: 'POST',
@@ -162,6 +172,7 @@ export default function RegisterPage() {
       });
 
       const data = await response.json();
+      console.log('Registration response:', { status: response.status, data }); // デバッグログ
 
       if (response.ok) {
         toast.success('登録が完了しました。確認メールをご確認ください。');
@@ -175,10 +186,25 @@ export default function RegisterPage() {
         // Redirect to success page
         router.push('/auth/registersuccess');
       } else {
-        if (data.detail?.includes('Email already in use')) {
+        console.error('Registration failed:', { status: response.status, data }); // 詳細エラーログ
+        
+        if (data.detail?.includes('Email already in use') || data.email) {
           setErrors({ email: 'このメールアドレスは既に登録されています' });
+        } else if (data.detail) {
+          setErrors({ general: data.detail });
+          throw new Error(data.detail);
+        } else if (data.errors) {
+          // バリデーションエラーの場合
+          const newErrors: Record<string, string> = {};
+          Object.keys(data.errors).forEach(field => {
+            newErrors[field] = Array.isArray(data.errors[field]) 
+              ? data.errors[field][0] 
+              : data.errors[field];
+          });
+          setErrors(newErrors);
+          throw new Error('入力内容に問題があります');
         } else {
-          throw new Error(data.detail || data.error || '登録に失敗しました');
+          throw new Error(JSON.stringify(data) || '登録に失敗しました');
         }
       }
     } catch (error: any) {
