@@ -20,7 +20,7 @@ class ApiV2Client {
   private client: AxiosInstance;
   private token: string | null = null;
 
-  constructor(baseURL: string = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000') {
+  constructor(baseURL: string = process.env.NEXT_PUBLIC_API_URL || 'https://trumee-production.up.railway.app') {
     this.client = axios.create({
       baseURL,
       headers: {
@@ -29,43 +29,82 @@ class ApiV2Client {
       timeout: 10000,
     });
 
-    // リクエストインターセプター：認証トークンを自動付与
-    this.client.interceptors.request.use((config) => {
-      if (this.token) {
-        config.headers.Authorization = `Token ${this.token}`;
-      }
-      return config;
-    });
+      // リクエストインターセプター：認証トークンを自動付与
+  this.client.interceptors.request.use((config) => {
+    const token = this.getToken();
+    if (token) {
+      config.headers.Authorization = `Token ${token}`;
+    }
+    return config;
+  });
 
-    // レスポンスインターセプター：エラーハンドリング
-    this.client.interceptors.response.use(
-      (response) => response,
-      (error: AxiosError) => {
-        console.error('API Error:', error.response?.data || error.message);
-        return Promise.reject(error);
+      // レスポンスインターセプター：エラーハンドリングとトークンリフレッシュ
+  this.client.interceptors.response.use(
+    (response) => response,
+    async (error: AxiosError) => {
+      const originalRequest = error.config as any;
+      
+      // 401エラー（認証失敗）でトークンリフレッシュを試行
+      if (error.response?.status === 401 && !originalRequest._retry) {
+        originalRequest._retry = true;
+        
+        try {
+          // DRFトークンは期限がないが、何らかの理由で無効になった場合
+          // ログアウトして再ログインを促す
+          this.clearToken();
+          if (typeof window !== 'undefined') {
+            window.location.href = '/auth/login';
+          }
+        } catch (refreshError) {
+          // エラーが発生した場合もログアウト
+          this.clearToken();
+          if (typeof window !== 'undefined') {
+            window.location.href = '/auth/login';
+          }
+        }
       }
-    );
+      
+      console.error('API Error:', error.response?.data || error.message);
+      return Promise.reject(error);
+    }
+  );
   }
 
   // トークン管理
-  setToken(token: string) {
-    this.token = token;
+  setToken(drfToken: string, jwtToken?: string) {
+    this.token = drfToken; // DRFトークンを優先
     if (typeof window !== 'undefined') {
-      localStorage.setItem('auth_token_v2', token);
+      localStorage.setItem('drf_token_v2', drfToken);
+      localStorage.setItem('auth_token_v2', drfToken); // 後方互換性のため
+      if (jwtToken) {
+        localStorage.setItem('jwt_token_v2', jwtToken);
+      }
     }
   }
 
   getToken(): string | null {
     if (!this.token && typeof window !== 'undefined') {
-      this.token = localStorage.getItem('auth_token_v2');
+      // DRFトークンを優先的に取得
+      this.token = localStorage.getItem('drf_token_v2') || localStorage.getItem('auth_token_v2');
     }
     return this.token;
+  }
+
+  getRefreshToken(): string | null {
+    // DRFトークンは期限がないので、リフレッシュは不要
+    // JWTトークンがある場合はそれを返す（将来の拡張用）
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('jwt_token_v2');
+    }
+    return null;
   }
 
   clearToken() {
     this.token = null;
     if (typeof window !== 'undefined') {
+      localStorage.removeItem('drf_token_v2');
       localStorage.removeItem('auth_token_v2');
+      localStorage.removeItem('jwt_token_v2');
     }
   }
 
@@ -76,24 +115,24 @@ class ApiV2Client {
   async login(credentials: LoginRequest): Promise<LoginResponse> {
     const response = await this.client.post<LoginResponse>(API_ENDPOINTS.LOGIN, credentials);
     const { drf_token, token, user } = response.data as any;
-    // DRFトークンを優先的に使用、なければJWTトークンを使用
-    this.setToken(drf_token || token);
+    // DRFトークンを優先的に使用
+    this.setToken(drf_token, token);
     return response.data;
   }
 
   async registerUser(userData: RegisterUserRequest): Promise<LoginResponse> {
     const response = await this.client.post<LoginResponse>(API_ENDPOINTS.REGISTER_USER, userData);
     const { drf_token, token } = response.data as any;
-    // DRFトークンを優先的に使用、なければJWTトークンを使用
-    this.setToken(drf_token || token);
+    // DRFトークンを優先的に使用
+    this.setToken(drf_token, token);
     return response.data;
   }
 
   async registerCompany(companyData: RegisterCompanyRequest): Promise<LoginResponse> {
     const response = await this.client.post<LoginResponse>(API_ENDPOINTS.REGISTER_COMPANY, companyData);
     const { drf_token, token } = response.data as any;
-    // DRFトークンを優先的に使用、なければJWTトークンを使用
-    this.setToken(drf_token || token);
+    // DRFトークンを優先的に使用
+    this.setToken(drf_token, token);
     return response.data;
   }
 
