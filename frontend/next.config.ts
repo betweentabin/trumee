@@ -5,6 +5,9 @@ const nextConfig: NextConfig = {
   // Ensure static assets are served correctly
   trailingSlash: false,
   
+  // Explicitly set the public directory
+  assetPrefix: '',
+  
   // Webpack configuration
   webpack(config) {
     config.module.rules.push({
