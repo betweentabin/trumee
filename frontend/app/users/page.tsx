@@ -17,36 +17,41 @@ export default function Rightpage() {
     initializeAuth();
   }, []);
 
-  // 認証状態の変化を監視（リダイレクトループ防止付き）
+  // 認証状態の変化を監視（ループ検出付き）
   useEffect(() => {
     console.log('👤 Users page: Auth check', { isAuthenticated });
     
     // SSRでは実行しない
     if (typeof window === 'undefined') return;
     
-    // リダイレクトループ防止
-    const lastRedirect = localStorage.getItem('last_redirect_time');
-    const now = Date.now();
-    if (lastRedirect && (now - parseInt(lastRedirect)) < 5000) {
-      console.log('👤 Users page: Redirect too recent, skipping');
+    // リダイレクトループ検出
+    const visitCount = parseInt(localStorage.getItem('users_page_visits') || '0');
+    if (visitCount > 3) {
+      console.log('👤 Users page: Too many visits, stopping redirects');
+      localStorage.removeItem('users_page_visits');
       return;
     }
+    localStorage.setItem('users_page_visits', (visitCount + 1).toString());
     
+    // ページロード直後は認証システムが安定するまで待つ
     const timer = setTimeout(() => {
       const hasStoredToken = localStorage.getItem('auth_token_v2') && 
         localStorage.getItem('drf_token_v2');
       
       console.log('👤 Users page: Token check', { hasStoredToken, isAuthenticated });
       
-      if (!hasStoredToken && !isAuthenticated) {
-        console.log('👤 Users page: No valid auth, redirecting to login');
-        localStorage.setItem('last_redirect_time', now.toString());
+      // より厳格な条件：トークンが完全に存在しない場合のみリダイレクト
+      if (!hasStoredToken) {
+        console.log('👤 Users page: No tokens at all, redirecting to login');
         router.push('/auth/login');
+      } else {
+        // トークンがある場合は訪問カウントをリセット
+        localStorage.removeItem('users_page_visits');
       }
-    }, 500); // さらに長めのタイマー
+    }, 1000); // 1秒待って認証システムの安定を確保
 
     return () => clearTimeout(timer);
-  }, [isAuthenticated]);
+  }, []); // 依存配列を空にして一度だけ実行
 
   return (
     <>

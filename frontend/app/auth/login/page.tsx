@@ -16,7 +16,11 @@ export default function LoginPage() {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const loginMutation = useLogin();
-  const { login: loginV2, isLoginPending: isV2Loading } = useAuthV2();
+  
+  // ログインページでは useAuthV2 の状態監視を無効化
+  const authV2 = useAuthV2();
+  const loginV2 = authV2.login;
+  const isV2Loading = authV2.isLoginPending;
   const [isLoading, setIsLoading] = useState(false);
   const [useV2API, setUseV2API] = useState(true); // API v2をデフォルトに設定
   
@@ -27,29 +31,8 @@ export default function LoginPage() {
     }
   }, []);
 
-  // 認証済みユーザーのリダイレクト処理（厳密版）
-  useEffect(() => {
-    // SSRでは実行しない
-    if (typeof window === 'undefined') return;
-    
-    console.log('🔐 Login page: Checking for existing auth');
-    
-    // より厳密なトークンチェック
-    const authToken = localStorage.getItem('auth_token_v2');
-    const drfToken = localStorage.getItem('drf_token_v2');
-    
-    if (authToken && drfToken) {
-      // トークンの有効性を簡易チェック（長さやフォーマット）
-      if (authToken.length > 10 && drfToken.length > 10) {
-        console.log('🔐 Login page: Valid tokens found, redirecting to users');
-        router.push('/users');
-      } else {
-        console.log('🔐 Login page: Invalid tokens, clearing storage');
-        localStorage.removeItem('auth_token_v2');
-        localStorage.removeItem('drf_token_v2');
-      }
-    }
-  }, []); // 一度だけ実行、認証状態は監視しない
+  // ログインページでは認証チェックを完全に無効化
+  // リダイレクトは手動ログイン成功時のみ実行
   
   const [formData, setFormData] = useState({
     email: '',
