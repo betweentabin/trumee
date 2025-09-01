@@ -1,5 +1,5 @@
 import React, { ReactNode, useState } from "react";
-import DownIcon from "@/assets/svg/down.svg";
+
 
 interface TestimonialCardProps {
     caseId: string;
@@ -65,7 +65,9 @@ const TestimonialCard = ({
                         ))
                     }
                     <div className="w-32 flex flex-row justify-center">
-                        <DownIcon className="w-4 h-3" />
+                        <svg className="w-4 h-3" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                        </svg>
                     </div>
                     {
                         sayings.map((_item, index) => (
@@ -97,7 +99,9 @@ const TestimonialCard = ({
                             >
                                 <span className="absolute -top-5 left-0 w-full h-5 blur-lg bg-white" />
                                 <span className="absolute top-3.5 left-4 w-6 h-6 rounded-full bg-white flex flex-col items-center justify-center">
-                                    <DownIcon className="w-4 h-4 text-black" />
+                                    <svg className="w-4 h-4 text-black" fill="currentColor" viewBox="0 0 20 20">
+                                      <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                                    </svg>
                                 </span>
                                 <span>
                                     続きを読む

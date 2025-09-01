@@ -154,15 +154,14 @@ export const useAuthV2 = () => {
 
   // 初期化: ページリロード時のトークン復元
   const initializeAuth = useCallback(() => {
-    console.log('🔧 initializeAuth called', { isAuthenticated, hasToken: !!localStorage.getItem('auth_token_v2') });
+    console.log('🔧 initializeAuth called', { isAuthenticated, hasToken: !!localStorage.getItem('drf_token_v2') });
     
-    const storedToken = localStorage.getItem('auth_token_v2');
     const storedDrfToken = localStorage.getItem('drf_token_v2');
     
-    if (storedToken && storedDrfToken && !isAuthenticated) {
+    if (storedDrfToken && !isAuthenticated) {
       console.log('🔧 Restoring auth tokens');
       dispatch(setTokens({
-        token: storedToken,
+        token: storedDrfToken,  // DRFトークンを両方に設定
         drfToken: storedDrfToken,
       }));
       
@@ -170,7 +169,6 @@ export const useAuthV2 = () => {
       apiV2Client.setToken(storedDrfToken);
     } else {
       console.log('🔧 Skip auth initialization', { 
-        hasStoredToken: !!storedToken, 
         hasStoredDrfToken: !!storedDrfToken, 
         isAuthenticated 
       });
@@ -185,14 +183,15 @@ export const useAuthV2 = () => {
     }
   }, [isAuthenticated, authTokens.drfToken, currentUser, refetchProfile]);
 
-  // トークン保存
+  // トークン保存（DRFトークンのみ使用）
   useEffect(() => {
-    if (authTokens.token && authTokens.drfToken) {
-      localStorage.setItem('auth_token_v2', authTokens.token);
+    if (authTokens.drfToken) {
       localStorage.setItem('drf_token_v2', authTokens.drfToken);
+      // 後方互換性のためauth_token_v2にも保存
+      localStorage.setItem('auth_token_v2', authTokens.drfToken);
     } else {
-      localStorage.removeItem('auth_token_v2');
       localStorage.removeItem('drf_token_v2');
+      localStorage.removeItem('auth_token_v2');
     }
   }, [authTokens]);
 

@@ -3,9 +3,10 @@
  * Django認証への移行に伴うトークン管理の統一
  */
 
-// 統一されたトークンキー名
+// 統一されたトークンキー名（DRF Token認証用）
 export const TOKEN_KEYS = {
-  ACCESS_TOKEN: 'access_token',
+  DRF_TOKEN: 'drf_token_v2',  // DRF Token認証用
+  ACCESS_TOKEN: 'access_token',  // 後方互換性のため残す
   REFRESH_TOKEN: 'refresh_token',
   USER_EMAIL: 'userEmail',
   USER_ID: 'uid',
@@ -19,11 +20,12 @@ export const LEGACY_TOKEN_KEYS = {
 } as const;
 
 /**
- * アクセストークンを取得
+ * アクセストークンを取得（DRF Tokenを優先）
  */
 export const getAccessToken = (): string | null => {
   if (typeof window === 'undefined') return null;
-  return localStorage.getItem(TOKEN_KEYS.ACCESS_TOKEN);
+  // DRF Tokenを優先的に取得
+  return localStorage.getItem(TOKEN_KEYS.DRF_TOKEN) || localStorage.getItem(TOKEN_KEYS.ACCESS_TOKEN);
 };
 
 /**
@@ -51,16 +53,26 @@ export const getUserInfo = () => {
  * 認証トークンを保存
  */
 export const setAuthTokens = (tokens: {
-  access: string;
-  refresh: string;
+  drf_token?: string;  // DRF Token
+  access?: string;  // 後方互換性
+  refresh?: string;
   userEmail?: string;
   uid?: string;
   role?: string;
 }) => {
   if (typeof window === 'undefined') return;
   
-  localStorage.setItem(TOKEN_KEYS.ACCESS_TOKEN, tokens.access);
-  localStorage.setItem(TOKEN_KEYS.REFRESH_TOKEN, tokens.refresh);
+  // DRF Tokenを優先的に保存
+  if (tokens.drf_token) {
+    localStorage.setItem(TOKEN_KEYS.DRF_TOKEN, tokens.drf_token);
+    localStorage.setItem(TOKEN_KEYS.ACCESS_TOKEN, tokens.drf_token);  // 後方互換性
+  } else if (tokens.access) {
+    localStorage.setItem(TOKEN_KEYS.ACCESS_TOKEN, tokens.access);
+  }
+  
+  if (tokens.refresh) {
+    localStorage.setItem(TOKEN_KEYS.REFRESH_TOKEN, tokens.refresh);
+  }
   
   if (tokens.userEmail) {
     localStorage.setItem(TOKEN_KEYS.USER_EMAIL, tokens.userEmail);
@@ -94,14 +106,14 @@ export const clearAuthData = () => {
 };
 
 /**
- * 認証ヘッダーを取得
+ * 認証ヘッダーを取得（DRF Token形式）
  */
 export const getAuthHeaders = (): Record<string, string> => {
   const token = getAccessToken();
   if (!token) return {};
   
   return {
-    'Authorization': `Bearer ${token}`,
+    'Authorization': `Token ${token}`,  // DRF Token認証形式に変更
     'Content-Type': 'application/json',
   };
 };

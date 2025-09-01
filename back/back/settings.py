@@ -210,9 +210,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # ====== REST Framework ======
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'core.authentication.JWTAuthentication',
-        'rest_framework.authentication.SessionAuthentication',
-        'rest_framework.authentication.TokenAuthentication',
+        'rest_framework.authentication.TokenAuthentication',  # DRF Token認証をメインに
+        'rest_framework.authentication.SessionAuthentication',  # ブラウザ用セッション認証
     ],
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',

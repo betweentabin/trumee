@@ -8,7 +8,7 @@ import Layout from '@/components/auth/layout';
 import Image from 'next/image';
 import { useLogin } from '@/hooks/useApi';
 import { useAppDispatch } from '@/app/redux/hooks';
-import logoBlack from '@/assets/logo/logo_black.png';
+
 import { setUser, setToken } from '@/app/redux/authSlice';
 import useAuthV2 from '@/hooks/useAuthV2';
 
@@ -150,7 +150,7 @@ export default function LoginPage() {
           <div>
             <div className="flex justify-center">
               <Image
-                src={logoBlack}
+                src="/logo/logo_black.png"
                 alt="Logo"
                 width={150}
                 height={40}

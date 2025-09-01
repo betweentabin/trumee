@@ -122,14 +122,12 @@ def register_user_v2(request):
                 
                 # DRFトークン取得または作成
                 drf_token, created = Token.objects.get_or_create(user=user)
-                # JWTトークンも生成（互換性のため）
-                jwt_token = generate_jwt_token(user)
                 
                 return Response({
                     'message': 'User registered successfully',
                     'user': UserSerializer(user).data,
-                    'token': jwt_token,
-                    'drf_token': drf_token.key
+                    'drf_token': drf_token.key,
+                    'token': drf_token.key  # 後方互換性のため
                 }, status=status.HTTP_201_CREATED)
                 
         except Exception as e:
@@ -188,14 +186,12 @@ def register_company_v2(request):
                 
                 # DRFトークン取得または作成
                 drf_token, created = Token.objects.get_or_create(user=user)
-                # JWTトークンも生成（互換性のため）
-                jwt_token = generate_jwt_token(user)
                 
                 return Response({
                     'message': 'Company registered successfully',
                     'user': UserSerializer(user).data,
-                    'token': jwt_token,
-                    'drf_token': drf_token.key
+                    'drf_token': drf_token.key,
+                    'token': drf_token.key  # 後方互換性のため
                 }, status=status.HTTP_201_CREATED)
                 
         except Exception as e:
@@ -218,14 +214,11 @@ def login_v2(request):
         # DRFトークン取得または作成
         drf_token, created = Token.objects.get_or_create(user=user)
         
-        # JWTトークンも生成（互換性のため）
-        jwt_token = generate_jwt_token(user)
-        
         return Response({
             'message': 'Login successful',
             'user': UserSerializer(user).data,
-            'token': jwt_token,  # JWTトークン
-            'drf_token': drf_token.key  # DRFトークン
+            'drf_token': drf_token.key,  # DRFトークン
+            'token': drf_token.key  # 後方互換性のため
         }, status=status.HTTP_200_OK)
     
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

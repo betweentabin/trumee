@@ -82,14 +82,14 @@ export const buildDynamicApiUrl = (endpointFn: (id: string) => string, id: strin
   return `${API_CONFIG.BASE_URL}${API_CONFIG.API_VERSION}${endpointFn(id)}`;
 };
 
-// Common headers for API requests
+// Common headers for API requests (DRF Token認証形式)
 export const getApiHeaders = (token?: string): HeadersInit => {
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
   };
   
   if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
+    headers['Authorization'] = `Token ${token}`;  // DRF Token認証形式に変更
   }
   
   return headers;

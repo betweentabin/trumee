@@ -8,7 +8,7 @@ import Layout from '@/components/auth/layout';
 import Image from 'next/image';
 import { useLogin } from '@/hooks/useApi';
 import { useAppDispatch } from '@/app/redux/hooks';
-import logoBlack from '@/assets/logo/logo_black.png';
+
 import { setUser, setToken } from '@/app/redux/authSlice';
 import { updateUser as setUserV2, setTokens as setTokensV2 } from '@/app/redux/authV2Slice';
 import apiClient from '@/lib/api-v2-client';
@@ -183,7 +183,7 @@ export default function CompanyLoginPage() {
           <div>
             <div className="flex justify-center">
               <Image
-                src={logoBlack}
+                src="/logo/logo_black.png"
                 alt="Logo"
                 width={150}
                 height={40}
