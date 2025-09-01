@@ -50,8 +50,8 @@ export default function CompanyLoginPage() {
       localStorage.getItem('drf_token_v2');
     
     if (hasStoredToken) {
-      console.log('🏢 Company login page: Found stored tokens, redirecting to company dashboard');
-      router.push('/company/dashboard');
+      console.log('🏢 Company login page: Found stored tokens, redirecting to company main page');
+      router.push('/company');
     }
   }, []); // 一度だけ実行、認証状態は監視しない
 
@@ -155,8 +155,8 @@ export default function CompanyLoginPage() {
         toast.success('ログインに成功しました（API v1）');
       }
 
-      // 企業向けダッシュボードにリダイレクト
-      router.push('/company/dashboard');
+      // 企業向けメインページにリダイレクト
+      router.push('/company');
     } catch (error: any) {
       console.error('Login error:', error);
       

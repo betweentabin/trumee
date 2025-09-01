@@ -2,6 +2,10 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
+import { useRouter } from 'next/navigation';
+import useAuthV2 from '@/hooks/useAuthV2';
+import { useAppSelector } from '@/app/redux/hooks';
+import toast from 'react-hot-toast';
 
 import { useMessageToUser,useScoutSeeker,useSearchSeekers  } from "@/components/company/queries/mutation";
 
@@ -18,6 +22,10 @@ import JobSeekerDetailModal from "@/components/modal/jobseeker-detail";
 import search, { applyScout, cancelScout } from "../api/api";
 
 export default function Search() {
+  const router = useRouter();
+  const { isAuthenticated, currentUser, initializeAuth } = useAuthV2();
+  const authState = useAppSelector(state => state.authV2);
+  
   const [resultList, setResultList] = useState<any[]>([]);
   const [results, setResults] = useState<any[]>([]);
   const [isScouting, setIsScouting] = useState<boolean>(false);
@@ -27,7 +35,46 @@ export default function Search() {
   const [showJobTypeModal, setShowJobTypeModal] = useState(false);
   const [appliedCompanies, setAppliedCompanies] = useState<string[]>([]);
 
-  const [currentUser, setCurrentUser] = useState<any>();
+  const [selectedSeeker, setSelectedSeeker] = useState<any>();
+
+  // 認証状態をチェックして初期化
+  useEffect(() => {
+    const initialize = async () => {
+      await initializeAuth();
+    };
+    initialize();
+  }, []);
+
+  // 認証とロールチェック
+  useEffect(() => {
+    if (isAuthenticated === false) {
+      // 認証されていない場合は企業ログインページにリダイレクト
+      toast.error('企業ログインが必要です');
+      router.push('/auth/company/login');
+      return;
+    }
+    
+    if (isAuthenticated && currentUser) {
+      // 企業ロールチェック
+      if (currentUser.role !== 'company') {
+        toast.error('企業アカウントでログインしてください');
+        router.push('/auth/company/login');
+        return;
+      }
+      
+      console.log('🏢 Company page: Authenticated company user', currentUser);
+      // 認証されたユーザーの設定完了
+    }
+  }, [isAuthenticated, currentUser, router]);
+
+  // 認証チェック中はローディング表示
+  if (isAuthenticated === null) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#FF733E]"></div>
+      </div>
+    );
+  }
 
   const {
     control,
@@ -79,7 +126,7 @@ export default function Search() {
     setShowJobTypeModal((old) => !old);
   }, []);
   const onToggleDetailModal = useCallback(() => {
-    setCurrentUser(undefined);
+    setSelectedSeeker(undefined);
   }, []);
 
   const onTogglePrefecture = useCallback(
@@ -117,7 +164,7 @@ export default function Search() {
   }, [reset]);
 
   const onDetail = useCallback((_seeker: any) => {
-    setCurrentUser(_seeker);
+    setSelectedSeeker(_seeker);
   }, []);
 
   const { mutate: sendMessage, isPending: sendingMessage } = useMessageToUser();
@@ -187,7 +234,7 @@ export default function Search() {
       // console.log(data,'dat');
       
       scoutSeeker(data);
-      setCurrentUser(undefined);
+      setSelectedSeeker(undefined);
     },
     [scoutSeeker]
   );
@@ -479,16 +526,16 @@ export default function Search() {
         )}
       />
       <JobSeekerDetailModal
-        detail={currentUser}
-        isOpen={!!currentUser}
+        detail={selectedSeeker}
+        isOpen={!!selectedSeeker}
         isSendingMessage={sendingMessage}
         closeLabel="閉じる"
         confirmLabel={
-          currentUser?.scouts?.length > 0 ? "スカウトを取り消す" : "スカウトする"
+          selectedSeeker?.scouts?.length > 0 ? "スカウトを取り消す" : "スカウトする"
         }
         onClose={onToggleDetailModal}
         sendMessage={sendMessage}
-        onConfirm={() => currentUser && scout(currentUser)}
+        onConfirm={() => selectedSeeker && scout(selectedSeeker)}
       />
     </div>
   );
