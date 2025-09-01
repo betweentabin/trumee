@@ -1,5 +1,6 @@
 "use client"
 import React from "react";
+import Image from "next/image";
 import { useRouter } from 'next/navigation';
 import Link from "next/link";
 import { clearAuthData } from '@/utils/auth';
@@ -27,7 +28,7 @@ const Header = () => {
           {/* Left Logo */}
           <div className="flex items-center">
           
-              <img src="/logo/logo_top.png" alt="Logo" className="h-10 w-[210px] mr-3 cursor-pointer" />
+              <Image src="/logo/logo_top.png" alt="Logo" width={210} height={40} className="h-10 w-[210px] mr-3 cursor-pointer" />
           
         </div>
       

@@ -1,5 +1,6 @@
 "use client";
 import React from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { clearAuthData } from "@/utils/auth";
 // Firebase imports removed - using Django auth only
@@ -29,9 +30,11 @@ const Header = () => {
       <div className="flex items-center justify-between h-20 px-6 md:px-12 lg:px-16">
         {/* Left Logo */}
         <div className="flex items-center">
-          <img
+          <Image
             src="/logo/logo_top.png"
             alt="Logo"
+            width={210}
+            height={40}
             className="h-10 w-[210px] mr-3"
           />
         </div>

@@ -92,13 +92,15 @@ export default function Home() {
             <div key={`section-1-${index}`}>{_item}</div>
           ))}
           <div className="absolute -top-8 -bottom-8 h-full aspect-square self-center object-center">
-            <img src={"/images/circle.png"} className="" alt="" />
+            <Image src="/images/circle.png" alt="circle" width={100} height={100} className="w-full h-full object-contain" />
           </div>
           <div className="absolute right-0 -bottom-4">
-            <img
-              src={"/images/note2.png"}
+            <Image
+              src="/images/note2.png"
+              alt="note2"
+              width={92}
+              height={92}
               className="w-[92px] h-[92px] object-cover"
-              alt=""
             />
           </div>
         </div>
