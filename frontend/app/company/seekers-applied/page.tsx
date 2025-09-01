@@ -2,12 +2,13 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import useAuthV2 from '@/hooks/useAuthV2';
 import apiClient from '@/lib/api-v2-client';
 import toast from 'react-hot-toast';
 import AppliedCard from './appliedcard';
 import JobSeekerDetailModal from '@/components/modal/jobseeker-detail';
 
-interface Application {
+interface ApplicationWithApplicant {
   id: string;
   applicant: {
     id: string;
@@ -26,19 +27,58 @@ interface Application {
 
 export default function SeekersAppliedPage() {
   const router = useRouter();
-  const [applications, setApplications] = useState<Application[]>([]);
+  const { isAuthenticated, currentUser, initializeAuth } = useAuthV2();
+  const [applications, setApplications] = useState<ApplicationWithApplicant[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedSeeker, setSelectedSeeker] = useState<any>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
 
+  // Initialize auth
   useEffect(() => {
-    fetchApplications();
+    const initialize = async () => {
+      initializeAuth();
+    };
+    initialize();
   }, []);
+
+  // Check authentication and role
+  useEffect(() => {
+    if (isAuthenticated === false) {
+      toast.error('企業ログインが必要です');
+      router.push('/auth/company/login');
+      return;
+    }
+    
+    if (isAuthenticated && currentUser) {
+      if (currentUser.role !== 'company') {
+        toast.error('企業アカウントでログインしてください');
+        router.push('/auth/company/login');
+        return;
+      }
+      
+      // Fetch applications after authentication check
+      fetchApplications();
+    }
+  }, [isAuthenticated, currentUser, router]);
 
   const fetchApplications = async () => {
     try {
       const response = await apiClient.getApplications();
-      setApplications(response);
+      // Transform response to match ApplicationWithApplicant interface
+      // TODO: Update backend to return applicant details with application data
+      const transformedApplications = response.map((app: any) => ({
+        ...app,
+        applicant: app.applicant || {
+          id: app.applicant_id || app.applicant,
+          email: 'N/A',
+          full_name: 'N/A',
+          username: 'N/A'
+        },
+        resume: app.resume || null,
+        applied_at: app.applied_at || app.created_at,
+        reviewed_at: app.reviewed_at || null
+      }));
+      setApplications(transformedApplications);
     } catch (error) {
       console.error('Failed to fetch applications:', error);
       toast.error('応募リストの取得に失敗しました');
@@ -63,7 +103,8 @@ export default function SeekersAppliedPage() {
     }
   };
 
-  if (loading) {
+  // Show loading while checking auth
+  if (isAuthenticated === null || loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#FF733E]"></div>
@@ -105,7 +146,20 @@ export default function SeekersAppliedPage() {
       {showDetailModal && selectedSeeker && (
         <JobSeekerDetailModal
           detail={selectedSeeker}
+          isOpen={showDetailModal}
+          closeLabel="閉じる"
+          confirmLabel="メッセージを送る"
+          isSendingMessage={false}
           onClose={() => {
+            setShowDetailModal(false);
+            setSelectedSeeker(null);
+          }}
+          sendMessage={(message: any) => {
+            console.log('Sending message:', message);
+            // TODO: Implement message sending
+          }}
+          onConfirm={() => {
+            console.log('Confirmed');
             setShowDetailModal(false);
             setSelectedSeeker(null);
           }}

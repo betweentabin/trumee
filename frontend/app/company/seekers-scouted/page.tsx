@@ -2,12 +2,13 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import useAuthV2 from '@/hooks/useAuthV2';
 import apiClient from '@/lib/api-v2-client';
 import toast from 'react-hot-toast';
 import UserCard from './usercard';
 import JobSeekerDetailModal from '@/components/modal/jobseeker-detail';
 
-interface Scout {
+interface ScoutWithSeeker {
   id: string;
   seeker: {
     id: string;
@@ -24,19 +25,55 @@ interface Scout {
 
 export default function SeekersScoutedPage() {
   const router = useRouter();
-  const [scouts, setScouts] = useState<Scout[]>([]);
+  const { isAuthenticated, currentUser, initializeAuth } = useAuthV2();
+  const [scouts, setScouts] = useState<ScoutWithSeeker[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedSeeker, setSelectedSeeker] = useState<any>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
 
+  // Initialize auth
   useEffect(() => {
-    fetchScouts();
+    const initialize = async () => {
+      initializeAuth();
+    };
+    initialize();
   }, []);
+
+  // Check authentication and role
+  useEffect(() => {
+    if (isAuthenticated === false) {
+      toast.error('企業ログインが必要です');
+      router.push('/auth/company/login');
+      return;
+    }
+    
+    if (isAuthenticated && currentUser) {
+      if (currentUser.role !== 'company') {
+        toast.error('企業アカウントでログインしてください');
+        router.push('/auth/company/login');
+        return;
+      }
+      
+      // Fetch scouts after authentication check
+      fetchScouts();
+    }
+  }, [isAuthenticated, currentUser, router]);
 
   const fetchScouts = async () => {
     try {
       const response = await apiClient.getScouts();
-      setScouts(response);
+      // Transform response to match ScoutWithSeeker interface
+      // TODO: Update backend to return seeker details with scout data
+      const transformedScouts = response.map((scout: any) => ({
+        ...scout,
+        seeker: scout.seeker || {
+          id: scout.seeker_id || scout.seeker,
+          email: 'N/A',
+          full_name: 'N/A',
+          username: 'N/A'
+        }
+      }));
+      setScouts(transformedScouts);
     } catch (error) {
       console.error('Failed to fetch scouts:', error);
       toast.error('スカウトリストの取得に失敗しました');
@@ -61,7 +98,8 @@ export default function SeekersScoutedPage() {
     }
   };
 
-  if (loading) {
+  // Show loading while checking auth
+  if (isAuthenticated === null || loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#FF733E]"></div>
@@ -102,7 +140,20 @@ export default function SeekersScoutedPage() {
       {showDetailModal && selectedSeeker && (
         <JobSeekerDetailModal
           detail={selectedSeeker}
+          isOpen={showDetailModal}
+          closeLabel="閉じる"
+          confirmLabel="メッセージを送る"
+          isSendingMessage={false}
           onClose={() => {
+            setShowDetailModal(false);
+            setSelectedSeeker(null);
+          }}
+          sendMessage={(message: any) => {
+            console.log('Sending message:', message);
+            // TODO: Implement message sending
+          }}
+          onConfirm={() => {
+            console.log('Confirmed');
             setShowDetailModal(false);
             setSelectedSeeker(null);
           }}
