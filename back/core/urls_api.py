@@ -13,6 +13,7 @@ from .views_api import (
     search_companies, get_company_detail, 
     create_stripe_checkout_session, get_admin_seekers
 )
+from . import views_api_v2
 
 router = DefaultRouter()
 router.register(r'seeker-profiles', SeekerProfileViewSet, basename='seeker-profile')
@@ -48,6 +49,11 @@ urlpatterns = [
     
     # 管理者用
     path('admin/seekers/', get_admin_seekers, name='admin-seekers'),
+    
+    # 新しい管理者API（v2からインポート）
+    path('admin/seminars/', views_api_v2.admin_seminars, name='admin-seminars'),
+    path('admin/publications/', views_api_v2.admin_publications, name='admin-publications'),
+    path('admin/news/', views_api_v2.admin_news, name='admin-news'),
     
     # ViewSet ルート
     path('', include(router.urls)),

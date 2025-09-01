@@ -59,6 +59,11 @@ urlpatterns = [
     # 共通エンドポイント
     path('user/settings/', views_api_v2.user_settings, name='user-settings'),
     
+    # 管理者専用エンドポイント
+    path('admin/seminars/', views_api_v2.admin_seminars, name='admin-seminars'),
+    path('admin/publications/', views_api_v2.admin_publications, name='admin-publications'),
+    path('admin/news/', views_api_v2.admin_news, name='admin-news'),
+    
     # ViewSet URLs
     path('', include(router.urls)),
 ]
