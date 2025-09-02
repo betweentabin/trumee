@@ -44,6 +44,12 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  async rewrites() {
+    return [
+      { source: '/images/:path*', destination: '/api/images/:path*' },
+      { source: '/logo/:path*', destination: '/api/logo/:path*' },
+    ];
+  },
 };
 
 export default nextConfig;
