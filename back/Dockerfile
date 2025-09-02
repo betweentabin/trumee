@@ -14,10 +14,17 @@ RUN apt-get update && apt-get install -y \
     libmagic-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements and install Python dependencies
+# Copy requirements and install script
 COPY requirements.txt .
+COPY install_requirements.sh .
+# Upgrade pip with retry logic and install dependencies in chunks
 RUN pip install --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt
+    pip config set global.timeout 300 && \
+    pip config set global.retries 5 && \
+    chmod +x install_requirements.sh && \
+    ./install_requirements.sh || \
+    (echo "Fallback: Installing from requirements.txt" && \
+     pip install --no-cache-dir --default-timeout=300 -r requirements.txt)
 
 # Copy the rest of the application
 COPY . .
