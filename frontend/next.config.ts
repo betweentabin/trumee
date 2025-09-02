@@ -30,9 +30,9 @@ const nextConfig: NextConfig = {
     return config;
   },
 
-  // Output configuration for static export if needed
-  output: 'standalone',
-  
+  // Use Vercel defaults; avoid standalone on Vercel
+  // output: 'standalone',
+
   // Asset prefix for Vercel deployment
   assetPrefix: process.env.NODE_ENV === 'production' ? '' : '',
   basePath: '',
