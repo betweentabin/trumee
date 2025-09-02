@@ -18,15 +18,6 @@ const nextConfig: NextConfig = {
       use: ["@svgr/webpack"],
     });
     
-    // Handle images with webpack
-    config.module.rules.push({
-      test: /\.(png|jpg|jpeg|gif)$/,
-      type: 'asset/resource',
-      generator: {
-        filename: 'static/images/[name].[hash][ext]'
-      }
-    });
-    
     // Add path aliases using path.resolve for better reliability
     config.resolve.alias = {
       ...config.resolve.alias,
