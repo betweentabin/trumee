@@ -54,11 +54,9 @@ export default function ResumesPage() {
   const fetchResumes = async () => {
     try {
       // DRFトークン認証でAPI v2から履歴書データを取得
-      const response = await apiClient.get('/api/v2/resumes/');
-      const resumesData = response.data;
-      
-      console.log('Fetched resumes from API:', resumesData);
-      setResumes(resumesData || []);
+      const data = await apiClient.getResumes();
+      console.log('Fetched resumes from API:', data);
+      setResumes(data || []);
     } catch (error: any) {
       console.error('Failed to fetch resumes:', error);
       
@@ -98,7 +96,7 @@ export default function ResumesPage() {
 
   const handleActivate = async (id: string) => {
     try {
-      await apiClient.patch(`/api/v2/resumes/${id}/`, { is_active: true });
+      await apiClient.updateResume(id, { is_active: true });
       toast.success('履歴書を有効化しました');
       fetchResumes();
     } catch (error: any) {

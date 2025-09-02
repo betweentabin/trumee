@@ -212,6 +212,20 @@ export interface Message extends BaseModel {
 }
 
 // ============================================================================
+// 企業 月次ページ
+// ============================================================================
+
+export interface CompanyMonthlyPage extends BaseModel {
+  company: UUID;
+  year: number;
+  month: number;
+  title: string;
+  content: { [key: string]: any };
+  is_published: boolean;
+  page_url: string;
+}
+
+// ============================================================================
 // リクエスト・レスポンス型
 // ============================================================================
 
@@ -425,4 +439,8 @@ export const API_ENDPOINTS = {
   
   // ダッシュボード
   DASHBOARD_STATS: '/api/v2/dashboard/stats/',
+  
+  // 企業 月次ページ
+  COMPANY_MONTHLY_BASE: '/api/v2/company/monthly/',
+  COMPANY_MONTHLY_CURRENT: '/api/v2/company/monthly/current/',
 } as const;

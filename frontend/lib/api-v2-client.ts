@@ -9,7 +9,8 @@ import {
   Application, Scout, Message, DashboardStats, ResumeCompletenessCheck,
   LoginRequest, LoginResponse, RegisterUserRequest, RegisterCompanyRequest,
   SearchSeekersRequest, SearchSeekersResponse, CreateResumeRequest, UpdateResumeRequest,
-  CreateApplicationRequest, CreateScoutRequest, ApiResponse, ApiError, API_ENDPOINTS
+  CreateApplicationRequest, CreateScoutRequest, ApiResponse, ApiError, API_ENDPOINTS,
+  CompanyMonthlyPage
 } from '@/types/api-v2';
 
 // ============================================================================
@@ -256,6 +257,27 @@ class ApiV2Client {
 
   async deleteCertification(id: string): Promise<void> {
     await this.client.delete(`${API_ENDPOINTS.CERTIFICATIONS}${id}/`);
+  }
+
+  // ============================================================================
+  // 企業 月次ページ
+  // ============================================================================
+
+  async getCompanyMonthlyCurrent(): Promise<CompanyMonthlyPage> {
+    const res = await this.client.get<CompanyMonthlyPage>(API_ENDPOINTS.COMPANY_MONTHLY_CURRENT);
+    return res.data;
+  }
+
+  async getCompanyMonthly(year: number, month: number): Promise<CompanyMonthlyPage> {
+    const url = `${API_ENDPOINTS.COMPANY_MONTHLY_BASE}${year}/${month}/`;
+    const res = await this.client.get<CompanyMonthlyPage>(url);
+    return res.data;
+  }
+
+  async updateCompanyMonthly(year: number, month: number, payload: Partial<CompanyMonthlyPage>): Promise<CompanyMonthlyPage> {
+    const url = `${API_ENDPOINTS.COMPANY_MONTHLY_BASE}${year}/${month}/`;
+    const res = await this.client.put<CompanyMonthlyPage>(url, payload);
+    return res.data;
   }
 
   // ============================================================================

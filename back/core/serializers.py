@@ -3,7 +3,7 @@ from django.contrib.auth import authenticate
 from .models import (
     User, SeekerProfile, CompanyProfile, Resume, Experience, Education, Certification,
     Application, Scout, Message, Payment, JobPosting,
-    ActivityLog, MLModel, MLPrediction
+    ActivityLog, MLModel, MLPrediction, CompanyMonthlyPage
 )
 
 
@@ -387,6 +387,19 @@ class MLPredictionSerializer(serializers.ModelSerializer):
         model = MLPrediction
         fields = '__all__'
         read_only_fields = ['created_at']
+
+
+class CompanyMonthlyPageSerializer(serializers.ModelSerializer):
+    """企業月次ページシリアライザー"""
+    page_url = serializers.CharField(read_only=True)
+
+    class Meta:
+        model = CompanyMonthlyPage
+        fields = [
+            'id', 'company', 'year', 'month', 'title', 'content',
+            'is_published', 'page_url', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['company', 'page_url', 'created_at', 'updated_at']
 
 
 # 互換性のための旧シリアライザー（段階的に削除予定）

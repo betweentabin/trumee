@@ -721,3 +721,33 @@ class UserProfileExtension(models.Model):
     
     def __str__(self):
         return f"{self.user.email} - Profile Extension"
+
+
+class CompanyMonthlyPage(models.Model):
+    """企業ごとの月次ページ（ダッシュボード用の簡易CMS）"""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    company = models.ForeignKey(User, on_delete=models.CASCADE, related_name='monthly_pages')
+    year = models.IntegerField()
+    month = models.IntegerField()
+    title = models.CharField(max_length=200, blank=True)
+    content = models.JSONField(default=dict, blank=True)
+    is_published = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'company_monthly_pages'
+        constraints = [
+            models.UniqueConstraint(fields=['company', 'year', 'month'], name='uniq_company_year_month')
+        ]
+        indexes = [
+            models.Index(fields=['company', '-year', '-month']),
+        ]
+
+    def __str__(self):
+        return f"{self.company.company_name or self.company.email} - {self.year}-{self.month:02d}"
+
+    @property
+    def page_url(self) -> str:
+        """フロントエンドで表示するための推奨URL"""
+        return f"/company/{self.company_id}/{self.year}/{self.month:02d}"

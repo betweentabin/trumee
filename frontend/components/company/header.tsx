@@ -3,6 +3,8 @@ import React from "react";
 import Image from "next/image";
 import { useRouter } from 'next/navigation';
 import Link from "next/link";
+import toast from 'react-hot-toast';
+import apiV2Client from '@/lib/api-v2-client';
 import { clearAuthData } from '@/utils/auth';
 
 
@@ -22,6 +24,15 @@ const Header = () => {
 
   }
 
+  const openThisMonth = async () => {
+    try {
+      const page = await apiV2Client.getCompanyMonthlyCurrent();
+      router.push(page.page_url);
+    } catch (e) {
+      toast.error('月次ページの取得に失敗しました');
+    }
+  }
+
     return (
       <header className="w-full bg-white shadow-md hide-under-756">
         <div className="flex items-center justify-between h-20 px-6 md:px-12 lg:px-16">
@@ -35,6 +46,9 @@ const Header = () => {
           <div className="flex items-center gap-4">
             <button onClick={search}>
             求職者の検索
+            </button>
+            <button onClick={openThisMonth}>
+            今月のページ
             </button>
             <button onClick={mypage}>
             マイページ

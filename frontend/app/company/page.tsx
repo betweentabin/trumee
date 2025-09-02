@@ -19,6 +19,8 @@ import { CheckInputConditions, DefaultInput } from "@/components/pure/input";
 import SeekerCard from "./_component/seeker_card";
 import { DefaultSelect } from "@/components/pure/select";
 import JobSeekerDetailModal from "@/components/modal/jobseeker-detail";
+import ScoutModal from "@/components/company/scout-modal";
+import apiV2Client from '@/lib/api-v2-client';
 import search, { applyScout, cancelScout } from "../api/api";
 
 export default function Search() {
@@ -36,6 +38,8 @@ export default function Search() {
   const [appliedCompanies, setAppliedCompanies] = useState<string[]>([]);
 
   const [selectedSeeker, setSelectedSeeker] = useState<any>();
+  const [showScoutModal, setShowScoutModal] = useState(false);
+  const [sendingScout, setSendingScout] = useState(false);
 
   // 認証状態をチェックして初期化
   useEffect(() => {
@@ -167,6 +171,14 @@ export default function Search() {
     setSelectedSeeker(_seeker);
   }, []);
 
+  const onOpenScout = useCallback((_seeker: any) => {
+    setSelectedSeeker(_seeker);
+    setShowScoutModal(true);
+  }, []);
+  const onCloseScout = useCallback(() => {
+    setShowScoutModal(false);
+  }, []);
+
   const { mutate: sendMessage, isPending: sendingMessage } = useMessageToUser();
   /**
    * * search handler
@@ -229,15 +241,26 @@ export default function Search() {
   
   const { mutate: scoutSeeker } =
     useScoutSeeker(onScoutResponse);
-  const onScout = useCallback(
-    (data: any) => () => {
-      // console.log(data,'dat');
-      
-      scoutSeeker(data);
-      setSelectedSeeker(undefined);
-    },
-    [scoutSeeker]
-  );
+
+  // v2: スカウト送信
+  const sendScoutV2 = useCallback(async (message: string) => {
+    if (!selectedSeeker) return;
+    setSendingScout(true);
+    try {
+      const res = await apiV2Client.createScout({
+        seeker: selectedSeeker.id,
+        scout_message: message,
+      });
+      toast.success('スカウトを送信しました');
+      setAppliedCompanies((prev) => [...new Set([...prev, selectedSeeker.id])]);
+      setShowScoutModal(false);
+    } catch (e: any) {
+      console.error('Failed to send scout:', e?.response?.data || e);
+      toast.error('スカウト送信に失敗しました');
+    } finally {
+      setSendingScout(false);
+    }
+  }, [selectedSeeker]);
 
   const scout = async(data: any) => {
     setIsScouting(true); // if global or per company loading state
@@ -478,7 +501,7 @@ export default function Search() {
             <SeekerCard
               detail={_seeker}
               onDetail={() => onDetail(_seeker)}
-              onScout={() => scout(_seeker)}
+              onScout={() => onOpenScout(_seeker)}
               isScouting={false}
               isScouted={appliedCompanies.includes(_seeker.id)}
               key={`seeker-${_seeker.id}`}
@@ -535,7 +558,15 @@ export default function Search() {
         }
         onClose={onToggleDetailModal}
         sendMessage={sendMessage}
-        onConfirm={() => selectedSeeker && scout(selectedSeeker)}
+        onConfirm={() => setShowScoutModal(true)}
+      />
+
+      <ScoutModal
+        isOpen={showScoutModal}
+        seeker={selectedSeeker || null}
+        loading={sendingScout}
+        onClose={onCloseScout}
+        onSend={sendScoutV2}
       />
     </div>
   );

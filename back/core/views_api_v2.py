@@ -26,14 +26,16 @@ import os
 
 from .models import (
     User, SeekerProfile, CompanyProfile, Resume, Experience, 
-    Education, Certification, Application, Scout, Message, JobPosting
+    Education, Certification, Application, Scout, Message, JobPosting,
+    CompanyMonthlyPage
 )
 from .serializers import (
     UserSerializer, SeekerProfileSerializer, CompanyProfileSerializer,
     ResumeSerializer, ResumeCreateSerializer, ResumeUpdateSerializer,
     ExperienceSerializer, EducationSerializer, CertificationSerializer,
     ApplicationSerializer, ScoutSerializer, MessageSerializer, JobPostingSerializer,
-    UserRegisterSerializer, CompanyRegisterSerializer, LoginSerializer
+    UserRegisterSerializer, CompanyRegisterSerializer, LoginSerializer,
+    CompanyMonthlyPageSerializer
 )
 
 JWT_SECRET = os.getenv("JWT_SECRET_KEY", "default-secret-key-change-in-production")
@@ -1177,6 +1179,73 @@ def company_applications_list(request):
     applications = Application.objects.filter(company=request.user).order_by('-applied_at')
     serializer = ApplicationSerializer(applications, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+# ============================================================================
+# 企業 月次ページ API
+# ============================================================================
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def company_monthly_current(request):
+    """
+    今月分の月次ページを取得（なければ作成）
+    GET /api/v2/company/monthly/current/
+    """
+    if request.user.role != 'company':
+        return Response({'error': 'This endpoint is for companies only'}, status=status.HTTP_403_FORBIDDEN)
+
+    today = datetime.date.today()
+    page, created = CompanyMonthlyPage.objects.get_or_create(
+        company=request.user, year=today.year, month=today.month,
+        defaults={'title': f'{today.year}年{today.month}月のページ', 'content': {}}
+    )
+    serializer = CompanyMonthlyPageSerializer(page)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def company_monthly_list(request):
+    """
+    自社の月次ページ一覧
+    GET /api/v2/company/monthly/
+    """
+    if request.user.role != 'company':
+        return Response({'error': 'This endpoint is for companies only'}, status=status.HTTP_403_FORBIDDEN)
+    pages = CompanyMonthlyPage.objects.filter(company=request.user).order_by('-year', '-month')
+    serializer = CompanyMonthlyPageSerializer(pages, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(['GET', 'PUT'])
+@permission_classes([IsAuthenticated])
+def company_monthly_detail(request, year: int, month: int):
+    """
+    指定年月の月次ページ取得・更新
+    GET /api/v2/company/monthly/<year>/<month>/
+    PUT /api/v2/company/monthly/<year>/<month>/
+    """
+    if request.user.role != 'company':
+        return Response({'error': 'This endpoint is for companies only'}, status=status.HTTP_403_FORBIDDEN)
+
+    page = CompanyMonthlyPage.objects.filter(company=request.user, year=year, month=month).first()
+    if not page:
+        if request.method == 'GET':
+            return Response({'error': 'Not found'}, status=status.HTTP_404_NOT_FOUND)
+        # PUTのときは作成して更新扱い
+        page = CompanyMonthlyPage.objects.create(company=request.user, year=year, month=month, title=f'{year}年{month}月のページ', content={})
+
+    if request.method == 'GET':
+        serializer = CompanyMonthlyPageSerializer(page)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    if request.method == 'PUT':
+        serializer = CompanyMonthlyPageSerializer(page, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save(company=request.user)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 # ============================================================================

@@ -55,6 +55,9 @@ urlpatterns = [
     path('company/jobs/new/', views_api_v2.company_jobs_new, name='company-jobs-new'),
     path('company/scouts/', views_api_v2.company_scouts_list, name='company-scouts-list'),
     path('company/applications/', views_api_v2.company_applications_list, name='company-applications-list'),
+    path('company/monthly/', views_api_v2.company_monthly_list, name='company-monthly-list'),
+    path('company/monthly/current/', views_api_v2.company_monthly_current, name='company-monthly-current'),
+    path('company/monthly/<int:year>/<int:month>/', views_api_v2.company_monthly_detail, name='company-monthly-detail'),
     
     # 共通エンドポイント
     path('user/settings/', views_api_v2.user_settings, name='user-settings'),
