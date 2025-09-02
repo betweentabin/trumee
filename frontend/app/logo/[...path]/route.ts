@@ -21,12 +21,14 @@ export async function GET(
 ) {
   try {
     const rel = params.path.join('/');
-    const filePath = path.join(process.cwd(), 'public', 'logo', rel);
-    if (!fs.existsSync(filePath)) {
-      return new NextResponse('Not Found', { status: 404 });
-    }
-    const data = await fs.promises.readFile(filePath);
-    const ct = getContentType(path.extname(filePath));
+    const candidates = [
+      path.join(process.cwd(), 'public', 'logo', rel),
+      path.join(process.cwd(), 'frontend', 'public', 'logo', rel),
+    ];
+    const found = candidates.find((p) => fs.existsSync(p));
+    if (!found) return new NextResponse('Not Found', { status: 404 });
+    const data = await fs.promises.readFile(found);
+    const ct = getContentType(path.extname(found));
     return new NextResponse(data, {
       status: 200,
       headers: {
@@ -38,4 +40,3 @@ export async function GET(
     return new NextResponse('Internal Server Error', { status: 500 });
   }
 }
-
