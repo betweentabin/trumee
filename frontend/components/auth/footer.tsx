@@ -1,5 +1,7 @@
 "use client"
 import { useRouter } from "next/navigation";
+import Image from 'next/image';
+import logoTop from '@/public/logo/logo_top.png';
 
 const Footer = () => {
 
@@ -17,7 +19,7 @@ const Footer = () => {
                     {/* Logo + Left Nav */}
                     <div className="flex justify-between">
                         <div className="mb-4">                           
-                            <img src="/logo/logo_top.png" alt="Xrosspoint" className="h-6 mr-2" />                          
+                            <Image src={logoTop} alt="Xrosspoint" className="h-6 mr-2" />                          
                         </div>
                         <div className="flex gap-4">
                         <button onClick={register} className="bg-[#FF733E] text-white px-4 py-2 rounded-full text-sm font-medium shadow hover:bg-[#e9632e] transition">

@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useRouter } from 'next/navigation';
 import Link from "next/link";
 import { clearAuthData } from '@/utils/auth';
+import logoTop from '@/public/logo/logo_top.png';
 
 
 
@@ -27,8 +28,7 @@ const Header = () => {
         <div className="flex items-center justify-between h-20 px-6 md:px-12 lg:px-16">
           {/* Left Logo */}
           <div className="flex items-center">
-          
-              <Image src="/logo/logo_top.png" alt="Logo" width={210} height={40} className="h-10 w-[210px] mr-3 cursor-pointer" />
+              <Image src={logoTop} alt="Logo" width={210} height={40} className="h-10 w-[210px] mr-3 cursor-pointer" />
           
         </div>
       
