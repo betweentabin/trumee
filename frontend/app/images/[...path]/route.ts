@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
 
+export const runtime = 'nodejs';
+
 function getContentType(ext: string) {
   switch (ext.toLowerCase()) {
     case '.png': return 'image/png';
@@ -20,7 +22,7 @@ export async function GET(
   { params }: { params: { path: string[] } }
 ) {
   try {
-    const rel = params.path.join('/');
+    const rel = params.path.map((p) => decodeURIComponent(p)).join('/');
     // Try both when running in monorepo (repo root) and app root
     const candidates = [
       path.join(process.cwd(), 'public', 'images', rel),
