@@ -2,7 +2,7 @@ from rest_framework import serializers
 from django.contrib.auth import authenticate
 from .models import (
     User, SeekerProfile, CompanyProfile, Resume, Experience, Education, Certification,
-    Application, Scout, Message, Payment,
+    Application, Scout, Message, Payment, JobPosting,
     ActivityLog, MLModel, MLPrediction
 )
 
@@ -283,19 +283,36 @@ class ResumeUpdateSerializer(serializers.ModelSerializer):
         return instance
 
 
+class JobPostingSerializer(serializers.ModelSerializer):
+    """求人投稿シリアライザー"""
+    company_name = serializers.CharField(source='company.company_profile.company_name', read_only=True, default='')
+    
+    class Meta:
+        model = JobPosting
+        fields = [
+            'id', 'company', 'company_name', 'title', 'description', 'requirements',
+            'employment_type', 'salary_min', 'salary_max', 'location', 'remote_allowed',
+            'experience_required', 'skills_required', 'benefits', 'deadline',
+            'is_active', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['company', 'created_at', 'updated_at']
+
+
 class ApplicationSerializer(serializers.ModelSerializer):
     """応募情報シリアライザー"""
     applicant_name = serializers.CharField(source='applicant.full_name', read_only=True)
     company_name = serializers.CharField(source='company.company_name', read_only=True)
+    job_posting = JobPostingSerializer(read_only=True)
+    job_posting_id = serializers.UUIDField(write_only=True, required=False)
     
     class Meta:
         model = Application
         fields = [
             'id', 'applicant', 'applicant_name', 'company', 'company_name',
-            'resume', 'status', 'applied_at', 'viewed_at',
+            'job_posting', 'job_posting_id', 'resume', 'status', 'applied_at', 'viewed_at',
             'match_score', 'recommendation_rank', 'notes'
         ]
-        read_only_fields = ['applied_at', 'viewed_at']
+        read_only_fields = ['applied_at', 'viewed_at', 'job_posting']
 
 
 class ScoutSerializer(serializers.ModelSerializer):

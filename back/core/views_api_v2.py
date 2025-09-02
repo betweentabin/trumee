@@ -19,19 +19,20 @@ from django.contrib.auth import authenticate
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
+from django.conf import settings
 import jwt
 import datetime
 import os
 
 from .models import (
     User, SeekerProfile, CompanyProfile, Resume, Experience, 
-    Education, Certification, Application, Scout, Message
+    Education, Certification, Application, Scout, Message, JobPosting
 )
 from .serializers import (
     UserSerializer, SeekerProfileSerializer, CompanyProfileSerializer,
     ResumeSerializer, ResumeCreateSerializer, ResumeUpdateSerializer,
     ExperienceSerializer, EducationSerializer, CertificationSerializer,
-    ApplicationSerializer, ScoutSerializer, MessageSerializer,
+    ApplicationSerializer, ScoutSerializer, MessageSerializer, JobPostingSerializer,
     UserRegisterSerializer, CompanyRegisterSerializer, LoginSerializer
 )
 
@@ -236,6 +237,22 @@ class SeekerProfileViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         return SeekerProfile.objects.filter(user=self.request.user)
     
+    def create(self, request, *args, **kwargs):
+        # Check if profile already exists
+        if SeekerProfile.objects.filter(user=request.user).exists():
+            # Update existing profile instead of creating new one
+            instance = SeekerProfile.objects.get(user=request.user)
+            serializer = self.get_serializer(instance, data=request.data, partial=True)
+            serializer.is_valid(raise_exception=True)
+            self.perform_update(serializer)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        else:
+            # Create new profile
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            self.perform_create(serializer)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+    
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
 
@@ -247,6 +264,22 @@ class CompanyProfileViewSet(viewsets.ModelViewSet):
     
     def get_queryset(self):
         return CompanyProfile.objects.filter(user=self.request.user)
+    
+    def create(self, request, *args, **kwargs):
+        # Check if profile already exists
+        if CompanyProfile.objects.filter(user=request.user).exists():
+            # Update existing profile instead of creating new one
+            instance = CompanyProfile.objects.get(user=request.user)
+            serializer = self.get_serializer(instance, data=request.data, partial=True)
+            serializer.is_valid(raise_exception=True)
+            self.perform_update(serializer)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        else:
+            # Create new profile
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            self.perform_create(serializer)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
     
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
@@ -364,72 +397,130 @@ class CertificationViewSet(viewsets.ModelViewSet):
 @permission_classes([IsAuthenticated])
 def search_seekers_v2(request):
     """求職者検索 API v2"""
-    if request.user.role != 'company':
+    import logging
+    logger = logging.getLogger(__name__)
+    
+    try:
+        if request.user.role != 'company':
+            return Response({
+                'detail': 'この機能は企業ユーザーのみ利用可能です'
+            }, status=status.HTTP_403_FORBIDDEN)
+        
+        # クエリパラメーター取得
+        keyword = request.GET.get('keyword', '')
+        prefecture = request.GET.get('prefecture', '')
+        industry = request.GET.get('industry', '')
+        experience_years_min = request.GET.get('experience_years_min')
+        experience_years_max = request.GET.get('experience_years_max')
+        min_experience = request.GET.get('min_experience')  # 互換性のため
+        max_experience = request.GET.get('max_experience')  # 互換性のため
+        
+        # 検索クエリ構築
+        queryset = SeekerProfile.objects.select_related('user')
+        
+        if keyword:
+            # スキルや自己PRにキーワードが含まれる履歴書を持つ求職者
+            from django.db.models import Q
+            queryset = queryset.filter(
+                Q(user__resumes__skills__icontains=keyword) |
+                Q(user__resumes__self_pr__icontains=keyword)
+            )
+        
+        if prefecture:
+            queryset = queryset.filter(prefecture=prefecture)
+        
+        if industry:
+            queryset = queryset.filter(
+                user__resumes__experiences__industry=industry
+            )
+        
+        # 経験年数フィルター
+        if experience_years_min:
+            try:
+                queryset = queryset.filter(experience_years__gte=int(experience_years_min))
+            except ValueError:
+                pass
+        elif min_experience:  # 互換性
+            try:
+                queryset = queryset.filter(experience_years__gte=int(min_experience))
+            except ValueError:
+                pass
+        
+        if experience_years_max:
+            try:
+                queryset = queryset.filter(experience_years__lte=int(experience_years_max))
+            except ValueError:
+                pass
+        elif max_experience:  # 互換性
+            try:
+                queryset = queryset.filter(experience_years__lte=int(max_experience))
+            except ValueError:
+                pass
+        
+        # 重複排除
+        queryset = queryset.distinct()
+        
+        # ページネーション
+        try:
+            page_size = int(request.GET.get('page_size', 20))
+            page = int(request.GET.get('page', 1))
+        except ValueError:
+            page_size = 20
+            page = 1
+        
+        start = (page - 1) * page_size
+        end = start + page_size
+        
+        # カウントを先に取得
+        total_count = queryset.count()
+        
+        # 結果を取得
+        results = queryset[start:end]
+        
+        # レスポンス生成
+        serializer = SeekerProfileSerializer(results, many=True)
+        
         return Response({
-            'detail': 'この機能は企業ユーザーのみ利用可能です'
-        }, status=status.HTTP_403_FORBIDDEN)
-    
-    # クエリパラメーター取得
-    keyword = request.GET.get('keyword', '')
-    prefecture = request.GET.get('prefecture', '')
-    industry = request.GET.get('industry', '')
-    experience_years_min = request.GET.get('experience_years_min')
-    experience_years_max = request.GET.get('experience_years_max')
-    
-    # 検索クエリ構築
-    queryset = SeekerProfile.objects.select_related('user').prefetch_related(
-        'user__resumes__experiences'
-    )
-    
-    if keyword:
-        # スキルや自己PRにキーワードが含まれる履歴書を持つ求職者
-        queryset = queryset.filter(
-            user__resumes__skills__icontains=keyword
-        ) | queryset.filter(
-            user__resumes__self_pr__icontains=keyword
-        )
-    
-    if prefecture:
-        queryset = queryset.filter(prefecture=prefecture)
-    
-    if industry:
-        queryset = queryset.filter(
-            user__resumes__experiences__industry=industry
-        )
-    
-    if experience_years_min:
-        queryset = queryset.filter(experience_years__gte=int(experience_years_min))
-    
-    if experience_years_max:
-        queryset = queryset.filter(experience_years__lte=int(experience_years_max))
-    
-    # 重複排除
-    queryset = queryset.distinct()
-    
-    # ページネーション
-    page_size = int(request.GET.get('page_size', 20))
-    page = int(request.GET.get('page', 1))
-    start = (page - 1) * page_size
-    end = start + page_size
-    
-    results = queryset[start:end]
-    total_count = queryset.count()
-    
-    # レスポンス生成
-    serializer = SeekerProfileSerializer(results, many=True)
-    
-    return Response({
-        'results': serializer.data,
-        'count': total_count,
-        'page': page,
-        'page_size': page_size,
-        'total_pages': (total_count + page_size - 1) // page_size
-    }, status=status.HTTP_200_OK)
+            'results': serializer.data,
+            'count': total_count,
+            'page': page,
+            'page_size': page_size,
+            'total_pages': (total_count + page_size - 1) // page_size if page_size > 0 else 0
+        }, status=status.HTTP_200_OK)
+        
+    except Exception as e:
+        logger.error(f"Search error: {str(e)}")
+        return Response({
+            'error': 'Internal server error',
+            'detail': str(e) if settings.DEBUG else 'An error occurred during search'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 # ============================================================================
 # スカウト・応募関連エンドポイント
 # ============================================================================
+
+class JobPostingViewSet(viewsets.ModelViewSet):
+    """求人投稿 ViewSet"""
+    serializer_class = JobPostingSerializer
+    permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        user = self.request.user
+        
+        if user.role == 'company':
+            # 企業は自分の求人を管理
+            return JobPosting.objects.filter(company=user)
+        else:
+            # 求職者は公開されている求人を閲覧
+            return JobPosting.objects.filter(is_active=True)
+    
+    def perform_create(self, serializer):
+        # 企業のみ求人投稿可能
+        if self.request.user.role != 'company':
+            raise serializers.ValidationError('企業のみ求人を投稿できます')
+        serializer.save(company=self.request.user)
+
 
 class ApplicationViewSet(viewsets.ModelViewSet):
     """応募 ViewSet"""
@@ -459,18 +550,140 @@ class ScoutViewSet(viewsets.ModelViewSet):
     
     def get_queryset(self):
         if self.request.user.role == 'company':
-            return Scout.objects.filter(company_id=self.request.user.id)
+            # 企業は自分が送ったスカウトを取得
+            return Scout.objects.filter(company=self.request.user).select_related('seeker', 'seeker__seeker_profile')
         elif self.request.user.role == 'user':
-            return Scout.objects.filter(seeker_id=self.request.user.id)
+            # 求職者は自分が受け取ったスカウトを取得
+            return Scout.objects.filter(seeker=self.request.user).select_related('company', 'company__company_profile')
         return Scout.objects.none()
     
-    def perform_create(self, serializer):
-        if self.request.user.role == 'company':
-            serializer.save(company=self.request.user)
+    def list(self, request, *args, **kwargs):
+        """スカウト一覧取得（詳細情報を含む）"""
+        queryset = self.filter_queryset(self.get_queryset())
+        page = self.paginate_queryset(queryset)
+        
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            data = serializer.data
         else:
+            serializer = self.get_serializer(queryset, many=True)
+            data = serializer.data
+        
+        # 各スカウトにseeker/companyの詳細情報を追加
+        for i, scout in enumerate(queryset if page is None else page):
+            if request.user.role == 'company':
+                # 企業向け：seeker詳細を追加
+                if scout.seeker:
+                    seeker_details = {
+                        'id': str(scout.seeker.id),
+                        'email': scout.seeker.email,
+                        'full_name': scout.seeker.full_name,
+                        'username': scout.seeker.username,
+                    }
+                    if hasattr(scout.seeker, 'seeker_profile'):
+                        seeker_details.update({
+                            'prefecture': scout.seeker.seeker_profile.prefecture,
+                            'experience_years': scout.seeker.seeker_profile.experience_years,
+                        })
+                    data[i]['seeker_details'] = seeker_details
+            elif request.user.role == 'user':
+                # 求職者向け：company詳細を追加
+                if scout.company:
+                    company_details = {
+                        'id': str(scout.company.id),
+                        'email': scout.company.email,
+                        'full_name': scout.company.full_name,
+                        'username': scout.company.username,
+                    }
+                    if hasattr(scout.company, 'company_profile'):
+                        company_details.update({
+                            'company_name': scout.company.company_profile.company_name,
+                            'industry': scout.company.company_profile.industry,
+                        })
+                    data[i]['company_details'] = company_details
+        
+        if page is not None:
+            return self.get_paginated_response(data)
+        
+        return Response(data)
+    
+    def retrieve(self, request, *args, **kwargs):
+        """スカウト詳細取得（詳細情報を含む）"""
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        data = serializer.data
+        
+        # seeker/companyの詳細情報を追加
+        if request.user.role == 'company' and instance.seeker:
+            seeker_details = {
+                'id': str(instance.seeker.id),
+                'email': instance.seeker.email,
+                'full_name': instance.seeker.full_name,
+                'username': instance.seeker.username,
+            }
+            if hasattr(instance.seeker, 'seeker_profile'):
+                seeker_details.update({
+                    'prefecture': instance.seeker.seeker_profile.prefecture,
+                    'experience_years': instance.seeker.seeker_profile.experience_years,
+                })
+            data['seeker_details'] = seeker_details
+        elif request.user.role == 'user' and instance.company:
+            company_details = {
+                'id': str(instance.company.id),
+                'email': instance.company.email,
+                'full_name': instance.company.full_name,
+                'username': instance.company.username,
+            }
+            if hasattr(instance.company, 'company_profile'):
+                company_details.update({
+                    'company_name': instance.company.company_profile.company_name,
+                    'industry': instance.company.company_profile.industry,
+                })
+            data['company_details'] = company_details
+        
+        return Response(data)
+    
+    def create(self, request, *args, **kwargs):
+        # 企業のみスカウトを作成可能
+        if request.user.role != 'company':
             return Response({
                 'detail': '企業のみスカウトを送信できます'
             }, status=status.HTTP_403_FORBIDDEN)
+        
+        # companyフィールドを自動設定
+        data = request.data.copy()
+        data['company'] = request.user.id
+        
+        serializer = self.get_serializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        
+        # レスポンスにseekerの詳細情報を含める
+        scout_data = serializer.data
+        scout = serializer.instance
+        
+        # Seekerの詳細情報を追加
+        if scout.seeker:
+            try:
+                seeker_profile = SeekerProfile.objects.get(user=scout.seeker)
+                scout_data['seeker_details'] = {
+                    'id': str(scout.seeker.id),
+                    'email': scout.seeker.email,
+                    'full_name': scout.seeker.full_name,
+                    'profile': SeekerProfileSerializer(seeker_profile).data if seeker_profile else None
+                }
+            except SeekerProfile.DoesNotExist:
+                scout_data['seeker_details'] = {
+                    'id': str(scout.seeker.id),
+                    'email': scout.seeker.email,
+                    'full_name': scout.seeker.full_name,
+                    'profile': None
+                }
+        
+        return Response(scout_data, status=status.HTTP_201_CREATED)
+    
+    def perform_create(self, serializer):
+        serializer.save(company=self.request.user)
     
     @action(detail=True, methods=['post'])
     def mark_viewed(self, request, pk=None):

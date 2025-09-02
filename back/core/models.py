@@ -371,6 +371,49 @@ class Experience(models.Model):
         return self.period_to is None
 
 
+class JobPosting(models.Model):
+    """求人投稿"""
+    EMPLOYMENT_TYPE_CHOICES = [
+        ('fulltime', '正社員'),
+        ('contract', '契約社員'),
+        ('parttime', 'パート・アルバイト'),
+        ('internship', 'インターン'),
+    ]
+    
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    company = models.ForeignKey(User, on_delete=models.CASCADE, related_name='job_postings')
+    
+    # 基本情報
+    title = models.CharField(max_length=200)
+    description = models.TextField()
+    requirements = models.TextField()
+    
+    # 雇用条件
+    employment_type = models.CharField(max_length=20, choices=EMPLOYMENT_TYPE_CHOICES, default='fulltime')
+    salary_min = models.IntegerField(null=True, blank=True)
+    salary_max = models.IntegerField(null=True, blank=True)
+    location = models.CharField(max_length=100)
+    remote_allowed = models.BooleanField(default=False)
+    
+    # 要件
+    experience_required = models.IntegerField(default=0)
+    skills_required = models.TextField(blank=True)
+    benefits = models.TextField(blank=True)
+    
+    # ステータス
+    deadline = models.DateField(null=True, blank=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        db_table = 'job_postings'
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"{self.title} - {self.company.company_name if hasattr(self.company, 'company_profile') else self.company.email}"
+
+
 class Application(models.Model):
     """応募情報"""
     STATUS_CHOICES = [
@@ -387,6 +430,7 @@ class Application(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     applicant = models.ForeignKey(User, on_delete=models.CASCADE, related_name='applications')
     company = models.ForeignKey(User, on_delete=models.CASCADE, related_name='received_applications')
+    job_posting = models.ForeignKey(JobPosting, on_delete=models.CASCADE, related_name='applications', null=True, blank=True)
     resume = models.ForeignKey(Resume, on_delete=models.SET_NULL, null=True, blank=True)
     
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending', db_index=True)
