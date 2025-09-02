@@ -21,6 +21,11 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "TruMee - 転職支援プラットフォーム",
   description: "TruMeeは求職者と企業をつなぐ転職支援プラットフォームです",
+  icons: {
+    icon: "/logo/logo.png",
+    shortcut: "/logo/logo.png",
+    apple: "/logo/logo.png",
+  },
 };
 
 export default function RootLayout({
