@@ -1,9 +1,6 @@
 "use client"
 import React from "react";
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
-import logoMix from '@/public/logo/logo_mix.png';
-import logo from '@/public/logo/logo.png';
 
 
 const Header = () => {
@@ -34,8 +31,8 @@ const Header = () => {
         min-w-0
       "
     >
-      <Image
-        src={logoMix}
+      <img
+        src="/logo/logo_mix.png"
         alt="Logo"
         className="
           h-6 max-[1330px]:h-8 md:h-10 
@@ -59,8 +56,8 @@ const Header = () => {
     {/* Right Buttons */}
     <div className="flex items-center gap-3 md:gap-4">
       {/* Logo hidden under 1330px */}
-      <Image
-        src={logo}
+      <img
+        src="/logo/logo.png"
         alt="Logo"
         className="h-8 md:h-10 w-auto mr-1 md:mr-2 max-[1330px]:hidden transition-all duration-300"
       />

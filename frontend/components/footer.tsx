@@ -1,13 +1,10 @@
-import Image from 'next/image';
-import logoMix from '@/public/logo/logo_mix.png';
-
 const Footer = () => {
 
     return(
         <>
             <div className="flex p-8 flex-col justify-center items-center">
                 <div className="flex items-center">
-                    <Image src={logoMix} alt="Logo" className="h-10 w-10 mr-3" />
+                    <img src="/logo/logo_mix.png" alt="Logo" className="h-10 w-10 mr-3" />
                 </div>
                 <div className="flex flex-col md:flex-row gap-9 mt-6 text-[14px]">
                     <a href="">マイページ</a>

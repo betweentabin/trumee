@@ -1,7 +1,5 @@
 'use client'
 import { useRouter } from "next/navigation";
-import Image from 'next/image';
-import logoTop from '@/public/logo/logo_top.png';
 
 const Footer = () => {
 
@@ -19,7 +17,7 @@ const Footer = () => {
         {/* Top Section: Logo and Buttons */}
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center">
           <div className="mb-6 sm:mb-0 flex items-center">
-            <Image src={logoTop} alt="Xrosspoint" className="h-6 mr-2" />
+            <img src="/logo/logo_top.png" alt="Xrosspoint" className="h-6 mr-2" />
           </div>
 
           <div className="flex gap-4 justify-center sm:justify-start">
