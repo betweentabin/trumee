@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import toast from 'react-hot-toast';
 
 interface WorkExperience {
@@ -39,6 +39,14 @@ interface ResumeData {
 
 export default function CreateResumePage() {
   const router = useRouter();
+  const pathname = usePathname();
+  const userIdFromPath = (() => {
+    if (!pathname) return null;
+    const parts = pathname.split('/').filter(Boolean);
+    if (parts[0] === 'users' && parts[1]) return parts[1];
+    return null;
+  })();
+  const to = (p: string) => (userIdFromPath ? `/users/${userIdFromPath}${p}` : p);
   const [currentStep, setCurrentStep] = useState(1);
   const [resumeData, setResumeData] = useState<ResumeData>({
     title: '',
@@ -202,7 +210,7 @@ export default function CreateResumePage() {
       console.log('Resume data to create:', apiData);
       console.log('Saved career resume to localStorage:', newCareerResume);
       toast.success('職務経歴書を作成しました（デバッグモード）');
-      router.push('/career');
+      router.push(to('/career'));
     } catch (error) {
       console.error('Failed to create resume:', error);
       toast.error('エラーが発生しました');

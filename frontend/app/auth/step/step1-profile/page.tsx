@@ -10,6 +10,7 @@ import { updateStepData, markStepCompleted } from '@/app/redux/formSlice';
 import StepNavigation from '../components/StepNavigation';
 import StepLayout from '../components/StepLayout';
 import toast from 'react-hot-toast';
+import apiClient from '@/lib/api-v2-client';
 
 const prefectures = [
   '北海道', '青森県', '岩手県', '宮城県', '秋田県', '山形県', '福島県',
@@ -127,18 +128,20 @@ export default function Step1ProfilePage() {
 
   const saveToBackend = async () => {
     try {
-      // APIフィールド名に変換
-      const apiData = {
-        full_name: `${formData.lastName} ${formData.firstName}`,
-        kana: `${formData.lastNameKana} ${formData.firstNameKana}`,
-        phone: formData.phone,
-        gender: formData.gender === '男性' ? 'male' : formData.gender === '女性' ? 'female' : 'other',
-        // SeekerProfileモデル用のデータは別途作成する必要があるかも
+      // SeekerProfileの保存（存在すれば更新として扱われる）
+      const seekerPayload: any = {
+        first_name: formData.firstName,
+        last_name: formData.lastName,
+        first_name_kana: formData.firstNameKana,
+        last_name_kana: formData.lastNameKana,
+        birthday: formData.birthday || null,
+        prefecture: formData.prefecture || '',
+        // 追加の互換フィールド
+        experience_years: 0,
       };
-      
-      // 🚨 API呼び出しを無効化
-      // await updateProfileMutation.mutateAsync(apiData);
-      console.log('Profile data to save:', apiData);
+
+      await apiClient.createSeekerProfile(seekerPayload);
+
       return true;
     } catch (error) {
       console.error('Failed to save profile:', error);

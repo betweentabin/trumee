@@ -7,6 +7,7 @@ import { useAuth } from '@/hooks/useAuth';
 import StepNavigation from '../components/StepNavigation';
 import StepLayout from '../components/StepLayout';
 import toast from 'react-hot-toast';
+import apiClient from '@/lib/api-v2-client';
 
 const salaryRanges = [
   '300万円未満',
@@ -151,27 +152,63 @@ export default function Step4PreferencePage() {
     }
   };
 
-  const handleNext = () => {
-    if (validateForm()) {
-      updatePreference(formData);
+  const handleNext = async () => {
+    if (!validateForm()) return;
+    updatePreference(formData);
+    saveToLocalStorage();
+    const ok = await savePreferenceToBackend();
+    if (ok) {
       markStepCompleted(4);
-      saveToLocalStorage();
       toast.success('希望条件を保存しました');
       router.push('/auth/step/step5-confirm');
     }
   };
 
-  const handleBack = () => {
+  const handleBack = async () => {
     updatePreference(formData);
     saveToLocalStorage();
+    await savePreferenceToBackend();
     router.push('/auth/step/step3-experience');
   };
 
-  const handleSave = () => {
-    if (validateForm()) {
-      updatePreference(formData);
-      saveToLocalStorage();
-      toast.success('希望条件を保存しました');
+  const handleSave = async () => {
+    if (!validateForm()) return;
+    updatePreference(formData);
+    saveToLocalStorage();
+    const ok = await savePreferenceToBackend();
+    if (ok) toast.success('希望条件を保存しました');
+  };
+
+  const savePreferenceToBackend = async (): Promise<boolean> => {
+    try {
+      // SeekerProfileの希望年収
+      await apiClient.createSeekerProfile({ desired_salary: formData.desiredSalary } as any);
+
+      // 履歴書（アクティブがあればそれ、なければ先頭/新規）
+      const resumes = await apiClient.getResumes().catch(() => []);
+      let resume = resumes.find((r: any) => r.is_active) || resumes[0] || null;
+      if (!resume) {
+        resume = await apiClient.createResume({
+          title: '職務経歴書',
+          description: '',
+          objective: '',
+          skills: '',
+          experiences: [],
+          certifications: [],
+        } as any);
+      }
+
+      await apiClient.updateResume(resume.id, {
+        desired_job: (formData.desiredJobTypes || [])[0] || '',
+        desired_industries: formData.desiredIndustries || [],
+        desired_locations: formData.desiredLocations || [],
+      } as any);
+
+      return true;
+    } catch (error) {
+      console.error('Failed to save preference:', error);
+      toast.error('希望条件の保存に失敗しました');
+      return false;
     }
   };
 

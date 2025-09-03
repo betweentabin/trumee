@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 import { FaPrint, FaDownload, FaEye, FaEdit, FaArrowLeft } from 'react-icons/fa';
@@ -32,6 +32,14 @@ interface Resume {
 
 export default function PrintPage() {
   const router = useRouter();
+  const pathname = usePathname();
+  const userIdFromPath = (() => {
+    if (!pathname) return null;
+    const parts = pathname.split('/').filter(Boolean);
+    if (parts[0] === 'users' && parts[1]) return parts[1];
+    return null;
+  })();
+  const to = (p: string) => (userIdFromPath ? `/users/${userIdFromPath}${p}` : p);
   const searchParams = useSearchParams();
   const resumeId = searchParams.get('id');
   const [resumes, setResumes] = useState<Resume[]>([]);
@@ -104,13 +112,13 @@ export default function PrintPage() {
 
   const handlePreview = () => {
     if (selectedResume) {
-      router.push(`/career/view/${selectedResume.id}`);
+      router.push(to(`/career/view/${selectedResume.id}`));
     }
   };
 
   const handleEdit = () => {
     if (selectedResume) {
-      router.push(`/career/edit/${selectedResume.id}`);
+      router.push(to(`/career/edit/${selectedResume.id}`));
     }
   };
 
@@ -142,7 +150,7 @@ export default function PrintPage() {
             <h3 className="text-lg font-medium text-gray-900 mb-2">印刷可能な履歴書がありません</h3>
             <p className="text-gray-500 mb-6">まず履歴書を作成してから印刷してください。</p>
             <button
-              onClick={() => router.push('/career/create')}
+              onClick={() => router.push(to('/career/create'))}
               className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-colors"
             >
               履歴書を作成する

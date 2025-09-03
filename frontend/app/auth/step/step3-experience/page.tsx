@@ -7,6 +7,7 @@ import { useAuth } from '@/hooks/useAuth';
 import StepNavigation from '../components/StepNavigation';
 import StepLayout from '../components/StepLayout';
 import toast from 'react-hot-toast';
+import apiClient from '@/lib/api-v2-client';
 
 interface Experience {
   id: number;
@@ -148,13 +149,16 @@ export default function Step3ExperiencePage() {
   };
 
   const handleNext = () => {
-    if (validateAllExperiences()) {
-      setExperiences(experiences);
-      markStepCompleted(3);
-      saveToLocalStorage();
-      toast.success('職歴情報を保存しました');
-      navigateToStep(4);
-    }
+    if (!validateAllExperiences()) return;
+    setExperiences(experiences);
+    saveToLocalStorage();
+    saveExperiencesToBackend().then((ok) => {
+      if (ok) {
+        markStepCompleted(3);
+        toast.success('職歴情報を保存しました');
+        navigateToStep(4);
+      }
+    });
   };
 
   const handleBack = () => {
@@ -164,12 +168,63 @@ export default function Step3ExperiencePage() {
   };
 
   const handleSave = () => {
-    if (validateAllExperiences()) {
-      setExperiences(experiences);
-      saveToLocalStorage();
-      toast.success('職歴情報を保存しました');
+    if (!validateAllExperiences()) return;
+    setExperiences(experiences);
+    saveToLocalStorage();
+    saveExperiencesToBackend().then((ok) => ok && toast.success('職歴情報を保存しました'));
+  };
+
+  const saveExperiencesToBackend = async () => {
+    try {
+      // 既存の履歴書を取得（なければ新規作成）
+      const resumes = await apiClient.getResumes().catch(() => []);
+      let resume = (resumes && resumes[0]) || null;
+      if (!resume) {
+        resume = await apiClient.createResume({
+          title: '職務経歴書',
+          description: '',
+          objective: '',
+          skills: '',
+          experiences: [],
+          certifications: [],
+        } as any);
+      }
+
+      const payload = {
+        experiences: experiences.map((e, idx) => ({
+          company: e.company,
+          period_from: e.periodFrom || '',
+          period_to: e.periodTo || null,
+          employment_type: mapEmploymentType(e.employmentType),
+          business: e.business || '',
+          capital: e.capital || '',
+          team_size: e.teamSize || '',
+          tasks: e.tasks || '',
+          position: e.position || '',
+          industry: e.industry || '',
+          order: idx,
+        })),
+      } as any;
+      await apiClient.updateResume(resume.id, payload);
+      return true;
+    } catch (error) {
+      console.error('Failed to persist experiences:', error);
+      toast.error('職歴の保存に失敗しました');
+      return false;
     }
   };
+
+  function mapEmploymentType(label: string): string {
+    switch (label) {
+      case '正社員': return 'fulltime';
+      case '契約社員': return 'contract';
+      case '派遣社員': return 'dispatch';
+      case 'パート・アルバイト': return 'parttime';
+      case '業務委託': return 'freelance';
+      case 'インターン': return 'internship';
+      default: return 'other';
+    }
+  }
 
   return (
     <StepLayout currentStep={3} title="職歴">

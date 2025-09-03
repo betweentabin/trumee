@@ -1,94 +1,61 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useEffect, useMemo, useState } from 'react';
+import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { FaPrint, FaEdit, FaDownload, FaArrowLeft } from 'react-icons/fa';
+import { FaArrowLeft, FaEdit, FaPrint } from 'react-icons/fa';
 
-interface Resume {
+interface SimpleResume {
   id: string;
-  title: string;
-  fullName: string;
-  email: string;
-  phone: string;
-  address: string;
-  birthDate: string;
-  summary: string;
-  desiredPosition: string;
-  desiredSalary: string;
-  workExperiences: Array<{
-    company: string;
-    position: string;
-    startDate: string;
-    endDate: string;
-    description: string;
-    achievements: string[];
-  }>;
-  education: Array<{
-    school: string;
-    degree: string;
-    field: string;
-    graduationDate: string;
-  }>;
-  skills: string[];
-  certifications: string[];
-  languages: Array<{ language: string; level: string }>;
+  title?: string;
+  fullName?: string;
+  email?: string;
+  desiredPosition?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export default function PreviewPage() {
   const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
   const resumeId = searchParams.get('id');
-  const [resume, setResume] = useState<Resume | null>(null);
+  const userIdFromPath = useMemo(() => {
+    if (!pathname) return null;
+    const parts = pathname.split('/').filter(Boolean);
+    return parts[0] === 'users' && parts[1] ? parts[1] : null;
+  }, [pathname]);
+  const to = (p: string) => (userIdFromPath ? `/users/${userIdFromPath}${p}` : p);
+
+  const [resume, setResume] = useState<SimpleResume | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!resumeId) {
-      router.push('/career');
-      return;
+    // デバッグモード: localStorageに保存した一覧から対象IDを取得
+    const stored = localStorage.getItem('debug_career_resumes');
+    const list: SimpleResume[] = stored ? JSON.parse(stored) : [];
+    if (resumeId) {
+      const found = list.find((r) => String(r.id) === String(resumeId)) || null;
+      setResume(found);
     }
-    fetchResume();
+    setLoading(false);
   }, [resumeId]);
-
-  const fetchResume = async () => {
-    try {
-      const token = localStorage.getItem('access_token');
-      const response = await fetch(`http://localhost:8000/api/v1/resumes/${resumeId}/`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        setResume(data);
-      } else {
-        console.error('Failed to fetch resume');
-        router.push('/career');
-      }
-    } catch (error) {
-      console.error('Error fetching resume:', error);
-      router.push('/career');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const formatDate = (dateString: string) => {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('ja-JP', {
-      year: 'numeric',
-      month: 'long'
-    });
-  };
 
   if (loading) {
     return (
+      <div className="min-h-screen flex items-center justify-center">読み込み中...</div>
+    );
+  }
+
+  if (!resume) {
+    return (
       <div className="min-h-screen bg-gray-50 p-8">
-        <div className="max-w-4xl mx-auto">
-          <div className="flex justify-center items-center h-64">
-            <div className="text-lg">読み込み中...</div>
+        <div className="max-w-3xl mx-auto">
+          <div className="bg-white border rounded p-6 text-center">
+            <div className="text-gray-700 mb-4">対象の職務経歴書が見つかりませんでした。</div>
+            <Link href={to('/career')} className="inline-flex items-center gap-2 text-blue-600">
+              <FaArrowLeft /> 一覧へ戻る
+            </Link>
           </div>
         </div>
       </div>
@@ -97,74 +64,55 @@ export default function PreviewPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 p-8">
-      <div className="max-w-4xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-800 mb-4">職務経歴書一覧</h1>
-          <button
-            onClick={handleCreateNew}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg flex items-center gap-2 transition-colors"
-          >
-            <FaPlus />
-            新しい職務経歴書を作成
-          </button>
-        </div>
-
-        {resumes.length === 0 ? (
-          <div className="bg-white rounded-lg shadow-md p-8 text-center">
-            <div className="text-gray-500 mb-4">
-              <svg className="mx-auto h-16 w-16 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-            </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">職務経歴書がありません</h3>
-            <p className="text-gray-500 mb-6">最初の職務経歴書を作成してみましょう</p>
+      <div className="max-w-3xl mx-auto space-y-6">
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold">{resume.title || '職務経歴書'}</h1>
+          <div className="flex gap-2">
             <button
-              onClick={handleCreateNew}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-colors"
+              onClick={() => router.push(to(`/career/edit/${resume.id}`))}
+              className="px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center gap-2"
             >
-              職務経歴書を作成する
+              <FaEdit /> 編集
+            </button>
+            <button
+              onClick={() => router.push(to(`/career/print?id=${resume.id}`))}
+              className="px-3 py-2 bg-gray-700 text-white rounded-md hover:bg-gray-800 flex items-center gap-2"
+            >
+              <FaPrint /> 印刷
             </button>
           </div>
-        ) : (
-          <div className="grid gap-6">
-            {resumes.map((resume) => (
-              <div key={resume.id} className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
-                <div className="flex justify-between items-start">
-                  <div className="flex-1">
-                    <h3 className="text-xl font-semibold text-gray-800 mb-2">
-                      {resume.title || '職務経歴書'}
-                    </h3>
-                    <div className="text-sm text-gray-500 mb-4">
-                      <p>作成日: {new Date(resume.created_at).toLocaleDateString('ja-JP')}</p>
-                      <p>更新日: {new Date(resume.updated_at).toLocaleDateString('ja-JP')}</p>
-                      {resume.is_active && (
-                        <span className="inline-block bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full mt-2">
-                          アクティブ
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => handleViewResume(resume.id)}
-                      className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
-                    >
-                      <FaEye />
-                      表示
-                    </button>
-                    <button
-                      onClick={() => handleEditResume(resume.id)}
-                      className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
-                    >
-                      <FaEdit />
-                      編集
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+        </div>
+
+        <div className="bg-white rounded-lg shadow p-6 space-y-3">
+          {resume.fullName && (
+            <div>
+              <div className="text-xs text-gray-500">氏名</div>
+              <div className="text-sm">{resume.fullName}</div>
+            </div>
+          )}
+          {resume.email && (
+            <div>
+              <div className="text-xs text-gray-500">メール</div>
+              <div className="text-sm">{resume.email}</div>
+            </div>
+          )}
+          {resume.desiredPosition && (
+            <div>
+              <div className="text-xs text-gray-500">希望職種</div>
+              <div className="text-sm">{resume.desiredPosition}</div>
+            </div>
+          )}
+          {(resume.createdAt || resume.updatedAt) && (
+            <div className="text-xs text-gray-500">
+              {resume.createdAt && <>作成日: {resume.createdAt} </>}
+              {resume.updatedAt && <>更新日: {resume.updatedAt}</>}
+            </div>
+          )}
+        </div>
+
+        <Link href={to('/career')} className="inline-flex items-center gap-2 text-blue-600">
+          <FaArrowLeft /> 一覧に戻る
+        </Link>
       </div>
     </div>
   );
