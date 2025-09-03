@@ -192,8 +192,8 @@ export default function Search() {
   const onSearchResponse = useCallback((_data: any) => {
     console.log("search response", _data);
     try {
-      const { list, count } = _data;
-      setResultList(list);
+      const arr = Array.isArray(_data) ? _data : (_data?.results ?? []);
+      setResults(arr);
     } catch (err) {
       console.log("Error", err);
     }
@@ -216,9 +216,9 @@ export default function Search() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const data = await search(); // <-- get returned data
+        const data = await search(); // returns SearchSeekersResponse
         console.log("Fetched data:", data);
-        setResults(data);           // <-- store it in state if needed
+        setResults(Array.isArray(data) ? data : (data?.results ?? []));
       } catch (error) {
         console.error("Error fetching search data:", error);
       }

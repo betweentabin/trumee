@@ -34,46 +34,27 @@ export default function ScoutsPage() {
   const [scouts, setScouts] = useState<Scout[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<string>('all');
-  // 🚨 認証チェックを無効化
-  // const { isAuthenticated, initializeAuth } = useAuthV2();
+  const { isAuthenticated, initializeAuth } = useAuthV2();
 
-  // ページ読み込み時にダミーデータを表示
+  // 認証初期化
   useEffect(() => {
-    console.log('🕵️ Scouts page: Loading without auth checks');
-    fetchScouts();
-  }, []);
+    initializeAuth();
+  }, [initializeAuth]);
+
+  // 認証済みなら実データを取得
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchScouts();
+    } else if (isAuthenticated === false) {
+      toast.error('ログインが必要です');
+      router.push('/auth/login');
+    }
+  }, [isAuthenticated, router]);
 
   const fetchScouts = async () => {
     try {
-      // 🚨 一時的にダミーデータを表示（API呼び出しを無効化）
-      setScouts([
-        {
-          id: '1',
-          company: {
-            id: 'comp1',
-            company_name: 'テックスタートアップ株式会社',
-            email: 'hr@techstartup.com'
-          },
-          scout_message: 'あなたのプロフィールを拝見し、ぜひ弊社のフロントエンドエンジニアポジションでお話しさせていただければと思います。',
-          status: 'pending',
-          created_at: '2024-01-20T10:00:00Z',
-          viewed_at: null,
-          responded_at: null
-        },
-        {
-          id: '2',
-          company: {
-            id: 'comp2',
-            company_name: 'イノベーション・テクノロジー',
-            email: 'recruit@innovation-tech.jp'
-          },
-          scout_message: 'フルスタック開発の経験をお持ちとのことで、弊社のプロダクト開発チームでご活躍いただけると考えております。',
-          status: 'viewed',
-          created_at: '2024-01-18T14:30:00Z',
-          viewed_at: '2024-01-19T09:15:00Z',
-          responded_at: null
-        }
-      ]);
+      const data = await apiClient.getScouts();
+      setScouts(data || []);
     } catch (error) {
       console.error('Failed to fetch scouts:', error);
       toast.error('スカウト情報の取得に失敗しました');
@@ -84,7 +65,7 @@ export default function ScoutsPage() {
 
   const handleViewScout = async (id: string) => {
     try {
-      await apiClient.viewScout(id);
+      await apiClient.markScoutViewed(id);
       toast.success('スカウトを確認しました');
       fetchScouts();
     } catch (error) {
@@ -279,7 +260,7 @@ export default function ScoutsPage() {
                     <div className="flex items-center gap-3 mb-2">
                       <FaBuilding className="text-gray-400" />
                       <h3 className="text-lg font-semibold text-gray-900">
-                        {scout.company.company_name}
+                        {scout.company?.company_name || scout.company_name || (scout as any).company_details?.company_name || '企業'}
                       </h3>
                       {getStatusBadge(scout.status, scout.viewed_at, scout.responded_at)}
                     </div>
