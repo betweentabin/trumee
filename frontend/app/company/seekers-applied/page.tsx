@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useMemo, useState, useEffect } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
 import useAuthV2 from '@/hooks/useAuthV2';
 import apiClient from '@/lib/api-v2-client';
 import toast from 'react-hot-toast';
@@ -27,6 +27,12 @@ interface ApplicationWithApplicant {
 
 export default function SeekersAppliedPage() {
   const router = useRouter();
+  const pathname = usePathname();
+  const companyIdFromPath = useMemo(() => {
+    if (!pathname) return null;
+    const parts = pathname.split('/').filter(Boolean);
+    return parts[0] === 'company' && parts[1] ? parts[1] : null;
+  }, [pathname]);
   const { isAuthenticated, currentUser, initializeAuth } = useAuthV2();
   const [applications, setApplications] = useState<ApplicationWithApplicant[]>([]);
   const [loading, setLoading] = useState(true);
@@ -120,7 +126,7 @@ export default function SeekersAppliedPage() {
         <div className="text-center py-12">
           <p className="text-gray-500 mb-4">まだ応募はありません</p>
           <button
-            onClick={() => router.push('/company')}
+            onClick={() => router.push(companyIdFromPath ? `/company/${companyIdFromPath}` : '/company')}
             className="px-4 py-2 bg-[#FF733E] text-white rounded-md hover:bg-[#e9632e]"
           >
             求職者を探す

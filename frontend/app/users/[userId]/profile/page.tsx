@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
 import apiClient from "@/lib/api-v2-client";
+import useAuthV2 from "@/hooks/useAuthV2";
 
 interface PublicProfile {
   id: string;
@@ -29,8 +30,10 @@ interface PublicProfile {
 }
 
 export default function UserProfileByIdPage() {
+  const router = useRouter();
   const params = useParams<{ userId: string }>();
   const userId = params?.userId as string;
+  const { currentUser } = useAuthV2();
   const [data, setData] = useState<PublicProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -57,6 +60,7 @@ export default function UserProfileByIdPage() {
 
   const ext = data.profile_extension || {};
   const seeker = data.seeker_profile || {};
+  const isOwner = !!(currentUser?.id && currentUser.id === userId);
 
   return (
     <div className="max-w-3xl mx-auto p-6 space-y-6">
@@ -64,6 +68,16 @@ export default function UserProfileByIdPage() {
         <h1 className="text-2xl font-bold">{data.full_name}</h1>
         {ext.headline && (
           <p className="text-gray-600 mt-1">{ext.headline}</p>
+        )}
+        {isOwner && (
+          <div className="mt-3">
+            <button
+              onClick={() => router.push('/auth/step/step1-profile')}
+              className="px-4 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700"
+            >
+              プロフィールを編集する
+            </button>
+          </div>
         )}
       </div>
 

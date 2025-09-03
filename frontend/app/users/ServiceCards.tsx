@@ -1,11 +1,13 @@
-'use client';
+"use client";
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { FaChevronRight } from 'react-icons/fa';
+import useAuthV2 from '@/hooks/useAuthV2';
 
 export default function ServiceCards() {
   const pathname = usePathname();
+  const { currentUser } = useAuthV2();
   // If path is /users/[id] or deeper under it, extract the userId to build per-user routes
   const userIdFromPath = (() => {
     if (!pathname) return null;
@@ -15,6 +17,7 @@ export default function ServiceCards() {
     return null;
   })();
 
+  const isOwner = !!(userIdFromPath && currentUser?.id && currentUser.id === userIdFromPath);
   const perUser = (subpath: string) =>
     userIdFromPath ? `/users/${userIdFromPath}/${subpath}` : undefined;
 
@@ -47,16 +50,16 @@ export default function ServiceCards() {
         <div className="grid grid-cols-2 gap-3 text-sm">
           {[{
             label: 'プロフィール',
-            href: perUser('profile') || '/auth/step/step1-profile',
+            href: isOwner ? '/auth/step/step1-profile' : (perUser('profile') || '/auth/step/step1-profile'),
           }, {
             label: '経歴',
-            href: perUser('experience') || '/auth/step/step3-experience',
+            href: isOwner ? '/auth/step/step3-experience' : (perUser('experience') || '/auth/step/step3-experience'),
           }, {
             label: '希望条件',
-            href: perUser('preference') || '/auth/step/step4-preference',
+            href: isOwner ? '/auth/step/step4-preference' : (perUser('preference') || '/auth/step/step4-preference'),
           }, {
             label: '履歴書',
-            href: perUser('resumes') || '/resumes',
+            href: isOwner ? '/resumes' : (perUser('resumes') || '/resumes'),
           }].map(({ label, href }, idx) => (
             <Link
               href={href}

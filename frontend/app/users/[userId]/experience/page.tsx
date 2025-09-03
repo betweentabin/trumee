@@ -1,12 +1,15 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import apiClient from "@/lib/api-v2-client";
+import useAuthV2 from "@/hooks/useAuthV2";
 
 export default function UserExperienceByIdPage() {
+  const router = useRouter();
   const params = useParams<{ userId: string }>();
   const userId = params?.userId as string;
+  const { currentUser } = useAuthV2();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [resumes, setResumes] = useState<any[]>([]);
@@ -35,13 +38,38 @@ export default function UserExperienceByIdPage() {
 
   if (loading) return <div className="p-6">読み込み中...</div>;
   if (error) return <div className="p-6 text-red-600">{error}</div>;
-  if (!target) return <div className="p-6">表示できる職歴がありません</div>;
+  const isOwner = !!(currentUser?.id && currentUser.id === userId);
+  if (!target) return (
+    <div className="p-6">
+      表示できる職歴がありません
+      {isOwner && (
+        <div className="mt-3">
+          <button
+            onClick={() => router.push('/auth/step/step3-experience')}
+            className="px-4 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700"
+          >
+            職歴を登録する
+          </button>
+        </div>
+      )}
+    </div>
+  );
 
   const experiences = target.experiences || [];
 
   return (
     <div className="max-w-3xl mx-auto p-6">
-      <h1 className="text-2xl font-bold mb-4">職歴</h1>
+      <div className="flex items-center justify-between mb-4">
+        <h1 className="text-2xl font-bold">職歴</h1>
+        {isOwner && (
+          <button
+            onClick={() => router.push('/auth/step/step3-experience')}
+            className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700"
+          >
+            編集する
+          </button>
+        )}
+      </div>
       <div className="space-y-4">
         {experiences.length === 0 && (
           <div className="text-sm text-gray-600">公開されている職歴がありません。</div>
