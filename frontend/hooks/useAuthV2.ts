@@ -59,7 +59,7 @@ export const useAuthV2 = () => {
       
       // ロール別のリダイレクト
       if (data.user.role === 'company') {
-        router.push('/company');
+        router.push(`/company/${data.user.id}`);
       } else {
         router.push('/users');
       }
@@ -115,7 +115,7 @@ export const useAuthV2 = () => {
       
       apiV2Client.setToken(data.drf_token);
       toast.success('企業登録が完了しました');
-      router.push('/company');
+      router.push(`/company/${data.user.id}`);
     },
     onError: (error: any) => {
       const errorMessage = error.response?.data?.detail || '企業登録に失敗しました';

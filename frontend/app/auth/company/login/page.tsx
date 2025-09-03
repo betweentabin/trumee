@@ -155,8 +155,12 @@ export default function CompanyLoginPage() {
         toast.success('ログインに成功しました（API v1）');
       }
 
-      // 企業向けメインページにリダイレクト
-      router.push('/company');
+      // 企業向けメインページにリダイレクト（API v2時はUserID付きURL）
+      if (useV2Api && response?.user?.id) {
+        router.push(`/company/${response.user.id}`);
+      } else {
+        router.push('/company');
+      }
     } catch (error: any) {
       console.error('Login error:', error);
       

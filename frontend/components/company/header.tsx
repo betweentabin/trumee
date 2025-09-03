@@ -6,12 +6,14 @@ import Link from "next/link";
 import toast from 'react-hot-toast';
 import apiV2Client from '@/lib/api-v2-client';
 import { clearAuthData } from '@/utils/auth';
+import useAuthV2 from '@/hooks/useAuthV2';
 
 
 
 const Header = () => {
 
   const router = useRouter();
+  const { currentUser } = useAuthV2();
   const mypage = () => {
     router.push('/companyinfo');
   }
@@ -20,8 +22,8 @@ const Header = () => {
     router.push('/dashboard');        // Redirect to dashboard or login page
   };
   const search = () => {
-    router.push('/company');        // Redirect to dashboard or login page
-
+    const to = currentUser?.id ? `/company/${currentUser.id}` : '/company';
+    router.push(to);
   }
 
   const openThisMonth = async () => {

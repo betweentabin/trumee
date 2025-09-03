@@ -114,7 +114,7 @@ export default function LoginPage() {
 
         // ロール別のリダイレクト
         if (result.user.role === 'company') {
-          router.push('/company');
+          router.push(`/company/${result.user.id}`);
         } else {
           router.push('/users');
         }

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import useAuthV2 from '@/hooks/useAuthV2';
 import { useAppSelector } from '@/app/redux/hooks';
 import toast from 'react-hot-toast';
@@ -25,6 +25,7 @@ import search, { applyScout, cancelScout } from "../api/api";
 
 export default function Search() {
   const router = useRouter();
+  const pathname = usePathname();
   const { isAuthenticated, currentUser, initializeAuth } = useAuthV2();
   const authState = useAppSelector(state => state.authV2);
   
@@ -68,8 +69,13 @@ export default function Search() {
       
       console.log('🏢 Company page: Authenticated company user', currentUser);
       // 認証されたユーザーの設定完了
+
+      // /company に来たら /company/<userId> へリダイレクト
+      if (pathname === '/company' && currentUser.id) {
+        router.replace(`/company/${currentUser.id}`);
+      }
     }
-  }, [isAuthenticated, currentUser, router]);
+  }, [isAuthenticated, currentUser, router, pathname]);
 
   // 認証チェック中はローディング表示
   if (isAuthenticated === null) {
