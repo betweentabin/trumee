@@ -22,6 +22,7 @@ interface Props {
   onClose: () => void;
   sendMessage: (_message: any) => void;
   onConfirm: () => void;
+  onScout?: (message: string) => void; // 追加: スカウト送信用（v2）
 }
 
 const JobSeekerDetailModal = ({
@@ -228,7 +229,14 @@ const JobSeekerDetailModal = ({
             {closeLabel}
           </button>
           <DefaultButton
-            onClick={onConfirm}
+            onClick={() => {
+              if (typeof onScout === 'function') {
+                const msg = messageRef.current?.value || '';
+                onScout(msg);
+              } else {
+                onConfirm();
+              }
+            }}
             label={confirmLabel}
             variant="primary"
             rounded={false}
