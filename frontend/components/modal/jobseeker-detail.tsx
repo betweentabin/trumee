@@ -237,11 +237,11 @@ const JobSeekerDetailModal = ({
                 onConfirm();
               }
             }}
-            label={confirmLabel}
             variant="primary"
-            rounded={false}
             className="text-sm md:text-lg"
-          />
+          >
+            {confirmLabel}
+          </DefaultButton>
         </div>
       </div>
     </DefaultModal>

@@ -151,6 +151,13 @@ class ApiV2Client {
     return response.data;
   }
 
+  // 公開プロフィール（閲覧用）
+  async getPublicUserProfile(userId: string) {
+    const url = `${API_ENDPOINTS.PUBLIC_USER_BASE}${userId}/`;
+    const res = await this.client.get(url);
+    return res.data;
+  }
+
   async getSeekerProfiles(): Promise<SeekerProfile[]> {
     const response = await this.client.get<SeekerProfile[]>(API_ENDPOINTS.SEEKER_PROFILES);
     return response.data;
@@ -193,6 +200,19 @@ class ApiV2Client {
   async getResume(id: string): Promise<Resume> {
     const response = await this.client.get<Resume>(`${API_ENDPOINTS.RESUMES}${id}/`);
     return response.data;
+  }
+
+  // 公開履歴書（閲覧用）
+  async getPublicUserResumes(userId: string): Promise<Resume[]> {
+    const url = `${API_ENDPOINTS.PUBLIC_USER_BASE}${userId}/resumes/`;
+    const res = await this.client.get<Resume[]>(url);
+    return res.data as any;
+  }
+
+  async getPublicUserResumeDetail(userId: string, resumeId: string): Promise<Resume> {
+    const url = `${API_ENDPOINTS.PUBLIC_USER_BASE}${userId}/resumes/${resumeId}/`;
+    const res = await this.client.get<Resume>(url);
+    return res.data as any;
   }
 
   async createResume(resumeData: CreateResumeRequest): Promise<Resume> {

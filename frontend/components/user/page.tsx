@@ -1,24 +1,29 @@
-'use client';
+"use client";
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useAppSelector } from '@/app/redux/hooks';
 import { FaChevronRight } from 'react-icons/fa';
-
-interface MenuItem {
-  label: string;
-  href: string;
-}
-
-const menuItems: MenuItem[] = [
-  { label: 'TOP', href: '/users' },
-  { label: '登録情報の確認・変更', href: '/users/myinfo/registerdata' },
-  { label: 'パスワードの変更', href: '/users/myinfo/password' },
-  { label: '支払い情報登録・変更', href: '/users/myinfo/payment' },
-  { label: '有料プラン', href: '/users/myinfo/paidplans' },
-];
 
 export default function Leftpage() {
   const pathname = usePathname();
+  const auth = useAppSelector((s) => s.auth);
+
+  const userIdFromPath = (() => {
+    if (!pathname) return null;
+    const parts = pathname.split('/').filter(Boolean);
+    if (parts[0] === 'users' && parts[1] && parts[1] !== 'myinfo') return parts[1];
+    return null;
+  })();
+  const userId = userIdFromPath || (auth?.user?.id as string | undefined);
+
+  const menuItems = [
+    { label: 'TOP', href: userId ? `/users/${userId}` : '/users' },
+    { label: '登録情報の確認・変更', href: userId ? `/users/${userId}/profile` : '/users/myinfo/registerdata' },
+    { label: 'パスワードの変更', href: '/users/myinfo/password' },
+    { label: '支払い情報登録・変更', href: '/users/myinfo/payment' },
+    { label: '有料プラン', href: '/users/myinfo/paidplans' },
+  ];
 
   return (
     <div className="bg-white p-[15px] border rounded-xl shadow-sm">

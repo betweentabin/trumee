@@ -160,6 +160,44 @@ export interface Resume extends BaseModel {
   resume_vector?: number[];
 }
 
+// 公開プロフィール（閲覧用）
+export interface PublicUserProfile {
+  id: UUID;
+  full_name: string;
+  role: UserRole;
+  email?: string;
+  phone?: string;
+  profile_extension?: {
+    bio?: string;
+    headline?: string;
+    profile_image_url?: string;
+    location?: string;
+    website_url?: string;
+    github_url?: string;
+    linkedin_url?: string;
+    available_for_work?: boolean;
+  };
+  privacy_settings?: {
+    is_profile_public: boolean;
+    show_email: boolean;
+    show_phone: boolean;
+    show_resumes: boolean;
+  };
+  resumes?: Array<{
+    id: UUID;
+    title: string;
+    description?: string;
+    is_active: boolean;
+    created_at?: string;
+  }>;
+  seeker_profile?: {
+    experience_years?: number;
+    prefecture?: string;
+    current_salary?: string;
+    desired_salary?: string;
+  };
+}
+
 // ============================================================================
 // マッチング関連
 // ============================================================================
@@ -443,4 +481,7 @@ export const API_ENDPOINTS = {
   // 企業 月次ページ
   COMPANY_MONTHLY_BASE: '/api/v2/company/monthly/',
   COMPANY_MONTHLY_CURRENT: '/api/v2/company/monthly/current/',
+  
+  // 公開ユーザー情報
+  PUBLIC_USER_BASE: '/api/v2/users/',
 } as const;

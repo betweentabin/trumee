@@ -1,19 +1,28 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAppSelector } from '@/app/redux/hooks';
 import { FaUser, FaBriefcase, FaClipboardList, FaFileAlt } from 'react-icons/fa';
 
 export default function RegisterDataPage() {
   const router = useRouter();
   const [activeSection, setActiveSection] = useState('profile');
+  const auth = useAppSelector((s) => s.auth);
 
-  const sections = [
-    { id: 'profile', label: 'プロフィール', icon: FaUser, href: '/auth/step/step1-profile' },
-    { id: 'history', label: '経歴', icon: FaBriefcase, href: '/auth/step/step3-experience' },
-    { id: 'hope', label: '希望条件', icon: FaClipboardList, href: '/auth/step/step4-preference' },
-    { id: 'resume', label: '履歴書', icon: FaFileAlt, href: '/resumes' },
-  ];
+  const userId = auth?.user?.id as string | undefined;
+
+  const sections = useMemo(() => {
+    const perUser = (subpath: string, fallback: string) =>
+      userId ? `/users/${userId}/${subpath}` : fallback;
+
+    return [
+      { id: 'profile', label: 'プロフィール', icon: FaUser, href: perUser('profile', '/auth/step/step1-profile') },
+      { id: 'history', label: '経歴', icon: FaBriefcase, href: perUser('experience', '/auth/step/step3-experience') },
+      { id: 'hope', label: '希望条件', icon: FaClipboardList, href: perUser('preference', '/auth/step/step4-preference') },
+      { id: 'resume', label: '履歴書', icon: FaFileAlt, href: perUser('resumes', '/resumes') },
+    ];
+  }, [userId]);
 
   return (
     <div className="max-w-4xl mx-auto p-6">

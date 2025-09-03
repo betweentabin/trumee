@@ -1010,6 +1010,79 @@ def user_privacy_settings(request, user_id):
 # 求職者専用エンドポイント
 # ============================================================================
 
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def user_public_resumes(request, user_id):
+    """
+    公開ユーザーの履歴書一覧
+    GET /api/v2/users/{user_id}/resumes/
+    - 本人: すべての履歴書
+    - 他人: プロフィールが公開かつ履歴書公開設定が有効な場合、is_active=True の履歴書のみ
+    """
+    from .models import UserPrivacySettings, Resume
+
+    try:
+        user = User.objects.get(id=user_id)
+    except User.DoesNotExist:
+        return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    is_owner = request.user.is_authenticated and str(request.user.id) == str(user_id)
+
+    privacy, _ = UserPrivacySettings.objects.get_or_create(user=user)
+
+    if not is_owner:
+        if not privacy.is_profile_public:
+            return Response({'error': 'This profile is private'}, status=status.HTTP_403_FORBIDDEN)
+        if not privacy.show_resumes:
+            return Response([], status=status.HTTP_200_OK)
+
+    if is_owner:
+        resumes_qs = Resume.objects.filter(user=user).order_by('-updated_at')
+    else:
+        resumes_qs = Resume.objects.filter(user=user, is_active=True).order_by('-updated_at')
+
+    data = ResumeSerializer(resumes_qs, many=True).data
+    if not is_owner:
+        for r in data:
+            r.pop('user_email', None)
+    return Response(data, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def user_public_resume_detail(request, user_id, resume_id):
+    """
+    公開ユーザーの履歴書詳細
+    GET /api/v2/users/{user_id}/resumes/{resume_id}/
+    - 本人: 自分の履歴書を閲覧可能
+    - 他人: プロフィール公開かつ履歴書公開設定が有効、かつ該当履歴書が is_active=True の場合のみ
+    """
+    from .models import UserPrivacySettings, Resume
+
+    try:
+        user = User.objects.get(id=user_id)
+    except User.DoesNotExist:
+        return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    try:
+        resume = Resume.objects.get(id=resume_id, user=user)
+    except Resume.DoesNotExist:
+        return Response({'error': 'Resume not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    is_owner = request.user.is_authenticated and str(request.user.id) == str(user_id)
+
+    privacy, _ = UserPrivacySettings.objects.get_or_create(user=user)
+
+    if not is_owner:
+        if not privacy.is_profile_public or not privacy.show_resumes or not resume.is_active:
+            return Response({'error': 'This resume is not publicly available'}, status=status.HTTP_403_FORBIDDEN)
+
+    data = ResumeSerializer(resume).data
+    if not is_owner:
+        data.pop('user_email', None)
+    return Response(data, status=status.HTTP_200_OK)
+
+
 @api_view(['GET', 'PUT'])
 @permission_classes([IsAuthenticated])
 def seeker_profile_detail(request):
