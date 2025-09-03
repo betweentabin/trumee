@@ -15,6 +15,8 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.authtoken.models import Token
 from django.shortcuts import get_object_or_404
 from django.db import transaction
+from django.db.models.functions import Cast
+from django.db.models import IntegerField
 from django.contrib.auth import authenticate
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
@@ -412,10 +414,30 @@ def search_seekers_v2(request):
         keyword = request.GET.get('keyword', '')
         prefecture = request.GET.get('prefecture', '')
         industry = request.GET.get('industry', '')
+        # 複数指定（CSVまたは多重キー）
+        def get_list_param(name):
+            values = request.GET.getlist(name)
+            if values:
+                flat = []
+                for v in values:
+                    if isinstance(v, str) and ',' in v:
+                        flat.extend([s.strip() for s in v.split(',') if s.strip()])
+                    elif v:
+                        flat.append(v)
+                return flat
+            csv = request.GET.get(name, '')
+            if csv:
+                return [s.strip() for s in csv.split(',') if s.strip()]
+            return []
+        prefectures = get_list_param('prefectures')
+        industries = get_list_param('industries')
         experience_years_min = request.GET.get('experience_years_min')
         experience_years_max = request.GET.get('experience_years_max')
         min_experience = request.GET.get('min_experience')  # 互換性のため
         max_experience = request.GET.get('max_experience')  # 互換性のため
+        desired_job = request.GET.get('desired_job', '')
+        min_salary = request.GET.get('min_salary')
+        max_salary = request.GET.get('max_salary')
         
         # 検索クエリ構築
         queryset = SeekerProfile.objects.select_related('user')
@@ -430,10 +452,22 @@ def search_seekers_v2(request):
         
         if prefecture:
             queryset = queryset.filter(prefecture=prefecture)
+        if prefectures:
+            queryset = queryset.filter(prefecture__in=prefectures)
         
         if industry:
             queryset = queryset.filter(
                 user__resumes__experiences__industry=industry
+            )
+        if industries:
+            queryset = queryset.filter(
+                user__resumes__experiences__industry__in=industries
+            )
+
+        # 職種（希望職種）
+        if desired_job:
+            queryset = queryset.filter(
+                user__resumes__desired_job__icontains=desired_job
             )
         
         # 経験年数フィルター
@@ -459,6 +493,23 @@ def search_seekers_v2(request):
             except ValueError:
                 pass
         
+        # 年収（希望年収）
+        if min_salary or max_salary:
+            # 数値にキャストして比較（不正値は除外）
+            queryset = queryset.annotate(
+                desired_salary_int=Cast('desired_salary', IntegerField())
+            )
+            if min_salary:
+                try:
+                    queryset = queryset.filter(desired_salary_int__gte=int(min_salary))
+                except ValueError:
+                    pass
+            if max_salary:
+                try:
+                    queryset = queryset.filter(desired_salary_int__lte=int(max_salary))
+                except ValueError:
+                    pass
+
         # 重複排除
         queryset = queryset.distinct()
         

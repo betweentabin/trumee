@@ -7,7 +7,7 @@ import useAuthV2 from '@/hooks/useAuthV2';
 import { useAppSelector } from '@/app/redux/hooks';
 import toast from 'react-hot-toast';
 
-import { useMessageToUser,useScoutSeeker,useSearchSeekers  } from "@/components/company/queries/mutation";
+import { useMessageToUser } from "@/components/company/queries/mutation";
 
 import {
   IndustryModal,
@@ -20,7 +20,9 @@ import SeekerCard from "./_component/seeker_card";
 import { DefaultSelect } from "@/components/pure/select";
 import JobSeekerDetailModal from "@/components/modal/jobseeker-detail";
 import apiV2Client from '@/lib/api-v2-client';
-import search, { applyScout, cancelScout } from "../api/api";
+import search from "../api/api";
+import { getPrefectureName } from '@/components/content/common/prefectures';
+import { getIndustryNames, getFirstJobTypeName } from '@/components/helpers/jobTypeHelper';
 
 export default function Search() {
   const router = useRouter();
@@ -28,7 +30,6 @@ export default function Search() {
   const { isAuthenticated, currentUser, initializeAuth } = useAuthV2();
   const authState = useAppSelector(state => state.authV2);
   
-  const [resultList, setResultList] = useState<any[]>([]);
   const [results, setResults] = useState<any[]>([]);
   const [isScouting, setIsScouting] = useState<boolean>(false);
 
@@ -71,6 +72,17 @@ export default function Search() {
       if (pathname === '/company' && currentUser.id) {
         router.replace(`/company/${currentUser.id}`);
       }
+
+      // 企業が過去に送ったスカウトを取得して重複送信を抑止
+      (async () => {
+        try {
+          const scouts = await apiV2Client.getScouts();
+          const seekerIds = (scouts || []).map((s: any) => s.seeker).filter(Boolean);
+          setAppliedCompanies(Array.from(new Set(seekerIds)));
+        } catch (e) {
+          // 取得失敗は無視（UIの抑止機能が効かないだけ）
+        }
+      })();
     }
   }, [isAuthenticated, currentUser, router, pathname]);
 
@@ -177,37 +189,77 @@ export default function Search() {
   const getSeekerId = useCallback((s: any) => (s?.user || s?.seeker?.id || s?.id), []);
 
   const { mutate: sendMessage, isPending: sendingMessage } = useMessageToUser();
-  /**
-   * * search handler
-   */
-  const onSearchResponse = useCallback((_data: any) => {
-    console.log("search response", _data);
-    try {
-      const arr = Array.isArray(_data) ? _data : (_data?.results ?? []);
-      setResults(arr);
-    } catch (err) {
-      console.log("Error", err);
+  // 検索パラメータの構築（API v2 準拠）
+  const buildSearchParams = useCallback((form: any) => {
+    const params: any = {};
+    if (form.keyword) params.keyword = form.keyword;
+    if (form.prefecture_ids) {
+      const ids = form.prefecture_ids.split(',').filter((x: string) => x);
+      const names = ids.map((id: string) => getPrefectureName(id)).filter(Boolean);
+      if (names.length > 0) params.prefectures = names.join(',');
     }
+    if (form.industry_ids) {
+      const names = getIndustryNames(form.industry_ids);
+      if (names) params.industries = names;
+    }
+    if (form.job_type_ids) {
+      // 職種は名称で曖昧検索する（API v2はdesired_jobをicontains）
+      const jobName = getFirstJobTypeName(form.job_type_ids);
+      if (jobName) params.desired_job = jobName;
+    }
+    // 経験年数（ラジオ相当）
+    if (form.exp_none) {
+      params.experience_years_min = 0;
+      params.experience_years_max = 0;
+    } else if (form.exp_1_5) {
+      params.experience_years_min = 1;
+      params.experience_years_max = 3;
+    } else if (form.exp_5_10) {
+      params.experience_years_min = 5;
+      params.experience_years_max = 10;
+    } else if (form.exp_10) {
+      params.experience_years_min = 10;
+    }
+    // 年収（万表記を想定: 100 -> 100万円）
+    const normalizeSalary = (v: string) => {
+      if (!v) return undefined;
+      const digits = (v.match(/\d+/g) || []).join('');
+      if (!digits) return undefined;
+      const n = parseInt(digits, 10);
+      if (isNaN(n)) return undefined;
+      return n * 10000; // 万円 → 円
+    };
+    const minSalary = normalizeSalary(form.from_salary);
+    const maxSalary = normalizeSalary(form.to_salary);
+    if (minSalary !== undefined) params.min_salary = minSalary;
+    if (maxSalary !== undefined) params.max_salary = maxSalary;
+    return params;
   }, []);
 
-  const { isPending: isSearching, mutate: searchSeekers } =
-    useSearchSeekers(onSearchResponse);
-  const onSearch = useCallback(
-    
-    (_data: any) => {
-      console.log(_data, 'data');
-      setShowPrefectureModal(false);
-      setShowJobTypeModal(false);
-      setShowIndustryModal(false);
-      searchSeekers(_data);
-    },
-    [searchSeekers]
-  );
+  const [isSearching, setIsSearching] = useState(false);
+  const onSearch = useCallback(async (_data: any) => {
+    console.log(_data, 'data');
+    setShowPrefectureModal(false);
+    setShowJobTypeModal(false);
+    setShowIndustryModal(false);
+    setIsSearching(true);
+    try {
+      const params = buildSearchParams(_data);
+      const resp = await apiV2Client.searchSeekers(params);
+      const arr = Array.isArray(resp) ? resp : (resp?.results ?? []);
+      setResults(arr);
+    } catch (e) {
+      console.error('Search error', e);
+      toast.error('検索に失敗しました');
+    } finally {
+      setIsSearching(false);
+    }
+  }, [buildSearchParams]);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const data = await search(); // returns SearchSeekersResponse
+        const data = await search(); // legacy helper
         console.log("Fetched data:", data);
         setResults(Array.isArray(data) ? data : (data?.results ?? []));
       } catch (error) {
@@ -218,26 +270,6 @@ export default function Search() {
     fetchData();
   }, []);
 
-  /**
-   * * scout handler
-   */
-  const onScoutResponse = useCallback((_data: any) => {
-    const isUnscout = _data.isUnscout;
-    const scoutData = _data.scout;
-    setResultList((oldList: any[]) => {
-      return oldList.map((_item: any) =>
-        _item.userId == scoutData.receiverId
-          ? {
-              ..._item,
-              scouts: isUnscout ? [] : [scoutData],
-            }
-          : _item
-      );
-    });
-  }, []);
-  
-  const { mutate: scoutSeeker } =
-    useScoutSeeker(onScoutResponse);
 
   // v2: スカウト送信
   const sendScoutV2 = useCallback(async (message: string, seekerArg?: any) => {
@@ -246,6 +278,10 @@ export default function Search() {
     try {
       // 検索結果はSeekerProfileを返すため、userが本来のユーザーUUID
       const seekerId = getSeekerId(target);
+      if (appliedCompanies.includes(seekerId)) {
+        toast.error('既にこの求職者へスカウト済みです');
+        return;
+      }
       const res = await apiV2Client.createScout({
         seeker: seekerId,
         scout_message: message,
@@ -257,30 +293,9 @@ export default function Search() {
       const msg = e?.response?.data?.detail || e?.response?.data?.error || 'スカウト送信に失敗しました';
       toast.error(msg);
     }
-  }, [selectedSeeker, getSeekerId]);
+  }, [selectedSeeker, getSeekerId, appliedCompanies]);
 
-  const scout = async(data: any) => {
-    setIsScouting(true); // if global or per company loading state
-  try {
-    if (appliedCompanies.includes(data.id)) {
-      // cancel application API call
-      await cancelScout(data);
-      console.log('1');
-      
-      setAppliedCompanies(prev => prev.filter(id => id !== data.id));
-    } else {
-      // apply API call
-      
-      await applyScout(data);
-      
-      setAppliedCompanies(prev => [...prev, data.id]);
-    }
-  } catch (error) {
-    console.error(error);
-  } finally {
-    setIsScouting(false);
-  }
-  }
+  // 旧scoutフローは廃止（v2 APIに統一）
 
 
   return (
@@ -498,7 +513,7 @@ export default function Search() {
             <SeekerCard
               detail={_seeker}
               onDetail={() => onDetail(_seeker)}
-              onScout={() => sendScoutV2('', _seeker)}
+              onScout={() => setSelectedSeeker(_seeker)}
               isScouting={false}
               isScouted={appliedCompanies.includes(_seeker.user || _seeker.id)}
               key={`seeker-${_seeker.id}`}
@@ -550,13 +565,15 @@ export default function Search() {
         isOpen={!!selectedSeeker}
         isSendingMessage={sendingMessage}
         closeLabel="閉じる"
-        confirmLabel={
-          selectedSeeker?.scouts?.length > 0 ? "スカウトを取り消す" : "スカウトする"
-        }
+        confirmLabel={"スカウトする"}
         onClose={onToggleDetailModal}
         sendMessage={sendMessage}
-        onConfirm={() => sendScoutV2('')}
+        onConfirm={() => { /* no-op: onScout で送信 */ }}
         onScout={async (msg: string) => {
+          if (!msg || !msg.trim()) {
+            toast.error('スカウトメッセージを入力してください');
+            return;
+          }
           try {
             await sendScoutV2(msg);
             onToggleDetailModal();
