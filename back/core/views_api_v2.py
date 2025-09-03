@@ -750,6 +750,18 @@ class ScoutViewSet(viewsets.ModelViewSet):
             'message': 'スカウトを閲覧済みにマークしました'
         }, status=status.HTTP_200_OK)
 
+    @action(detail=True, methods=['post'])
+    def respond(self, request, pk=None):
+        """スカウトに返信マーク（簡易）"""
+        scout = self.get_object()
+        # 求職者のみが自身の受け取ったスカウトに対して返信可能
+        if request.user.role != 'user' or scout.seeker_id != request.user.id:
+            return Response({'detail': 'Unauthorized'}, status=status.HTTP_403_FORBIDDEN)
+        scout.responded_at = datetime.datetime.now()
+        scout.status = 'responded'
+        scout.save()
+        return Response({'message': '返信済みにしました'}, status=status.HTTP_200_OK)
+
 
 # ============================================================================
 # 統計・ダッシュボード関連エンドポイント

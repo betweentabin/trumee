@@ -181,12 +181,18 @@ export default function SeekerDashboard() {
     );
   }
 
+  const userIdFromPath = (() => {
+    const parts = (typeof window !== 'undefined' ? window.location.pathname : '').split('/').filter(Boolean);
+    return parts[0] === 'users' && parts[1] ? parts[1] : null;
+  })();
+  const perUser = (p: string, fallback: string) => userIdFromPath ? `/users/${userIdFromPath}${p}` : fallback;
+
   const quickLinks = [
     {
       title: '履歴書管理',
       description: '履歴書の作成・編集',
       icon: FaFileAlt,
-      href: '/resumes',
+      href: perUser('/resumes', '/resumes'),
       count: stats?.resumes_count || 0,
       color: 'bg-blue-500'
     },
@@ -194,7 +200,7 @@ export default function SeekerDashboard() {
       title: '応募管理',
       description: '応募状況を確認',
       icon: FaBriefcase,
-      href: '/applications',
+      href: perUser('/applications', '/applications'),
       count: stats?.applications_count || 0,
       color: 'bg-green-500'
     },
@@ -202,7 +208,7 @@ export default function SeekerDashboard() {
       title: 'スカウト',
       description: '企業からのオファー',
       icon: FaUserTie,
-      href: '/scouts',
+      href: perUser('/scouts', '/scouts'),
       count: stats?.scouts_count || 0,
       color: 'bg-purple-500'
     },
@@ -210,7 +216,7 @@ export default function SeekerDashboard() {
       title: 'メッセージ',
       description: '企業とのやり取り',
       icon: FaEnvelope,
-      href: '/messages',
+      href: perUser('/messages', '/messages'),
       count: stats?.messages_count || 0,
       badge: stats?.unread_messages || 0,
       color: 'bg-orange-500'

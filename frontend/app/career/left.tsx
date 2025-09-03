@@ -1,21 +1,22 @@
-'use client';
+"use client";
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { FaChevronRight } from 'react-icons/fa';
 
-interface MenuItem {
-  label: string;
-  href: string;
-}
-
-const menuItems: MenuItem[] = [
-  { label: '職務経歴書を作成する', href: '/career/preview' },
-  { label: '印刷する', href: '/career/print' },
-];
-
 export default function Leftpage() {
   const pathname = usePathname();
+  const userIdFromPath = (() => {
+    if (!pathname) return null;
+    const parts = pathname.split('/').filter(Boolean);
+    if (parts[0] === 'users' && parts[1]) return parts[1];
+    return null;
+  })();
+
+  const menuItems = [
+    { label: '職務経歴書を作成する', href: userIdFromPath ? `/users/${userIdFromPath}/career/preview` : '/career/preview' },
+    { label: '印刷する', href: userIdFromPath ? `/users/${userIdFromPath}/career/print` : '/career/print' },
+  ];
 
   return (
     <div className="bg-white border rounded-xl p-4 shadow-sm">

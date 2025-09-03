@@ -25,9 +25,9 @@ export default function ServiceCards() {
         <h2 className="font-bold text-sm mb-4">各サービスを利用する</h2>
         <div className="space-y-3">
           {[
-            { text: '職務経歴書に関するアドバイス', href: '/career' },
-            { text: '面接に関するアドバイス', href: '/interview' },
-            { text: '企業からのスカウト確認', href: '/scouts' },
+            { text: '職務経歴書に関するアドバイス', href: perUser('career') || '/career' },
+            { text: '面接に関するアドバイス', href: perUser('interview') || '/interview' },
+            { text: '企業からのスカウト確認', href: perUser('scouts') || '/scouts' },
           ].map(({ text, href }, idx) => (
             <Link 
               href={href} 

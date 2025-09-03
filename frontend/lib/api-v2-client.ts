@@ -329,8 +329,10 @@ class ApiV2Client {
 
   // スカウト関連
   async getScouts(): Promise<Scout[]> {
-    const response = await this.client.get<Scout[]>(API_ENDPOINTS.SCOUTS);
-    return response.data;
+    const response = await this.client.get<any>(API_ENDPOINTS.SCOUTS);
+    const data = response.data as any;
+    // DRF Pagination対応：resultsに配列が入る
+    return Array.isArray(data) ? data : (data?.results ?? []);
   }
 
   async createScout(scoutData: CreateScoutRequest): Promise<Scout> {

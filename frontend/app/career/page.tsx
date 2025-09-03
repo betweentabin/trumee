@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import useAuthV2 from '@/hooks/useAuthV2';
 import toast from 'react-hot-toast';
 import { FaPlus, FaEdit, FaEye, FaPrint, FaTrash, FaClock, FaFileAlt } from 'react-icons/fa';
@@ -19,6 +20,14 @@ interface Resume {
 
 export default function CareerPage() {
   const router = useRouter();
+  const pathname = usePathname();
+  const userIdFromPath = (() => {
+    if (!pathname) return null;
+    const parts = pathname.split('/').filter(Boolean);
+    if (parts[0] === 'users' && parts[1]) return parts[1];
+    return null;
+  })();
+  const to = (path: string) => userIdFromPath ? `/users/${userIdFromPath}${path}` : path;
   // 🚨 認証チェックを無効化
   // const { isAuthenticated, initializeAuth } = useAuthV2();
   const [resumes, setResumes] = useState<Resume[]>([]);
@@ -109,7 +118,7 @@ export default function CareerPage() {
             <h1 className="text-3xl font-bold text-gray-800">職務経歴書</h1>
             <p className="text-gray-600 mt-2">あなたの職務経歴書を管理できます</p>
           </div>
-          <Link href="/career/create">
+          <Link href={to('/career/create')}>
             <button className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
               <FaPlus />
               新規作成
@@ -126,7 +135,7 @@ export default function CareerPage() {
             <p className="text-gray-500 mb-6">
               新規作成ボタンをクリックして、職務経歴書を作成しましょう
             </p>
-            <Link href="/career/create">
+            <Link href={to('/career/create')}>
               <button className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
                 職務経歴書を作成する
               </button>
@@ -151,17 +160,17 @@ export default function CareerPage() {
                 </div>
                 <div className="border-t px-6 py-4 flex justify-between">
                   <div className="flex gap-2">
-                    <Link href={`/career/preview?id=${resume.id}`}>
+                    <Link href={to(`/career/preview?id=${resume.id}`)}>
                       <button className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded transition">
                         <FaEye />
                       </button>
                     </Link>
-                    <Link href={`/career/edit/${resume.id}`}>
+                    <Link href={to(`/career/edit/${resume.id}`)}>
                       <button className="p-2 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded transition">
                         <FaEdit />
                       </button>
                     </Link>
-                    <Link href={`/career/print?id=${resume.id}`}>
+                    <Link href={to(`/career/print?id=${resume.id}`)}>
                       <button className="p-2 text-gray-600 hover:text-purple-600 hover:bg-purple-50 rounded transition">
                         <FaPrint />
                       </button>

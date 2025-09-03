@@ -1,10 +1,18 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 
 export default function InterviewPage2() {
   const router = useRouter();
+  const pathname = usePathname();
+  const userIdFromPath = (() => {
+    if (!pathname) return null;
+    const parts = pathname.split('/').filter(Boolean);
+    if (parts[0] === 'users' && parts[1]) return parts[1];
+    return null;
+  })();
+  const to = (path: string) => userIdFromPath ? `/users/${userIdFromPath}${path}` : path;
   const [achievements, setAchievements] = useState('');
   const [challenges, setChallenges] = useState('');
   const [skills, setSkills] = useState('');
@@ -47,13 +55,13 @@ export default function InterviewPage2() {
 
           <div className="flex justify-between">
             <button
-              onClick={() => router.push('/interview/1')}
+              onClick={() => router.push(to('/interview/1'))}
               className="bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 rounded-lg"
             >
               前へ：転職理由・志望動機
             </button>
             <button
-              onClick={() => router.push('/interview/3')}
+              onClick={() => router.push(to('/interview/3'))}
               className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg"
             >
               次へ：面接対策

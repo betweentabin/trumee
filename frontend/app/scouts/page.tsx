@@ -15,19 +15,7 @@ import {
   FaCheckCircle
 } from 'react-icons/fa';
 
-interface Scout {
-  id: string;
-  company: {
-    id: string;
-    company_name: string;
-    email: string;
-  };
-  scout_message: string;
-  status: string;
-  created_at: string;
-  viewed_at: string | null;
-  responded_at: string | null;
-}
+type Scout = any; // API差異があるため一旦ワイドに受ける
 
 export default function ScoutsPage() {
   const router = useRouter();
@@ -109,7 +97,7 @@ export default function ScoutsPage() {
     );
   };
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString?: string | null) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('ja-JP', {
       year: 'numeric',
@@ -274,7 +262,7 @@ export default function ScoutsPage() {
                     <div className="flex items-center gap-4 text-sm text-gray-500">
                       <div className="flex items-center">
                         <FaClock className="mr-1" />
-                        受信日: {formatDate(scout.created_at)}
+                        受信日: {formatDate(scout.created_at || scout.scouted_at)}
                       </div>
                       {scout.viewed_at && (
                         <div className="flex items-center">

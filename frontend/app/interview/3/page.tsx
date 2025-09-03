@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { 
   FaPlay, 
@@ -26,6 +26,14 @@ interface MockInterview {
 
 export default function InterviewPage3() {
   const router = useRouter();
+  const pathname = usePathname();
+  const userIdFromPath = (() => {
+    if (!pathname) return null;
+    const parts = pathname.split('/').filter(Boolean);
+    if (parts[0] === 'users' && parts[1]) return parts[1];
+    return null;
+  })();
+  const to = (path: string) => userIdFromPath ? `/users/${userIdFromPath}${path}` : path;
   const [currentQuestion, setCurrentQuestion] = useState<MockInterview | null>(null);
   const [isRecording, setIsRecording] = useState(false);
   const [timeElapsed, setTimeElapsed] = useState(0);
@@ -442,13 +450,13 @@ export default function InterviewPage3() {
         {!currentQuestion && (
           <div className="flex justify-between mt-8">
             <button
-              onClick={() => router.push('/interview/2')}
+              onClick={() => router.push(to('/interview/2'))}
               className="bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 rounded-lg transition-colors"
             >
               前へ：職務経歴書に関する質問
             </button>
             <button
-              onClick={() => router.push('/interview/1')}
+              onClick={() => router.push(to('/interview/1'))}
               className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-colors"
             >
               最初に戻る
