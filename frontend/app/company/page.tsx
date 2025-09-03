@@ -253,16 +253,19 @@ export default function Search() {
     if (!selectedSeeker) return;
     setSendingScout(true);
     try {
+      // 検索結果はSeekerProfileを返すため、userが本来のユーザーUUID
+      const seekerId = selectedSeeker.user || selectedSeeker.seeker?.id || selectedSeeker.id;
       const res = await apiV2Client.createScout({
-        seeker: selectedSeeker.id,
+        seeker: seekerId,
         scout_message: message,
       });
       toast.success('スカウトを送信しました');
-      setAppliedCompanies((prev) => [...new Set([...prev, selectedSeeker.id])]);
+      setAppliedCompanies((prev) => [...new Set([...prev, seekerId])]);
       setShowScoutModal(false);
     } catch (e: any) {
       console.error('Failed to send scout:', e?.response?.data || e);
-      toast.error('スカウト送信に失敗しました');
+      const msg = e?.response?.data?.detail || e?.response?.data?.error || 'スカウト送信に失敗しました';
+      toast.error(msg);
     } finally {
       setSendingScout(false);
     }
@@ -509,7 +512,7 @@ export default function Search() {
               onDetail={() => onDetail(_seeker)}
               onScout={() => onOpenScout(_seeker)}
               isScouting={false}
-              isScouted={appliedCompanies.includes(_seeker.id)}
+              isScouted={appliedCompanies.includes(_seeker.user || _seeker.id)}
               key={`seeker-${_seeker.id}`}
             />
           ))
