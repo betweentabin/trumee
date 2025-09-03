@@ -1,6 +1,7 @@
 "use client"
 import React from "react";
 import Image from "next/image";
+import logoTop from '@/logo/logo_top.png';
 import { useRouter } from 'next/navigation';
 import Link from "next/link";
 import toast from 'react-hot-toast';
@@ -40,7 +41,7 @@ const Header = () => {
         <div className="flex items-center justify-between h-20 px-6 md:px-12 lg:px-16">
           {/* Left Logo */}
           <div className="flex items-center">
-              <Image src="/logo/logo_top.png" alt="Logo" width={210} height={40} className="h-10 w-[210px] mr-3 cursor-pointer" />
+              <Image src={logoTop} alt="Logo" width={210} height={40} className="h-10 w-[210px] mr-3 cursor-pointer" />
           
         </div>
       

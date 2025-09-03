@@ -95,7 +95,10 @@ export const useAuth = () => {
         toast.success('ログインに成功しました');
 
         // Redirect based on role
-        if (data.user?.role === 'company') {
+        if (data.user?.is_staff || data.user?.is_superuser) {
+          // 管理者は管理画面へリダイレクト
+          router.push('/admin/seekers');
+        } else if (data.user?.role === 'company') {
           router.push('/company');
         } else {
           router.push('/users');

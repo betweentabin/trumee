@@ -8,6 +8,8 @@ import StepNavigation from '../components/StepNavigation';
 import StepLayout from '../components/StepLayout';
 import toast from 'react-hot-toast';
 import apiClient from '@/lib/api-v2-client';
+import { DefaultModal } from '@/components/modal';
+import ResumePreview from '@/components/pure/resume/preview';
 
 interface Experience {
   id: number;
@@ -51,6 +53,7 @@ export default function Step3ExperiencePage() {
   const [experiences, setLocalExperiences] = useState<Experience[]>([]);
   const [errors, setErrors] = useState<Record<string, Record<string, string>>>({});
   const [expandedIndex, setExpandedIndex] = useState<number | null>(0);
+  const [showPreview, setShowPreview] = useState(false);
 
   // Load saved data on mount
   useEffect(() => {
@@ -130,6 +133,26 @@ export default function Step3ExperiencePage() {
         return newErrors;
       });
     }
+  };
+
+  // Preview helpers
+  const buildPreviewData = () => {
+    const jobhistoryList = experiences.map((_, i) => `job${i+1}`);
+    const formValues: any = {};
+    experiences.forEach((e, i) => {
+      const key = `job${i+1}`;
+      formValues[key] = {
+        company: e.company,
+        capital: e.capital,
+        work_content: e.tasks,
+        since: e.periodFrom ? e.periodFrom.replace('-', '/') : '',
+        to: e.periodTo ? e.periodTo.replace('-', '/') : '現在',
+        people: e.teamSize,
+        duty: e.position,
+        business: e.business,
+      };
+    });
+    return { jobhistoryList, formValues };
   };
 
   const addExperience = () => {
@@ -435,6 +458,12 @@ export default function Step3ExperiencePage() {
             </button>
             <div className="space-x-3">
               <button
+                onClick={() => setShowPreview(true)}
+                className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition"
+              >
+                プレビュー
+              </button>
+              <button
                 onClick={handleSave}
                 className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition"
               >
@@ -453,6 +482,30 @@ export default function Step3ExperiencePage() {
 
       {/* Step Navigation */}
       <StepNavigation currentStep={3} />
+
+      {/* Preview Modal */}
+      <DefaultModal isOpen={showPreview} onClose={() => setShowPreview(false)}>
+        <div className="w-full max-w-4xl">
+          {(() => {
+            const { jobhistoryList, formValues } = buildPreviewData();
+            return (
+              <ResumePreview
+                userName=""
+                jobhistoryList={jobhistoryList}
+                formValues={formValues}
+              />
+            );
+          })()}
+          <div className="p-4 flex justify-end">
+            <button
+              onClick={() => setShowPreview(false)}
+              className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition"
+            >
+              閉じる
+            </button>
+          </div>
+        </div>
+      </DefaultModal>
     </StepLayout>
   );
 }

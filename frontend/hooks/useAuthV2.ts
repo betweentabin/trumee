@@ -62,7 +62,10 @@ export const useAuthV2 = () => {
       toast.success('ログインしました');
       
       // ロール別のリダイレクト
-      if (data.user.role === 'company') {
+      if (data.user.is_staff || data.user.is_superuser) {
+        // 管理者は管理画面へリダイレクト
+        router.push('/admin/seekers');
+      } else if (data.user.role === 'company') {
         router.push(`/company/${data.user.id}`);
       } else {
         router.push('/users');

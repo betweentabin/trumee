@@ -193,8 +193,9 @@ class ApiV2Client {
   // ============================================================================
 
   async getResumes(): Promise<Resume[]> {
-    const response = await this.client.get<Resume[]>(API_ENDPOINTS.RESUMES);
-    return response.data;
+    const response = await this.client.get<any>(API_ENDPOINTS.RESUMES);
+    const data = response.data as any;
+    return Array.isArray(data) ? data : (data?.results ?? []);
   }
 
   async getResume(id: string): Promise<Resume> {
@@ -313,8 +314,9 @@ class ApiV2Client {
 
   // 応募関連
   async getApplications(): Promise<Application[]> {
-    const response = await this.client.get<Application[]>(API_ENDPOINTS.APPLICATIONS);
-    return response.data;
+    const response = await this.client.get<any>(API_ENDPOINTS.APPLICATIONS);
+    const data = response.data as any;
+    return Array.isArray(data) ? data : (data?.results ?? []);
   }
 
   async createApplication(applicationData: CreateApplicationRequest): Promise<Application> {

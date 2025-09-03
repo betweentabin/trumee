@@ -113,7 +113,10 @@ export default function LoginPage() {
         }));
 
         // ロール別のリダイレクト
-        if (result.user.role === 'company') {
+        if (result.user.is_staff || result.user.is_superuser) {
+          // 管理者は管理画面へリダイレクト
+          router.push('/admin/seekers');
+        } else if (result.user.role === 'company') {
           router.push(`/company/${result.user.id}`);
         } else {
           router.push('/users');
