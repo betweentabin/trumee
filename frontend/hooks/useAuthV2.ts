@@ -51,6 +51,10 @@ export const useAuthV2 = () => {
         token: data.token,
         drfToken: data.drf_token,
       }));
+      // 永続化
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('current_user_v2', JSON.stringify(data.user));
+      }
       
       // API クライアントにトークンを設定（DRFトークンを使用）
       apiV2Client.setToken(data.drf_token);
@@ -157,6 +161,7 @@ export const useAuthV2 = () => {
     console.log('🔧 initializeAuth called', { isAuthenticated, hasToken: !!localStorage.getItem('drf_token_v2') });
     
     const storedDrfToken = localStorage.getItem('drf_token_v2');
+    const storedUser = localStorage.getItem('current_user_v2');
     
     if (storedDrfToken && !isAuthenticated) {
       console.log('🔧 Restoring auth tokens');
@@ -167,6 +172,12 @@ export const useAuthV2 = () => {
       
       // DRFトークンを使用
       apiV2Client.setToken(storedDrfToken);
+      if (storedUser) {
+        try {
+          const user = JSON.parse(storedUser);
+          dispatch(updateUser(user));
+        } catch {}
+      }
     } else {
       console.log('🔧 Skip auth initialization', { 
         hasStoredDrfToken: !!storedDrfToken, 
@@ -189,11 +200,15 @@ export const useAuthV2 = () => {
       localStorage.setItem('drf_token_v2', authTokens.drfToken);
       // 後方互換性のためauth_token_v2にも保存
       localStorage.setItem('auth_token_v2', authTokens.drfToken);
+      if (currentUser) {
+        localStorage.setItem('current_user_v2', JSON.stringify(currentUser));
+      }
     } else {
       localStorage.removeItem('drf_token_v2');
       localStorage.removeItem('auth_token_v2');
+      localStorage.removeItem('current_user_v2');
     }
-  }, [authTokens]);
+  }, [authTokens, currentUser]);
 
   // 公開メソッド
   const login = useCallback((credentials: LoginRequest) => {
@@ -233,6 +248,19 @@ export const useAuthV2 = () => {
     return currentUser?.role === role;
   }, [currentUser]);
 
+  // 管理者判定（is_staff または is_superuser）
+  const isAdmin = useCallback(() => {
+    return !!(currentUser && ((currentUser as any).is_staff || (currentUser as any).is_superuser));
+  }, [currentUser]);
+
+  const requireAdmin = useCallback((redirectTo = '/') => {
+    if (!checkAuth() || !isAdmin()) {
+      router.push(redirectTo);
+      return false;
+    }
+    return true;
+  }, [checkAuth, isAdmin, router]);
+
   const requireRole = useCallback((role: string, redirectTo = '/') => {
     if (!checkAuth() || !hasRole(role)) {
       router.push(redirectTo);
@@ -261,6 +289,8 @@ export const useAuthV2 = () => {
     requireAuth,
     hasRole,
     requireRole,
+    isAdmin,
+    requireAdmin,
     refetchProfile,
     
     // API状態

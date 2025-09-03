@@ -34,6 +34,7 @@ const JobSeekerDetailModal = ({
   onClose,
   sendMessage,
   onConfirm,
+  onScout,
 }: Props) => {
   const messageRef = useRef<HTMLTextAreaElement | null>(null);
 

@@ -42,6 +42,8 @@ export interface User extends BaseModel {
   full_name: string;
   kana: string;
   gender?: Gender;
+  is_staff?: boolean;
+  is_superuser?: boolean;
   company_name?: string;
   capital?: number;
   company_url?: string;

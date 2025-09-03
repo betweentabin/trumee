@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import Link from "next/link";
@@ -8,6 +8,7 @@ import { FaUsers, FaBars, FaTimes, FaSignOutAlt } from "react-icons/fa";
 import { clearAuthData } from '@/utils/auth';
 
 import AdminHeader from "@/components/admin/admin";
+import useAuthV2 from '@/hooks/useAuthV2';
 
 const queryClient = new QueryClient();
 
@@ -19,6 +20,16 @@ export default function Layout({
   const pathname = usePathname();
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
+  const { initializeAuth, requireAdmin, isAdmin } = useAuthV2();
+
+  useEffect(() => {
+    initializeAuth();
+  }, [initializeAuth]);
+
+  useEffect(() => {
+    // 認証・管理者チェック。非管理者はトップへ
+    requireAdmin('/');
+  }, [requireAdmin]);
 
   const handleLogout = () => {
     // Clear auth tokens or session storage as needed
@@ -86,7 +97,9 @@ export default function Layout({
 
           {/* Main content */}
           <main className="flex-1 px-4 py-4 md:px-[20px] md:py-[20px] overflow-x-hidden">
-            {children}
+            {isAdmin() ? children : (
+              <div className="p-6 text-center text-gray-700">権限がありません</div>
+            )}
           </main>
         </div>
       </div>

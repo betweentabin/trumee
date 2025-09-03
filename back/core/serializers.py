@@ -15,9 +15,11 @@ class UserSerializer(serializers.ModelSerializer):
             'id', 'email', 'username', 'role', 'full_name', 
             'kana', 'gender', 'company_name', 'capital', 
             'company_url', 'phone', 'is_premium', 'premium_expiry',
+            # 管理者可視のためのフラグを公開（read-only）
+            'is_staff', 'is_superuser',
             'created_at', 'updated_at'
         ]
-        read_only_fields = ['id', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'created_at', 'updated_at', 'is_staff', 'is_superuser']
 
 
 class UserRegisterSerializer(serializers.ModelSerializer):
