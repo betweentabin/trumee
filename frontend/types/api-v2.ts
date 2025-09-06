@@ -341,6 +341,7 @@ export interface UpdateResumeRequest extends Partial<CreateResumeRequest> {
 export interface CreateApplicationRequest {
   company: UUID;
   resume?: UUID;
+  job_posting_id?: UUID;
 }
 
 export interface CreateScoutRequest {
@@ -476,6 +477,8 @@ export const API_ENDPOINTS = {
   APPLICATIONS: '/api/v2/applications/',
   SCOUTS: '/api/v2/scouts/',
   SEARCH_SEEKERS: '/api/v2/search/seekers/',
+  MESSAGES_SEEKER: '/api/v2/seeker/messages/',
+  COMPANY_JOBS_NEW: '/api/v2/company/jobs/new/',
   
   // ダッシュボード
   DASHBOARD_STATS: '/api/v2/dashboard/stats/',

@@ -329,6 +329,18 @@ class ApiV2Client {
     return response.data;
   }
 
+  // メッセージ関連
+  async getSeekerMessages(): Promise<Message[]> {
+    const response = await this.client.get<Message[]>(API_ENDPOINTS.MESSAGES_SEEKER);
+    return response.data as any;
+  }
+
+  // 企業: 新規求人作成（簡易API）
+  async createCompanyJob(payload: any): Promise<{ message: string; job_id?: string }>{
+    const response = await this.client.post(API_ENDPOINTS.COMPANY_JOBS_NEW, payload);
+    return response.data as any;
+  }
+
   // スカウト関連
   async getScouts(): Promise<Scout[]> {
     const response = await this.client.get<any>(API_ENDPOINTS.SCOUTS);
