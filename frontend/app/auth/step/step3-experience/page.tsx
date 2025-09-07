@@ -211,20 +211,32 @@ export default function Step3ExperiencePage() {
         } as any);
       }
 
-      const payload = {
-        experiences: experiences.map((e, idx) => ({
-          company: e.company,
-          period_from: e.periodFrom || '',
-          period_to: e.periodTo || null,
-          employment_type: mapEmploymentType(e.employmentType),
-          business: e.business || '',
-          capital: e.capital || '',
-          team_size: e.teamSize || '',
-          tasks: e.tasks || '',
-          position: e.position || '',
-          industry: e.industry || '',
+      const toIsoDate = (v?: string | null) => {
+        if (!v) return null;
+        // Accept 'YYYY-MM' or 'YYYY/MM' and convert to 'YYYY-MM-01'
+        const s = String(v).trim();
+        if (/^\d{4}-\d{2}$/.test(s)) return `${s}-01`;
+        if (/^\d{4}\/\d{2}$/.test(s)) return `${s.replace('/', '-')}-01`;
+        return s; // Assume already YYYY-MM-DD
+      };
+
+      const mapped = experiences.map((e, idx) => ({
+          company: (e.company || '').trim(),
+          period_from: toIsoDate((e.periodFrom || '').trim()),
+          period_to: toIsoDate((e.periodTo || '').trim() || null),
+          employment_type: mapEmploymentType((e.employmentType || '').trim()),
+          business: (e.business || '').trim(),
+          capital: (e.capital || '').trim(),
+          team_size: (e.teamSize || '').trim(),
+          tasks: (e.tasks && e.tasks.trim()) ? e.tasks.trim() : '仕事内容未記載',
+          position: (e.position || '').trim(),
+          industry: (e.industry || '').trim(),
           order: idx,
-        })),
+        }));
+      // API要件を満たさない空行は送信しない
+      const experiencesPayload = mapped.filter(x => !!(x.company && x.period_from && x.employment_type && x.tasks));
+      const payload = {
+        experiences: experiencesPayload,
       } as any;
       await apiClient.updateResume(resume.id, payload);
       return true;
