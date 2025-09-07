@@ -34,8 +34,11 @@ export default function ScoutsPage() {
     if (isAuthenticated) {
       fetchScouts();
     } else if (isAuthenticated === false) {
-      toast.error('ログインが必要です');
-      router.push('/auth/login');
+      const hasStored = typeof window !== 'undefined' && !!localStorage.getItem('drf_token_v2');
+      if (!hasStored) {
+        toast.error('ログインが必要です');
+        router.push('/auth/login');
+      }
     }
   }, [isAuthenticated, router]);
 

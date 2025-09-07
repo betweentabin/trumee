@@ -1,4 +1,4 @@
-import StepLayout from './components/StepLayout';
+import AuthLayout from '@/components/auth/layout';
 
 export default function Layout({
   children
@@ -6,8 +6,8 @@ export default function Layout({
   children: React.ReactNode
 }) {
   return (
-    <StepLayout>
+    <AuthLayout>
       {children}
-    </StepLayout>
+    </AuthLayout>
   )
 }

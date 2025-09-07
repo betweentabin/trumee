@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAppSelector } from '@/app/redux/hooks';
 import { FaCreditCard, FaCalendarAlt, FaLock, FaPlus, FaTrash } from 'react-icons/fa';
 import toast from 'react-hot-toast';
+import useAuthV2 from '@/hooks/useAuthV2';
 
 interface PaymentMethod {
   id: string;
@@ -18,7 +18,7 @@ interface PaymentMethod {
 
 export default function PaymentPage() {
   const router = useRouter();
-  const authState = useAppSelector(state => state.auth);
+  const { isAuthenticated, initializeAuth } = useAuthV2();
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
   const [showAddCard, setShowAddCard] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -31,12 +31,19 @@ export default function PaymentPage() {
   });
 
   useEffect(() => {
-    if (!authState.isAuthenticated) {
-      router.push('/auth/login');
-      return;
+    initializeAuth();
+  }, [initializeAuth]);
+
+  useEffect(() => {
+    if (isAuthenticated === false) {
+      const hasStored = typeof window !== 'undefined' && !!localStorage.getItem('drf_token_v2');
+      if (!hasStored) {
+        router.push('/auth/login');
+        return;
+      }
     }
-    fetchPaymentMethods();
-  }, [authState, router]);
+    if (isAuthenticated) fetchPaymentMethods();
+  }, [isAuthenticated, router]);
 
   const fetchPaymentMethods = async () => {
     try {

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useFormPersist } from '@/hooks/useFormPersist';
-import { useAuth } from '@/hooks/useAuth';
+import useAuthV2 from '@/hooks/useAuthV2';
 import StepNavigation from '../components/StepNavigation';
 import StepLayout from '../components/StepLayout';
 import toast from 'react-hot-toast';
@@ -37,8 +37,7 @@ const employmentTypes = [
 
 export default function Step3ExperiencePage() {
   const router = useRouter();
-  // 🚨 認証チェックを無効化
-  // const { requireAuth } = useAuth();
+  const { initializeAuth } = useAuthV2();
   const {
     formState,
     setExperiences,
@@ -47,8 +46,7 @@ export default function Step3ExperiencePage() {
     saveToLocalStorage,
   } = useFormPersist();
 
-  // 🚨 認証チェックを無効化
-  // requireAuth();
+  useEffect(() => { initializeAuth(); }, [initializeAuth]);
 
   const [experiences, setLocalExperiences] = useState<Experience[]>([]);
   const [errors, setErrors] = useState<Record<string, Record<string, string>>>({});
@@ -179,7 +177,7 @@ export default function Step3ExperiencePage() {
       if (ok) {
         markStepCompleted(3);
         toast.success('職歴情報を保存しました');
-        navigateToStep(4);
+        router.push('/auth/step/step4-preference');
       }
     });
   };
@@ -187,7 +185,7 @@ export default function Step3ExperiencePage() {
   const handleBack = () => {
     setExperiences(experiences);
     saveToLocalStorage();
-    navigateToStep(2);
+    router.push('/auth/step/step2-education');
   };
 
   const handleSave = () => {

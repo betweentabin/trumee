@@ -49,7 +49,8 @@ export default function SeekersAppliedPage() {
 
   // Check authentication and role
   useEffect(() => {
-    if (isAuthenticated === false) {
+    const hasStored = typeof window !== 'undefined' && !!localStorage.getItem('drf_token_v2');
+    if (isAuthenticated === false && !hasStored) {
       toast.error('企業ログインが必要です');
       router.push('/auth/company/login');
       return;
@@ -110,7 +111,8 @@ export default function SeekersAppliedPage() {
   };
 
   // Show loading while checking auth
-  if (isAuthenticated === null || loading) {
+  const restoring = typeof window !== 'undefined' && !!localStorage.getItem('drf_token_v2') && isAuthenticated === false;
+  if (restoring || loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#FF733E]"></div>

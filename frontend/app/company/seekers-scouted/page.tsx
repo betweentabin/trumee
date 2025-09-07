@@ -47,7 +47,8 @@ export default function SeekersScoutedPage() {
 
   // Check authentication and role
   useEffect(() => {
-    if (isAuthenticated === false) {
+    const hasStored = typeof window !== 'undefined' && !!localStorage.getItem('drf_token_v2');
+    if (isAuthenticated === false && !hasStored) {
       toast.error('企業ログインが必要です');
       router.push('/auth/company/login');
       return;

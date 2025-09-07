@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useFormPersist } from '@/hooks/useFormPersist';
-import { useAuth } from '@/hooks/useAuth';
+import useAuthV2 from '@/hooks/useAuthV2';
 import StepNavigation from '../components/StepNavigation';
 import StepLayout from '../components/StepLayout';
 import toast from 'react-hot-toast';
@@ -21,7 +21,7 @@ const educationTypes = [
 
 export default function Step2EducationPage() {
   const router = useRouter();
-  const { requireAuth } = useAuth();
+  const { isAuthenticated, initializeAuth } = useAuthV2();
   const {
     formState,
     updateEducation,
@@ -30,8 +30,10 @@ export default function Step2EducationPage() {
     saveToLocalStorage,
   } = useFormPersist();
 
-  // Redirect if not authenticated
-  requireAuth();
+  // 認証復元（未ログインでも編集は続行可能にする）
+  useEffect(() => {
+    initializeAuth();
+  }, [initializeAuth]);
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [formData, setFormData] = useState({
@@ -91,14 +93,14 @@ export default function Step2EducationPage() {
       markStepCompleted(2);
       saveToLocalStorage();
       toast.success('学歴情報を保存しました');
-      navigateToStep(3);
+      router.push('/auth/step/step3-experience');
     }
   };
 
   const handleBack = () => {
     updateEducation(formData);
     saveToLocalStorage();
-    navigateToStep(1);
+    router.push('/auth/step/step1-profile');
   };
 
   const handleSave = () => {

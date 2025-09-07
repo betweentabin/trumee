@@ -238,13 +238,23 @@ export const useAuthV2 = () => {
   }, [isAuthenticated, authTokens.token]);
 
   // 認証が必要なページでの認証チェック
+  const hasStoredToken = () => {
+    if (typeof window === 'undefined') return false;
+    return !!localStorage.getItem('drf_token_v2');
+  };
+
   const requireAuth = useCallback((redirectTo = '/auth/login') => {
     if (!checkAuth()) {
+      if (hasStoredToken()) {
+        // トークン復元中はリダイレクトせず待機
+        initializeAuth();
+        return false;
+      }
       router.push(redirectTo);
       return false;
     }
     return true;
-  }, [checkAuth, router]);
+  }, [checkAuth, router, initializeAuth]);
 
   // ロール別のアクセス制御
   const hasRole = useCallback((role: string) => {
@@ -258,19 +268,27 @@ export const useAuthV2 = () => {
 
   const requireAdmin = useCallback((redirectTo = '/') => {
     if (!checkAuth() || !isAdmin()) {
+      if (hasStoredToken()) {
+        initializeAuth();
+        return false;
+      }
       router.push(redirectTo);
       return false;
     }
     return true;
-  }, [checkAuth, isAdmin, router]);
+  }, [checkAuth, isAdmin, router, initializeAuth]);
 
   const requireRole = useCallback((role: string, redirectTo = '/') => {
     if (!checkAuth() || !hasRole(role)) {
+      if (hasStoredToken()) {
+        initializeAuth();
+        return false;
+      }
       router.push(redirectTo);
       return false;
     }
     return true;
-  }, [checkAuth, hasRole, router]);
+  }, [checkAuth, hasRole, router, initializeAuth]);
 
   return {
     // 状態

@@ -30,7 +30,8 @@ export default function CompanyMonthlyPageView({ params }: { params: Params }) {
   }, [initializeAuth]);
 
   useEffect(() => {
-    if (isAuthenticated === false) {
+    const hasStored = typeof window !== 'undefined' && !!localStorage.getItem('drf_token_v2');
+    if (isAuthenticated === false && !hasStored) {
       router.push('/auth/company/login');
       return;
     }
@@ -142,4 +143,3 @@ export default function CompanyMonthlyPageView({ params }: { params: Params }) {
     </div>
   );
 }
-

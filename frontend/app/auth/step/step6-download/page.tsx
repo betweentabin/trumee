@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useFormPersist } from '@/hooks/useFormPersist';
-import { useAuth } from '@/hooks/useAuth';
+import useAuthV2 from '@/hooks/useAuthV2';
 import StepNavigation from '../components/StepNavigation';
 import StepLayout from '../components/StepLayout';
 import { API_CONFIG, buildApiUrl } from '@/config/api';
@@ -12,12 +12,18 @@ import Link from 'next/link';
 
 export default function Step6DownloadPage() {
   const router = useRouter();
-  const { requireAuth, getAuthHeaders } = useAuth();
+  const { initializeAuth } = useAuthV2();
+
+  const getAuthHeaders = () => {
+    if (typeof window === 'undefined') return {} as any;
+    const t = localStorage.getItem('drf_token_v2');
+    return t ? { Authorization: `Token ${t}` } : ({} as any);
+  };
   const { formState, resetForm } = useFormPersist();
   const [isDownloading, setIsDownloading] = useState(false);
 
-  // Redirect if not authenticated
-  requireAuth();
+  // 認証復元（未ログインでも利用可）
+  useEffect(() => { initializeAuth(); }, [initializeAuth]);
 
   const handleDownloadPDF = async () => {
     setIsDownloading(true);

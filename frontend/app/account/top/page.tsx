@@ -3,18 +3,23 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useAppSelector } from '@/app/redux/hooks';
 import { FaUser, FaLock, FaCreditCard, FaCrown, FaFileAlt, FaBriefcase, FaEnvelope, FaChartLine } from 'react-icons/fa';
+import useAuthV2 from '@/hooks/useAuthV2';
 
 export default function AccountTopPage() {
   const router = useRouter();
-  const authState = useAppSelector(state => state.auth);
+  const { isAuthenticated, currentUser, initializeAuth } = useAuthV2();
 
   useEffect(() => {
-    if (!authState.isAuthenticated) {
-      router.push('/auth/login');
+    initializeAuth();
+  }, [initializeAuth]);
+
+  useEffect(() => {
+    if (isAuthenticated === false) {
+      const hasStored = typeof window !== 'undefined' && !!localStorage.getItem('drf_token_v2');
+      if (!hasStored) router.push('/auth/login');
     }
-  }, [authState, router]);
+  }, [isAuthenticated, router]);
 
   const menuItems = [
     {
@@ -59,7 +64,7 @@ export default function AccountTopPage() {
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-800">マイページ</h1>
-          <p className="text-gray-600 mt-2">ようこそ、{authState.user?.name || 'ユーザー'}さん</p>
+          <p className="text-gray-600 mt-2">ようこそ、{(currentUser as any)?.full_name || (currentUser as any)?.username || 'ユーザー'}さん</p>
         </div>
 
         {/* クイックステータス */}

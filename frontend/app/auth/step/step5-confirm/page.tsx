@@ -3,14 +3,14 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useFormPersist } from '@/hooks/useFormPersist';
-import { useAuth } from '@/hooks/useAuth';
+import useAuthV2 from '@/hooks/useAuthV2';
 import StepNavigation from '../components/StepNavigation';
 import StepLayout from '../components/StepLayout';
 import toast from 'react-hot-toast';
 
 export default function Step5ConfirmPage() {
   const router = useRouter();
-  const { requireAuth } = useAuth();
+  const { initializeAuth } = useAuthV2();
   const {
     formState,
     markStepCompleted,
@@ -18,14 +18,11 @@ export default function Step5ConfirmPage() {
     saveToBackend,
   } = useFormPersist();
 
-  // Redirect if not authenticated
-  requireAuth();
+  useEffect(() => { initializeAuth(); }, [initializeAuth]);
 
   const { profile, education, experiences, preference } = formState.stepData;
 
-  const handleBack = () => {
-    navigateToStep(4);
-  };
+  const handleBack = () => { router.push('/auth/step/step4-preference'); };
 
   const handleConfirm = async () => {
     try {
@@ -35,7 +32,7 @@ export default function Step5ConfirmPage() {
       if (success) {
         markStepCompleted(5);
         toast.success('履歴書情報を保存しました');
-        navigateToStep(6);
+        router.push('/auth/step/step6-download');
       } else {
         toast.error('保存に失敗しました。もう一度お試しください。');
       }

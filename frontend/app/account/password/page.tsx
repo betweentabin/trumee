@@ -2,13 +2,13 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAppSelector } from '@/app/redux/hooks';
 import { FaLock, FaEye, FaEyeSlash, FaCheckCircle } from 'react-icons/fa';
 import toast from 'react-hot-toast';
+import useAuthV2 from '@/hooks/useAuthV2';
 
 export default function PasswordChangePage() {
   const router = useRouter();
-  const authState = useAppSelector(state => state.auth);
+  const { isAuthenticated, initializeAuth } = useAuthV2();
   const [loading, setLoading] = useState(false);
   const [showPasswords, setShowPasswords] = useState({
     current: false,
@@ -23,10 +23,15 @@ export default function PasswordChangePage() {
   const [passwordStrength, setPasswordStrength] = useState(0);
 
   useEffect(() => {
-    if (!authState.isAuthenticated) {
-      router.push('/auth/login');
+    initializeAuth();
+  }, [initializeAuth]);
+
+  useEffect(() => {
+    if (isAuthenticated === false) {
+      const hasStored = typeof window !== 'undefined' && !!localStorage.getItem('drf_token_v2');
+      if (!hasStored) router.push('/auth/login');
     }
-  }, [authState, router]);
+  }, [isAuthenticated, router]);
 
   useEffect(() => {
     // パスワード強度の計算

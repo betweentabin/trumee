@@ -46,8 +46,10 @@ export default function ResumesPage() {
       console.log('📄 Resumes page: Loading with DRF authentication');
       fetchResumes();
     } else if (isAuthenticated === false) {
-      // 認証されていない場合はログインページにリダイレクト
-      router.push('/auth/login');
+      const hasStored = typeof window !== 'undefined' && !!localStorage.getItem('drf_token_v2');
+      if (!hasStored) {
+        router.push('/auth/login');
+      }
     }
   }, [isAuthenticated, router]);
 
