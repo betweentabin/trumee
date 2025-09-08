@@ -64,6 +64,10 @@ urlpatterns = [
     # 共通エンドポイント
     path('user/settings/', views_api_v2.user_settings, name='user-settings'),
     
+    # Resume PDF endpoints
+    path('resumes/download-pdf/', views_api_v2.download_resume_pdf, name='download-resume-pdf'),
+    path('resumes/send-pdf/', views_api_v2.send_resume_pdf, name='send-resume-pdf'),
+    
     # ViewSet URLs
     path('', include(router.urls)),
 ]

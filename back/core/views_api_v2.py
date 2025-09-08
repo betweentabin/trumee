@@ -40,6 +40,9 @@ from .serializers import (
     CompanyMonthlyPageSerializer
 )
 
+# Import PDF generation views
+from api_v2.views.resume_views import download_resume_pdf, send_resume_pdf
+
 JWT_SECRET = os.getenv("JWT_SECRET_KEY", "default-secret-key-change-in-production")
 JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
 JWT_EXP_DELTA_SECONDS = int(os.getenv("JWT_EXP_DELTA_SECONDS", str(3600*24*30)))
