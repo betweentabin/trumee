@@ -29,7 +29,7 @@ export default function Step6DownloadPage() {
     setIsDownloading(true);
     
     try {
-      const response = await fetch(buildApiUrl('/api/resume/download-pdf'), {
+      const response = await fetch(buildApiUrl('/resumes/download-pdf/'), {
         method: 'POST',
         headers: {
           ...getAuthHeaders(),
