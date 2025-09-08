@@ -40,8 +40,22 @@ from .serializers import (
     CompanyMonthlyPageSerializer
 )
 
-# Import PDF generation views
-from api_v2.views.resume_views import download_resume_pdf, send_resume_pdf
+# Import PDF generation views (conditional import)
+try:
+    from api_v2.views.resume_views import download_resume_pdf, send_resume_pdf
+except ImportError:
+    # Fallback if reportlab is not installed
+    def download_resume_pdf(request):
+        return Response(
+            {'error': 'PDF generation is not available. Please install reportlab.'},
+            status=status.HTTP_503_SERVICE_UNAVAILABLE
+        )
+    
+    def send_resume_pdf(request):
+        return Response(
+            {'error': 'PDF generation is not available. Please install reportlab.'},
+            status=status.HTTP_503_SERVICE_UNAVAILABLE
+        )
 
 JWT_SECRET = os.getenv("JWT_SECRET_KEY", "default-secret-key-change-in-production")
 JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")

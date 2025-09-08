@@ -55,4 +55,5 @@ firebase-admin==7.0.0
 
 # Additional utilities
 Pillow==11.0.0  # Image processing
+reportlab==4.2.5  # PDF generation
 # python-magic==0.4.27  # File type detection (uncomment if needed)
