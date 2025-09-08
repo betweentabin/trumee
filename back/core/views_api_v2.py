@@ -42,19 +42,43 @@ from .serializers import (
 
 # Import PDF generation views (conditional import)
 try:
-    from api_v2.views.resume_views import download_resume_pdf, send_resume_pdf
+    from reportlab.lib.pagesizes import A4
+    REPORTLAB_AVAILABLE = True
 except ImportError:
+    REPORTLAB_AVAILABLE = False
+
+if REPORTLAB_AVAILABLE:
+    try:
+        from api_v2.views.resume_views import download_resume_pdf, send_resume_pdf
+    except ImportError:
+        # Fallback if the views file is not found
+        from django.http import JsonResponse
+        
+        def download_resume_pdf(request):
+            return JsonResponse(
+                {'error': 'PDF generation views not found'},
+                status=500
+            )
+        
+        def send_resume_pdf(request):
+            return JsonResponse(
+                {'error': 'PDF generation views not found'},
+                status=500
+            )
+else:
     # Fallback if reportlab is not installed
+    from django.http import JsonResponse
+    
     def download_resume_pdf(request):
-        return Response(
-            {'error': 'PDF generation is not available. Please install reportlab.'},
-            status=status.HTTP_503_SERVICE_UNAVAILABLE
+        return JsonResponse(
+            {'error': 'PDF generation is not available. Reportlab is not installed.'},
+            status=503
         )
     
     def send_resume_pdf(request):
-        return Response(
-            {'error': 'PDF generation is not available. Please install reportlab.'},
-            status=status.HTTP_503_SERVICE_UNAVAILABLE
+        return JsonResponse(
+            {'error': 'PDF generation is not available. Reportlab is not installed.'},
+            status=503
         )
 
 JWT_SECRET = os.getenv("JWT_SECRET_KEY", "default-secret-key-change-in-production")

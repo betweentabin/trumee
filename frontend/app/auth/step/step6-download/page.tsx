@@ -58,7 +58,9 @@ export default function Step6DownloadPage() {
         
         toast.success('PDFをダウンロードしました');
       } else {
-        throw new Error('PDFの生成に失敗しました');
+        const errorText = await response.text();
+        console.error('API Error Response:', response.status, errorText);
+        throw new Error(`PDFの生成に失敗しました: ${response.status} - ${errorText.substring(0, 100)}`);
       }
     } catch (error) {
       console.error('Download error:', error);
