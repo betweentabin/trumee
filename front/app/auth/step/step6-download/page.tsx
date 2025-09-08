@@ -34,7 +34,7 @@ export default function Step6DownloadPage() {
 
     setIsSending(true);
     try {
-      const response = await fetch(buildApiUrl('/resumes/send-pdf'), {
+      const response = await fetch(buildApiUrl('/resumes/send-pdf/'), {
         method: 'POST',
         headers: {
           ...getAuthHeaders(),
@@ -62,7 +62,7 @@ export default function Step6DownloadPage() {
     setIsDownloading(true);
     
     try {
-      const response = await fetch(buildApiUrl('/resumes/download-pdf'), {
+      const response = await fetch(buildApiUrl('/resumes/download-pdf/'), {
         method: 'POST',
         headers: {
           ...getAuthHeaders(),

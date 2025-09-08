@@ -70,11 +70,13 @@ export const API_CONFIG = {
 
 // Helper function to build full URL
 export const buildApiUrl = (endpoint: string): string => {
-  // If endpoint is a function, it's a dynamic endpoint
-  if (typeof endpoint === 'function') {
-    return `${API_CONFIG.BASE_URL}${API_CONFIG.API_VERSION}${endpoint}`;
+  // Ensure endpoint starts with /
+  const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+  // Check if the endpoint already includes /api/v2
+  if (cleanEndpoint.includes('/api/v2')) {
+    return `${API_CONFIG.BASE_URL}${cleanEndpoint}`;
   }
-  return `${API_CONFIG.BASE_URL}${API_CONFIG.API_VERSION}${endpoint}`;
+  return `${API_CONFIG.BASE_URL}${API_CONFIG.API_VERSION}${cleanEndpoint}`;
 };
 
 // Build full URL with dynamic params
