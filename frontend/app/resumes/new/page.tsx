@@ -251,7 +251,7 @@ export default function NewResumePage() {
                 type="button"
                 onClick={() => setUseV2API(!useV2API)}
                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                  useV2API ? 'bg-blue-600' : 'bg-gray-300'
+                  useV2API ? 'bg-[#FF733E]' : 'bg-gray-300'
                 }`}
               >
                 <span
@@ -262,7 +262,7 @@ export default function NewResumePage() {
               </button>
               <span className="text-sm text-gray-600">API v2</span>
               {useV2API && (
-                <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
+                <span className="bg-orange-100 text-[#FF733E] text-xs px-2 py-1 rounded-full">
                   🧪 拡張機能
                 </span>
               )}
@@ -403,7 +403,7 @@ export default function NewResumePage() {
                   <button
                     type="button"
                     onClick={addExperience}
-                    className="inline-flex items-center px-3 py-1 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700"
+                    className="inline-flex items-center px-3 py-1 bg-[#FF733E] text-white text-sm rounded-md hover:bg-[#FF8659]"
                   >
                     <FaPlus className="mr-1" />
                     追加
@@ -432,7 +432,7 @@ export default function NewResumePage() {
                           type="text"
                           value={experience.company}
                           onChange={(e) => updateExperience(index, 'company', e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-[#FF733E] focus:border-[#FF733E]"
                           placeholder="会社名を入力"
                         />
                       </div>
@@ -445,7 +445,7 @@ export default function NewResumePage() {
                           type="text"
                           value={experience.position || ''}
                           onChange={(e) => updateExperience(index, 'position', e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-[#FF733E] focus:border-[#FF733E]"
                           placeholder="役職を入力"
                         />
                       </div>
@@ -458,7 +458,7 @@ export default function NewResumePage() {
                           type="date"
                           value={experience.period_from}
                           onChange={(e) => updateExperience(index, 'period_from', e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-[#FF733E] focus:border-[#FF733E]"
                         />
                       </div>
                       
@@ -470,7 +470,7 @@ export default function NewResumePage() {
                           type="date"
                           value={experience.period_to || ''}
                           onChange={(e) => updateExperience(index, 'period_to', e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-[#FF733E] focus:border-[#FF733E]"
                         />
                       </div>
                     </div>
@@ -527,7 +527,7 @@ export default function NewResumePage() {
                           type="text"
                           value={education.school_name}
                           onChange={(e) => updateEducation(index, 'school_name', e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-[#FF733E] focus:border-[#FF733E]"
                           placeholder="学校名を入力"
                         />
                       </div>
@@ -540,7 +540,7 @@ export default function NewResumePage() {
                           type="text"
                           value={education.faculty || ''}
                           onChange={(e) => updateEducation(index, 'faculty', e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-[#FF733E] focus:border-[#FF733E]"
                           placeholder="学部・学科を入力"
                         />
                       </div>
@@ -553,7 +553,7 @@ export default function NewResumePage() {
                           type="text"
                           value={education.major || ''}
                           onChange={(e) => updateEducation(index, 'major', e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-[#FF733E] focus:border-[#FF733E]"
                           placeholder="専攻を入力"
                         />
                       </div>
@@ -566,7 +566,7 @@ export default function NewResumePage() {
                           type="date"
                           value={education.graduation_date || ''}
                           onChange={(e) => updateEducation(index, 'graduation_date', e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-[#FF733E] focus:border-[#FF733E]"
                         />
                       </div>
                     </div>
@@ -610,7 +610,7 @@ export default function NewResumePage() {
                           type="text"
                           value={certification.name}
                           onChange={(e) => updateCertification(index, 'name', e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-[#FF733E] focus:border-[#FF733E]"
                           placeholder="資格名を入力"
                         />
                       </div>
@@ -623,7 +623,7 @@ export default function NewResumePage() {
                           type="text"
                           value={certification.issuer || ''}
                           onChange={(e) => updateCertification(index, 'issuer', e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-[#FF733E] focus:border-[#FF733E]"
                           placeholder="発行機関を入力"
                         />
                       </div>
@@ -636,7 +636,7 @@ export default function NewResumePage() {
                           type="date"
                           value={certification.obtained_date || ''}
                           onChange={(e) => updateCertification(index, 'obtained_date', e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-[#FF733E] focus:border-[#FF733E]"
                         />
                       </div>
                       
@@ -648,7 +648,7 @@ export default function NewResumePage() {
                           type="date"
                           value={certification.expiry_date || ''}
                           onChange={(e) => updateCertification(index, 'expiry_date', e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-[#FF733E] focus:border-[#FF733E]"
                         />
                       </div>
                     </div>
@@ -703,7 +703,7 @@ export default function NewResumePage() {
               disabled={useV2API ? createResumeV2.isPending : loading}
               className={`inline-flex items-center px-4 py-2 text-white rounded-md disabled:opacity-50 disabled:cursor-not-allowed ${
                 useV2API 
-                  ? 'bg-blue-600 hover:bg-blue-700' 
+                  ? 'bg-[#FF733E] hover:bg-[#FF8659]' 
                   : 'bg-[#FF733E] hover:bg-[#e9632e]'
               }`}
             >

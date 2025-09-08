@@ -301,7 +301,7 @@ export default function Step3ExperiencePage() {
                         type="text"
                         value={exp.company}
                         onChange={(e) => handleExperienceChange(index, 'company', e.target.value)}
-                        className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                        className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#FF733E] focus:border-transparent ${
                           errors[index]?.company ? 'border-red-300' : 'border-gray-300'
                         }`}
                         placeholder="例: 株式会社サンプル"
@@ -321,7 +321,7 @@ export default function Step3ExperiencePage() {
                           type="month"
                           value={exp.periodFrom}
                           onChange={(e) => handleExperienceChange(index, 'periodFrom', e.target.value)}
-                          className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                          className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#FF733E] focus:border-transparent ${
                             errors[index]?.periodFrom ? 'border-red-300' : 'border-gray-300'
                           }`}
                         />
@@ -338,7 +338,7 @@ export default function Step3ExperiencePage() {
                           type="month"
                           value={exp.periodTo}
                           onChange={(e) => handleExperienceChange(index, 'periodTo', e.target.value)}
-                          className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                          className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#FF733E] focus:border-transparent ${
                             errors[index]?.periodTo ? 'border-red-300' : 'border-gray-300'
                           }`}
                         />
@@ -360,7 +360,7 @@ export default function Step3ExperiencePage() {
                         <select
                           value={exp.employmentType}
                           onChange={(e) => handleExperienceChange(index, 'employmentType', e.target.value)}
-                          className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                          className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#FF733E] focus:border-transparent ${
                             errors[index]?.employmentType ? 'border-red-300' : 'border-gray-300'
                           }`}
                         >
@@ -382,7 +382,7 @@ export default function Step3ExperiencePage() {
                           type="text"
                           value={exp.position || ''}
                           onChange={(e) => handleExperienceChange(index, 'position', e.target.value)}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FF733E] focus:border-transparent"
                           placeholder="例: エンジニア、マネージャー"
                         />
                       </div>
@@ -396,7 +396,7 @@ export default function Step3ExperiencePage() {
                       <textarea
                         value={exp.business}
                         onChange={(e) => handleExperienceChange(index, 'business', e.target.value)}
-                        className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                        className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#FF733E] focus:border-transparent ${
                           errors[index]?.business ? 'border-red-300' : 'border-gray-300'
                         }`}
                         rows={2}
@@ -415,7 +415,7 @@ export default function Step3ExperiencePage() {
                       <textarea
                         value={exp.tasks}
                         onChange={(e) => handleExperienceChange(index, 'tasks', e.target.value)}
-                        className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                        className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#FF733E] focus:border-transparent ${
                           errors[index]?.tasks ? 'border-red-300' : 'border-gray-300'
                         }`}
                         rows={4}
@@ -449,7 +449,7 @@ export default function Step3ExperiencePage() {
             <button
               type="button"
               onClick={addExperience}
-              className="text-blue-600 hover:text-blue-700 font-medium flex items-center"
+              className="text-[#FF733E] hover:text-[#e9632e] font-medium flex items-center"
             >
               <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -481,7 +481,7 @@ export default function Step3ExperiencePage() {
               </button>
               <button
                 onClick={handleNext}
-                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                className="px-6 py-2 bg-[#FF733E] text-white rounded-lg hover:bg-[#e9632e] transition"
               >
                 次へ進む
               </button>

@@ -150,7 +150,7 @@ export default function Step6DownloadPage() {
                   className={`w-full flex items-center justify-center py-3 px-4 border rounded-lg transition ${
                     isDownloading
                       ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                      : 'bg-blue-600 text-white hover:bg-blue-700 border-transparent'
+                      : 'bg-[#FF733E] text-white hover:bg-[#e9632e] border-transparent'
                   }`}
                 >
                   {isDownloading ? (
@@ -191,25 +191,25 @@ export default function Step6DownloadPage() {
           </div>
 
           {/* Next Actions */}
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-8">
-            <h3 className="text-lg font-semibold text-blue-900 mb-3">
+          <div className="bg-orange-50 border border-orange-200 rounded-lg p-6 mb-8">
+            <h3 className="text-lg font-semibold text-gray-900 mb-3">
               次のステップ
             </h3>
-            <ul className="space-y-2 text-sm text-blue-800">
+            <ul className="space-y-2 text-sm text-gray-700">
               <li className="flex items-start">
-                <svg className="w-5 h-5 mr-2 mt-0.5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 mr-2 mt-0.5 text-[#FF733E]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 <span>作成した履歴書は自動的に保存されています</span>
               </li>
               <li className="flex items-start">
-                <svg className="w-5 h-5 mr-2 mt-0.5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 mr-2 mt-0.5 text-[#FF733E]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 <span>企業からのスカウトを受け取ることができます</span>
               </li>
               <li className="flex items-start">
-                <svg className="w-5 h-5 mr-2 mt-0.5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 mr-2 mt-0.5 text-[#FF733E]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 <span>マイページから履歴書の編集が可能です</span>
@@ -239,7 +239,7 @@ export default function Step6DownloadPage() {
         <div className="mt-6 text-center">
           <p className="text-sm text-gray-600">
             ご不明な点がございましたら、
-            <Link href="/contact-us" className="text-blue-600 hover:text-blue-700 font-medium">
+            <Link href="/contact-us" className="text-[#FF733E] hover:text-[#e9632e] font-medium">
               お問い合わせ
             </Link>
             までご連絡ください。

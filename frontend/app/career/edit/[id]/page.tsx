@@ -474,7 +474,7 @@ export default function EditResumePage() {
               ))}
               <button
                 onClick={addSkill}
-                className="mt-2 text-blue-600 hover:text-blue-800"
+                className="mt-2 text-[#FF733E] hover:text-[#FF8659]"
               >
                 + スキルを追加
               </button>
@@ -498,7 +498,7 @@ export default function EditResumePage() {
               ))}
               <button
                 onClick={() => setResumeData(prev => ({ ...prev, certifications: [...prev.certifications, ''] }))}
-                className="mt-2 text-blue-600 hover:text-blue-800"
+                className="mt-2 text-[#FF733E] hover:text-[#FF8659]"
               >
                 + 資格を追加
               </button>
@@ -533,7 +533,7 @@ export default function EditResumePage() {
               <div
                 key={step}
                 className={`flex-1 h-2 mx-1 rounded ${
-                  step <= currentStep ? 'bg-blue-600' : 'bg-gray-300'
+                  step <= currentStep ? 'bg-[#FF733E]' : 'bg-gray-300'
                 }`}
               />
             ))}
@@ -565,7 +565,7 @@ export default function EditResumePage() {
             {currentStep < 4 ? (
               <button
                 onClick={() => setCurrentStep(prev => prev + 1)}
-                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                className="px-6 py-2 bg-[#FF733E] text-white rounded-lg hover:bg-[#FF8659]"
               >
                 次へ
               </button>

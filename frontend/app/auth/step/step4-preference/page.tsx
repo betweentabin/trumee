@@ -231,7 +231,7 @@ export default function Step4PreferencePage() {
                 name="desiredSalary"
                 value={formData.desiredSalary}
                 onChange={handleChange}
-                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#FF733E] focus:border-transparent ${
                   errors.desiredSalary ? 'border-red-300' : 'border-gray-300'
                 }`}
               >
@@ -258,7 +258,7 @@ export default function Step4PreferencePage() {
                       value={industry}
                       checked={formData.desiredIndustries.includes(industry)}
                       onChange={() => handleCheckboxChange('desiredIndustries', industry)}
-                      className="mr-2 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      className="mr-2 rounded border-gray-300 text-[#FF733E] focus:ring-[#FF733E]"
                     />
                     <span className="text-sm text-gray-700">{industry}</span>
                   </label>
@@ -282,7 +282,7 @@ export default function Step4PreferencePage() {
                       value={jobType}
                       checked={formData.desiredJobTypes.includes(jobType)}
                       onChange={() => handleCheckboxChange('desiredJobTypes', jobType)}
-                      className="mr-2 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      className="mr-2 rounded border-gray-300 text-[#FF733E] focus:ring-[#FF733E]"
                     />
                     <span className="text-sm text-gray-700">{jobType}</span>
                   </label>
@@ -306,7 +306,7 @@ export default function Step4PreferencePage() {
                       value={prefecture}
                       checked={formData.desiredLocations.includes(prefecture)}
                       onChange={() => handleCheckboxChange('desiredLocations', prefecture)}
-                      className="mr-2 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      className="mr-2 rounded border-gray-300 text-[#FF733E] focus:ring-[#FF733E]"
                     />
                     <span className="text-sm text-gray-700">{prefecture}</span>
                   </label>
@@ -327,7 +327,7 @@ export default function Step4PreferencePage() {
                 name="workStyle"
                 value={formData.workStyle}
                 onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FF733E] focus:border-transparent"
               >
                 <option value="">選択してください</option>
                 {workStyles.map(style => (
@@ -348,7 +348,7 @@ export default function Step4PreferencePage() {
                 value={formData.availableDate}
                 onChange={handleChange}
                 min={new Date().toISOString().split('T')[0]}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FF733E] focus:border-transparent"
               />
               <p className="mt-1 text-sm text-gray-500">
                 転職可能な最短の日付を選択してください
@@ -373,7 +373,7 @@ export default function Step4PreferencePage() {
               </button>
               <button
                 onClick={handleNext}
-                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                className="px-6 py-2 bg-[#FF733E] text-white rounded-lg hover:bg-[#e9632e] transition"
               >
                 次へ進む
               </button>

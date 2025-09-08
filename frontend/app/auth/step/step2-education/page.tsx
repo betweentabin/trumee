@@ -130,7 +130,7 @@ export default function Step2EducationPage() {
                 name="educationType"
                 value={formData.educationType}
                 onChange={handleChange}
-                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#FF733E] focus:border-transparent ${
                   errors.educationType ? 'border-red-300' : 'border-gray-300'
                 }`}
               >
@@ -155,7 +155,7 @@ export default function Step2EducationPage() {
                 name="school"
                 value={formData.school}
                 onChange={handleChange}
-                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#FF733E] focus:border-transparent ${
                   errors.school ? 'border-red-300' : 'border-gray-300'
                 }`}
                 placeholder="例: 東京大学"
@@ -176,7 +176,7 @@ export default function Step2EducationPage() {
                 name="faculty"
                 value={formData.faculty}
                 onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FF733E] focus:border-transparent"
                 placeholder="例: 工学部情報工学科"
               />
             </div>
@@ -192,7 +192,7 @@ export default function Step2EducationPage() {
                 name="graduationYear"
                 value={formData.graduationYear}
                 onChange={handleChange}
-                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#FF733E] focus:border-transparent ${
                   errors.graduationYear ? 'border-red-300' : 'border-gray-300'
                 }`}
                 placeholder="例: 2020"
@@ -240,7 +240,7 @@ export default function Step2EducationPage() {
               </button>
               <button
                 onClick={handleNext}
-                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                className="px-6 py-2 bg-[#FF733E] text-white rounded-lg hover:bg-[#e9632e] transition"
               >
                 次へ進む
               </button>

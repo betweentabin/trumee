@@ -86,7 +86,7 @@ export default function PasswordChangePage() {
     if (passwordStrength === 0) return 'bg-gray-200';
     if (passwordStrength === 1) return 'bg-red-500';
     if (passwordStrength === 2) return 'bg-yellow-500';
-    if (passwordStrength === 3) return 'bg-blue-500';
+    if (passwordStrength === 3) return 'bg-gray-400';
     return 'bg-green-500';
   };
 
@@ -103,7 +103,7 @@ export default function PasswordChangePage() {
       <div className="max-w-2xl mx-auto">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-800 flex items-center gap-3">
-            <FaLock className="text-blue-600" />
+            <FaLock className="text-[#FF733E]" />
             パスワードの変更
           </h1>
           <p className="text-gray-600 mt-2">アカウントのパスワードを変更します</p>
@@ -120,7 +120,7 @@ export default function PasswordChangePage() {
                   type={showPasswords.current ? 'text' : 'password'}
                   value={formData.currentPassword}
                   onChange={(e) => setFormData({...formData, currentPassword: e.target.value})}
-                  className="w-full p-3 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full p-3 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF733E]"
                   required
                 />
                 <button
@@ -142,7 +142,7 @@ export default function PasswordChangePage() {
                   type={showPasswords.new ? 'text' : 'password'}
                   value={formData.newPassword}
                   onChange={(e) => setFormData({...formData, newPassword: e.target.value})}
-                  className="w-full p-3 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full p-3 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF733E]"
                   required
                 />
                 <button
@@ -180,7 +180,7 @@ export default function PasswordChangePage() {
                   type={showPasswords.confirm ? 'text' : 'password'}
                   value={formData.confirmPassword}
                   onChange={(e) => setFormData({...formData, confirmPassword: e.target.value})}
-                  className="w-full p-3 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full p-3 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF733E]"
                   required
                 />
                 <button
@@ -226,7 +226,7 @@ export default function PasswordChangePage() {
             <button
               type="submit"
               disabled={loading}
-              className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:bg-gray-400 flex items-center gap-2"
+              className="px-6 py-3 bg-[#FF733E] text-white rounded-lg hover:bg-[#FF8659] transition disabled:bg-gray-400 flex items-center gap-2"
             >
               <FaLock />
               {loading ? '変更中...' : 'パスワードを変更'}

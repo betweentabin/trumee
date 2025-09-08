@@ -80,7 +80,7 @@ export default function AccountPage() {
       <div className="max-w-4xl mx-auto">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-800 flex items-center gap-3">
-            <FaUser className="text-blue-600" />
+            <FaUser className="text-[#FF733E]" />
             基本情報の確認・変更
           </h1>
           <p className="text-gray-600 mt-2">アカウント情報を確認・更新できます</p>
@@ -98,7 +98,7 @@ export default function AccountPage() {
                 name="fullName"
                 value={formData.fullName}
                 onChange={handleChange}
-                className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF733E]"
                 required
               />
             </div>
@@ -113,7 +113,7 @@ export default function AccountPage() {
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF733E]"
                 required
               />
             </div>
@@ -128,7 +128,7 @@ export default function AccountPage() {
                 name="phone"
                 value={formData.phone}
                 onChange={handleChange}
-                className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF733E]"
                 required
               />
             </div>
@@ -143,7 +143,7 @@ export default function AccountPage() {
                 name="birthDate"
                 value={formData.birthDate}
                 onChange={handleChange}
-                className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF733E]"
                 required
               />
             </div>
@@ -156,7 +156,7 @@ export default function AccountPage() {
                 name="gender"
                 value={formData.gender}
                 onChange={handleChange}
-                className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF733E]"
               >
                 <option value="">選択してください</option>
                 <option value="male">男性</option>
@@ -173,7 +173,7 @@ export default function AccountPage() {
                 name="currentEmployment"
                 value={formData.currentEmployment}
                 onChange={handleChange}
-                className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF733E]"
               >
                 <option value="">選択してください</option>
                 <option value="employed">在職中</option>
@@ -199,7 +199,7 @@ export default function AccountPage() {
                   value={formData.postalCode}
                   onChange={handleChange}
                   placeholder="123-4567"
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF733E]"
                 />
               </div>
 
@@ -212,7 +212,7 @@ export default function AccountPage() {
                   name="prefecture"
                   value={formData.prefecture}
                   onChange={handleChange}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF733E]"
                 />
               </div>
 
@@ -225,7 +225,7 @@ export default function AccountPage() {
                   name="city"
                   value={formData.city}
                   onChange={handleChange}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF733E]"
                 />
               </div>
 
@@ -238,7 +238,7 @@ export default function AccountPage() {
                   name="address"
                   value={formData.address}
                   onChange={handleChange}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF733E]"
                 />
               </div>
             </div>
@@ -248,7 +248,7 @@ export default function AccountPage() {
             <button
               type="submit"
               disabled={loading}
-              className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:bg-gray-400 flex items-center gap-2"
+              className="px-6 py-3 bg-[#FF733E] text-white rounded-lg hover:bg-[#FF8659] transition disabled:bg-gray-400 flex items-center gap-2"
             >
               <FaSave />
               {loading ? '保存中...' : '変更を保存'}

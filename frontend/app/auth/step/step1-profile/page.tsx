@@ -197,7 +197,7 @@ export default function Step1ProfilePage() {
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#FF733E] focus:border-transparent ${
                   errors.email ? 'border-red-300' : 'border-gray-300'
                 }`}
                 placeholder="example@email.com"
@@ -219,7 +219,7 @@ export default function Step1ProfilePage() {
                   name="lastName"
                   value={formData.lastName}
                   onChange={handleChange}
-                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#FF733E] focus:border-transparent ${
                     errors.lastName ? 'border-red-300' : 'border-gray-300'
                   }`}
                   placeholder="山田"
@@ -239,7 +239,7 @@ export default function Step1ProfilePage() {
                   name="firstName"
                   value={formData.firstName}
                   onChange={handleChange}
-                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#FF733E] focus:border-transparent ${
                     errors.firstName ? 'border-red-300' : 'border-gray-300'
                   }`}
                   placeholder="太郎"
@@ -262,7 +262,7 @@ export default function Step1ProfilePage() {
                   name="lastNameKana"
                   value={formData.lastNameKana}
                   onChange={handleChange}
-                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#FF733E] focus:border-transparent ${
                     errors.lastNameKana ? 'border-red-300' : 'border-gray-300'
                   }`}
                   placeholder="ヤマダ"
@@ -282,7 +282,7 @@ export default function Step1ProfilePage() {
                   name="firstNameKana"
                   value={formData.firstNameKana}
                   onChange={handleChange}
-                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#FF733E] focus:border-transparent ${
                     errors.firstNameKana ? 'border-red-300' : 'border-gray-300'
                   }`}
                   placeholder="タロウ"
@@ -305,7 +305,7 @@ export default function Step1ProfilePage() {
                   name="birthday"
                   value={formData.birthday}
                   onChange={handleChange}
-                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#FF733E] focus:border-transparent ${
                     errors.birthday ? 'border-red-300' : 'border-gray-300'
                   }`}
                 />
@@ -323,7 +323,7 @@ export default function Step1ProfilePage() {
                   name="gender"
                   value={formData.gender}
                   onChange={handleChange}
-                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#FF733E] focus:border-transparent ${
                     errors.gender ? 'border-red-300' : 'border-gray-300'
                   }`}
                 >
@@ -350,7 +350,7 @@ export default function Step1ProfilePage() {
                   name="phone"
                   value={formData.phone}
                   onChange={handleChange}
-                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#FF733E] focus:border-transparent ${
                     errors.phone ? 'border-red-300' : 'border-gray-300'
                   }`}
                   placeholder="090-1234-5678"
@@ -369,7 +369,7 @@ export default function Step1ProfilePage() {
                   name="prefecture"
                   value={formData.prefecture}
                   onChange={handleChange}
-                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#FF733E] focus:border-transparent ${
                     errors.prefecture ? 'border-red-300' : 'border-gray-300'
                   }`}
                 >
@@ -395,7 +395,7 @@ export default function Step1ProfilePage() {
             </button>
             <button
               onClick={handleNext}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+              className="px-6 py-2 bg-[#FF733E] text-white rounded-lg hover:bg-[#e9632e] transition"
             >
               次へ進む
             </button>

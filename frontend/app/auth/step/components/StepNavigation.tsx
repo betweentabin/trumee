@@ -44,7 +44,7 @@ export default function StepNavigation({
                 className={`
                   w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium
                   ${step.step <= currentStep
-                    ? 'bg-blue-600 text-white'
+                    ? 'bg-[#FF733E] text-white'
                     : 'bg-gray-200 text-gray-600'
                   }
                 `}
@@ -54,7 +54,7 @@ export default function StepNavigation({
               <span
                 className={`
                   ml-2 text-sm font-medium
-                  ${step.step <= currentStep ? 'text-blue-600' : 'text-gray-500'}
+                  ${step.step <= currentStep ? 'text-[#FF733E]' : 'text-gray-500'}
                 `}
               >
                 {step.label}
@@ -63,7 +63,7 @@ export default function StepNavigation({
                 <div
                   className={`
                     ml-4 w-12 h-0.5
-                    ${step.step < currentStep ? 'bg-blue-600' : 'bg-gray-200'}
+                    ${step.step < currentStep ? 'bg-[#FF733E]' : 'bg-gray-200'}
                   `}
                 />
               )}
@@ -79,14 +79,14 @@ export default function StepNavigation({
             prevHref ? (
               <Link
                 href={prevHref}
-                className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#FF733E]"
               >
                 ← {prevLabel}
               </Link>
             ) : (
               <button
                 onClick={onPrev}
-                className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#FF733E]"
               >
                 ← {prevLabel}
               </button>
@@ -103,7 +103,7 @@ export default function StepNavigation({
                   inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white
                   ${nextDisabled
                     ? 'bg-gray-400 cursor-not-allowed'
-                    : 'bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500'
+                    : 'bg-[#FF733E] hover:bg-[#e9632e] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#FF733E]'
                   }
                 `}
               >
@@ -117,7 +117,7 @@ export default function StepNavigation({
                   inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white
                   ${nextDisabled
                     ? 'bg-gray-400 cursor-not-allowed'
-                    : 'bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500'
+                    : 'bg-[#FF733E] hover:bg-[#e9632e] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#FF733E]'
                   }
                 `}
               >
