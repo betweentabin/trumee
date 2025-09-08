@@ -12,14 +12,14 @@ import Link from 'next/link';
 
 export default function Step6DownloadPage() {
   const router = useRouter();
-  const { initializeAuth } = useAuthV2();
+  const { initializeAuth, currentUser } = useAuthV2();
 
   const getAuthHeaders = () => {
     if (typeof window === 'undefined') return {} as any;
     const t = localStorage.getItem('drf_token_v2');
     return t ? { Authorization: `Token ${t}` } : ({} as any);
   };
-  const { formState, resetForm } = useFormPersist();
+  const { formState, clearFormData } = useFormPersist();
   const [isDownloading, setIsDownloading] = useState(false);
 
   // 認証復元（未ログインでも利用可）
@@ -95,7 +95,7 @@ export default function Step6DownloadPage() {
 
   const handleCreateNew = () => {
     if (confirm('新しい履歴書を作成すると、現在のデータがクリアされます。よろしいですか？')) {
-      resetForm();
+      clearFormData();
       router.push('/auth/step/step1-profile');
     }
   };
@@ -218,7 +218,7 @@ export default function Step6DownloadPage() {
           {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row gap-3">
             <Link
-              href="/mypage"
+              href={currentUser?.id ? `/users/${currentUser.id}` : '/users'}
               className="flex-1 flex items-center justify-center py-3 px-4 border border-transparent rounded-lg text-white bg-green-600 hover:bg-green-700 transition font-medium"
             >
               マイページへ移動
@@ -237,16 +237,16 @@ export default function Step6DownloadPage() {
         <div className="mt-6 text-center">
           <p className="text-sm text-gray-600">
             ご不明な点がございましたら、
-            <Link href="/support" className="text-blue-600 hover:text-blue-700 font-medium">
-              サポートセンター
+            <Link href="/contact-us" className="text-blue-600 hover:text-blue-700 font-medium">
+              お問い合わせ
             </Link>
-            までお問い合わせください。
+            までご連絡ください。
           </p>
         </div>
       </div>
 
       {/* Step Navigation */}
-      <StepNavigation currentStep={6} />
+      <StepNavigation currentStep={6} totalSteps={6} />
     </StepLayout>
   );
 }
