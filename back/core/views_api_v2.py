@@ -44,8 +44,10 @@ from .serializers import (
 try:
     from reportlab.lib.pagesizes import A4
     REPORTLAB_AVAILABLE = True
-except ImportError:
+    REPORTLAB_ERROR = None
+except ImportError as e:
     REPORTLAB_AVAILABLE = False
+    REPORTLAB_ERROR = str(e)
 
 if REPORTLAB_AVAILABLE:
     try:
@@ -68,16 +70,27 @@ if REPORTLAB_AVAILABLE:
 else:
     # Fallback if reportlab is not installed
     from django.http import JsonResponse
+    import sys
     
     def download_resume_pdf(request):
+        error_msg = f'PDF generation is not available. Reportlab import error: {REPORTLAB_ERROR}'
         return JsonResponse(
-            {'error': 'PDF generation is not available. Reportlab is not installed.'},
+            {
+                'error': error_msg,
+                'python_version': sys.version,
+                'reportlab_error': REPORTLAB_ERROR
+            },
             status=503
         )
     
     def send_resume_pdf(request):
+        error_msg = f'PDF generation is not available. Reportlab import error: {REPORTLAB_ERROR}'
         return JsonResponse(
-            {'error': 'PDF generation is not available. Reportlab is not installed.'},
+            {
+                'error': error_msg,
+                'python_version': sys.version,
+                'reportlab_error': REPORTLAB_ERROR
+            },
             status=503
         )
 
