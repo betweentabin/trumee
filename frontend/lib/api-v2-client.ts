@@ -173,6 +173,11 @@ class ApiV2Client {
     return response.data;
   }
 
+  async updateUserInfo(userId: string, userData: { email?: string; phone?: string }): Promise<any> {
+    const response = await this.client.patch(`/api/v2/users/${userId}/update/`, userData);
+    return response.data;
+  }
+
   async getCompanyProfiles(): Promise<CompanyProfile[]> {
     const response = await this.client.get<CompanyProfile[]>(API_ENDPOINTS.COMPANY_PROFILES);
     return response.data;

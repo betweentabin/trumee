@@ -175,13 +175,13 @@ export default function LoginPage() {
           </div>
           <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
             {/* 🚨 デバッグ用テストアカウント */}
-            <div className="bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded-md text-sm">
+            <div className="bg-[#FFF5F3] border border-[#FFD7D0] text-[#FF733E] px-4 py-3 rounded-md text-sm">
               <p className="font-medium mb-2">🧪 デバッグ用テストアカウント:</p>
               <div className="flex gap-2 mb-2">
                 <button
                   type="button"
                   onClick={() => setFormData({ email: 'test@example.com', password: 'testpassword123' })}
-                  className="px-3 py-1 bg-blue-100 hover:bg-blue-200 rounded text-xs"
+                  className="px-3 py-1 bg-[#FFF5F3] hover:bg-[#FFE6E1] rounded text-xs"
                 >
                   ユーザーアカウント
                 </button>
@@ -283,7 +283,7 @@ export default function LoginPage() {
                 type="button"
                 onClick={() => setUseV2API(!useV2API)}
                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                  useV2API ? 'bg-blue-600' : 'bg-gray-300'
+                  useV2API ? 'bg-[#FF733E]' : 'bg-gray-300'
                 }`}
               >
                 <span
@@ -314,9 +314,9 @@ export default function LoginPage() {
               
               {/* テストアカウント情報 */}
               {useV2API && (
-                <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-md text-left">
-                  <p className="text-xs font-medium text-blue-800 mb-2">🧪 API v2 テストアカウント</p>
-                  <div className="text-xs text-blue-700 space-y-1">
+                <div className="mt-4 p-3 bg-[#FFF5F3] border border-[#FFD7D0] rounded-md text-left">
+                  <p className="text-xs font-medium text-[#FF733E] mb-2">🧪 API v2 テストアカウント</p>
+                  <div className="text-xs text-[#FF733E] space-y-1">
                     <p>Email: test_new_329d5794@example.com</p>
                     <p>Password: testpass123</p>
                     <button
@@ -327,7 +327,7 @@ export default function LoginPage() {
                           password: 'testpass123'
                         });
                       }}
-                      className="text-blue-600 underline hover:text-blue-800"
+                      className="text-[#FF733E] underline hover:text-[#FF8659]"
                     >
                       自動入力
                     </button>

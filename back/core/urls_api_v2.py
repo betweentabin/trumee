@@ -39,6 +39,7 @@ urlpatterns = [
     
     # ユーザープロフィール公開API（新規追加）
     path('users/<uuid:user_id>/', views_api_v2.user_public_profile, name='user-public-profile'),
+    path('users/<uuid:user_id>/update/', views_api_v2.update_user_info, name='update-user-info'),
     path('users/<uuid:user_id>/privacy/', views_api_v2.user_privacy_settings, name='user-privacy-settings'),
     path('users/<uuid:user_id>/resumes/', views_api_v2.user_public_resumes, name='user-public-resumes'),
     path('users/<uuid:user_id>/resumes/<uuid:resume_id>/', views_api_v2.user_public_resume_detail, name='user-public-resume-detail'),

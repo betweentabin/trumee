@@ -475,7 +475,7 @@ export default function CreateResumePage() {
               ))}
               <button
                 onClick={addSkill}
-                className="mt-2 text-blue-600 hover:text-blue-800"
+                className="mt-2 text-[#FF733E] hover:text-blue-800"
               >
                 + スキルを追加
               </button>
@@ -499,7 +499,7 @@ export default function CreateResumePage() {
               ))}
               <button
                 onClick={() => setResumeData(prev => ({ ...prev, certifications: [...prev.certifications, ''] }))}
-                className="mt-2 text-blue-600 hover:text-blue-800"
+                className="mt-2 text-[#FF733E] hover:text-blue-800"
               >
                 + 資格を追加
               </button>

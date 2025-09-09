@@ -136,7 +136,7 @@ export default function PaymentPage() {
       <div className="max-w-4xl mx-auto">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-800 flex items-center gap-3">
-            <FaCreditCard className="text-blue-600" />
+            <FaCreditCard className="text-[#FF733E]" />
             支払い情報登録・変更
           </h1>
           <p className="text-gray-600 mt-2">クレジットカード情報を管理します</p>
@@ -147,7 +147,7 @@ export default function PaymentPage() {
             <h2 className="text-xl font-semibold">登録済みカード</h2>
             <button
               onClick={() => setShowAddCard(true)}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center gap-2"
+              className="px-4 py-2 bg-[#FF733E] text-white rounded-lg hover:bg-[#FF8659] transition flex items-center gap-2"
             >
               <FaPlus />
               カードを追加
@@ -164,7 +164,7 @@ export default function PaymentPage() {
               {paymentMethods.map((card) => (
                 <div key={card.id} className="border rounded-lg p-4 flex items-center justify-between">
                   <div className="flex items-center gap-4">
-                    <div className="w-12 h-8 bg-gradient-to-r from-blue-500 to-blue-600 rounded flex items-center justify-center text-white text-xs">
+                    <div className="w-12 h-8 bg-gradient-to-r from-[#FF733E] to-[#FF8659] rounded flex items-center justify-center text-white text-xs">
                       {card.brand}
                     </div>
                     <div>
@@ -222,7 +222,7 @@ export default function PaymentPage() {
                         })}
                         placeholder="1234 5678 9012 3456"
                         maxLength={19}
-                        className="w-full p-3 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full p-3 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF733E]"
                         required
                       />
                       <FaCreditCard className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
@@ -238,7 +238,7 @@ export default function PaymentPage() {
                       value={cardForm.cardHolder}
                       onChange={(e) => setCardForm({...cardForm, cardHolder: e.target.value})}
                       placeholder="TARO YAMADA"
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF733E]"
                       required
                     />
                   </div>
@@ -251,7 +251,7 @@ export default function PaymentPage() {
                       <select
                         value={cardForm.expiryMonth}
                         onChange={(e) => setCardForm({...cardForm, expiryMonth: e.target.value})}
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF733E]"
                         required
                       >
                         <option value="">MM</option>
@@ -270,7 +270,7 @@ export default function PaymentPage() {
                       <select
                         value={cardForm.expiryYear}
                         onChange={(e) => setCardForm({...cardForm, expiryYear: e.target.value})}
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF733E]"
                         required
                       >
                         <option value="">YY</option>
@@ -293,7 +293,7 @@ export default function PaymentPage() {
                           onChange={(e) => setCardForm({...cardForm, cvv: e.target.value})}
                           placeholder="123"
                           maxLength={4}
-                          className="w-full p-3 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full p-3 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF733E]"
                           required
                         />
                         <FaLock className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-xs" />
@@ -313,7 +313,7 @@ export default function PaymentPage() {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:bg-gray-400"
+                    className="px-4 py-2 bg-[#FF733E] text-white rounded-lg hover:bg-[#FF8659] transition disabled:bg-gray-400"
                   >
                     {loading ? '追加中...' : 'カードを追加'}
                   </button>
@@ -323,22 +323,22 @@ export default function PaymentPage() {
           </div>
         )}
 
-        <div className="mt-8 bg-blue-50 rounded-lg p-6">
+        <div className="mt-8 bg-[#FFF5F3] rounded-lg p-6">
           <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
-            <FaLock className="text-blue-600" />
+            <FaLock className="text-[#FF733E]" />
             セキュリティについて
           </h3>
           <ul className="space-y-2 text-gray-700">
             <li className="flex items-start gap-2">
-              <span className="text-blue-600">✓</span>
+              <span className="text-[#FF733E]">✓</span>
               <span>カード情報は暗号化されて安全に保管されます</span>
             </li>
             <li className="flex items-start gap-2">
-              <span className="text-blue-600">✓</span>
+              <span className="text-[#FF733E]">✓</span>
               <span>PCI DSS準拠のセキュアな決済システムを使用しています</span>
             </li>
             <li className="flex items-start gap-2">
-              <span className="text-blue-600">✓</span>
+              <span className="text-[#FF733E]">✓</span>
               <span>不正利用防止のため、定期的にセキュリティチェックを実施しています</span>
             </li>
           </ul>

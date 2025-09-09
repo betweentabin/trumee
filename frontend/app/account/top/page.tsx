@@ -27,7 +27,7 @@ export default function AccountTopPage() {
       icon: <FaUser className="text-3xl" />,
       description: '氏名、連絡先などの基本情報を確認・変更',
       href: '/account',
-      color: 'bg-blue-500'
+      color: 'bg-[#FF733E]'
     },
     {
       title: 'パスワード変更',
@@ -53,7 +53,7 @@ export default function AccountTopPage() {
   ];
 
   const quickStats = [
-    { label: '職務経歴書', value: '3', icon: <FaFileAlt />, color: 'text-blue-600' },
+    { label: '職務経歴書', value: '3', icon: <FaFileAlt />, color: 'text-[#FF733E]' },
     { label: '応募中', value: '5', icon: <FaBriefcase />, color: 'text-green-600' },
     { label: 'スカウト', value: '8', icon: <FaEnvelope />, color: 'text-purple-600' },
     { label: '閲覧数', value: '124', icon: <FaChartLine />, color: 'text-orange-600' }
@@ -114,7 +114,7 @@ export default function AccountTopPage() {
           <div className="space-y-3">
             <div className="flex items-center justify-between py-3 border-b">
               <div className="flex items-center gap-3">
-                <FaFileAlt className="text-blue-600" />
+                <FaFileAlt className="text-[#FF733E]" />
                 <div>
                   <p className="font-medium">職務経歴書を更新しました</p>
                   <p className="text-sm text-gray-500">2日前</p>

@@ -9,7 +9,7 @@ export default function PersonalInfoLicensePage() {
         <div className="bg-white rounded-lg shadow-md p-8">
           <div className="mb-8 text-center">
             <h1 className="text-3xl font-bold text-gray-800 flex items-center justify-center gap-3">
-              <FaShieldAlt className="text-blue-600" />
+              <FaShieldAlt className="text-[#FF733E]" />
               個人情報利用許諾
             </h1>
             <p className="text-gray-600 mt-2">最終更新日: 2024年1月1日</p>
@@ -18,10 +18,10 @@ export default function PersonalInfoLicensePage() {
           <div className="prose max-w-none">
             <section className="mb-8">
               <h2 className="text-2xl font-semibold mb-4 flex items-center gap-2">
-                <FaUserShield className="text-blue-600" />
+                <FaUserShield className="text-[#FF733E]" />
                 個人情報の取り扱いについて
               </h2>
-              <div className="bg-blue-50 rounded-lg p-4">
+              <div className="bg-[#FFF5F3] rounded-lg p-4">
                 <p>
                   株式会社TruMeee（以下「当社」といいます）は、お客様の個人情報の重要性を認識し、
                   その保護を徹底するため、個人情報保護法および関連法令を遵守し、
@@ -101,10 +101,10 @@ export default function PersonalInfoLicensePage() {
 
             <section className="mb-8">
               <h2 className="text-2xl font-semibold mb-4 flex items-center gap-2">
-                <FaLock className="text-blue-600" />
+                <FaLock className="text-[#FF733E]" />
                 第5条（個人情報の安全管理）
               </h2>
-              <div className="bg-blue-50 rounded-lg p-4">
+              <div className="bg-[#FFF5F3] rounded-lg p-4">
                 <p>
                   当社は、個人情報の漏洩、滅失または毀損の防止その他の個人情報の安全管理のために、
                   以下の措置を講じています：
@@ -189,7 +189,7 @@ export default function PersonalInfoLicensePage() {
             </section>
           </div>
 
-          <div className="mt-8 p-4 bg-blue-50 rounded-lg">
+          <div className="mt-8 p-4 bg-[#FFF5F3] rounded-lg">
             <p className="text-center text-gray-700">
               本個人情報利用許諾は2024年1月1日から施行されます。<br />
               ご不明な点がございましたら、上記お問い合わせ窓口までご連絡ください。

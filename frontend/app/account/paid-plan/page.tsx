@@ -121,8 +121,8 @@ export default function PaidPlanPage() {
           <p className="text-gray-600 mt-2">あなたに最適なプランを選択してください</p>
         </div>
 
-        <div className="mb-6 bg-blue-50 rounded-lg p-4 text-center">
-          <p className="text-blue-700">
+        <div className="mb-6 bg-[#FFF5F3] rounded-lg p-4 text-center">
+          <p className="text-[#FF733E]">
             現在のプラン: <span className="font-bold">{plans.find(p => p.id === currentPlan)?.name}</span>
           </p>
         </div>
@@ -132,11 +132,11 @@ export default function PaidPlanPage() {
             <div
               key={plan.id}
               className={`bg-white rounded-lg shadow-lg overflow-hidden ${
-                plan.recommended ? 'ring-2 ring-blue-500' : ''
+                plan.recommended ? 'ring-2 ring-[#FF733E]' : ''
               } ${currentPlan === plan.id ? 'border-2 border-green-500' : ''}`}
             >
               {plan.recommended && (
-                <div className="bg-blue-500 text-white text-center py-2 font-bold">
+                <div className="bg-[#FFF5F3]0 text-white text-center py-2 font-bold">
                   おすすめ
                 </div>
               )}
@@ -190,7 +190,7 @@ export default function PaidPlanPage() {
                     currentPlan === plan.id
                       ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
                       : plan.recommended
-                      ? 'bg-blue-600 text-white hover:bg-blue-700'
+                      ? 'bg-[#FF733E] text-white hover:bg-[#FF8659]'
                       : 'bg-gray-600 text-white hover:bg-gray-700'
                   }`}
                 >
@@ -210,7 +210,7 @@ export default function PaidPlanPage() {
         <div className="mt-12 grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="bg-white rounded-lg shadow-md p-6">
             <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-              <FaRocket className="text-blue-600" />
+              <FaRocket className="text-[#FF733E]" />
               プレミアムプランの特典
             </h3>
             <ul className="space-y-2 text-gray-700">

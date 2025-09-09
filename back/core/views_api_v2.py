@@ -271,6 +271,46 @@ def login_v2(request):
 
 
 # ============================================================================
+# ユーザー情報更新エンドポイント
+# ============================================================================
+
+@api_view(['PATCH'])
+@permission_classes([IsAuthenticated])
+def update_user_info(request, user_id):
+    """ユーザーの基本情報（email, phone）を更新"""
+    try:
+        # 自分のプロフィールのみ更新可能
+        if str(request.user.id) != user_id:
+            return Response({
+                'error': '他のユーザーの情報は更新できません'
+            }, status=status.HTTP_403_FORBIDDEN)
+        
+        user = get_object_or_404(User, id=user_id)
+        
+        # 更新可能なフィールドのみ更新
+        if 'email' in request.data:
+            user.email = request.data['email']
+        if 'phone' in request.data:
+            user.phone = request.data['phone']
+        
+        user.save()
+        
+        return Response({
+            'id': str(user.id),
+            'email': user.email,
+            'phone': user.phone,
+            'message': 'ユーザー情報を更新しました'
+        }, status=status.HTTP_200_OK)
+        
+    except Exception as e:
+        logger.error(f"User update error: {str(e)}")
+        return Response({
+            'error': 'ユーザー情報の更新に失敗しました',
+            'detail': str(e) if settings.DEBUG else None
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+# ============================================================================
 # プロフィール関連エンドポイント
 # ============================================================================
 
