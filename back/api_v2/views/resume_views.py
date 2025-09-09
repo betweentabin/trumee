@@ -4,6 +4,7 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from django.http import HttpResponse
 from django.template.loader import render_to_string
+from django.views.decorators.csrf import csrf_exempt
 from reportlab.lib.pagesizes import A4
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
@@ -19,6 +20,7 @@ from datetime import datetime
 # Register Japanese font
 pdfmetrics.registerFont(UnicodeCIDFont('HeiseiMin-W3'))
 
+@csrf_exempt
 @api_view(['POST'])
 @permission_classes([AllowAny])  # Allow both authenticated and anonymous users
 def download_resume_pdf(request):
@@ -184,6 +186,7 @@ def download_resume_pdf(request):
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
+@csrf_exempt
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def send_resume_pdf(request):

@@ -70,6 +70,12 @@ export const API_CONFIG = {
 
 // Helper function to build full URL
 export const buildApiUrl = (endpoint: string): string => {
+  // Handle undefined or null endpoint
+  if (!endpoint) {
+    console.error('buildApiUrl called with undefined or null endpoint');
+    return `${API_CONFIG.BASE_URL}${API_CONFIG.API_VERSION}/`;
+  }
+  
   // Ensure endpoint starts with /
   const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
   // Check if the endpoint already includes /api/v2
