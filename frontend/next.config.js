@@ -1,7 +1,8 @@
-import type { NextConfig } from "next";
-import path from "path";
+// Converted to JS to avoid TS transpilation issues on Vercel
+const path = require("path");
 
-const nextConfig: NextConfig = {
+/** @type {import('next').NextConfig} */
+const nextConfig = {
   // Image optimization settings
   images: {
     domains: [],
@@ -48,4 +49,4 @@ const nextConfig: NextConfig = {
   async rewrites() { return []; },
 };
 
-export default nextConfig;
+module.exports = nextConfig;
