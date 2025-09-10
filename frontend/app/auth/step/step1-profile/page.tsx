@@ -2,117 +2,38 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAppDispatch, useAppSelector } from '@/app/redux/hooks';
-import { updateStepData, markStepCompleted } from '@/app/redux/formSlice';
-// 🚨 不要なimportを削除（Application error対策）
-// import { useUpdateProfile, useUserProfile } from '@/hooks/useApi';
-// import useAuthV2 from '@/hooks/useAuthV2';
-import StepNavigation from '../components/StepNavigation';
-import StepLayout from '../components/StepLayout';
+import { useFormPersist } from '@/hooks/useFormPersist';
+import StepLayout from '@/components/auth/StepLayout';
 import toast from 'react-hot-toast';
-import apiClient from '@/lib/api-v2-client';
-
-const prefectures = [
-  '北海道', '青森県', '岩手県', '宮城県', '秋田県', '山形県', '福島県',
-  '茨城県', '栃木県', '群馬県', '埼玉県', '千葉県', '東京都', '神奈川県',
-  '新潟県', '富山県', '石川県', '福井県', '山梨県', '長野県', '岐阜県',
-  '静岡県', '愛知県', '三重県', '滋賀県', '京都府', '大阪府', '兵庫県',
-  '奈良県', '和歌山県', '鳥取県', '島根県', '岡山県', '広島県', '山口県',
-  '徳島県', '香川県', '愛媛県', '高知県', '福岡県', '佐賀県', '長崎県',
-  '熊本県', '大分県', '宮崎県', '鹿児島県', '沖縄県'
-];
 
 export default function Step1ProfilePage() {
   const router = useRouter();
-  const dispatch = useAppDispatch();
-  const formState = useAppSelector(state => state.form);
-  // 🚨 認証チェックを無効化
-  // const { isAuthenticated, initializeAuth } = useAuthV2();
-  // const { data: userProfile } = useUserProfile();
-  // const updateProfileMutation = useUpdateProfile();
-
+  const { formState, updateFormData } = useFormPersist();
   const [errors, setErrors] = useState<Record<string, string>>({});
+  
   const [formData, setFormData] = useState({
-    email: 'yamada@example.com',
-    firstName: '太郎',
-    lastName: '山田',
-    firstNameKana: 'タロウ',
-    lastNameKana: 'ヤマダ',
-    birthday: '1990-01-15',
-    gender: 'male',
-    phone: '090-1234-5678',
-    prefecture: '東京都',
+    title: '',
+    name: '',
+    email: '',
+    phone: '',
+    birthDate: '',
+    address: '',
+    experience: '',
+    desiredSalary: ''
   });
-
-  // ページ読み込み時の初期化
-  useEffect(() => {
-    console.log('👤 Step1 Profile: Loading without auth checks');
-  }, []);
 
   // Load saved data on mount
   useEffect(() => {
-    // Redux formStateから読み込み
-    if (formState.stepData.profile) {
+    const savedData = formState.stepData?.step1;
+    if (savedData) {
       setFormData(prev => ({
         ...prev,
-        ...formState.stepData.profile,
+        ...savedData
       }));
     }
-  }, [formState.stepData.profile]);
+  }, [formState.stepData]);
 
-  // 🚨 API関連処理を無効化
-  // Load user profile from API
-  // useEffect(() => {
-  //   // APIから取得したプロフィールデータを反映
-  //   if (userProfile) {
-  //     setFormData(prev => ({
-  //       ...prev,
-  //       email: userProfile.email || prev.email,
-  //       // APIのフィールド名に合わせて調整が必要
-  //     }));
-  //   }
-  // }, [userProfile]);
-
-  // 🚨 authState参照を削除（Application error対策）
-  // Set initial email from auth
-  // useEffect(() => {
-  //   // 認証情報から初期値設定
-  //   if (authState.user?.email && !formData.email) {
-  //     setFormData(prev => ({ ...prev, email: authState.user.email }));
-  //   }
-  // }, [authState.user]);
-
-  const validateForm = () => {
-    const newErrors: Record<string, string> = {};
-
-    if (!formData.email) newErrors.email = 'メールアドレスを入力してください';
-    if (!formData.firstName) newErrors.firstName = '名を入力してください';
-    if (!formData.lastName) newErrors.lastName = '姓を入力してください';
-    if (!formData.firstNameKana) newErrors.firstNameKana = 'メイを入力してください';
-    if (!formData.lastNameKana) newErrors.lastNameKana = 'セイを入力してください';
-    if (!formData.birthday) newErrors.birthday = '生年月日を選択してください';
-    if (!formData.gender) newErrors.gender = '性別を選択してください';
-    if (!formData.phone) newErrors.phone = '電話番号を入力してください';
-    if (!formData.prefecture) newErrors.prefecture = '都道府県を選択してください';
-
-    // Validate kana
-    if (formData.firstNameKana && !/^[ァ-ヶー・\s]+$/.test(formData.firstNameKana)) {
-      newErrors.firstNameKana = 'カタカナで入力してください';
-    }
-    if (formData.lastNameKana && !/^[ァ-ヶー・\s]+$/.test(formData.lastNameKana)) {
-      newErrors.lastNameKana = 'カタカナで入力してください';
-    }
-
-    // Validate phone
-    if (formData.phone && !/^[0-9-]+$/.test(formData.phone)) {
-      newErrors.phone = '有効な電話番号を入力してください';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
     
@@ -126,285 +47,211 @@ export default function Step1ProfilePage() {
     }
   };
 
-  const saveToBackend = async () => {
-    try {
-      // SeekerProfileの保存（存在すれば更新として扱われる）
-      const seekerPayload: any = {
-        first_name: formData.firstName,
-        last_name: formData.lastName,
-        first_name_kana: formData.firstNameKana,
-        last_name_kana: formData.lastNameKana,
-        birthday: formData.birthday || null,
-        prefecture: formData.prefecture || '',
-        // 追加の互換フィールド
-        experience_years: 0,
-      };
-
-      await apiClient.createSeekerProfile(seekerPayload);
-
-      return true;
-    } catch (error) {
-      console.error('Failed to save profile:', error);
-      return false;
-    }
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
+    
+    if (!formData.name) newErrors.name = '氏名を入力してください';
+    if (!formData.email) newErrors.email = 'メールアドレスを入力してください';
+    if (!formData.phone) newErrors.phone = '電話番号を入力してください';
+    if (!formData.birthDate) newErrors.birthDate = '生年月日を入力してください';
+    if (!formData.address) newErrors.address = '住所を入力してください';
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleNext = async () => {
     if (validateForm()) {
-      // Reduxに保存
-      dispatch(updateStepData({ step: 'profile', data: formData }));
-      dispatch(markStepCompleted(1));
-      
-      // バックエンドに保存
-      const saved = await saveToBackend();
-      if (saved) {
-        toast.success('プロフィール情報を保存しました');
-        router.push('/auth/step/step2-education');
-      }
+      // Save to persistent storage
+      updateFormData('step1', formData);
+      toast.success('基本情報を保存しました');
+      router.push('/auth/step/step2-education');
     }
   };
 
-  const handleSave = async () => {
-    if (validateForm()) {
-      // Reduxに保存
-      dispatch(updateStepData({ step: 'profile', data: formData }));
-      
-      // バックエンドに保存
-      const saved = await saveToBackend();
-      if (saved) {
-        toast.success('プロフィール情報を保存しました');
-      }
-    }
+  const handleBack = () => {
+    router.push('/dashboard');
   };
 
   return (
-    <StepLayout currentStep={1} title="基本情報">
-      <div className="max-w-3xl mx-auto">
-        <div className="bg-white rounded-lg shadow-sm p-6 md:p-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">
-            基本情報を入力してください
-          </h2>
-
-          <div className="space-y-6">
-            {/* Email */}
+    <StepLayout currentStep={1} stepTitle="職務経歴書編集">
+      <div className="space-y-6">
+        {/* 基本情報 Section */}
+        <div>
+          <h2 className="text-lg font-bold mb-4">基本情報</h2>
+          
+          <div className="grid grid-cols-2 gap-4">
+            {/* Title Field */}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                タイトル
+              </label>
+              <input
+                type="text"
+                name="title"
+                value={formData.title}
+                onChange={handleChange}
+                placeholder="例: マーケティング職向け職務経歴書"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#FF6B35] focus:border-[#FF6B35]"
+              />
+            </div>
+
+            {/* Name Field */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                氏名 <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-[#FF6B35] focus:border-[#FF6B35] ${
+                  errors.name ? 'border-red-300' : 'border-gray-300'
+                }`}
+              />
+              {errors.name && (
+                <p className="mt-1 text-xs text-red-600">{errors.name}</p>
+              )}
+            </div>
+
+            {/* Email Field */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
                 メールアドレス <span className="text-red-500">*</span>
               </label>
               <input
                 type="email"
-                id="email"
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#FF733E] focus:border-transparent ${
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-[#FF6B35] focus:border-[#FF6B35] ${
                   errors.email ? 'border-red-300' : 'border-gray-300'
                 }`}
-                placeholder="example@email.com"
               />
               {errors.email && (
-                <p className="mt-1 text-sm text-red-600">{errors.email}</p>
+                <p className="mt-1 text-xs text-red-600">{errors.email}</p>
               )}
             </div>
 
-            {/* Name Fields */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-2">
-                  姓 <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  id="lastName"
-                  name="lastName"
-                  value={formData.lastName}
-                  onChange={handleChange}
-                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#FF733E] focus:border-transparent ${
-                    errors.lastName ? 'border-red-300' : 'border-gray-300'
-                  }`}
-                  placeholder="山田"
-                />
-                {errors.lastName && (
-                  <p className="mt-1 text-sm text-red-600">{errors.lastName}</p>
-                )}
-              </div>
-
-              <div>
-                <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-2">
-                  名 <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  id="firstName"
-                  name="firstName"
-                  value={formData.firstName}
-                  onChange={handleChange}
-                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#FF733E] focus:border-transparent ${
-                    errors.firstName ? 'border-red-300' : 'border-gray-300'
-                  }`}
-                  placeholder="太郎"
-                />
-                {errors.firstName && (
-                  <p className="mt-1 text-sm text-red-600">{errors.firstName}</p>
-                )}
-              </div>
+            {/* Phone Field */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                電話番号 <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="tel"
+                name="phone"
+                value={formData.phone}
+                onChange={handleChange}
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-[#FF6B35] focus:border-[#FF6B35] ${
+                  errors.phone ? 'border-red-300' : 'border-gray-300'
+                }`}
+              />
+              {errors.phone && (
+                <p className="mt-1 text-xs text-red-600">{errors.phone}</p>
+              )}
             </div>
 
-            {/* Kana Fields */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="lastNameKana" className="block text-sm font-medium text-gray-700 mb-2">
-                  セイ <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  id="lastNameKana"
-                  name="lastNameKana"
-                  value={formData.lastNameKana}
-                  onChange={handleChange}
-                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#FF733E] focus:border-transparent ${
-                    errors.lastNameKana ? 'border-red-300' : 'border-gray-300'
-                  }`}
-                  placeholder="ヤマダ"
-                />
-                {errors.lastNameKana && (
-                  <p className="mt-1 text-sm text-red-600">{errors.lastNameKana}</p>
-                )}
-              </div>
-
-              <div>
-                <label htmlFor="firstNameKana" className="block text-sm font-medium text-gray-700 mb-2">
-                  メイ <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  id="firstNameKana"
-                  name="firstNameKana"
-                  value={formData.firstNameKana}
-                  onChange={handleChange}
-                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#FF733E] focus:border-transparent ${
-                    errors.firstNameKana ? 'border-red-300' : 'border-gray-300'
-                  }`}
-                  placeholder="タロウ"
-                />
-                {errors.firstNameKana && (
-                  <p className="mt-1 text-sm text-red-600">{errors.firstNameKana}</p>
-                )}
-              </div>
+            {/* Birth Date Field */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                生年月日 <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="date"
+                name="birthDate"
+                value={formData.birthDate}
+                onChange={handleChange}
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-[#FF6B35] focus:border-[#FF6B35] ${
+                  errors.birthDate ? 'border-red-300' : 'border-gray-300'
+                }`}
+              />
+              {errors.birthDate && (
+                <p className="mt-1 text-xs text-red-600">{errors.birthDate}</p>
+              )}
             </div>
 
-            {/* Birthday and Gender */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="birthday" className="block text-sm font-medium text-gray-700 mb-2">
-                  生年月日 <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="date"
-                  id="birthday"
-                  name="birthday"
-                  value={formData.birthday}
-                  onChange={handleChange}
-                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#FF733E] focus:border-transparent ${
-                    errors.birthday ? 'border-red-300' : 'border-gray-300'
-                  }`}
-                />
-                {errors.birthday && (
-                  <p className="mt-1 text-sm text-red-600">{errors.birthday}</p>
-                )}
-              </div>
-
-              <div>
-                <label htmlFor="gender" className="block text-sm font-medium text-gray-700 mb-2">
-                  性別 <span className="text-red-500">*</span>
-                </label>
-                <select
-                  id="gender"
-                  name="gender"
-                  value={formData.gender}
-                  onChange={handleChange}
-                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#FF733E] focus:border-transparent ${
-                    errors.gender ? 'border-red-300' : 'border-gray-300'
-                  }`}
-                >
-                  <option value="">選択してください</option>
-                  <option value="男性">男性</option>
-                  <option value="女性">女性</option>
-                  <option value="その他">その他</option>
-                </select>
-                {errors.gender && (
-                  <p className="mt-1 text-sm text-red-600">{errors.gender}</p>
-                )}
-              </div>
+            {/* Address Field */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                住所 <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                name="address"
+                value={formData.address}
+                onChange={handleChange}
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-[#FF6B35] focus:border-[#FF6B35] ${
+                  errors.address ? 'border-red-300' : 'border-gray-300'
+                }`}
+              />
+              {errors.address && (
+                <p className="mt-1 text-xs text-red-600">{errors.address}</p>
+              )}
             </div>
-
-            {/* Phone and Prefecture */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
-                  電話番号 <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="tel"
-                  id="phone"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleChange}
-                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#FF733E] focus:border-transparent ${
-                    errors.phone ? 'border-red-300' : 'border-gray-300'
-                  }`}
-                  placeholder="090-1234-5678"
-                />
-                {errors.phone && (
-                  <p className="mt-1 text-sm text-red-600">{errors.phone}</p>
-                )}
-              </div>
-
-              <div>
-                <label htmlFor="prefecture" className="block text-sm font-medium text-gray-700 mb-2">
-                  都道府県 <span className="text-red-500">*</span>
-                </label>
-                <select
-                  id="prefecture"
-                  name="prefecture"
-                  value={formData.prefecture}
-                  onChange={handleChange}
-                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#FF733E] focus:border-transparent ${
-                    errors.prefecture ? 'border-red-300' : 'border-gray-300'
-                  }`}
-                >
-                  <option value="">選択してください</option>
-                  {prefectures.map(pref => (
-                    <option key={pref} value={pref}>{pref}</option>
-                  ))}
-                </select>
-                {errors.prefecture && (
-                  <p className="mt-1 text-sm text-red-600">{errors.prefecture}</p>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Action Buttons */}
-          <div className="mt-8 flex justify-between">
-            <button
-              onClick={handleSave}
-              className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition"
-            >
-              保存
-            </button>
-            <button
-              onClick={handleNext}
-              className="px-6 py-2 bg-[#FF733E] text-white rounded-lg hover:bg-[#e9632e] transition"
-            >
-              次へ進む
-            </button>
           </div>
         </div>
-      </div>
 
-      {/* Step Navigation */}
-      <StepNavigation currentStep={1} />
+        {/* Self PR Section */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            自己PR
+          </label>
+          <textarea
+            name="experience"
+            value={formData.experience}
+            onChange={handleChange}
+            rows={5}
+            placeholder="あなたの強みや経験を簡潔に記載してください"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#FF6B35] focus:border-[#FF6B35]"
+          />
+        </div>
+
+        {/* Desired Conditions Section */}
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              希望職種
+            </label>
+            <input
+              type="text"
+              placeholder="営業、マーケティングなど"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#FF6B35] focus:border-[#FF6B35]"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              希望年収
+            </label>
+            <input
+              type="text"
+              name="desiredSalary"
+              value={formData.desiredSalary}
+              onChange={handleChange}
+              placeholder="例: 500万円〜"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#FF6B35] focus:border-[#FF6B35]"
+            />
+          </div>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex justify-between pt-6">
+          <button
+            onClick={handleBack}
+            className="px-8 py-2.5 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors"
+          >
+            前へ
+          </button>
+          <button
+            onClick={handleNext}
+            className="px-8 py-2.5 bg-[#FF6B35] text-white rounded-md hover:bg-[#e85a2b] transition-colors"
+          >
+            次へ
+          </button>
+        </div>
+      </div>
     </StepLayout>
   );
 }

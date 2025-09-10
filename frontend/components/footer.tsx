@@ -1,21 +1,25 @@
+import Link from 'next/link';
+
 const Footer = () => {
 
     return(
         <>
             <div className="flex p-8 flex-col justify-center items-center">
                 <div className="flex items-center">
-                    <img src="/logo/logo_mix.png" alt="Logo" className="h-10 w-10 mr-3" />
+                    <Link href="/">
+                        <img src="/logo/logo_mix.png" alt="Logo" className="h-10 w-10 mr-3 cursor-pointer" />
+                    </Link>
                 </div>
                 <div className="flex flex-col md:flex-row gap-9 mt-6 text-[14px]">
-                    <a href="">マイページ</a>
-                    <a href="">利用規約</a>
-                    <a href="">お問い合わせ</a>
+                    <Link href="/users" className="hover:text-[#FF733E] transition-colors">マイページ</Link>
+                    <Link href="/terms-of-use" className="hover:text-[#FF733E] transition-colors">利用規約</Link>
+                    <Link href="/contact-us" className="hover:text-[#FF733E] transition-colors">お問い合わせ</Link>
                 </div>
                 <div className="flex gap-9 mt-6 text-[10px]">
-                <a href="https://docs.google.com/document/d/1_IejVWnELrA8757p9SPh5LtFv1w-Z5DaCxAKjfJp9QA/view" target="_blank" rel="noopener noreferrer">
+                <a href="https://docs.google.com/document/d/1_IejVWnELrA8757p9SPh5LtFv1w-Z5DaCxAKjfJp9QA/view" target="_blank" rel="noopener noreferrer" className="hover:text-[#FF733E] transition-colors">
                     個人情報利用許諾
                 </a> 
-                <a href="">特定商取引法</a>
+                <Link href="/transaction-law" className="hover:text-[#FF733E] transition-colors">特定商取引法</Link>
                 </div>
             </div>
             <div className="flex w-full bg-[#32291F] items-center justify-center pt-[17px] pb-[15px] ">

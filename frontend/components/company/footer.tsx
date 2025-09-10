@@ -1,5 +1,6 @@
 'use client'
 import { useRouter } from "next/navigation";
+import Link from 'next/link';
 
 const Footer = () => {
 
@@ -17,7 +18,9 @@ const Footer = () => {
         {/* Top Section: Logo and Buttons */}
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center">
           <div className="mb-6 sm:mb-0 flex items-center">
-            <img src="/logo/logo_top.png" alt="Xrosspoint" className="h-6 mr-2" />
+            <Link href="/">
+              <img src="/logo/logo_top.png" alt="Xrosspoint" className="h-6 mr-2 cursor-pointer" />
+            </Link>
           </div>
 
           <div className="flex gap-4 justify-center sm:justify-start">
@@ -42,8 +45,8 @@ const Footer = () => {
           <div>
             <p className="font-bold mb-2">職務経歴書に関するアドバイス</p>
             <ul className="ml-4 space-y-1 list-disc">
-              <li>職務経歴書の添削</li>
-              <li>印刷</li>
+              <li><Link href="/resume-advice" className="hover:text-[#FF733E] transition-colors">職務経歴書の添削</Link></li>
+              <li><Link href="/resume-advice/print" className="hover:text-[#FF733E] transition-colors">印刷</Link></li>
             </ul>
           </div>
 
@@ -51,10 +54,10 @@ const Footer = () => {
           <div>
             <p className="font-bold mb-2">面接に関するアドバイス</p>
             <ul className="space-y-1 list-disc ml-4">
-              <li>転職理由（志望理由）</li>
-              <li>職務経歴書に関する質問</li>
-              <li>自己PRに関係する質問</li>
-              <li>面接対策</li>
+              <li><Link href="/interview-advice/applying-reasons" className="hover:text-[#FF733E] transition-colors">転職理由（志望理由）</Link></li>
+              <li><Link href="/interview-advice/resume-questions" className="hover:text-[#FF733E] transition-colors">職務経歴書に関する質問</Link></li>
+              <li><Link href="/interview-advice/pr-questions" className="hover:text-[#FF733E] transition-colors">自己PRに関係する質問</Link></li>
+              <li><Link href="/interview-advice/prepare-interview" className="hover:text-[#FF733E] transition-colors">面接対策</Link></li>
             </ul>
           </div>
 
@@ -62,8 +65,8 @@ const Footer = () => {
           <div>
             <p className="font-bold mb-2">企業からのスカウト確認</p>
             <ul className="space-y-1 list-disc ml-4">
-              <li>企業からのスカウト状況</li>
-              <li>スカウト企業への志望理由作成補助</li>
+              <li><Link href="/confirm-scout/status" className="hover:text-[#FF733E] transition-colors">企業からのスカウト状況</Link></li>
+              <li><Link href="/confirm-scout/applying-reasons-assist" className="hover:text-[#FF733E] transition-colors">スカウト企業への志望理由作成補助</Link></li>
             </ul>
           </div>
 
@@ -71,11 +74,11 @@ const Footer = () => {
           <div>
             <p className="font-bold mb-2">マイページ</p>
             <ul className="space-y-1 list-disc ml-4">
-              <li>TOP</li>
-              <li>基本情報の確認・変更</li>
-              <li>パスワードの変更</li>
-              <li>支払い情報登録・変更</li>
-              <li>有料プラン</li>
+              <li><Link href="/account/top" className="hover:text-[#FF733E] transition-colors">TOP</Link></li>
+              <li><Link href="/account/personal-info-license" className="hover:text-[#FF733E] transition-colors">基本情報の確認・変更</Link></li>
+              <li><Link href="/account/password" className="hover:text-[#FF733E] transition-colors">パスワードの変更</Link></li>
+              <li><Link href="/account/payment" className="hover:text-[#FF733E] transition-colors">支払い情報登録・変更</Link></li>
+              <li><Link href="/account/paid-plan" className="hover:text-[#FF733E] transition-colors">有料プラン</Link></li>
             </ul>
           </div>
         </div>
@@ -85,18 +88,18 @@ const Footer = () => {
       <div className="bg-[#3E2E2B] text-white text-xs py-3">
         <div className="max-w-7xl mx-auto px-4 flex flex-wrap justify-between items-center gap-4">
           <div className="flex flex-wrap gap-4">
-            <a href="#" className="hover:underline">
+            <a href="https://docs.google.com/document/d/1_IejVWnELrA8757p9SPh5LtFv1w-Z5DaCxAKjfJp9QA/view" target="_blank" rel="noopener noreferrer" className="hover:underline">
               個人情報利用許諾
             </a>
-            <a href="#" className="hover:underline">
+            <Link href="/terms-of-use" className="hover:underline">
               利用規約
-            </a>
-            <a href="#" className="hover:underline">
+            </Link>
+            <Link href="/transaction-law" className="hover:underline">
               特定商取引法
-            </a>
-            <a href="#" className="hover:underline">
+            </Link>
+            <Link href="/contact-us" className="hover:underline">
               お問い合わせ
-            </a>
+            </Link>
           </div>
           <div className="text-right ml-auto w-full sm:w-auto">
             © 2025 Xrosspoint Inc. All rights reserved.
