@@ -13,7 +13,7 @@ type Params = {
   month: string;
 };
 
-export default function CompanyMonthlyPageView({ params }: { params: Params }) {
+export default function CompanyMonthlyPageView({ params }: { params: Promise<Params> }) {
   const router = useRouter();
   const { isAuthenticated, currentUser, initializeAuth, requireRole } = useAuthV2();
   const [page, setPage] = useState<CompanyMonthlyPage | null>(null);
@@ -21,13 +21,20 @@ export default function CompanyMonthlyPageView({ params }: { params: Params }) {
   const [saving, setSaving] = useState(false);
   const [title, setTitle] = useState('');
   const [notes, setNotes] = useState('');
-
-  const year = Number(params.year);
-  const month = Number(params.month);
+  const [year, setYear] = useState<number>(0);
+  const [month, setMonth] = useState<number>(0);
+  const [companyId, setCompanyId] = useState<string>('');
 
   useEffect(() => {
     initializeAuth();
-  }, [initializeAuth]);
+    
+    // Resolve params promise
+    params.then((resolvedParams) => {
+      setYear(Number(resolvedParams.year));
+      setMonth(Number(resolvedParams.month));
+      setCompanyId(resolvedParams.companyId);
+    });
+  }, [initializeAuth, params]);
 
   useEffect(() => {
     const hasStored = typeof window !== 'undefined' && !!localStorage.getItem('drf_token_v2');
@@ -43,6 +50,11 @@ export default function CompanyMonthlyPageView({ params }: { params: Params }) {
   }, [isAuthenticated, currentUser, router]);
 
   useEffect(() => {
+    // Wait for params to be resolved
+    if (!companyId || year === 0 || month === 0) {
+      return;
+    }
+    
     const fetchPage = async () => {
       try {
         const data = await apiV2Client.getCompanyMonthly(year, month);

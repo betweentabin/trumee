@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "build": "next build",
-    "vercel-build": "next build",
+    "vercel-build": "echo 'Build started at' && date && next build",
     "start": "next start",
     "dev": "next dev",
     "lint": "next lint"
