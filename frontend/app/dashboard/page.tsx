@@ -8,7 +8,7 @@ import StepCard from "@/components/card/step";
 import TestimonialCard from "@/components/card/testimonial";
 import AccordionCard from "@/components/card/accordion";
 import ImageCardWithBg from "@/components/image-with-bg";
-import { accordion_list, section_desc_1, section_info_list, section_job_seekers_desc, section_log_desc_list, section_usage_list } from "@/seeker/page";
+import { accordion_list, section_desc_1, section_info_list, section_job_seekers_desc, section_log_desc_list, section_usage_list } from "../../seeker/page";
 
 import Image from 'next/image';
 import MobileMenu from "@/components/MobileMenu";
