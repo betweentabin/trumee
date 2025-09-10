@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useFormPersist } from '@/hooks/useFormPersist';
+import useAuthV2 from '@/hooks/useAuthV2';
 import StepLayout from '@/components/auth/StepLayout';
 import toast from 'react-hot-toast';
 import { Plus, Trash2 } from 'lucide-react';
@@ -19,6 +20,7 @@ interface EducationEntry {
 
 export default function Step2EducationPage() {
   const router = useRouter();
+  const { currentUser } = useAuthV2();
   const { formState, updateFormData } = useFormPersist();
   
   const [educationEntries, setEducationEntries] = useState<EducationEntry[]>([
@@ -32,6 +34,15 @@ export default function Step2EducationPage() {
       description: ''
     }
   ]);
+
+  // Redirect to user-specific page if user exists
+  useEffect(() => {
+    if (currentUser?.id) {
+      // Check if education page exists, otherwise go to profile
+      router.push(`/users/${currentUser.id}/profile`);
+      return;
+    }
+  }, [currentUser, router]);
 
   // Load saved data on mount
   useEffect(() => {

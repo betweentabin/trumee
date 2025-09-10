@@ -37,7 +37,7 @@ const employmentTypes = [
 
 export default function Step3ExperiencePage() {
   const router = useRouter();
-  const { initializeAuth } = useAuthV2();
+  const { initializeAuth, currentUser } = useAuthV2();
   const {
     formState,
     setExperiences,
@@ -47,6 +47,14 @@ export default function Step3ExperiencePage() {
   } = useFormPersist();
 
   useEffect(() => { initializeAuth(); }, [initializeAuth]);
+
+  // Redirect to user-specific page if user exists
+  useEffect(() => {
+    if (currentUser?.id) {
+      router.push(`/users/${currentUser.id}/experience`);
+      return;
+    }
+  }, [currentUser, router]);
 
   const [experiences, setLocalExperiences] = useState<Experience[]>([]);
   const [errors, setErrors] = useState<Record<string, Record<string, string>>>({});

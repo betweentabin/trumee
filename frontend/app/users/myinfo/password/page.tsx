@@ -8,7 +8,7 @@ import useAuthV2 from '@/hooks/useAuthV2';
 
 export default function UserPasswordPage() {
   const router = useRouter();
-  const { isAuthenticated, initializeAuth } = useAuthV2();
+  const { isAuthenticated, initializeAuth, currentUser } = useAuthV2();
   const [loading, setLoading] = useState(false);
   const [showPasswords, setShowPasswords] = useState({
     current: false,
@@ -25,6 +25,15 @@ export default function UserPasswordPage() {
   useEffect(() => {
     initializeAuth();
   }, [initializeAuth]);
+
+  // Redirect to user-specific page if logged in
+  useEffect(() => {
+    if (currentUser?.id) {
+      // Password change page doesn't have a user-specific equivalent, 
+      // so we redirect to profile settings
+      router.replace(`/users/${currentUser.id}/profile`);
+    }
+  }, [currentUser, router]);
 
   useEffect(() => {
     if (isAuthenticated === false) {

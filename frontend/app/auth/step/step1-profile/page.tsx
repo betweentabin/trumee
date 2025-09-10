@@ -5,9 +5,11 @@ import { useRouter } from 'next/navigation';
 import { useFormPersist } from '@/hooks/useFormPersist';
 import StepLayout from '@/components/auth/StepLayout';
 import toast from 'react-hot-toast';
+import useAuthV2 from '@/hooks/useAuthV2';
 
 export default function Step1ProfilePage() {
   const router = useRouter();
+  const { currentUser } = useAuthV2();
   const { formState, updateFormData } = useFormPersist();
   const [errors, setErrors] = useState<Record<string, string>>({});
   
@@ -21,6 +23,13 @@ export default function Step1ProfilePage() {
     experience: '',
     desiredSalary: ''
   });
+
+  // Redirect to user-specific page if logged in
+  useEffect(() => {
+    if (currentUser?.id) {
+      router.replace(`/users/${currentUser.id}/profile`);
+    }
+  }, [currentUser, router]);
 
   // Load saved data on mount
   useEffect(() => {

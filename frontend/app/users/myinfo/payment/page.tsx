@@ -18,7 +18,7 @@ interface PaymentMethod {
 
 export default function UserPaymentPage() {
   const router = useRouter();
-  const { isAuthenticated, initializeAuth } = useAuthV2();
+  const { isAuthenticated, initializeAuth, currentUser } = useAuthV2();
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
   const [showAddCard, setShowAddCard] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -33,6 +33,15 @@ export default function UserPaymentPage() {
   useEffect(() => {
     initializeAuth();
   }, [initializeAuth]);
+
+  // Redirect to user-specific page if logged in
+  useEffect(() => {
+    if (currentUser?.id) {
+      // Payment page doesn't have a user-specific equivalent, 
+      // so we redirect to profile settings
+      router.replace(`/users/${currentUser.id}/profile`);
+    }
+  }, [currentUser, router]);
 
   useEffect(() => {
     if (isAuthenticated === false) {

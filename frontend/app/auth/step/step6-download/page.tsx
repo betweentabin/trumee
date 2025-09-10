@@ -25,6 +25,14 @@ export default function Step6DownloadPage() {
   // 認証復元（未ログインでも利用可）
   useEffect(() => { initializeAuth(); }, [initializeAuth]);
 
+  // Redirect to user-specific page if user exists
+  useEffect(() => {
+    if (currentUser?.id) {
+      router.push(`/users/${currentUser.id}/resumes`);
+      return;
+    }
+  }, [currentUser, router]);
+
   const handleDownloadPDF = async () => {
     setIsDownloading(true);
     

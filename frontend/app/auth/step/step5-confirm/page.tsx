@@ -10,7 +10,7 @@ import toast from 'react-hot-toast';
 
 export default function Step5ConfirmPage() {
   const router = useRouter();
-  const { initializeAuth } = useAuthV2();
+  const { initializeAuth, currentUser } = useAuthV2();
   const {
     formState,
     markStepCompleted,
@@ -19,6 +19,14 @@ export default function Step5ConfirmPage() {
   } = useFormPersist();
 
   useEffect(() => { initializeAuth(); }, [initializeAuth]);
+
+  // Redirect to user-specific page if user exists
+  useEffect(() => {
+    if (currentUser?.id) {
+      router.push(`/users/${currentUser.id}/profile`);
+      return;
+    }
+  }, [currentUser, router]);
 
   const { profile, education, experiences, preference } = formState.stepData;
 

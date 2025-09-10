@@ -30,7 +30,7 @@ export default function ResumesPage() {
   const router = useRouter();
   const [resumes, setResumes] = useState<Resume[]>([]);
   const [loading, setLoading] = useState(true);
-  const { isAuthenticated, initializeAuth } = useAuthV2();
+  const { isAuthenticated, initializeAuth, currentUser } = useAuthV2();
 
   // 認証状態をチェックして初期化
   useEffect(() => {
@@ -39,6 +39,13 @@ export default function ResumesPage() {
     };
     initialize();
   }, []);
+
+  // Redirect to user-specific page if logged in
+  useEffect(() => {
+    if (currentUser?.id) {
+      router.replace(`/users/${currentUser.id}/resumes`);
+    }
+  }, [currentUser, router]);
 
   // 認証が完了したら履歴書データを取得
   useEffect(() => {

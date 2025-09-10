@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useFormPersist } from '@/hooks/useFormPersist';
 import { useAuth } from '@/hooks/useAuth';
+import useAuthV2 from '@/hooks/useAuthV2';
 import StepNavigation from '../components/StepNavigation';
 import StepLayout from '../components/StepLayout';
 import toast from 'react-hot-toast';
@@ -67,6 +68,7 @@ const prefectures = [
 
 export default function Step4PreferencePage() {
   const router = useRouter();
+  const { currentUser } = useAuthV2();
   // 🚨 認証チェックを無効化
   // const { requireAuth } = useAuth();
   const {
@@ -76,6 +78,14 @@ export default function Step4PreferencePage() {
     goToStep,
     saveToLocalStorage,
   } = useFormPersist();
+
+  // Redirect to user-specific page if user exists
+  useEffect(() => {
+    if (currentUser?.id) {
+      router.push(`/users/${currentUser.id}/preference`);
+      return;
+    }
+  }, [currentUser, router]);
 
   // 🚨 認証チェックを無効化
   // useEffect(() => {
