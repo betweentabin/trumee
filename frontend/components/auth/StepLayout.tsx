@@ -4,6 +4,7 @@ import { ReactNode } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { ChevronRight } from 'lucide-react';
+import useAuthV2 from '@/hooks/useAuthV2';
 
 interface StepLayoutProps {
   children: ReactNode;
@@ -13,12 +14,14 @@ interface StepLayoutProps {
 
 const StepLayout = ({ children, currentStep, stepTitle }: StepLayoutProps) => {
   const pathname = usePathname();
+  const { currentUser } = useAuthV2();
+  const userId = currentUser?.id;
   
   const menuItems = [
     { label: 'TOP', href: '/dashboard', icon: null },
-    { label: '登録情報の確認・変更', href: '/auth/step/step1-profile', icon: <ChevronRight className="w-4 h-4" /> },
-    { label: 'パスワードの変更', href: '/account/password', icon: <ChevronRight className="w-4 h-4" /> },
-    { label: '支払い情報登録・変更', href: '/account/payment', icon: <ChevronRight className="w-4 h-4" /> },
+    { label: '登録情報の確認・変更', href: userId ? `/users/${userId}/profile` : '/auth/step/step1-profile', icon: <ChevronRight className="w-4 h-4" /> },
+    { label: 'パスワードの変更', href: userId ? `/users/${userId}/profile` : '/account/password', icon: <ChevronRight className="w-4 h-4" /> },
+    { label: '支払い情報登録・変更', href: userId ? `/users/${userId}/profile` : '/account/payment', icon: <ChevronRight className="w-4 h-4" /> },
     { label: '有料プラン', href: '/account/paid-plan', icon: <ChevronRight className="w-4 h-4" /> },
   ];
 

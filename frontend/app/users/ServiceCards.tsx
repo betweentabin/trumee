@@ -18,8 +18,11 @@ export default function ServiceCards() {
   })();
 
   const isOwner = !!(userIdFromPath && currentUser?.id && currentUser.id === userIdFromPath);
-  const perUser = (subpath: string) =>
-    userIdFromPath ? `/users/${userIdFromPath}/${subpath}` : undefined;
+  const perUser = (subpath: string) => {
+    // Use current user ID if available, otherwise use path ID
+    const userId = currentUser?.id || userIdFromPath;
+    return userId ? `/users/${userId}/${subpath}` : undefined;
+  };
 
   return (
     <div className="flex flex-col md:flex-row gap-6 mx-auto pt-4">
@@ -50,16 +53,16 @@ export default function ServiceCards() {
         <div className="grid grid-cols-2 gap-3 text-sm">
           {[{
             label: 'プロフィール',
-            href: isOwner ? '/auth/step/step1-profile' : (perUser('profile') || '/auth/step/step1-profile'),
+            href: perUser('profile') || `/users/${currentUser?.id}/profile`,
           }, {
             label: '経歴',
-            href: isOwner ? '/auth/step/step3-experience' : (perUser('experience') || '/auth/step/step3-experience'),
+            href: perUser('experience') || `/users/${currentUser?.id}/experience`,
           }, {
             label: '希望条件',
-            href: isOwner ? '/auth/step/step4-preference' : (perUser('preference') || '/auth/step/step4-preference'),
+            href: perUser('preference') || `/users/${currentUser?.id}/preference`,
           }, {
             label: '履歴書',
-            href: isOwner ? '/resumes' : (perUser('resumes') || '/resumes'),
+            href: perUser('resumes') || `/users/${currentUser?.id}/resumes`,
           }].map(({ label, href }, idx) => (
             <Link
               href={href}
