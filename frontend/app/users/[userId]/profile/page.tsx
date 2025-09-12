@@ -110,7 +110,13 @@ export default function UserProfileByIdPage() {
       }
       
       if (Object.keys(seekerUpdateData).length > 0) {
-        await apiClient.updateSeekerProfile(userId, seekerUpdateData);
+        const seekerProfileId = (data.seeker_profile as any)?.id as string | undefined;
+        if (seekerProfileId) {
+          await apiClient.updateSeekerProfile(seekerProfileId, seekerUpdateData);
+        } else {
+          // IDがない場合は作成API（upsert挙動）を利用
+          await apiClient.createSeekerProfile(seekerUpdateData);
+        }
       }
       
       // メールと電話番号の更新
