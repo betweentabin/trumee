@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { FaArrowLeft, FaSearch, FaPaperPlane } from 'react-icons/fa';
+import { getAuthHeaders, getUserInfo } from '@/utils/auth';
 
 interface Message {
   id: string;
@@ -14,46 +15,69 @@ interface Message {
 export default function ResumeReviewPage() {
   const router = useRouter();
   const [sectionTitle] = useState('職務内容について');
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: '1',
-      role: 'system',
-      text: '添削内容が記載されます。添削内容が記載されます。',
-      timestamp: new Date().toLocaleString('ja-JP'),
-    },
-    {
-      id: '2',
-      role: 'seeker',
-      text: '求職者のコメントが入ります。求職者のコメントが入ります。',
-      timestamp: new Date().toLocaleString('ja-JP'),
-    },
-    {
-      id: '3',
-      role: 'system',
-      text: '添削内容が記載されます。添削内容が記載されます。',
-      timestamp: new Date().toLocaleString('ja-JP'),
-    },
-  ]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const endRef = useRef<HTMLDivElement | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages.length]);
 
-  const send = () => {
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+
+  const fetchMessages = async () => {
+    try {
+      setError(null);
+      const res = await fetch(`${apiUrl}/api/v2/advice/messages/`, {
+        headers: {
+          ...getAuthHeaders(),
+        },
+      });
+      if (!res.ok) throw new Error('failed');
+      const data = await res.json();
+      const uid = getUserInfo()?.uid;
+      // Map to local structure
+      const mapped: Message[] = data.map((m: any) => ({
+        id: String(m.id),
+        role: uid && String(m.sender) === String(uid) ? 'seeker' : 'advisor',
+        text: m.content,
+        timestamp: new Date(m.created_at).toLocaleString('ja-JP'),
+      }));
+      // Post-process to mark own messages. We cannot easily know user id here without an extra call; assume last message echo will render on send.
+      setMessages(mapped);
+    } catch (e) {
+      setError('メッセージの取得に失敗しました');
+    }
+  };
+
+  useEffect(() => {
+    fetchMessages();
+    const t = setInterval(fetchMessages, 10000);
+    return () => clearInterval(t);
+  }, []);
+
+  const send = async () => {
     const text = input.trim();
     if (!text) return;
-    setMessages((prev) => [
-      ...prev,
-      {
-        id: String(prev.length + 1),
-        role: 'seeker',
-        text,
-        timestamp: new Date().toLocaleString('ja-JP'),
-      },
-    ]);
-    setInput('');
+    setLoading(true);
+    try {
+      const res = await fetch(`${apiUrl}/api/v2/advice/messages/`, {
+        method: 'POST',
+        headers: {
+          ...getAuthHeaders(),
+        },
+        body: JSON.stringify({ content: text }),
+      });
+      if (!res.ok) throw new Error('failed');
+      setInput('');
+      await fetchMessages();
+    } catch (e) {
+      setError('送信に失敗しました');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -153,6 +177,7 @@ export default function ResumeReviewPage() {
                   className="flex-1 h-20 resize-none rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-600"
                 />
                 <button
+                  disabled={loading}
                   onClick={send}
                   className="h-10 w-10 shrink-0 rounded-md bg-primary-600 text-white flex items-center justify-center hover:bg-primary-500"
                   aria-label="send message"
@@ -160,6 +185,7 @@ export default function ResumeReviewPage() {
                   <FaPaperPlane />
                 </button>
               </div>
+              {error && <p className="text-sm text-error-600 mt-2">{error}</p>}
             </div>
           </aside>
         </div>
@@ -167,4 +193,3 @@ export default function ResumeReviewPage() {
     </div>
   );
 }
-

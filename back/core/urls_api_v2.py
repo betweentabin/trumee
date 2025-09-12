@@ -69,6 +69,9 @@ urlpatterns = [
     path('resumes/download-pdf/', views_api_v2.download_resume_pdf, name='download-resume-pdf'),
     path('resumes/send-pdf/', views_api_v2.send_resume_pdf, name='send-resume-pdf'),
     
+    # 添削メッセージ（管理者↔ユーザー）
+    path('advice/messages/', views_api_v2.advice_messages, name='advice-messages'),
+    
     # ViewSet URLs
     path('', include(router.urls)),
 ]

@@ -913,6 +913,70 @@ def user_profile_v2(request):
     return Response(data, status=status.HTTP_200_OK)
 
 
+# ============================================================================
+# 添削（ユーザー↔管理者）メッセージ API ー 既存 Message テーブルを活用
+# ============================================================================
+
+@api_view(['GET', 'POST'])
+@permission_classes([IsAuthenticated])
+def advice_messages(request):
+    """
+    ユーザーと管理者（is_staff）間のメッセージスレッドを簡易提供。
+    - GET  : メッセージ一覧取得（subject='resume_advice' 限定）。
+             管理者は `user_id` クエリで対象ユーザーを指定。一般ユーザーは最初の管理者が相手。
+    - POST : メッセージ送信。body: { content, user_id? }
+    既存の Message モデルと通知を利用するため、新規テーブルは不要。
+    """
+    from django.db.models import Q
+
+    SUBJECT = 'resume_advice'
+
+    # 対向ユーザーの決定
+    def resolve_counterpart(for_user, specified_user_id=None):
+        if for_user.is_staff:
+            if not specified_user_id:
+                return None
+            try:
+                # 管理者→指定ユーザー
+                return User.objects.get(id=specified_user_id)
+            except User.DoesNotExist:
+                return None
+        else:
+            # 一般ユーザー→最初の管理者（存在しない場合は None）
+            return User.objects.filter(is_staff=True).order_by('date_joined').first()
+
+    if request.method == 'GET':
+        user_id = request.GET.get('user_id')
+        counterpart = resolve_counterpart(request.user, user_id)
+        if counterpart is None:
+            return Response({'error': 'counterpart_not_found'}, status=status.HTTP_404_NOT_FOUND)
+
+        qs = Message.objects.filter(
+            Q(sender=request.user, receiver=counterpart) |
+            Q(sender=counterpart, receiver=request.user),
+        ).filter(subject=SUBJECT).order_by('created_at')
+
+        return Response(MessageSerializer(qs, many=True).data)
+
+    # POST
+    content = (request.data or {}).get('content', '').strip()
+    user_id = (request.data or {}).get('user_id')
+    if not content:
+        return Response({'error': 'content_required'}, status=status.HTTP_400_BAD_REQUEST)
+
+    counterpart = resolve_counterpart(request.user, user_id)
+    if counterpart is None:
+        return Response({'error': 'counterpart_not_found'}, status=status.HTTP_404_NOT_FOUND)
+
+    msg = Message.objects.create(
+        sender=request.user,
+        receiver=counterpart,
+        subject=SUBJECT,
+        content=content,
+    )
+    return Response(MessageSerializer(msg).data, status=status.HTTP_201_CREATED)
+
+
 # ====================================================================
 # ユーザープロフィール公開API（新規追加）
 # ====================================================================
