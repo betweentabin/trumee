@@ -119,7 +119,7 @@ export default function CareerPage() {
             <p className="text-gray-600 mt-2">あなたの職務経歴書を管理できます</p>
           </div>
           <Link href={to('/career/create')}>
-            <button className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+            <button className="flex items-center gap-2 px-6 py-3 bg-[#FF733E] text-white rounded-lg hover:bg-[#FF8659] transition">
               <FaPlus />
               新規作成
             </button>
@@ -136,7 +136,7 @@ export default function CareerPage() {
               新規作成ボタンをクリックして、職務経歴書を作成しましょう
             </p>
             <Link href={to('/career/create')}>
-              <button className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+              <button className="px-6 py-3 bg-[#FF733E] text-white rounded-lg hover:bg-[#FF8659] transition">
                 職務経歴書を作成する
               </button>
             </Link>

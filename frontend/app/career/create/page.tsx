@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import toast from 'react-hot-toast';
 
@@ -217,12 +217,53 @@ export default function CreateResumePage() {
     }
   };
 
+  // ---- Draft autosave/load ----
+  const DRAFT_KEY = 'career_create_draft_v2';
+  // Load draft on mount
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(DRAFT_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.resumeData) setResumeData(parsed.resumeData);
+        if (parsed.currentStep) setCurrentStep(parsed.currentStep);
+      }
+    } catch (e) {
+      console.warn('Failed to load draft:', e);
+    }
+  }, []);
+  // Autosave on change (throttled by event loop)
+  const saveDraft = (message?: string) => {
+    try {
+      localStorage.setItem(
+        DRAFT_KEY,
+        JSON.stringify({ resumeData, currentStep, savedAt: new Date().toISOString() })
+      );
+      if (message) toast.success(message);
+    } catch (e) {
+      console.warn('Failed to save draft:', e);
+      if (message) toast.error('下書き保存に失敗しました');
+    }
+  };
+  // Autosave when major state changes
+  useEffect(() => {
+    const id = setTimeout(() => saveDraft(), 0);
+    return () => clearTimeout(id);
+  }, [resumeData, currentStep]);
+
+  const clearDraft = () => {
+    try {
+      localStorage.removeItem(DRAFT_KEY);
+      toast.success('下書きを削除しました');
+    } catch {}
+  };
+
   const renderStep = () => {
     switch (currentStep) {
       case 1:
         return (
           <div className="space-y-6">
-            <h2 className="text-2xl font-semibold mb-4">基本情報</h2>
+            <h2 className="text-2xl font-semibold mb-4">基本情報（自己PRなし）</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium mb-2">タイトル</label>
@@ -282,16 +323,6 @@ export default function CreateResumePage() {
                   onChange={(e) => handleInputChange('address', e.target.value)}
                 />
               </div>
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-2">自己PR</label>
-              <textarea
-                className="w-full p-2 border rounded-lg"
-                rows={4}
-                value={resumeData.summary}
-                onChange={(e) => handleInputChange('summary', e.target.value)}
-                placeholder="あなたの強みや経験を簡潔に記載してください"
-              />
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
@@ -507,6 +538,75 @@ export default function CreateResumePage() {
           </div>
         );
 
+      case 5:
+        return (
+          <div className="space-y-6">
+            <h2 className="text-2xl font-semibold mb-4">自己PR</h2>
+            <div>
+              <label className="block text-sm font-medium mb-2">自己PR</label>
+              <textarea
+                className="w-full p-2 border rounded-lg"
+                rows={8}
+                value={resumeData.summary}
+                onChange={(e) => handleInputChange('summary', e.target.value)}
+                placeholder="あなたの強みや経験を簡潔に記載してください"
+              />
+            </div>
+          </div>
+        );
+
+      case 6:
+        return (
+          <div className="space-y-6">
+            <h2 className="text-2xl font-semibold mb-4">職務経歴（プレビュー）</h2>
+            <div className="bg-gray-50 border rounded-lg p-4 space-y-3">
+              <div><span className="text-xs text-gray-500">タイトル</span><div>{resumeData.title || '（未設定）'}</div></div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div><span className="text-xs text-gray-500">氏名</span><div>{resumeData.fullName || '（未設定）'}</div></div>
+                <div><span className="text-xs text-gray-500">メール</span><div>{resumeData.email || '（未設定）'}</div></div>
+                <div><span className="text-xs text-gray-500">電話</span><div>{resumeData.phone || '（未設定）'}</div></div>
+                <div><span className="text-xs text-gray-500">住所</span><div>{resumeData.address || '（未設定）'}</div></div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div><span className="text-xs text-gray-500">希望職種</span><div>{resumeData.desiredPosition || '（未設定）'}</div></div>
+                <div><span className="text-xs text-gray-500">希望年収</span><div>{resumeData.desiredSalary || '（未設定）'}</div></div>
+              </div>
+              <div>
+                <span className="text-xs text-gray-500">自己PR</span>
+                <div className="whitespace-pre-wrap">{resumeData.summary || '（未入力）'}</div>
+              </div>
+              <div>
+                <span className="text-xs text-gray-500">職歴</span>
+                <div className="space-y-2 mt-1">
+                  {resumeData.workExperiences.map((w, i) => (
+                    <div key={i} className="border rounded p-2">
+                      <div className="font-medium">{w.company || '会社名未設定'} / {w.position || '役職未設定'}</div>
+                      <div className="text-xs text-gray-500">{w.startDate || '----/--'} ~ {w.endDate || '----/--'}</div>
+                      {w.description && <div className="mt-1 text-sm whitespace-pre-wrap">{w.description}</div>}
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <span className="text-xs text-gray-500">学歴</span>
+                <div className="space-y-2 mt-1">
+                  {resumeData.education.map((e, i) => (
+                    <div key={i} className="border rounded p-2">
+                      <div className="font-medium">{e.school || '学校名未設定'} / {e.degree || '学位未設定'}</div>
+                      <div className="text-xs text-gray-500">{e.field || '専攻未設定'} / {e.graduationDate || '卒業年月未設定'}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <span className="text-xs text-gray-500">スキル</span>
+                <div className="mt-1 text-sm">{resumeData.skills.filter(Boolean).join(', ') || '（未入力）'}</div>
+              </div>
+            </div>
+            <div className="text-sm text-gray-500">この内容で「作成する」を押すと保存されます。</div>
+          </div>
+        );
+
       default:
         return null;
     }
@@ -516,22 +616,48 @@ export default function CreateResumePage() {
     <div className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-4xl mx-auto">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">職務経歴書作成</h1>
-          <div className="flex justify-between items-center mt-4">
-            {[1, 2, 3, 4].map((step) => (
-              <div
+          <div className="flex items-center justify-between">
+            <h1 className="text-3xl font-bold text-gray-800">職務経歴書作成</h1>
+            <div className="flex gap-2">
+              <button
+                onClick={() => saveDraft('下書きを保存しました')}
+                className="px-4 py-2 border rounded-md text-[#FF733E] border-[#FF733E] hover:bg-orange-50"
+              >
+                下書き保存
+              </button>
+              <button
+                onClick={clearDraft}
+                className="px-4 py-2 border rounded-md text-gray-600 hover:bg-gray-100"
+              >
+                下書き削除
+              </button>
+            </div>
+          </div>
+          {/* Clickable Stepper: 6 steps */}
+          <div className="flex justify-between items-center mt-6">
+            {[1, 2, 3, 4, 5, 6].map((step) => (
+              <button
+                type="button"
                 key={step}
-                className={`flex-1 h-2 mx-1 rounded ${
-                  step <= currentStep ? 'bg-blue-600' : 'bg-gray-300'
-                }`}
-              />
+                onClick={() => setCurrentStep(step)}
+                className="flex-1 mx-1"
+                title={`${step}へ移動`}
+              >
+                <div
+                  className={`h-2 w-full rounded ${
+                    step <= currentStep ? 'bg-[#FF733E]' : 'bg-gray-300'
+                  }`}
+                />
+              </button>
             ))}
           </div>
           <div className="flex justify-between mt-2 text-sm">
-            <span className={currentStep === 1 ? 'font-semibold' : ''}>基本情報</span>
-            <span className={currentStep === 2 ? 'font-semibold' : ''}>職歴</span>
-            <span className={currentStep === 3 ? 'font-semibold' : ''}>学歴</span>
-            <span className={currentStep === 4 ? 'font-semibold' : ''}>スキル</span>
+            <button className={`text-left flex-1 mx-1 ${currentStep === 1 ? 'font-semibold text-gray-900' : 'text-gray-600'}`} onClick={() => setCurrentStep(1)}>基本情報</button>
+            <button className={`text-center flex-1 mx-1 ${currentStep === 2 ? 'font-semibold text-gray-900' : 'text-gray-600'}`} onClick={() => setCurrentStep(2)}>職歴</button>
+            <button className={`text-center flex-1 mx-1 ${currentStep === 3 ? 'font-semibold text-gray-900' : 'text-gray-600'}`} onClick={() => setCurrentStep(3)}>学歴</button>
+            <button className={`text-center flex-1 mx-1 ${currentStep === 4 ? 'font-semibold text-gray-900' : 'text-gray-600'}`} onClick={() => setCurrentStep(4)}>スキル</button>
+            <button className={`text-center flex-1 mx-1 ${currentStep === 5 ? 'font-semibold text-gray-900' : 'text-gray-600'}`} onClick={() => setCurrentStep(5)}>自己PR</button>
+            <button className={`text-right flex-1 mx-1 ${currentStep === 6 ? 'font-semibold text-gray-900' : 'text-gray-600'}`} onClick={() => setCurrentStep(6)}>職務経歴</button>
           </div>
         </div>
 
@@ -550,18 +676,17 @@ export default function CreateResumePage() {
             >
               前へ
             </button>
-
-            {currentStep < 4 ? (
+            {currentStep < 6 ? (
               <button
-                onClick={() => setCurrentStep(prev => prev + 1)}
-                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                onClick={() => setCurrentStep(prev => Math.min(6, prev + 1))}
+                className="px-6 py-2 bg-[#FF733E] text-white rounded-lg hover:bg-[#FF8659]"
               >
                 次へ
               </button>
             ) : (
               <button
                 onClick={handleSubmit}
-                className="px-8 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                className="px-8 py-2 bg-[#FF733E] text-white rounded-lg hover:bg-[#FF8659]"
               >
                 作成する
               </button>

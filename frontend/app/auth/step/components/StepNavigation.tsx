@@ -40,29 +40,32 @@ export default function StepNavigation({
         <div className="flex items-center space-x-4">
           {steps.map((step, index) => (
             <div key={step.step} className="flex items-center">
-              <div
-                className={`
-                  w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium
-                  ${step.step <= currentStep
-                    ? 'bg-[#FF733E] text-white'
-                    : 'bg-gray-200 text-gray-600'
-                  }
-                `}
-              >
-                {step.step}
-              </div>
-              <span
-                className={`
-                  ml-2 text-sm font-medium
-                  ${step.step <= currentStep ? 'text-[#FF733E]' : 'text-gray-500'}
-                `}
-              >
-                {step.label}
-              </span>
+              <Link href={step.href} className="flex items-center group">
+                <div
+                  className={`
+                    w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium transition-colors
+                    ${step.step <= currentStep
+                      ? 'bg-[#FF733E] text-white'
+                      : 'bg-gray-200 text-gray-600 group-hover:bg-gray-300'
+                    }
+                  `}
+                  title={`${step.label}`}
+                >
+                  {step.step}
+                </div>
+                <span
+                  className={`
+                    ml-2 text-sm font-medium transition-colors
+                    ${step.step <= currentStep ? 'text-[#FF733E]' : 'text-gray-500 group-hover:text-gray-700'}
+                  `}
+                >
+                  {step.label}
+                </span>
+              </Link>
               {index < steps.length - 1 && (
                 <div
                   className={`
-                    ml-4 w-12 h-0.5
+                    ml-4 w-12 h-0.5 transition-colors
                     ${step.step < currentStep ? 'bg-[#FF733E]' : 'bg-gray-200'}
                   `}
                 />
