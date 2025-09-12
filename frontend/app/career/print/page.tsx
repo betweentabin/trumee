@@ -6,6 +6,7 @@ import Link from 'next/link';
 import toast from 'react-hot-toast';
 import { FaPrint, FaDownload, FaEye, FaEdit, FaArrowLeft } from 'react-icons/fa';
 import '../print.css';
+import { getAuthHeaders } from '@/utils/auth';
 
 interface Resume {
   id: string;
@@ -53,11 +54,10 @@ export default function PrintPage() {
 
   const fetchResumes = async () => {
     try {
-      const token = localStorage.getItem('access_token');
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
       const response = await fetch(`${apiUrl}/api/v2/resumes/`, {
         headers: {
-          'Authorization': `Bearer ${token}`
+          ...getAuthHeaders(),
         },
       });
       
@@ -74,8 +74,8 @@ export default function PrintPage() {
           setSelectedResume(resumeList[0]);
         }
       } else if (response.status === 401) {
-        toast.error('ログインが必要です');
-        router.push('/auth/login');
+        // 認証切れでもページ遷移はしない（ユーザー体験を阻害しない）
+        toast.error('履歴書の取得にはログインが必要です');
       } else {
         toast.error('履歴書の取得に失敗しました');
       }

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { FaUser, FaLock, FaCreditCard, FaCrown, FaFileAlt, FaBriefcase, FaEnvelope, FaChartLine } from 'react-icons/fa';
 import useAuthV2 from '@/hooks/useAuthV2';
+import { getAccessToken } from '@/utils/auth';
 
 export default function AccountTopPage() {
   const router = useRouter();
@@ -16,7 +17,7 @@ export default function AccountTopPage() {
 
   useEffect(() => {
     if (isAuthenticated === false) {
-      const hasStored = typeof window !== 'undefined' && !!localStorage.getItem('drf_token_v2');
+      const hasStored = typeof window !== 'undefined' && !!getAccessToken();
       if (!hasStored) router.push('/auth/login');
     }
   }, [isAuthenticated, router]);

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { FaEdit, FaDownload, FaPrint } from 'react-icons/fa';
+import { getAuthHeaders } from '@/utils/auth';
 
 export default function ViewResumePage() {
   const router = useRouter();
@@ -17,10 +18,10 @@ export default function ViewResumePage() {
 
   const fetchResume = async () => {
     try {
-      const token = localStorage.getItem('access_token');
-      const response = await fetch(`http://localhost:8000/api/resumes/${params.id}/`, {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+      const response = await fetch(`${apiUrl}/api/v2/resumes/${params.id}/`, {
         headers: {
-          'Authorization': `Bearer ${token}`
+          ...getAuthHeaders(),
         }
       });
       
@@ -29,7 +30,7 @@ export default function ViewResumePage() {
         setResume(data);
       } else {
         toast.error('職務経歴書が見つかりません');
-        router.push('/career/preview');
+        // ページ遷移は行わず、エラーステートのままにする
       }
     } catch (error) {
       console.error('Failed to fetch resume:', error);
@@ -45,10 +46,10 @@ export default function ViewResumePage() {
 
   const handleDownload = async () => {
     try {
-      const token = localStorage.getItem('access_token');
-      const response = await fetch(`http://localhost:8000/api/resumes/${params.id}/download/`, {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+      const response = await fetch(`${apiUrl}/api/v2/resumes/${params.id}/download/`, {
         headers: {
-          'Authorization': `Bearer ${token}`
+          ...getAuthHeaders(),
         }
       });
       

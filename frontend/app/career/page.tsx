@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import useAuthV2 from '@/hooks/useAuthV2';
+import { getAuthHeaders } from '@/utils/auth';
 import toast from 'react-hot-toast';
 import { FaPlus, FaEdit, FaEye, FaPrint, FaTrash, FaClock, FaFileAlt } from 'react-icons/fa';
 
@@ -33,45 +34,49 @@ export default function CareerPage() {
   const [resumes, setResumes] = useState<Resume[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // ページ読み込み時にダミーデータを表示
+  // 初回ロードでAPIから取得。失敗時はローカルのダミーデータにフォールバック
   useEffect(() => {
-    console.log('📄 Career page: Loading without auth checks');
+    console.log('📄 Career page: trying API, fallback to local data');
     fetchResumes();
   }, []);
 
   const fetchResumes = async () => {
     try {
-      // 🚨 デバッグモード: localStorageから作成済みデータを取得
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+      const res = await fetch(`${apiUrl}/api/v2/resumes/`, {
+        headers: {
+          ...getAuthHeaders(),
+        },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const list = (data.results || data || []).map((r: any) => ({
+          id: String(r.id),
+          title: r?.extra_data?.title || r?.desired_job || '職務経歴書',
+          fullName: r?.extra_data?.fullName || '',
+          email: r?.extra_data?.email || '',
+          desiredPosition: r?.desired_job || '',
+          createdAt: r?.created_at,
+          updatedAt: r?.updated_at,
+        }));
+        setResumes(list);
+        return;
+      }
+
+      // APIが失敗した場合はローカルのダミーデータへフォールバック
       const storedCareerResumes = localStorage.getItem('debug_career_resumes');
       let createdResumes = storedCareerResumes ? JSON.parse(storedCareerResumes) : [];
-      
-      // デフォルトのダミーデータ
       const defaultResumes = [
-        {
-          id: '1',
-          title: 'ソフトウェアエンジニア職務経歴書',
-          fullName: '山田太郎',
-          email: 'yamada@example.com',
-          desiredPosition: 'フルスタックエンジニア',
-          createdAt: '2024-01-15',
-          updatedAt: '2024-01-20'
-        },
-        {
-          id: '2', 
-          title: 'フロントエンド開発者職務経歴書',
-          fullName: '山田太郎',
-          email: 'yamada@example.com',
-          desiredPosition: 'フロントエンドエンジニア',
-          createdAt: '2024-01-10',
-          updatedAt: '2024-01-18'
-        }
+        { id: '1', title: 'ソフトウェアエンジニア職務経歴書', fullName: '山田太郎', email: 'yamada@example.com', desiredPosition: 'フルスタックエンジニア', createdAt: '2024-01-15', updatedAt: '2024-01-20' },
+        { id: '2', title: 'フロントエンド開発者職務経歴書', fullName: '山田太郎', email: 'yamada@example.com', desiredPosition: 'フロントエンドエンジニア', createdAt: '2024-01-10', updatedAt: '2024-01-18' },
       ];
-      
-      // 作成済みデータとデフォルトデータを結合
-      const allResumes = [...createdResumes, ...defaultResumes];
-      setResumes(allResumes);
+      setResumes([...createdResumes, ...defaultResumes]);
     } catch (error) {
       console.error('Error fetching resumes:', error);
+      // フォールバック
+      const storedCareerResumes = localStorage.getItem('debug_career_resumes');
+      let createdResumes = storedCareerResumes ? JSON.parse(storedCareerResumes) : [];
+      setResumes(createdResumes);
     } finally {
       setLoading(false);
     }
@@ -81,12 +86,11 @@ export default function CareerPage() {
     if (!confirm('この職務経歴書を削除してもよろしいですか？')) return;
     
     try {
-      const token = localStorage.getItem('access_token');
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
       const response = await fetch(`${apiUrl}/api/v2/resumes/${id}/`, {
         method: 'DELETE',
         headers: {
-          'Authorization': `Bearer ${token}`
+          ...getAuthHeaders(),
         }
       });
       

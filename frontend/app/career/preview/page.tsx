@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { FaArrowLeft, FaEdit, FaPrint } from 'react-icons/fa';
+import { getAuthHeaders } from '@/utils/auth';
 
 interface SimpleResume {
   id: string;
@@ -38,7 +39,34 @@ export default function PreviewPage() {
       const found = list.find((r) => String(r.id) === String(resumeId)) || null;
       setResume(found);
     }
-    setLoading(false);
+    // サーバーからの取得（ローカルに無い場合に補完）
+    const fetchFromServer = async () => {
+      if (resumeId && !found) {
+        try {
+          const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+          const res = await fetch(`${apiUrl}/api/v2/resumes/${resumeId}/`, {
+            headers: {
+              ...getAuthHeaders(),
+            },
+          });
+          if (res.ok) {
+            const data = await res.json();
+            setResume({
+              id: String(data.id),
+              title: data?.extra_data?.title || data?.desired_job,
+              fullName: data?.extra_data?.fullName,
+              email: data?.extra_data?.email,
+              desiredPosition: data?.desired_job,
+              createdAt: data?.created_at,
+              updatedAt: data?.updated_at,
+            });
+          }
+        } catch (e) {
+          // 無視（未ログイン/ネットワーク等）
+        }
+      }
+    };
+    fetchFromServer().finally(() => setLoading(false));
   }, [resumeId]);
 
   if (loading) {

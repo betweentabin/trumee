@@ -19,10 +19,10 @@ const StepLayout = ({ children, currentStep, stepTitle }: StepLayoutProps) => {
   
   const menuItems = [
     { label: 'TOP', href: '/dashboard', icon: null },
-    { label: '登録情報の確認・変更', href: userId ? `/users/${userId}/profile` : '/auth/step/step1-profile', icon: <ChevronRight className="w-4 h-4" /> },
-    { label: 'パスワードの変更', href: userId ? `/users/${userId}/profile` : '/account/password', icon: <ChevronRight className="w-4 h-4" /> },
-    { label: '支払い情報登録・変更', href: userId ? `/users/${userId}/profile` : '/account/payment', icon: <ChevronRight className="w-4 h-4" /> },
-    { label: '有料プラン', href: '/account/paid-plan', icon: <ChevronRight className="w-4 h-4" /> },
+    { label: '登録情報の確認・変更', href: userId ? `/users/${userId}/profile` : '/users/myinfo/registerdata', icon: <ChevronRight className="w-4 h-4" /> },
+    { label: 'パスワードの変更', href: '/users/myinfo/password', icon: <ChevronRight className="w-4 h-4" /> },
+    { label: '支払い情報登録・変更', href: '/users/myinfo/payment', icon: <ChevronRight className="w-4 h-4" /> },
+    { label: '有料プラン', href: '/users/myinfo/paidplans', icon: <ChevronRight className="w-4 h-4" /> },
   ];
 
   const steps = [

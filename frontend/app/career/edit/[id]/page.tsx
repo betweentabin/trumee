@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { FaChevronRight } from 'react-icons/fa';
 import toast from 'react-hot-toast';
+import { getAuthHeaders } from '@/utils/auth';
 
 interface WorkExperience {
   company: string;
@@ -78,10 +79,10 @@ export default function EditResumePage() {
 
   const fetchResume = async () => {
     try {
-      const token = localStorage.getItem('access_token');
-      const response = await fetch(`http://localhost:8000/api/resumes/${params.id}/`, {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+      const response = await fetch(`${apiUrl}/api/v2/resumes/${params.id}/`, {
         headers: {
-          'Authorization': `Bearer ${token}`
+          ...getAuthHeaders(),
         }
       });
       
@@ -125,12 +126,12 @@ export default function EditResumePage() {
 
   const handleSubmit = async () => {
     try {
-      const token = localStorage.getItem('access_token');
-      const response = await fetch(`http://localhost:8000/api/resumes/${params.id}/`, {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+      const response = await fetch(`${apiUrl}/api/v2/resumes/${params.id}/`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          ...getAuthHeaders(),
         },
         body: JSON.stringify(resumeData)
       });

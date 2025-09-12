@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { FaLock, FaEye, FaEyeSlash, FaCheckCircle } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 import useAuthV2 from '@/hooks/useAuthV2';
+import { getAccessToken } from '@/utils/auth';
 
 export default function PasswordChangePage() {
   const router = useRouter();
@@ -28,7 +29,7 @@ export default function PasswordChangePage() {
 
   useEffect(() => {
     if (isAuthenticated === false) {
-      const hasStored = typeof window !== 'undefined' && !!localStorage.getItem('drf_token_v2');
+      const hasStored = typeof window !== 'undefined' && !!getAccessToken();
       if (!hasStored) router.push('/auth/login');
     }
   }, [isAuthenticated, router]);

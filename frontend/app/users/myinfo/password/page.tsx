@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { FaLock, FaEye, FaEyeSlash, FaCheckCircle } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 import useAuthV2 from '@/hooks/useAuthV2';
+import { getAccessToken } from '@/utils/auth';
 
 export default function UserPasswordPage() {
   const router = useRouter();
@@ -26,18 +27,11 @@ export default function UserPasswordPage() {
     initializeAuth();
   }, [initializeAuth]);
 
-  // Redirect to user-specific page if logged in
-  useEffect(() => {
-    if (currentUser?.id) {
-      // Password change page doesn't have a user-specific equivalent, 
-      // so we redirect to profile settings
-      router.replace(`/users/${currentUser.id}/profile`);
-    }
-  }, [currentUser, router]);
+  // このページはログインユーザーがそのまま利用できるためリダイレクトしない
 
   useEffect(() => {
     if (isAuthenticated === false) {
-      const hasStored = typeof window !== 'undefined' && !!localStorage.getItem('drf_token_v2');
+      const hasStored = typeof window !== 'undefined' && !!getAccessToken();
       if (!hasStored) router.push('/auth/login');
     }
   }, [isAuthenticated, router]);

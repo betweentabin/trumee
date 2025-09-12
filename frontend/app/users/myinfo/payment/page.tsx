@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { FaCreditCard, FaCalendarAlt, FaLock, FaPlus, FaTrash } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 import useAuthV2 from '@/hooks/useAuthV2';
+import { getAccessToken } from '@/utils/auth';
 
 interface PaymentMethod {
   id: string;
@@ -45,7 +46,7 @@ export default function UserPaymentPage() {
 
   useEffect(() => {
     if (isAuthenticated === false) {
-      const hasStored = typeof window !== 'undefined' && !!localStorage.getItem('drf_token_v2');
+      const hasStored = typeof window !== 'undefined' && !!getAccessToken();
       if (!hasStored) {
         router.push('/auth/login');
         return;

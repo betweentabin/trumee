@@ -44,10 +44,41 @@ export default function ResumeAdvicePage() {
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-800 flex items-center gap-3">
-            <FaPencilAlt className="text-blue-600" />
+            <FaPencilAlt className="text-[#FF733E]" />
             職務経歴書の添削
           </h1>
           <p className="text-gray-600 mt-2">AIがあなたの職務経歴書を分析し、改善点をアドバイスします</p>
+        </div>
+
+        {/* Shortcut cards (wireframe-style) */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch mb-8">
+          <div className="md:col-span-1 bg-white border rounded-lg p-4 flex flex-col gap-3">
+            <a
+              href="/resume-advice/review"
+              className="w-full flex items-center justify-between px-4 py-3 border rounded-md hover:bg-gray-50"
+            >
+              <span>職務経歴書の添削</span>
+              <span className="text-secondary-400">›</span>
+            </a>
+            <a
+              href="/resume-advice/print"
+              className="w-full flex items-center justify-between px-4 py-3 border rounded-md hover:bg-gray-50"
+            >
+              <span>印刷する</span>
+              <span className="text-secondary-400">›</span>
+            </a>
+          </div>
+          <div className="md:col-span-2 bg-white border rounded-lg p-6 flex items-center justify-center">
+            <div className="text-center">
+              <p className="text-secondary-700 mb-4">作成した職務経歴書をブラッシュアップ。アドバイザーがレビューし、強みを最大限に引き出します。</p>
+              <a
+                href="/resume-advice/review"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-[#FF733E] text-white hover:bg-[#FF8659]"
+              >
+                職務経歴書を添削する
+              </a>
+            </div>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -65,7 +96,7 @@ export default function ResumeAdvicePage() {
             <button
               onClick={handleSubmit}
               disabled={loading}
-              className="mt-4 w-full py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:bg-gray-400"
+              className="mt-4 w-full py-3 bg-[#FF733E] text-white rounded-lg hover:bg-[#FF8659] transition disabled:bg-gray-400"
             >
               {loading ? '分析中...' : 'AIで分析する'}
             </button>
