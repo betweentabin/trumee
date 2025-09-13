@@ -62,7 +62,7 @@ if REPORTLAB_AVAILABLE:
                 status=500
             )
         
-def send_resume_pdf(request):
+        def send_resume_pdf(request):
             return JsonResponse(
                 {'error': 'PDF generation views not found'},
                 status=500
