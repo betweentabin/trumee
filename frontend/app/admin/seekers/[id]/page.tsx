@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { buildApiUrl, getApiHeaders, API_CONFIG } from '@/config/api';
 import AdviceScreenTab from '@/components/admin/AdviceScreenTab';
@@ -22,6 +22,12 @@ export default function AdminSeekerDetailPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'review' | 'interview' | 'advice' | 'member'>('review');
+  const [reviewMessages, setReviewMessages] = useState<Array<{id:string; sender:string; content:string; created_at:string;}>>([]);
+  const [reviewInput, setReviewInput] = useState('');
+  const [adviceMessages, setAdviceMessages] = useState<any[]>([]);
+  const [interviewMessages, setInterviewMessages] = useState<any[]>([]);
+  const [selectedAdviceTab, setSelectedAdviceTab] = useState<string>('resume');
+  const [selectedAdviceSubTab, setSelectedAdviceSubTab] = useState<string | null>(null);
 
   const token = useMemo(() => {
     if (typeof window === 'undefined') return '';
@@ -51,6 +57,108 @@ export default function AdminSeekerDetailPage() {
     };
     fetchOne();
   }, [id, token]);
+
+  const currentUser = useMemo(() => {
+    if (typeof window === 'undefined') return null as any;
+    try { return JSON.parse(localStorage.getItem('current_user_v2') || 'null'); } catch { return null as any; }
+  }, []);
+
+  const loadReviewMessages = useCallback(async () => {
+    if (!id) return;
+    try {
+      const url = `${buildApiUrl('/advice/messages/')}?user_id=${id}`;
+      const res = await fetch(url, { headers: getApiHeaders(token) });
+      if (!res.ok) return;
+      const list = await res.json();
+      const mapped = (list || []).map((m: any) => ({ id: String(m.id), sender: String(m.sender), content: m.content, created_at: m.created_at }));
+      setReviewMessages(mapped);
+    } catch {}
+  }, [id, token]);
+
+  useEffect(() => {
+    loadReviewMessages();
+  }, [loadReviewMessages]);
+
+  const sendReviewMessage = useCallback(async () => {
+    if (!reviewInput.trim()) return;
+    try {
+      const url = buildApiUrl('/advice/messages/');
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: getApiHeaders(token),
+        body: JSON.stringify({ content: reviewInput.trim(), user_id: id }),
+      });
+      if (!res.ok) return;
+      const m = await res.json();
+      setReviewMessages((prev) => [...prev, { id: String(m.id), sender: String(m.sender), content: m.content, created_at: m.created_at }]);
+      setReviewInput('');
+    } catch {}
+  }, [reviewInput, token, id]);
+
+  // Advice (タブ付き) 取得/送信
+  const parseContent = (c: any) => {
+    try { const obj = JSON.parse(c); if (obj && typeof obj === 'object') return obj; } catch {}
+    return { message: String(c ?? '') };
+  };
+
+  const loadAdvice = useCallback(async () => {
+    if (!id) return;
+    try {
+      const url = `${buildApiUrl('/advice/messages/')}?user_id=${id}&subject=advice`;
+      const res = await fetch(url, { headers: getApiHeaders(token) });
+      if (!res.ok) return;
+      const list = await res.json();
+      const mapped = (list || []).map((m: any) => ({
+        id: String(m.id),
+        senderId: String(m.sender),
+        content: parseContent(m.content),
+        created_at: m.created_at,
+      }));
+      setAdviceMessages(mapped);
+    } catch {}
+  }, [id, token]);
+
+  const sendAdviceMessage = useCallback(async ({ message, type }: { message: string; type: string; }) => {
+    if (!message?.trim()) return;
+    try {
+      const body = { user_id: id, subject: 'advice', content: JSON.stringify({ type, message: message.trim() }) };
+      const res = await fetch(buildApiUrl('/advice/messages/'), { method: 'POST', headers: getApiHeaders(token), body: JSON.stringify(body) });
+      if (!res.ok) return;
+      await loadAdvice();
+    } catch {}
+  }, [id, token, loadAdvice]);
+
+  useEffect(() => { loadAdvice(); }, [loadAdvice]);
+
+  // Interview 取得/送信（subject='interview'）
+  const loadInterview = useCallback(async () => {
+    if (!id) return;
+    try {
+      const url = `${buildApiUrl('/advice/messages/')}?user_id=${id}&subject=interview`;
+      const res = await fetch(url, { headers: getApiHeaders(token) });
+      if (!res.ok) return;
+      const list = await res.json();
+      const mapped = (list || []).map((m: any) => ({
+        id: String(m.id),
+        senderId: String(m.sender),
+        content: parseContent(m.content),
+        created_at: m.created_at,
+      }));
+      setInterviewMessages(mapped);
+    } catch {}
+  }, [id, token]);
+
+  const sendInterviewMessage = useCallback(async ({ message }: { message: string; type: string; }) => {
+    if (!message?.trim()) return;
+    try {
+      const body = { user_id: id, subject: 'interview', content: JSON.stringify({ message: message.trim() }) };
+      const res = await fetch(buildApiUrl('/advice/messages/'), { method: 'POST', headers: getApiHeaders(token), body: JSON.stringify(body) });
+      if (!res.ok) return;
+      await loadInterview();
+    } catch {}
+  }, [id, token, loadInterview]);
+
+  useEffect(() => { loadInterview(); }, [loadInterview]);
 
   // Forms for message inputs
   const adviceForm = useForm<{ message: string }>({ defaultValues: { message: '' } });
@@ -148,20 +256,31 @@ export default function AdminSeekerDetailPage() {
               <div className="w-full md:w-[360px] p-6">
                 <div className="text-lg font-semibold mb-3">職務内容について</div>
                 <div className="h-[460px] overflow-y-auto border rounded-md p-3 space-y-2 bg-gray-50">
-                  <div className="bg-white rounded-md p-3 border">添削内容が記載されます。</div>
-                  <div className="bg-gray-800 text-white rounded-md p-3">求職者のコメントが入ります。</div>
-                  <div className="bg-white rounded-md p-3 border">添削内容が記載されます。</div>
+                  {reviewMessages.length === 0 && (
+                    <div className="text-gray-400 text-sm text-center py-8">まだコメントがありません。</div>
+                  )}
+                  {reviewMessages.map((m) => {
+                    const isAdmin = currentUser && String(m.sender) === String(currentUser.id);
+                    return (
+                      <div key={m.id} className={`flex ${isAdmin ? 'justify-start' : 'justify-end'}`}>
+                        <div className={`max-w-[85%] rounded-md p-3 text-sm ${isAdmin ? 'bg-gray-200 text-gray-900' : 'bg-gray-800 text-white'}`}>
+                          <div>{m.content}</div>
+                          <div className="text-[11px] opacity-70 mt-1">{new Date(m.created_at).toLocaleString()}</div>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
                 {/* message box */}
                 <div className="mt-4">
-                  {/* reuse MessageBox via AdviceScreenTab input for consistency */}
-                  {/* inline simple textbox to avoid hook props complexity here */}
-                  <form
-                    onSubmit={(e) => { e.preventDefault(); /* TODO: hook up API */ }}
-                    className="flex gap-2"
-                  >
-                    <input className="flex-1 rounded-md border px-3 py-2" placeholder="入力してください。" />
-                    <button className="rounded-md bg-gray-800 text-white px-4 py-2">送信</button>
+                  <form onSubmit={(e) => { e.preventDefault(); sendReviewMessage(); }} className="flex gap-2">
+                    <input
+                      className="flex-1 rounded-md border px-3 py-2"
+                      placeholder="入力してください。"
+                      value={reviewInput}
+                      onChange={(e) => setReviewInput(e.target.value)}
+                    />
+                    <button type="submit" className="rounded-md bg-gray-800 text-white px-4 py-2">送信</button>
                   </form>
                 </div>
               </div>
@@ -174,9 +293,9 @@ export default function AdminSeekerDetailPage() {
               errors={interviewForm.formState.errors}
               sendingInterview={false}
               handleSubmit={interviewForm.handleSubmit}
-              sendInterviewMessage={() => {}}
+              sendInterviewMessage={sendInterviewMessage as any}
               interviewQuestions={interviewQuestions}
-              interviewAnswers={interviewAnswers as any}
+              interviewAnswers={interviewMessages as any}
               currentUserIdInterview={String(id)}
               reset={interviewForm.reset}
               refetchInterview={() => {}}
@@ -186,16 +305,16 @@ export default function AdminSeekerDetailPage() {
           {activeTab === 'advice' && (
             <AdviceScreenTab
               adviceTabs={adviceTabs}
-              selectedAdviceTab={'resume'}
-              setSelectedAdviceTab={() => {}}
-              selectedAdviceSubTab={null}
-              setSelectedAdviceSubTab={() => {}}
+              selectedAdviceTab={selectedAdviceTab}
+              setSelectedAdviceTab={setSelectedAdviceTab}
+              selectedAdviceSubTab={selectedAdviceSubTab}
+              setSelectedAdviceSubTab={setSelectedAdviceSubTab}
               adviceMessages={adviceMessages}
               currentUserIdAdvice={String(id)}
               sendingAdvice={false}
               handleSubmit={adviceForm.handleSubmit}
-              sendAdviceMessage={() => {}}
-              selectedAdviceType={'resume'}
+              sendAdviceMessage={sendAdviceMessage as any}
+              selectedAdviceType={selectedAdviceTab}
               messageEndRef={{ current: null }}
               reset={adviceForm.reset}
               refetchAdvice={() => {}}

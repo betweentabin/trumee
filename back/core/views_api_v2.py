@@ -1009,7 +1009,10 @@ def advice_messages(request):
     """
     from django.db.models import Q
 
-    SUBJECT = 'resume_advice'
+    # subject はタブや種別（例: resume_advice, interview, advice）を区別するために使用
+    DEFAULT_SUBJECT = 'resume_advice'
+    subject_param = request.GET.get('subject') if request.method == 'GET' else (request.data or {}).get('subject')
+    SUBJECT = subject_param or DEFAULT_SUBJECT
 
     # 対向ユーザーの決定
     def resolve_counterpart(for_user, specified_user_id=None):
