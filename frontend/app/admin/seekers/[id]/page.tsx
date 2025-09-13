@@ -26,6 +26,10 @@ export default function AdminSeekerDetailPage() {
   const [reviewInput, setReviewInput] = useState('');
   const [adviceMessages, setAdviceMessages] = useState<any[]>([]);
   const [interviewMessages, setInterviewMessages] = useState<any[]>([]);
+  const [sendingReview, setSendingReview] = useState(false);
+  const [sendingAdvice, setSendingAdvice] = useState(false);
+  const [sendingInterview, setSendingInterview] = useState(false);
+  const [sendError, setSendError] = useState<string | null>(null);
   const [selectedAdviceTab, setSelectedAdviceTab] = useState<string>('resume');
   const [selectedAdviceSubTab, setSelectedAdviceSubTab] = useState<string | null>(null);
 
@@ -82,17 +86,29 @@ export default function AdminSeekerDetailPage() {
   const sendReviewMessage = useCallback(async () => {
     if (!reviewInput.trim()) return;
     try {
+      setSendingReview(true);
+      setSendError(null);
       const url = buildApiUrl('/advice/messages/');
       const res = await fetch(url, {
         method: 'POST',
         headers: getApiHeaders(token),
-        body: JSON.stringify({ content: reviewInput.trim(), user_id: id }),
+        body: JSON.stringify({ content: reviewInput.trim(), user_id: id, subject: 'resume_advice' }),
       });
-      if (!res.ok) return;
+      if (!res.ok) {
+        const text = await res.text();
+        console.error('review send failed', res.status, text);
+        setSendError(`送信に失敗しました (${res.status})`);
+        return;
+      }
       const m = await res.json();
       setReviewMessages((prev) => [...prev, { id: String(m.id), sender: String(m.sender), content: m.content, created_at: m.created_at }]);
       setReviewInput('');
-    } catch {}
+    } catch (e: any) {
+      console.error(e);
+      setSendError('送信に失敗しました');
+    } finally {
+      setSendingReview(false);
+    }
   }, [reviewInput, token, id]);
 
   // Advice (タブ付き) 取得/送信
@@ -121,11 +137,23 @@ export default function AdminSeekerDetailPage() {
   const sendAdviceMessage = useCallback(async ({ message, type }: { message: string; type: string; }) => {
     if (!message?.trim()) return;
     try {
+      setSendingAdvice(true);
+      setSendError(null);
       const body = { user_id: id, subject: 'advice', content: JSON.stringify({ type, message: message.trim() }) };
       const res = await fetch(buildApiUrl('/advice/messages/'), { method: 'POST', headers: getApiHeaders(token), body: JSON.stringify(body) });
-      if (!res.ok) return;
+      if (!res.ok) {
+        const text = await res.text();
+        console.error('advice send failed', res.status, text);
+        setSendError(`送信に失敗しました (${res.status})`);
+        return;
+      }
       await loadAdvice();
-    } catch {}
+    } catch (e: any) {
+      console.error(e);
+      setSendError('送信に失敗しました');
+    } finally {
+      setSendingAdvice(false);
+    }
   }, [id, token, loadAdvice]);
 
   useEffect(() => { loadAdvice(); }, [loadAdvice]);
@@ -151,11 +179,23 @@ export default function AdminSeekerDetailPage() {
   const sendInterviewMessage = useCallback(async ({ message }: { message: string; type: string; }) => {
     if (!message?.trim()) return;
     try {
+      setSendingInterview(true);
+      setSendError(null);
       const body = { user_id: id, subject: 'interview', content: JSON.stringify({ message: message.trim() }) };
       const res = await fetch(buildApiUrl('/advice/messages/'), { method: 'POST', headers: getApiHeaders(token), body: JSON.stringify(body) });
-      if (!res.ok) return;
+      if (!res.ok) {
+        const text = await res.text();
+        console.error('interview send failed', res.status, text);
+        setSendError(`送信に失敗しました (${res.status})`);
+        return;
+      }
       await loadInterview();
-    } catch {}
+    } catch (e: any) {
+      console.error(e);
+      setSendError('送信に失敗しました');
+    } finally {
+      setSendingInterview(false);
+    }
   }, [id, token, loadInterview]);
 
   useEffect(() => { loadInterview(); }, [loadInterview]);
@@ -280,8 +320,9 @@ export default function AdminSeekerDetailPage() {
                       value={reviewInput}
                       onChange={(e) => setReviewInput(e.target.value)}
                     />
-                    <button type="submit" className="rounded-md bg-gray-800 text-white px-4 py-2">送信</button>
+                    <button type="submit" disabled={sendingReview} className="rounded-md bg-gray-800 text-white px-4 py-2 disabled:opacity-50">{sendingReview ? '送信中…' : '送信'}</button>
                   </form>
+                  {sendError && <div className="text-red-600 text-sm mt-2">{sendError}</div>}
                 </div>
               </div>
             </div>
@@ -291,7 +332,7 @@ export default function AdminSeekerDetailPage() {
             <InterviewPreparationTab
               control={interviewForm.control}
               errors={interviewForm.formState.errors}
-              sendingInterview={false}
+              sendingInterview={sendingInterview}
               handleSubmit={interviewForm.handleSubmit}
               sendInterviewMessage={sendInterviewMessage as any}
               interviewQuestions={interviewQuestions}
@@ -311,7 +352,7 @@ export default function AdminSeekerDetailPage() {
               setSelectedAdviceSubTab={setSelectedAdviceSubTab}
               adviceMessages={adviceMessages}
               currentUserIdAdvice={String(id)}
-              sendingAdvice={false}
+              sendingAdvice={sendingAdvice}
               handleSubmit={adviceForm.handleSubmit}
               sendAdviceMessage={sendAdviceMessage as any}
               selectedAdviceType={selectedAdviceTab}
