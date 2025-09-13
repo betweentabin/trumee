@@ -47,10 +47,15 @@ export default function AdminSeekersPage() {
       qs.set('page', String(page));
       if (status) qs.set('status', status);
       // 既存APIはキーワード未対応のため、実装時はバック側に合わせる
-      const url = `${buildApiUrl(API_CONFIG.endpoints.adminSeekers)}?${qs.toString()}`;
-      const res = await fetch(url, {
+      // v2 admin/users を優先。404時は admin/seekers にフォールバック
+      const urlUsers = `${buildApiUrl(API_CONFIG.endpoints.adminUsers)}?${qs.toString()}`;
+      let res = await fetch(urlUsers, {
         headers: getApiHeaders(token),
       });
+      if (res.status === 404) {
+        const urlSeekers = `${buildApiUrl(API_CONFIG.endpoints.adminSeekers)}?${qs.toString()}`;
+        res = await fetch(urlSeekers, { headers: getApiHeaders(token) });
+      }
       if (!res.ok) throw new Error(`Failed to fetch: ${res.status}`);
       const json = (await res.json()) as Paginated<AdminSeeker>;
       let filtered = json.results;

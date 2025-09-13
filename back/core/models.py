@@ -43,6 +43,8 @@ class User(AbstractUser):
     phone = models.CharField(max_length=20, blank=True)
     is_premium = models.BooleanField(default=False)
     premium_expiry = models.DateTimeField(null=True, blank=True)
+    # 課金プラン（starter / standard / premium）。空は未契約（またはレガシー互換）
+    plan_tier = models.CharField(max_length=20, blank=True, db_index=True)
     
     # メタデータ
     created_at = models.DateTimeField(auto_now_add=True)
@@ -56,6 +58,7 @@ class User(AbstractUser):
         indexes = [
             models.Index(fields=['email', 'role']),
             models.Index(fields=['created_at']),
+            models.Index(fields=['plan_tier']),
         ]
     
     def __str__(self):

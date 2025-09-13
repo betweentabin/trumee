@@ -65,6 +65,7 @@ export const API_CONFIG = {
     
     // Admin
     adminSeekers: '/admin/seekers/',
+    adminUsers: '/admin/users/',
     
     // Form persistence endpoints
     saveHistory: '/seeker/history/',

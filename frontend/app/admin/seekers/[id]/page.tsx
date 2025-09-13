@@ -32,8 +32,13 @@ export default function AdminSeekerDetailPage() {
     const fetchOne = async () => {
       try {
         setLoading(true);
-        const url = `${buildApiUrl(API_CONFIG.endpoints.adminSeekers)}?page=1`;
-        const res = await fetch(url, { headers: getApiHeaders(token) });
+        const qs = new URLSearchParams({ page: '1' });
+        const urlUsers = `${buildApiUrl(API_CONFIG.endpoints.adminUsers)}?${qs}`;
+        let res = await fetch(urlUsers, { headers: getApiHeaders(token) });
+        if (res.status === 404) {
+          const urlSeekers = `${buildApiUrl(API_CONFIG.endpoints.adminSeekers)}?${qs}`;
+          res = await fetch(urlSeekers, { headers: getApiHeaders(token) });
+        }
         if (!res.ok) throw new Error('failed to load');
         const json = await res.json();
         const found = (json?.results || []).find((u: any) => u.id === id) || null;
@@ -222,4 +227,3 @@ export default function AdminSeekerDetailPage() {
     </div>
   );
 }
-

@@ -4,24 +4,17 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAppSelector } from '@/app/redux/hooks';
 import { FaCrown, FaCheck, FaTimes, FaRocket, FaStar } from 'react-icons/fa';
+import { plansByRole, PlanTier } from '@/config/plans';
+import { getAuthHeaders } from '@/utils/auth';
 import toast from 'react-hot-toast';
-
-interface Plan {
-  id: string;
-  name: string;
-  price: number;
-  period: string;
-  features: string[];
-  notIncluded: string[];
-  recommended?: boolean;
-}
 
 export default function PaidPlanPage() {
   const router = useRouter();
   const authState = useAppSelector(state => state.auth);
-  const [currentPlan, setCurrentPlan] = useState('free');
+  const [currentPlan, setCurrentPlan] = useState<PlanTier | ''>('');
   const [selectedPlan, setSelectedPlan] = useState('');
   const [loading, setLoading] = useState(false);
+  const [role, setRole] = useState<'user' | 'company'>('user');
 
   useEffect(() => {
     if (!authState.isAuthenticated) {
@@ -29,66 +22,25 @@ export default function PaidPlanPage() {
     }
   }, [authState, router]);
 
-  const plans: Plan[] = [
-    {
-      id: 'free',
-      name: 'フリープラン',
-      price: 0,
-      period: '月',
-      features: [
-        '職務経歴書作成（3件まで）',
-        '企業検索・閲覧',
-        'スカウト受信',
-        '基本的なサポート'
-      ],
-      notIncluded: [
-        'AI面接対策',
-        '優先サポート',
-        '詳細分析レポート'
-      ]
-    },
-    {
-      id: 'standard',
-      name: 'スタンダードプラン',
-      price: 2980,
-      period: '月',
-      features: [
-        '職務経歴書作成（無制限）',
-        '企業検索・閲覧',
-        'スカウト受信',
-        'AI職務経歴書添削',
-        'AI面接対策（月10回）',
-        '応募管理機能',
-        'メールサポート'
-      ],
-      notIncluded: [
-        '優先サポート',
-        '1対1キャリア相談'
-      ],
-      recommended: true
-    },
-    {
-      id: 'premium',
-      name: 'プレミアムプラン',
-      price: 5980,
-      period: '月',
-      features: [
-        '職務経歴書作成（無制限）',
-        '企業検索・閲覧（詳細情報付き）',
-        'スカウト受信（優先表示）',
-        'AI職務経歴書添削（無制限）',
-        'AI面接対策（無制限）',
-        '応募管理機能',
-        '詳細分析レポート',
-        '1対1キャリア相談（月1回）',
-        '優先サポート',
-        '転職成功保証'
-      ],
-      notIncluded: []
-    }
-  ];
+  // ログインユーザー情報から現在のプランとロールを取得
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+        const res = await fetch(`${apiUrl}/api/v2/profile/me/`, { headers: getAuthHeaders() });
+        if (res.ok) {
+          const data = await res.json();
+          setRole(data.role === 'company' ? 'company' : 'user');
+          setCurrentPlan((data.plan_tier as PlanTier) || '');
+        }
+      } catch {}
+    };
+    fetchProfile();
+  }, []);
 
-  const handleUpgrade = async (planId: string) => {
+  const plans = plansByRole[role];
+
+  const handleUpgrade = async (planId: PlanTier) => {
     if (planId === currentPlan) {
       toast.error('既に選択中のプランです');
       return;
@@ -98,16 +50,21 @@ export default function PaidPlanPage() {
     setLoading(true);
 
     try {
-      // プラン変更のシミュレーション
-      setTimeout(() => {
-        setCurrentPlan(planId);
-        setLoading(false);
-        toast.success('プランを変更しました');
-      }, 1500);
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+      const res = await fetch(`${apiUrl}/api/v2/user/settings/`, {
+        method: 'PUT',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ user: { plan_tier: planId, is_premium: planId !== 'starter' ? true : true } }),
+      });
+      if (!res.ok) throw new Error('failed');
+      setCurrentPlan(planId);
+      toast.success('プランを変更しました');
     } catch (error) {
       setLoading(false);
       toast.error('プラン変更に失敗しました');
+      return;
     }
+    setLoading(false);
   };
 
   return (
@@ -123,7 +80,7 @@ export default function PaidPlanPage() {
 
         <div className="mb-6 bg-[#FFF5F3] rounded-lg p-4 text-center">
           <p className="text-[#FF733E]">
-            現在のプラン: <span className="font-bold">{plans.find(p => p.id === currentPlan)?.name}</span>
+            現在のプラン: <span className="font-bold">{plans.find(p => p.id === currentPlan)?.name || '未契約'}</span>
           </p>
         </div>
 
@@ -132,13 +89,11 @@ export default function PaidPlanPage() {
             <div
               key={plan.id}
               className={`bg-white rounded-lg shadow-lg overflow-hidden ${
-                plan.recommended ? 'ring-2 ring-[#FF733E]' : ''
+                plan.id === 'standard' ? 'ring-2 ring-[#FF733E]' : ''
               } ${currentPlan === plan.id ? 'border-2 border-green-500' : ''}`}
             >
-              {plan.recommended && (
-                <div className="bg-[#FFF5F3]0 text-white text-center py-2 font-bold">
-                  おすすめ
-                </div>
+              {plan.id === 'standard' && (
+                <div className="bg-[#FF733E] text-white text-center py-2 font-bold">おすすめ</div>
               )}
               
               <div className="p-6">
@@ -146,7 +101,7 @@ export default function PaidPlanPage() {
                   <h2 className="text-2xl font-bold mb-2">{plan.name}</h2>
                   <div className="flex items-baseline justify-center">
                     <span className="text-4xl font-bold">¥{plan.price.toLocaleString()}</span>
-                    <span className="text-gray-600 ml-2">/{plan.period}</span>
+                    <span className="text-gray-600 ml-2">/月</span>
                   </div>
                   {currentPlan === plan.id && (
                     <span className="inline-block mt-2 px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm">
@@ -167,29 +122,15 @@ export default function PaidPlanPage() {
                       ))}
                     </ul>
                   </div>
-
-                  {plan.notIncluded.length > 0 && (
-                    <div>
-                      <h3 className="font-semibold mb-2">含まれない機能</h3>
-                      <ul className="space-y-2">
-                        {plan.notIncluded.map((feature, index) => (
-                          <li key={index} className="flex items-start gap-2">
-                            <FaTimes className="text-red-500 mt-1 flex-shrink-0" />
-                            <span className="text-sm text-gray-500">{feature}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
                 </div>
 
                 <button
-                  onClick={() => handleUpgrade(plan.id)}
+                  onClick={() => handleUpgrade(plan.id as PlanTier)}
                   disabled={loading || currentPlan === plan.id}
                   className={`w-full mt-6 py-3 rounded-lg font-medium transition ${
                     currentPlan === plan.id
                       ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
-                      : plan.recommended
+                      : plan.id === 'standard'
                       ? 'bg-[#FF733E] text-white hover:bg-[#FF8659]'
                       : 'bg-gray-600 text-white hover:bg-gray-700'
                   }`}
@@ -198,9 +139,7 @@ export default function PaidPlanPage() {
                     ? '選択中' 
                     : loading && selectedPlan === plan.id 
                     ? '処理中...'
-                    : plan.price === 0 
-                    ? 'ダウングレード' 
-                    : 'アップグレード'}
+                    : 'このプランに変更'}
                 </button>
               </div>
             </div>

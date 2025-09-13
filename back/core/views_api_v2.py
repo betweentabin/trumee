@@ -62,7 +62,7 @@ if REPORTLAB_AVAILABLE:
                 status=500
             )
         
-        def send_resume_pdf(request):
+def send_resume_pdf(request):
             return JsonResponse(
                 {'error': 'PDF generation views not found'},
                 status=500
@@ -134,6 +134,86 @@ def health_check_v2(request):
         'message': 'API v2 is working',
         'timestamp': datetime.now().isoformat(),
     }, status=status.HTTP_200_OK)
+
+# ============================================================================
+# 管理者用エンドポイント
+# ============================================================================
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def admin_seekers_v2(request):
+    """管理者用 求職者一覧 (API v2)
+
+    互換エンドポイント。実体は admin_users_v2 と同等のロジックで
+    role='user' に固定フィルタをかけたもの。
+    """
+    # 権限チェック
+    if not request.user.is_staff:
+        return Response({'detail': '管理者権限が必要です'}, status=status.HTTP_403_FORBIDDEN)
+
+    queryset = User.objects.filter(role='user').order_by('-created_at')
+
+    # フィルタ（v1互換）
+    status_filter = request.query_params.get('status', '')
+    date_from = request.query_params.get('date_from', '')
+    date_to = request.query_params.get('date_to', '')
+
+    if status_filter == 'active':
+        queryset = queryset.filter(is_active=True)
+    elif status_filter == 'premium':
+        queryset = queryset.filter(is_premium=True)
+
+    if date_from:
+        queryset = queryset.filter(created_at__gte=date_from)
+    if date_to:
+        queryset = queryset.filter(created_at__lte=date_to)
+
+    # ページネーション
+    from rest_framework.pagination import PageNumberPagination
+    paginator = PageNumberPagination()
+    paginator.page_size = int(request.query_params.get('page_size') or 50)
+    page = paginator.paginate_queryset(queryset, request)
+
+    serializer = UserSerializer(page, many=True)
+    return paginator.get_paginated_response(serializer.data)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def admin_users_v2(request):
+    """管理者用 ユーザー一覧 (API v2)
+
+    クエリ: role=(user|company) で絞り込み可能。未指定は全件。
+    status=(active|premium) フィルタ対応。日付範囲も同様。
+    """
+    if not request.user.is_staff:
+        return Response({'detail': '管理者権限が必要です'}, status=status.HTTP_403_FORBIDDEN)
+
+    role = request.query_params.get('role')
+    queryset = User.objects.all().order_by('-created_at')
+    if role in {'user', 'company'}:
+        queryset = queryset.filter(role=role)
+
+    status_filter = request.query_params.get('status', '')
+    date_from = request.query_params.get('date_from', '')
+    date_to = request.query_params.get('date_to', '')
+
+    if status_filter == 'active':
+        queryset = queryset.filter(is_active=True)
+    elif status_filter == 'premium':
+        queryset = queryset.filter(is_premium=True)
+
+    if date_from:
+        queryset = queryset.filter(created_at__gte=date_from)
+    if date_to:
+        queryset = queryset.filter(created_at__lte=date_to)
+
+    from rest_framework.pagination import PageNumberPagination
+    paginator = PageNumberPagination()
+    paginator.page_size = int(request.query_params.get('page_size') or 50)
+    page = paginator.paginate_queryset(queryset, request)
+    serializer = UserSerializer(page, many=True)
+    return paginator.get_paginated_response(serializer.data)
 
 # ============================================================================
 # 認証関連エンドポイント
@@ -1585,7 +1665,7 @@ def user_settings(request):
         # ユーザー基本情報の更新
         if 'user' in request.data:
             user_data = request.data['user']
-            allowed_fields = ['full_name', 'phone', 'kana']
+            allowed_fields = ['full_name', 'phone', 'kana', 'plan_tier', 'is_premium', 'premium_expiry']
             for field in allowed_fields:
                 if field in user_data:
                     setattr(request.user, field, user_data[field])

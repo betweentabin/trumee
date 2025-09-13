@@ -33,6 +33,10 @@ urlpatterns = [
     
     # ダッシュボード・統計
     path('dashboard/stats/', views_api_v2.dashboard_stats_v2, name='dashboard-stats-v2'),
+
+    # 管理者
+    path('admin/seekers/', views_api_v2.admin_seekers_v2, name='admin-seekers-v2'),
+    path('admin/users/', views_api_v2.admin_users_v2, name='admin-users-v2'),
     
     # プロフィール
     path('profile/me/', views_api_v2.user_profile_v2, name='user-profile-v2'),

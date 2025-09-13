@@ -14,7 +14,7 @@ class UserSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'email', 'username', 'role', 'full_name', 
             'kana', 'gender', 'company_name', 'capital', 
-            'company_url', 'phone', 'is_premium', 'premium_expiry',
+            'company_url', 'phone', 'is_premium', 'premium_expiry', 'plan_tier',
             # 管理者可視のためのフラグを公開（read-only）
             'is_staff', 'is_superuser',
             'created_at', 'updated_at'
