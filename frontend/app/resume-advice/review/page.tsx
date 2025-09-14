@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { FaArrowLeft, FaSearch, FaPaperPlane } from 'react-icons/fa';
 import { getAuthHeaders, getUserInfo } from '@/utils/auth';
+import ResumePreview from '@/components/pure/resume/preview';
 
 interface Message {
   id: string;
@@ -20,12 +21,56 @@ export default function ResumeReviewPage() {
   const endRef = useRef<HTMLDivElement | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [resumes, setResumes] = useState<any[]>([]);
+  const [selected, setSelected] = useState<any | null>(null);
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages.length]);
 
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+
+  // Load user's resumes to show on the left
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const res = await fetch(`${apiUrl}/api/v2/resumes/`, {
+          headers: { ...getAuthHeaders() },
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        const list = data.results || data || [];
+        setResumes(list);
+        const active = list.find((r: any) => r.is_active) || list[0] || null;
+        setSelected(active);
+      } catch {}
+    };
+    load();
+  }, []);
+
+  const buildPreviewFromResume = useMemo(() => {
+    return (resume: any) => {
+      if (!resume) return { userName: '', jobhistoryList: [], formValues: {} } as any;
+      const extra = resume?.extra_data || {};
+      const jobs = Array.isArray(extra.workExperiences) ? extra.workExperiences : [];
+      const jobhistoryList = jobs.map((_: any, i: number) => `job${i + 1}`);
+      const formValues: any = {};
+      const toYM = (v?: string) => (v ? String(v).replace(/-/g, '/').slice(0, 7) : '');
+      jobs.forEach((e: any, i: number) => {
+        formValues[`job${i + 1}`] = {
+          company: e.company,
+          capital: '',
+          work_content: e.description,
+          since: toYM(e.startDate),
+          to: toYM(e.endDate),
+          people: '',
+          duty: e.position,
+          business: e.business,
+        };
+      });
+      return { userName: extra.fullName || '', jobhistoryList, formValues };
+    };
+  }, []);
 
   const fetchMessages = async () => {
     try {
@@ -109,41 +154,20 @@ export default function ResumeReviewPage() {
         </h1>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* Left: Resume preview mock */}
-          <section className="lg:col-span-8 bg-white border rounded-lg shadow-sm p-6 overflow-auto max-h-[75vh]">
-            <div className="mx-auto max-w-3xl">
-              <div className="text-center mb-6">
-                <h2 className="text-xl font-semibold">職務経歴書</h2>
-                <div className="text-sm text-secondary-500 mt-1">{new Date().toLocaleDateString('ja-JP')} 現在</div>
+          {/* Left: Resume preview (actual data) */}
+          <section className="lg:col-span-8 bg-white border rounded-lg shadow-sm p-4 overflow-auto max-h-[75vh]">
+            {selected ? (
+              <div className="mx-auto max-w-3xl">
+                {(() => {
+                  const d = buildPreviewFromResume(selected);
+                  return <ResumePreview userName={d.userName} jobhistoryList={d.jobhistoryList} formValues={d.formValues} />;
+                })()}
               </div>
-
-              <div className="border-t pt-4">
-                <h3 className="font-semibold text-secondary-800 mb-2">職務要約</h3>
-                <p className="text-sm text-secondary-700">入力した職務要約が記載されます。</p>
+            ) : (
+              <div className="h-[60vh] flex items-center justify-center text-secondary-500">
+                プレビュー可能な職務経歴書が見つかりません。先に職務経歴書を作成してください。
               </div>
-
-              <div className="border-t pt-4 mt-6">
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="font-semibold text-secondary-800">職務内容</h3>
-                  <span className="inline-flex items-center gap-2 text-primary-600 text-sm">
-                    <span className="w-2 h-2 rounded-full bg-primary-600" /> 対応中
-                  </span>
-                </div>
-                <div className="text-sm text-secondary-700 space-y-2">
-                  <p>2023年08月〜2024年08月 会社名: ●● 事業内容: ●●</p>
-                  <div className="border rounded-md overflow-hidden">
-                    <div className="grid grid-cols-12 bg-secondary-50 text-secondary-700 text-xs">
-                      <div className="col-span-4 px-3 py-2 border-r">期間</div>
-                      <div className="col-span-8 px-3 py-2">職務内容</div>
-                    </div>
-                    <div className="grid grid-cols-12 text-sm">
-                      <div className="col-span-4 px-3 py-3 border-r">2023年08月〜2024年08月</div>
-                      <div className="col-span-8 px-3 py-3">入力した職務内容が記載されます。</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+            )}
           </section>
 
           {/* Right: Comments panel */}

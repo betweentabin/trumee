@@ -12,6 +12,7 @@ from rest_framework import status, viewsets, permissions
 from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.authtoken.models import Token
 from django.shortcuts import get_object_or_404
 from django.db import transaction
@@ -30,7 +31,7 @@ import os
 from .models import (
     User, SeekerProfile, CompanyProfile, Resume, Experience, 
     Education, Certification, Application, Scout, Message, JobPosting,
-    CompanyMonthlyPage
+    CompanyMonthlyPage, ResumeFile
 )
 from .serializers import (
     UserSerializer, SeekerProfileSerializer, CompanyProfileSerializer,
@@ -38,7 +39,7 @@ from .serializers import (
     ExperienceSerializer, EducationSerializer, CertificationSerializer,
     ApplicationSerializer, ScoutSerializer, MessageSerializer, JobPostingSerializer,
     UserRegisterSerializer, CompanyRegisterSerializer, LoginSerializer,
-    CompanyMonthlyPageSerializer
+    CompanyMonthlyPageSerializer, ResumeFileSerializer
 )
 
 # Import PDF generation views (conditional import)
@@ -566,6 +567,39 @@ class CertificationViewSet(viewsets.ModelViewSet):
     
     def get_queryset(self):
         return Certification.objects.filter(resume__user=self.request.user)
+
+
+class ResumeFileViewSet(viewsets.ModelViewSet):
+    """履歴書ファイル ViewSet（アップロード/一覧/削除）"""
+    serializer_class = ResumeFileSerializer
+    permission_classes = [IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
+
+    def get_queryset(self):
+        return ResumeFile.objects.filter(user=self.request.user).order_by('-uploaded_at')
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+    def create(self, request, *args, **kwargs):
+        """multipart/form-data でのファイルアップロード対応"""
+        if 'file' not in request.FILES:
+            return Response({'detail': 'file is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        uploaded = request.FILES['file']
+        data = {
+            'file': uploaded,
+            'original_name': getattr(uploaded, 'name', ''),
+            'content_type': getattr(uploaded, 'content_type', ''),
+            'size': getattr(uploaded, 'size', 0),
+            'description': request.data.get('description', ''),
+        }
+
+        serializer = self.get_serializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
 
 # ============================================================================

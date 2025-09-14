@@ -162,6 +162,18 @@ export interface Resume extends BaseModel {
   resume_vector?: number[];
 }
 
+// アップロード済み履歴書ファイル
+export interface ResumeFile extends BaseModel {
+  user?: UUID;
+  original_name: string;
+  content_type?: string;
+  size: number;
+  description?: string;
+  file?: any;
+  file_url?: string;
+  uploaded_at: string;
+}
+
 // 公開プロフィール（閲覧用）
 export interface PublicUserProfile {
   id: UUID;
@@ -472,6 +484,7 @@ export const API_ENDPOINTS = {
   EXPERIENCES: '/api/v2/experiences/',
   EDUCATIONS: '/api/v2/educations/',
   CERTIFICATIONS: '/api/v2/certifications/',
+  RESUME_FILES: '/api/v2/resume-files/',
   
   // マッチング
   APPLICATIONS: '/api/v2/applications/',

@@ -10,6 +10,7 @@ import {
   LoginRequest, LoginResponse, RegisterUserRequest, RegisterCompanyRequest,
   SearchSeekersRequest, SearchSeekersResponse, CreateResumeRequest, UpdateResumeRequest,
   CreateApplicationRequest, CreateScoutRequest, ApiResponse, ApiError, API_ENDPOINTS,
+  ResumeFile,
   CompanyMonthlyPage
 } from '@/types/api-v2';
 
@@ -238,6 +239,27 @@ class ApiV2Client {
   async checkResumeCompleteness(id: string): Promise<ResumeCompletenessCheck> {
     const response = await this.client.get<ResumeCompletenessCheck>(`${API_ENDPOINTS.RESUMES}${id}/completeness_check/`);
     return response.data;
+  }
+
+  // 履歴書ファイル（アップロード）
+  async getResumeFiles(): Promise<ResumeFile[]> {
+    const res = await this.client.get(API_ENDPOINTS.RESUME_FILES);
+    const data = res.data as any;
+    return Array.isArray(data) ? data : (data?.results ?? []);
+  }
+
+  async uploadResumeFile(file: File, description?: string): Promise<ResumeFile> {
+    const form = new FormData();
+    form.append('file', file);
+    if (description) form.append('description', description);
+    const res = await this.client.post(API_ENDPOINTS.RESUME_FILES, form, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return res.data as any;
+  }
+
+  async deleteResumeFile(id: string): Promise<void> {
+    await this.client.delete(`${API_ENDPOINTS.RESUME_FILES}${id}/`);
   }
 
   // 職歴関連

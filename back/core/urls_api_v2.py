@@ -16,6 +16,7 @@ router.register(r'resumes', views_api_v2.ResumeViewSet, basename='resume')
 router.register(r'experiences', views_api_v2.ExperienceViewSet, basename='experience')
 router.register(r'educations', views_api_v2.EducationViewSet, basename='education')
 router.register(r'certifications', views_api_v2.CertificationViewSet, basename='certification')
+router.register(r'resume-files', views_api_v2.ResumeFileViewSet, basename='resumefile')
 router.register(r'applications', views_api_v2.ApplicationViewSet, basename='application')
 router.register(r'scouts', views_api_v2.ScoutViewSet, basename='scout')
 

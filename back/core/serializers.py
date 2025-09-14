@@ -3,7 +3,7 @@ from django.contrib.auth import authenticate
 from .models import (
     User, SeekerProfile, CompanyProfile, Resume, Experience, Education, Certification,
     Application, Scout, Message, Payment, JobPosting,
-    ActivityLog, MLModel, MLPrediction, CompanyMonthlyPage
+    ActivityLog, MLModel, MLPrediction, CompanyMonthlyPage, ResumeFile
 )
 
 
@@ -283,6 +283,28 @@ class ResumeUpdateSerializer(serializers.ModelSerializer):
                 Certification.objects.create(resume=instance, **cert_data)
         
         return instance
+
+
+class ResumeFileSerializer(serializers.ModelSerializer):
+    """履歴書ファイルシリアライザー"""
+    file_url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ResumeFile
+        fields = [
+            'id', 'user', 'original_name', 'content_type', 'size', 'description',
+            'file', 'file_url', 'uploaded_at'
+        ]
+        read_only_fields = ['user', 'file_url', 'uploaded_at']
+
+    def get_file_url(self, obj):
+        request = self.context.get('request')
+        if obj.file and hasattr(obj.file, 'url'):
+            url = obj.file.url
+            if request:
+                return request.build_absolute_uri(url)
+            return url
+        return None
 
 
 class JobPostingSerializer(serializers.ModelSerializer):

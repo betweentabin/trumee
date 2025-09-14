@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAppSelector } from '@/app/redux/hooks';
 import { FaUser, FaBriefcase, FaClipboardList, FaFileAlt } from 'react-icons/fa';
 import useAuthV2 from '@/hooks/useAuthV2';
+import ResumeFileUpload from '@/components/resume/resume-file-upload';
 
 export default function RegisterDataPage() {
   const router = useRouter();
@@ -73,6 +74,11 @@ export default function RegisterDataPage() {
             <p className="text-sm text-gray-600">履歴書の作成・管理・ダウンロード</p>
           </div>
         </div>
+      </div>
+
+      {/* 履歴書（ファイル）アップロード */}
+      <div className="mt-8">
+        <ResumeFileUpload />
       </div>
     </div>
   );

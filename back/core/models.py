@@ -285,6 +285,31 @@ class Resume(models.Model):
         return bool(self.skills and self.self_pr and self.experiences.exists())
 
 
+class ResumeFile(models.Model):
+    """ユーザーがアップロードした履歴書ファイル（PDF/Word/Excel等）"""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='resume_files')
+    # 実ファイル
+    file = models.FileField(upload_to='resumes/')
+    # メタ情報
+    original_name = models.CharField(max_length=255)
+    content_type = models.CharField(max_length=100, blank=True)
+    size = models.BigIntegerField(default=0)
+    description = models.CharField(max_length=255, blank=True)
+    
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        db_table = 'resume_files'
+        ordering = ['-uploaded_at']
+        indexes = [
+            models.Index(fields=['user', '-uploaded_at']),
+        ]
+    
+    def __str__(self):
+        return f"{self.original_name} ({self.user.email})"
+
+
 class Experience(models.Model):
     """職歴"""
     EMPLOYMENT_TYPES = [

@@ -4,6 +4,8 @@ URL configuration for back project.
 
 from django.contrib import admin
 from django.urls import path, include
+from django.conf import settings
+from django.conf.urls.static import static
 from django.http import JsonResponse
 from django.utils import timezone
 
@@ -23,3 +25,7 @@ urlpatterns = [
     path('api/v1/', include('core.urls_api')),  # 既存API（互換性用）
     path('api/v2/', include('core.urls_api_v2')),  # 新しいAPI
 ]
+
+# 開発環境でメディアファイルを配信
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
