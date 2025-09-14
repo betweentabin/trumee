@@ -66,8 +66,8 @@ const Footer = () => {
                             <div>
                             <p className="font-bold mb-2">企業からのスカウト確認</p>
                             <ul className="space-y-1">
-                                <li><Link href="/confirm-scout/status" className="hover:text-[#FF733E] transition-colors">企業からのスカウト状況</Link></li>
-                                <li><Link href="/confirm-scout/applying-reasons-assist" className="hover:text-[#FF733E] transition-colors">スカウト企業への志望理由作成補助</Link></li>
+                                <li><Link href="/scouts" className="hover:text-[#FF733E] transition-colors">企業からのスカウト状況</Link></li>
+                                <li><Link href="/interview-advice/applying-reasons" className="hover:text-[#FF733E] transition-colors">スカウト企業への志望理由作成補助</Link></li>
                             </ul>
                             </div>
 
