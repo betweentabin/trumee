@@ -7,6 +7,9 @@ import { FaBriefcase, FaLightbulb, FaPencilAlt, FaStar, FaPlus, FaMinus } from '
 import { buildApiUrl, getApiHeaders } from '@/config/api';
 import toast from 'react-hot-toast';
 
+// Local types
+type ThreadMsg = { id: string; sender: string; text: string; created_at: string };
+
 export default function ApplyingReasonsPage() {
   const router = useRouter();
   const authState = useAppSelector(state => state.auth);
@@ -25,7 +28,6 @@ export default function ApplyingReasonsPage() {
   }, []);
 
   // Thread state
-  type ThreadMsg = { id: string; sender: string; text: string; created_at: string };
   const [thread, setThread] = useState<ThreadMsg[]>([]);
   const [threadInput, setThreadInput] = useState('');
   const endRef = useRef<HTMLDivElement | null>(null);
@@ -131,7 +133,9 @@ export default function ApplyingReasonsPage() {
       }));
       setThread(mapped);
       endRef.current?.scrollIntoView({ behavior: 'smooth' });
-    } catch {}
+    } catch (e) {
+      // noop
+    }
   };
 
   const sendThreadMessage = async () => {
