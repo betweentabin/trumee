@@ -146,7 +146,7 @@ export default function PrepareInterviewPage() {
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex-1 px-6 py-4 flex items-center justify-center gap-2 transition ${
                   activeTab === tab.id
-                    ? 'bg-blue-600 text-white'
+                    ? 'bg-[#FF733E] text-white'
                     : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
                 }`}
               >

@@ -251,7 +251,7 @@ export default function InterviewPage3() {
                       onClick={() => setSelectedCategory(category.key)}
                       className={`px-4 py-2 rounded-lg transition-colors ${
                         selectedCategory === category.key
-                          ? 'bg-blue-600 text-white'
+                          ? 'bg-[#FF733E] text-white'
                           : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                       }`}
                     >
@@ -301,7 +301,7 @@ export default function InterviewPage3() {
 
                     <button
                       onClick={() => startQuestion(question)}
-                      className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-colors flex items-center gap-2"
+                      className="bg-[#FF733E] hover:bg-orange-70 active:bg-orange-60 text-white px-6 py-3 rounded-lg transition-colors flex items-center gap-2"
                     >
                       <FaPlay />
                       練習開始
@@ -457,7 +457,7 @@ export default function InterviewPage3() {
             </button>
             <button
               onClick={() => router.push(to('/interview/1'))}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-colors"
+              className="bg-[#FF733E] hover:bg-orange-70 active:bg-orange-60 text-white px-6 py-3 rounded-lg transition-colors"
             >
               最初に戻る
             </button>

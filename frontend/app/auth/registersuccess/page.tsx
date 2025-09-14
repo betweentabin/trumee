@@ -69,14 +69,14 @@ export default function RegisterSuccessPage() {
             <div className="mt-8 space-y-3">
               <Link
                 href="/auth/login"
-                className="block w-full py-2 px-4 border border-transparent rounded-md text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 text-center"
+                className="block w-full py-2 px-4 border border-transparent rounded-md text-sm font-medium text-white bg-[#FF733E] hover:bg-orange-70 active:bg-orange-60 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 text-center"
               >
                 今すぐログイン
               </Link>
               
               <Link
                 href="/"
-                className="block w-full py-2 px-4 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 text-center"
+                className="block w-full py-2 px-4 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 text-center"
               >
                 トップページへ戻る
               </Link>

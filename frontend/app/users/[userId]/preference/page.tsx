@@ -46,7 +46,7 @@ export default function UserPreferenceByIdPage() {
         <div className="mt-3">
           <button
             onClick={() => router.push('/auth/step/step4-preference')}
-            className="px-4 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700"
+            className="px-4 py-2 text-sm bg-[#FF733E] text-white rounded-md hover:bg-orange-70 active:bg-orange-60"
           >
             希望条件を設定する
           </button>
@@ -62,7 +62,7 @@ export default function UserPreferenceByIdPage() {
         {isOwner && (
           <button
             onClick={() => router.push('/auth/step/step4-preference')}
-            className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700"
+            className="px-3 py-1.5 text-sm bg-[#FF733E] text-white rounded-md hover:bg-orange-70 active:bg-orange-60"
           >
             編集する
           </button>

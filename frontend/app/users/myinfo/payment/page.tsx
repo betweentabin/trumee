@@ -157,7 +157,7 @@ export default function UserPaymentPage() {
             <h2 className="text-xl font-semibold">登録済みカード</h2>
             <button
               onClick={() => setShowAddCard(true)}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center gap-2"
+              className="px-4 py-2 bg-[#FF733E] text-white rounded-lg hover:bg-orange-70 active:bg-orange-60 transition flex items-center gap-2"
             >
               <FaPlus />
               カードを追加
@@ -323,7 +323,7 @@ export default function UserPaymentPage() {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:bg-gray-400"
+                    className="px-4 py-2 bg-[#FF733E] text-white rounded-lg hover:bg-orange-70 active:bg-orange-60 transition disabled:bg-gray-400"
                   >
                     {loading ? '追加中...' : 'カードを追加'}
                   </button>

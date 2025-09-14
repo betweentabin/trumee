@@ -111,7 +111,7 @@ export default function ApplyingReasonsPage() {
               <button
                 onClick={handleGenerate}
                 disabled={loading}
-                className="w-full py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:bg-gray-400"
+                className="w-full py-3 bg-[#FF733E] text-white rounded-lg hover:bg-orange-70 active:bg-orange-60 transition disabled:bg-gray-400"
               >
                 {loading ? '生成中...' : '志望理由を生成'}
               </button>

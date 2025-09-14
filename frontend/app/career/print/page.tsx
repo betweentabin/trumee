@@ -151,7 +151,7 @@ export default function PrintPage() {
             <p className="text-gray-500 mb-6">まず履歴書を作成してから印刷してください。</p>
             <button
               onClick={() => router.push(to('/career/create'))}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-colors"
+              className="bg-[#FF733E] hover:bg-orange-70 active:bg-orange-60 text-white px-6 py-3 rounded-lg transition-colors"
             >
               履歴書を作成する
             </button>
@@ -208,7 +208,7 @@ export default function PrintPage() {
                 <button
                   onClick={handlePrint}
                   disabled={!selectedResume}
-                  className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white px-4 py-3 rounded-lg flex items-center justify-center gap-2 transition-colors"
+                  className="w-full bg-[#FF733E] hover:bg-orange-70 active:bg-orange-60 disabled:bg-gray-400 text-white px-4 py-3 rounded-lg flex items-center justify-center gap-2 transition-colors"
                 >
                   <FaPrint />
                   印刷

@@ -111,7 +111,7 @@ export default function ResumePrintPage() {
               <div className="mt-6 space-y-3">
                 <button
                   onClick={handlePrint}
-                  className="w-full py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center justify-center gap-2"
+                  className="w-full py-3 bg-[#FF733E] text-white rounded-lg hover:bg-orange-70 active:bg-orange-60 transition flex items-center justify-center gap-2"
                 >
                   <FaPrint />
                   印刷する

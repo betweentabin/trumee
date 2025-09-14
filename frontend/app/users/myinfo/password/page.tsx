@@ -229,7 +229,7 @@ export default function UserPasswordPage() {
             <button
               type="submit"
               disabled={loading}
-              className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:bg-gray-400 flex items-center gap-2"
+              className="px-6 py-3 bg-[#FF733E] text-white rounded-lg hover:bg-orange-70 active:bg-orange-60 transition disabled:bg-gray-400 flex items-center gap-2"
             >
               <FaLock />
               {loading ? '変更中...' : 'パスワードを変更'}

@@ -271,7 +271,7 @@ export default function SeekerDashboard() {
                 type="button"
                 onClick={() => setUseV2API(!useV2API)}
                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                  useV2API ? 'bg-blue-600' : 'bg-gray-300'
+                  useV2API ? 'bg-[#FF733E]' : 'bg-gray-300'
                 }`}
               >
                 <span

@@ -51,7 +51,7 @@ export default function InterviewPage1() {
             </button>
             <button
               onClick={() => router.push(to('/interview/2'))}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg"
+              className="bg-[#FF733E] hover:bg-orange-70 active:bg-orange-60 text-white px-6 py-3 rounded-lg"
             >
               次へ：職務経歴書対策
             </button>

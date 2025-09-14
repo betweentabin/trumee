@@ -190,7 +190,7 @@ export default function UserPaidPlansPage() {
                     currentPlan === plan.id
                       ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
                       : plan.recommended
-                      ? 'bg-blue-600 text-white hover:bg-blue-700'
+                      ? 'bg-[#FF733E] text-white hover:bg-orange-70 active:bg-orange-60'
                       : 'bg-gray-600 text-white hover:bg-gray-700'
                   }`}
                 >

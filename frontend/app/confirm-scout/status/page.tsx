@@ -137,7 +137,7 @@ export default function ScoutStatusPage() {
                 onClick={() => setFilter(status)}
                 className={`px-4 py-2 rounded-lg transition ${
                   filter === status
-                    ? 'bg-blue-600 text-white'
+                    ? 'bg-[#FF733E] text-white'
                     : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
                 }`}
               >
@@ -213,7 +213,7 @@ export default function ScoutStatusPage() {
                       <>
                         <button
                           onClick={() => handleReply(scout.id)}
-                          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                          className="px-4 py-2 bg-[#FF733E] text-white rounded-lg hover:bg-orange-70 active:bg-orange-60 transition"
                         >
                           返信する
                         </button>

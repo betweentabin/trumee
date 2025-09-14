@@ -96,7 +96,7 @@ export default function ResumeQuestionsPage() {
                     onClick={() => setSelectedCategory(category.id)}
                     className={`w-full text-left px-4 py-3 rounded-lg transition ${
                       selectedCategory === category.id
-                        ? 'bg-blue-600 text-white'
+                        ? 'bg-[#FF733E] text-white'
                         : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
                     }`}
                   >

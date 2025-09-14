@@ -287,7 +287,7 @@ export default function ScoutsPage() {
                   {!scout.viewed_at && (
                     <button
                       onClick={() => handleViewScout(scout.id)}
-                      className="inline-flex items-center px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+                      className="inline-flex items-center px-4 py-2 bg-[#FF733E] text-white rounded-md hover:bg-orange-70 active:bg-orange-60"
                     >
                       <FaEye className="mr-2" />
                       既読にする

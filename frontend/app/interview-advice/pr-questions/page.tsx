@@ -111,7 +111,7 @@ export default function PRQuestionsPage() {
                             onClick={() => setSelectedQuestion(globalIndex)}
                             className={`w-full text-left px-3 py-2 rounded-lg text-sm transition ${
                               selectedQuestion === globalIndex
-                                ? 'bg-blue-600 text-white'
+                                ? 'bg-[#FF733E] text-white'
                                 : 'hover:bg-gray-100 text-gray-700'
                             }`}
                           >
@@ -174,7 +174,7 @@ export default function PRQuestionsPage() {
                 <button
                   onClick={() => setSelectedQuestion(Math.min(allQuestions.length - 1, selectedQuestion + 1))}
                   disabled={selectedQuestion === allQuestions.length - 1}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
+                  className="px-4 py-2 bg-[#FF733E] text-white rounded-lg hover:bg-orange-70 active:bg-orange-60 transition disabled:opacity-50"
                 >
                   次の質問
                 </button>

@@ -98,7 +98,7 @@ export default function PreviewPage() {
           <div className="flex gap-2">
             <button
               onClick={() => router.push(to(`/career/edit/${resume.id}`))}
-              className="px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center gap-2"
+              className="px-3 py-2 bg-[#FF733E] text-white rounded-md hover:bg-orange-70 active:bg-orange-60 flex items-center gap-2"
             >
               <FaEdit /> 編集
             </button>
