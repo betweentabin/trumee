@@ -1,18 +1,15 @@
-'use client';
+"use client";
 
 import { useMemo, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import apiClient from '@/lib/api-v2-client';
 import useAuthV2 from '@/hooks/useAuthV2';
 import toast from 'react-hot-toast';
-import { 
-  FaUserTie, 
-  FaClock, 
-  FaEye,
-  FaReply,
+import {
+  FaUserTie,
+  FaClock,
   FaBuilding,
-  FaEnvelope,
-  FaCheckCircle
+  FaSearch,
 } from 'react-icons/fa';
 
 type Scout = any; // API差異があるため一旦ワイドに受ける
@@ -21,14 +18,27 @@ export default function ScoutsPage() {
   const router = useRouter();
   const [scouts, setScouts] = useState<Scout[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<string>('all');
-  const [jobType, setJobType] = useState<string>('');
+  // フィルター（未適用）
+  const [pendingStatus, setPendingStatus] = useState<string>(''); // 応募状況
+  const [pendingPref, setPendingPref] = useState<string>(''); // 勤務地
+  const [pendingIndustry, setPendingIndustry] = useState<string>(''); // 業種
+  const [pendingJobTags, setPendingJobTags] = useState<string[]>([]); // 職種タグ
+
+  // 適用中フィルター
+  const [status, setStatus] = useState<string>('');
   const [pref, setPref] = useState<string>('');
   const [industry, setIndustry] = useState<string>('');
-  const [keyword, setKeyword] = useState('');
+  const [jobTags, setJobTags] = useState<string[]>([]);
   const [selected, setSelected] = useState<Scout | null>(null);
   const [page, setPage] = useState(1);
   const perPage = 5;
+
+  // 職種タグ候補（UI表示用）
+  const JOB_TAGS = [
+    '営業・販売', '事務・受付', '飲食・サービス', '保育士・教員',
+    '介護・福祉', '医師・看護師', 'クリエイター', 'IT・WEB',
+    'エンジニア', '製造・工場', '物流', '金融',
+  ];
   const { isAuthenticated, initializeAuth } = useAuthV2();
 
   // 認証初期化
@@ -99,31 +109,6 @@ export default function ScoutsPage() {
     }
   };
 
-  const getStatusBadge = (status: string, viewedAt: string | null, respondedAt: string | null) => {
-    if (respondedAt) {
-      return (
-        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-          <FaCheckCircle className="mr-1" />
-          返信済み
-        </span>
-      );
-    }
-    if (viewedAt) {
-      return (
-        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-          <FaEye className="mr-1" />
-          既読
-        </span>
-      );
-    }
-    return (
-      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-        <FaEnvelope className="mr-1" />
-        未読
-      </span>
-    );
-  };
-
   const formatDate = (dateString?: string | null) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('ja-JP', {
@@ -134,13 +119,14 @@ export default function ScoutsPage() {
   };
 
   const filteredScouts = useMemo(() => {
-    let list = scouts.filter(scout => {
-      if (filter === 'all') return true;
-      if (filter === 'unread') return !scout.viewed_at;
-      if (filter === 'read') return scout.viewed_at && !scout.responded_at;
-      if (filter === 'responded') return scout.responded_at;
-      return true;
-    });
+    let list = scouts.slice();
+
+    // 応募状況
+    if (status) {
+      if (status === '未読') list = list.filter((s: any) => !s.viewed_at);
+      if (status === '既読') list = list.filter((s: any) => s.viewed_at && !s.responded_at);
+      if (status === '返信済み') list = list.filter((s: any) => !!s.responded_at);
+    }
     // industry filter (company profile)
     if (industry) {
       const kw = industry.toLowerCase();
@@ -149,24 +135,22 @@ export default function ScoutsPage() {
         return String(ind).toLowerCase().includes(kw);
       });
     }
-    // JobType filter: message contains a hint (暫定)
-    if (jobType) {
-      const kw = jobType.toLowerCase();
-      list = list.filter((s: any) => String(s.scout_message || '').toLowerCase().includes(kw));
-    }
     // Pref filter: 暫定（メッセージ内検索）
     if (pref) {
       const kw = pref.toLowerCase();
       list = list.filter((s: any) => String(s.scout_message || '').toLowerCase().includes(kw));
     }
-    if (!keyword.trim()) return list;
-    const kw = keyword.trim().toLowerCase();
-    return list.filter((s: any) => {
-      const companyName = s.company_name || s.company?.company_name || s.company_details?.company_name || '';
-      const msg = s.scout_message || '';
-      return String(companyName).toLowerCase().includes(kw) || String(msg).toLowerCase().includes(kw);
-    });
-  }, [scouts, filter, keyword, jobType, pref, industry]);
+    // Job tags: メッセージ内に含まれる語で簡易フィルタ
+    if (jobTags.length > 0) {
+      const kws = jobTags.map((t) => t.toLowerCase());
+      list = list.filter((s: any) => {
+        const text = String(s.scout_message || '').toLowerCase();
+        return kws.some((k) => text.includes(k) || (s.company_name || '').toLowerCase().includes(k));
+      });
+    }
+
+    return list;
+  }, [scouts, status, pref, industry, jobTags]);
 
   const totalPages = Math.max(1, Math.ceil(filteredScouts.length / perPage));
   const pagedScouts = useMemo(() => {
@@ -219,7 +203,7 @@ export default function ScoutsPage() {
 
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <div className="bg-white rounded-lg shadow p-4">
+          <div className="bg-white rounded-lg border p-4">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">全スカウト</p>
@@ -228,92 +212,111 @@ export default function ScoutsPage() {
               <FaUserTie className="text-3xl text-gray-400" />
             </div>
           </div>
-          <div className="bg-white rounded-lg shadow p-4">
+          <div className="bg-white rounded-lg border p-4">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">未読</p>
-                <p className="text-2xl font-bold text-yellow-600">
-                  {scouts.filter(s => !s.viewed_at).length}
-                </p>
+                <p className="text-2xl font-bold text-gray-900">{scouts.filter(s => !s.viewed_at).length}</p>
               </div>
-              <FaEnvelope className="text-3xl text-yellow-400" />
+              <span className="text-2xl text-gray-400">●</span>
             </div>
           </div>
-          <div className="bg-white rounded-lg shadow p-4">
+          <div className="bg-white rounded-lg border p-4">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">既読</p>
-                <p className="text-2xl font-bold text-blue-600">
-                  {scouts.filter(s => s.viewed_at && !s.responded_at).length}
-                </p>
+                <p className="text-2xl font-bold text-gray-900">{scouts.filter(s => s.viewed_at && !s.responded_at).length}</p>
               </div>
-              <FaEye className="text-3xl text-blue-400" />
+              <span className="text-2xl text-gray-400">●</span>
             </div>
           </div>
-          <div className="bg-white rounded-lg shadow p-4">
+          <div className="bg-white rounded-lg border p-4">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">返信済み</p>
-                <p className="text-2xl font-bold text-green-600">
-                  {scouts.filter(s => s.responded_at).length}
-                </p>
+                <p className="text-2xl font-bold text-gray-900">{scouts.filter(s => s.responded_at).length}</p>
               </div>
-              <FaCheckCircle className="text-3xl text-green-400" />
+              <span className="text-2xl text-gray-400">●</span>
             </div>
           </div>
         </div>
 
         {/* Filters bar */}
-        <div className="bg-white rounded-lg shadow p-4 mb-6">
-          <div className="flex flex-wrap gap-3 items-center">
-            <div className="flex items-center gap-2">
-              <label className="text-sm text-gray-600">職種</label>
-              <select value={jobType} onChange={(e)=>setJobType(e.target.value)} className="px-3 py-2 border rounded-md text-sm">
-                <option value="">指定なし</option>
-                <option value="sales">営業・販売</option>
-                <option value="office">事務・受付</option>
-                <option value="it">IT・WEB</option>
-                <option value="engineer">エンジニア</option>
-              </select>
+        <div className="bg-white rounded-lg border p-4 mb-6">
+          {/* 上段セレクタ */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">職種</label>
+              <div className="px-3 py-2 border rounded-md text-sm text-gray-700 bg-white">指定なし</div>
             </div>
-            <div className="flex items-center gap-2">
-              <label className="text-sm text-gray-600">勤務地</label>
-              <select value={pref} onChange={(e)=>setPref(e.target.value)} className="px-3 py-2 border rounded-md text-sm">
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">勤務地</label>
+              <select value={pendingPref} onChange={(e)=>setPendingPref(e.target.value)} className="w-full px-3 py-2 border rounded-md text-sm">
                 <option value="">指定なし</option>
                 <option value="東京都">東京都</option>
                 <option value="神奈川県">神奈川県</option>
                 <option value="大阪府">大阪府</option>
               </select>
             </div>
-            <div className="flex items-center gap-2">
-              <label className="text-sm text-gray-600">業種</label>
-              <select value={industry} onChange={(e)=>setIndustry(e.target.value)} className="px-3 py-2 border rounded-md text-sm">
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">業種</label>
+              <select value={pendingIndustry} onChange={(e)=>setPendingIndustry(e.target.value)} className="w-full px-3 py-2 border rounded-md text-sm">
                 <option value="">指定なし</option>
-                <option value="it">IT</option>
-                <option value="manufacturing">製造</option>
-                <option value="service">サービス</option>
+                <option value="IT">IT</option>
+                <option value="製造">製造</option>
+                <option value="サービス">サービス</option>
               </select>
             </div>
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">応募状況</label>
+              <select value={pendingStatus} onChange={(e)=>setPendingStatus(e.target.value)} className="w-full px-3 py-2 border rounded-md text-sm">
+                <option value="">指定なし</option>
+                <option value="未読">未読</option>
+                <option value="既読">既読</option>
+                <option value="返信済み">返信済み</option>
+              </select>
+            </div>
+          </div>
+
+          {/* 職種チップ */}
+          <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+            {JOB_TAGS.map((tag) => {
+              const active = pendingJobTags.includes(tag);
+              return (
+                <button
+                  key={tag}
+                  type="button"
+                  onClick={() => {
+                    setPendingJobTags((prev) => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]);
+                  }}
+                  className={`flex items-center justify-start gap-2 px-3 py-2 rounded-md border text-sm ${active ? 'bg-gray-800 text-white border-gray-800' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'}`}
+                >
+                  <span className={`inline-block w-4 h-4 rounded ${active ? 'bg-white' : 'bg-gray-200'} border`}></span>
+                  {tag}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* アクション行 */}
+          <div className="mt-4 flex items-center justify-between">
+            <button
+              className="text-sm text-gray-700 hover:underline"
+              onClick={() => { setPendingJobTags([]); setPendingPref(''); setPendingIndustry(''); setPendingStatus(''); setPage(1); }}
+            >全てクリア</button>
             <div className="flex items-center gap-2">
-              <label className="text-sm text-gray-600">応募状況</label>
-              <select value={filter} onChange={(e)=>{ setPage(1); setFilter(e.target.value); }} className="px-3 py-2 border rounded-md text-sm">
-                <option value="all">指定なし</option>
-                <option value="unread">未読</option>
-                <option value="read">既読</option>
-                <option value="responded">返信済み</option>
-              </select>
-            </div>
-            <div className="ml-auto flex items-center gap-2">
-              <input
-                value={keyword}
-                onChange={(e) => { setPage(1); setKeyword(e.target.value); }}
-                placeholder="会社名・メッセージで検索"
-                className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
-              />
               <button
-                onClick={() => { setKeyword(''); setFilter('all'); setJobType(''); setPref(''); setIndustry(''); setPage(1); }}
-                className="px-3 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50"
-              >全てクリア</button>
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-md border border-gray-300 text-sm hover:bg-gray-50"
+                onClick={() => {
+                  setStatus(pendingStatus);
+                  setPref(pendingPref);
+                  setIndustry(pendingIndustry);
+                  setJobTags(pendingJobTags);
+                  setPage(1);
+                }}
+              >
+                <FaSearch /> この条件で検索する
+              </button>
             </div>
           </div>
         </div>
@@ -334,65 +337,37 @@ export default function ScoutsPage() {
             {pagedScouts.map((scout) => (
               <div
                 key={scout.id}
-                className="bg-white rounded-lg shadow hover:shadow-md transition-shadow p-6"
+                className="bg-white rounded-xl border p-5"
               >
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <FaBuilding className="text-gray-400" />
-                      <h3 className="text-lg font-semibold text-gray-900">
-                        {scout.company?.company_name || scout.company_name || (scout as any).company_details?.company_name || '企業'}
-                      </h3>
-                      {getStatusBadge(scout.status, scout.viewed_at, scout.responded_at)}
-                    </div>
-
-                    <div className="bg-gray-50 rounded-lg p-4 mb-3">
-                      <p className="text-gray-700 whitespace-pre-wrap">
-                        {scout.scout_message}
-                      </p>
-                    </div>
-
-                    <div className="flex items-center gap-4 text-sm text-gray-500">
-                      <div className="flex items-center">
-                        <FaClock className="mr-1" />
-                        受信日: {formatDate(scout.created_at || scout.scouted_at)}
-                      </div>
-                      {scout.viewed_at && (
-                        <div className="flex items-center">
-                          <FaEye className="mr-1" />
-                          既読: {formatDate(scout.viewed_at)}
-                        </div>
-                      )}
-                      {scout.responded_at && (
-                        <div className="flex items-center">
-                          <FaReply className="mr-1" />
-                          返信: {formatDate(scout.responded_at)}
-                        </div>
-                      )}
-                    </div>
+                {/* 上段: 会社名 + 更新日時 */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-gray-900 font-semibold">
+                    <FaBuilding className="text-gray-500" />
+                    {scout.company?.company_name || scout.company_name || (scout as any).company_details?.company_name || '株式会社'}
+                  </div>
+                  <div className="text-sm text-gray-600 flex items-center gap-1">
+                    <FaClock />
+                    {new Date(scout.updated_at || scout.scouted_at || scout.created_at).toLocaleString('ja-JP')}
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2">
+                {/* 中段: 情報行 */}
+                <div className="mt-3 space-y-1 text-sm text-gray-700">
+                  <div>職種：<span className="text-gray-900">{jobTags[0] || '未指定'}</span></div>
+                  <div>勤務地：<span className="text-gray-900">{pref || '未指定'}</span></div>
+                  <div className="truncate">メッセージ：<span className="text-gray-900">{scout.scout_message || 'メッセージが入ります。'}</span></div>
+                </div>
+
+                {/* 下段: ボタン */}
+                <div className="mt-4 flex items-center gap-3">
                   <button
                     onClick={() => setSelected(scout)}
-                    className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
+                    className="px-4 py-2 rounded-md border border-gray-300 hover:bg-gray-50"
                   >詳細を見る</button>
-                  {!scout.viewed_at && (
-                    <button
-                      onClick={() => handleViewScout(scout.id)}
-                      className="inline-flex items-center px-4 py-2 bg-[#FF733E] text-white rounded-md hover:bg-orange-70 active:bg-orange-60"
-                    >
-                      <FaEye className="mr-2" />
-                      既読にする
-                    </button>
-                  )}
-                  {(!scout.responded_at) && (
-                    <button
-                      onClick={() => handleApply(scout)}
-                      className="inline-flex items-center px-4 py-2 bg-[#FF733E] text-white rounded-md hover:bg-orange-70 active:bg-orange-60"
-                    >応募する</button>
-                  )}
+                  <button
+                    onClick={() => handleApply(scout)}
+                    className="px-4 py-2 rounded-md border border-gray-300 hover:bg-gray-50"
+                  >応募する</button>
                 </div>
               </div>
             ))}
@@ -410,12 +385,12 @@ export default function ScoutsPage() {
 
         {/* Pagination */}
         {filteredScouts.length > perPage && (
-          <div className="mt-6 flex justify-center items-center gap-2">
+          <div className="mt-8 flex justify-center items-center gap-1">
             {Array.from({ length: totalPages }, (_, i) => i + 1).map((n) => (
               <button
                 key={n}
                 onClick={() => setPage(n)}
-                className={`w-8 h-8 rounded-full text-sm ${n === page ? 'bg-gray-800 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+                className={`w-8 h-8 rounded-full text-sm border ${n === page ? 'bg-gray-800 text-white border-gray-800' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'}`}
               >{n}</button>
             ))}
           </div>
