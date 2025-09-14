@@ -14,7 +14,7 @@ export default function MobileMenu() {
   const go = (href: string) => { router.push(href); close(); };
   const login = () => go('/auth/login');
   const register = () => go('/auth/register');
-  const goMyPage = () => go('/account/top');
+  const goMyPage = () => go('/users');
   return (
     <>
       {/* Bottom Fixed Bar */}

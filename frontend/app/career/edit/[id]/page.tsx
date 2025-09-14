@@ -88,17 +88,19 @@ export default function EditResumePage() {
       
       if (response.ok) {
         const data = await response.json();
+        const extra = data?.extra_data || {};
         setResumeData({
-          title: data.title || '',
-          fullName: data.fullName || '',
-          email: data.email || '',
-          phone: data.phone || '',
-          address: data.address || '',
-          birthDate: data.birthDate || '',
-          summary: data.summary || '',
-          desiredPosition: data.desiredPosition || '',
-          desiredSalary: data.desiredSalary || '',
-          workExperiences: data.workExperiences || [{
+          title: extra.title || '',
+          fullName: extra.fullName || '',
+          email: extra.email || '',
+          phone: extra.phone || '',
+          address: extra.address || '',
+          birthDate: extra.birthDate || '',
+          summary: data?.self_pr || '',
+          desiredPosition: data?.desired_job || '',
+          desiredSalary: extra.desiredSalary || '',
+          // Keep experiences/education only in extra_data for now to avoid nested validation
+          workExperiences: extra.workExperiences || [{
             company: '',
             position: '',
             startDate: '',
@@ -106,15 +108,16 @@ export default function EditResumePage() {
             description: '',
             achievements: ['']
           }],
-          education: data.education || [{
+          education: extra.education || [{
             school: '',
             degree: '',
             field: '',
             graduationDate: ''
           }],
-          skills: data.skills || [''],
-          certifications: data.certifications || [''],
-          languages: data.languages || [{ language: '', level: '' }]
+          // API stores skills as comma-separated string; split to array for editing
+          skills: (data?.skills ? String(data.skills).split(',').map((s: string) => s.trim()).filter(Boolean) : ['']),
+          certifications: extra.certifications || [''],
+          languages: extra.languages || [{ language: '', level: '' }]
         });
       }
       setLoading(false);
@@ -127,19 +130,46 @@ export default function EditResumePage() {
   const handleSubmit = async () => {
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+      // Map local state to API fields (keep complex sections in extra_data)
+      const apiData = {
+        desired_job: resumeData.desiredPosition || '',
+        desired_industries: [],
+        desired_locations: [],
+        skills: (resumeData.skills || []).filter(s => s).join(', '),
+        self_pr: resumeData.summary || '',
+        extra_data: {
+          title: resumeData.title,
+          fullName: resumeData.fullName,
+          email: resumeData.email,
+          phone: resumeData.phone,
+          address: resumeData.address,
+          birthDate: resumeData.birthDate,
+          desiredSalary: resumeData.desiredSalary,
+          workExperiences: resumeData.workExperiences,
+          education: resumeData.education,
+          certifications: resumeData.certifications,
+          languages: resumeData.languages,
+        },
+      } as any;
+
       const response = await fetch(`${apiUrl}/api/v2/resumes/${params.id}/`, {
-        method: 'PUT',
+        method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
           ...getAuthHeaders(),
         },
-        body: JSON.stringify(resumeData)
+        body: JSON.stringify(apiData),
       });
 
       if (response.ok) {
         toast.success('職務経歴書を更新しました');
         router.push('/career');
       } else {
+        // Try to surface backend error for easier debugging
+        try {
+          const err = await response.json();
+          console.error('Resume update failed:', err);
+        } catch {}
         throw new Error('更新に失敗しました');
       }
     } catch (error) {

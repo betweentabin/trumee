@@ -8,6 +8,7 @@ import useAuthV2 from '@/hooks/useAuthV2';
 import { getAuthHeaders } from '@/utils/auth';
 import toast from 'react-hot-toast';
 import { FaPlus, FaEdit, FaEye, FaPrint, FaTrash, FaClock, FaFileAlt } from 'react-icons/fa';
+import { FaDownload } from 'react-icons/fa';
 
 interface Resume {
   id: string;
@@ -171,7 +172,7 @@ export default function CareerPage() {
                 </div>
                 <div className="border-t px-6 py-4 flex justify-between">
                   <div className="flex gap-2">
-                    <Link href={to(`/career/preview?id=${resume.id}`)}>
+                    <Link href={to(`/career/print?id=${resume.id}&open=pdf`)}>
                       <button className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded transition">
                         <FaEye />
                       </button>
@@ -184,6 +185,11 @@ export default function CareerPage() {
                     <Link href={to(`/career/print?id=${resume.id}`)}>
                       <button className="p-2 text-gray-600 hover:text-purple-600 hover:bg-purple-50 rounded transition">
                         <FaPrint />
+                      </button>
+                    </Link>
+                    <Link href={to(`/career/print?id=${resume.id}&open=download`)}>
+                      <button className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded transition" title="PDFダウンロード">
+                        <FaDownload />
                       </button>
                     </Link>
                   </div>

@@ -5,6 +5,7 @@ import { useRouter, useParams } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { FaEdit, FaDownload, FaPrint } from 'react-icons/fa';
 import { getAuthHeaders } from '@/utils/auth';
+import { buildApiUrl } from '@/config/api';
 
 export default function ViewResumePage() {
   const router = useRouter();
@@ -46,25 +47,66 @@ export default function ViewResumePage() {
 
   const handleDownload = async () => {
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-      const response = await fetch(`${apiUrl}/api/v2/resumes/${params.id}/download/`, {
+      if (!resume) return;
+
+      // Map current resume to backend expected structure
+      const extra = resume.extra_data || {};
+      const skillsArray = (resume.skills || '')
+        .split('\n')
+        .map((s: string) => s.trim())
+        .filter(Boolean);
+
+      const resumeData = {
+        step1: {
+          name: extra.fullName || '',
+          email: extra.email || '',
+          phone: extra.phone || '',
+          birthDate: extra.birthDate || '',
+          address: extra.address || '',
+        },
+        step2: {
+          education: Array.isArray(extra.education) ? extra.education : [],
+        },
+        step3: {
+          experience: Array.isArray(extra.workExperiences) ? extra.workExperiences : [],
+        },
+        step4: {
+          skills: skillsArray,
+          certifications: Array.isArray(extra.certifications) ? extra.certifications : [],
+          languages: Array.isArray(extra.languages) ? extra.languages : [],
+        },
+        step5: {
+          selfPR: resume.self_pr || '',
+        },
+      };
+
+      const response = await fetch(buildApiUrl('/resumes/download-pdf/'), {
+        method: 'POST',
         headers: {
           ...getAuthHeaders(),
-        }
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ resumeData }),
       });
-      
-      if (response.ok) {
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `resume_${params.id}.pdf`;
-        a.click();
-        window.URL.revokeObjectURL(url);
-        toast.success('ダウンロードを開始しました');
+
+      if (!response.ok) {
+        const t = await response.text();
+        throw new Error(`PDF生成に失敗しました: ${response.status} ${t?.slice(0, 120)}`);
       }
-    } catch (error) {
-      toast.error('ダウンロードに失敗しました');
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `resume_${params.id}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+      toast.success('ダウンロードを開始しました');
+    } catch (error: any) {
+      console.error('Download error:', error);
+      toast.error(error?.message || 'ダウンロードに失敗しました');
     }
   };
 

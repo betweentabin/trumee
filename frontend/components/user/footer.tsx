@@ -68,11 +68,11 @@ const Footer = () => {
                             <div>
                             <p className="font-bold mb-2">マイページ</p>
                             <ul className="space-y-1">
-                                <li><Link href="/account/top" className="hover:text-[#FF733E] transition-colors">TOP</Link></li>
-                                <li><Link href="/account" className="hover:text-[#FF733E] transition-colors">基本情報の確認・変更</Link></li>
-                                <li><Link href="/account/password" className="hover:text-[#FF733E] transition-colors">パスワードの変更</Link></li>
-                                <li><Link href="/account/payment" className="hover:text-[#FF733E] transition-colors">支払い情報登録・変更</Link></li>
-                                <li><Link href="/account/paid-plan" className="hover:text-[#FF733E] transition-colors">有料プラン</Link></li>
+                                <li><Link href="/users" className="hover:text-[#FF733E] transition-colors">TOP</Link></li>
+                                <li><Link href="/users/myinfo/registerdata" className="hover:text-[#FF733E] transition-colors">基本情報の確認・変更</Link></li>
+                                <li><Link href="/users/myinfo/password" className="hover:text-[#FF733E] transition-colors">パスワードの変更</Link></li>
+                                <li><Link href="/users/myinfo/payment" className="hover:text-[#FF733E] transition-colors">支払い情報登録・変更</Link></li>
+                                <li><Link href="/users/myinfo/paidplans" className="hover:text-[#FF733E] transition-colors">有料プラン</Link></li>
                             </ul>
                             </div>
                         

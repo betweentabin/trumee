@@ -51,27 +51,27 @@ const seeker_menu_list = [
     },
     {
         label: "マイページ",
-        href: "/account",
+        href: "/users",
         submenu: [
             {
                 label: "TOP",
-                href: "/account/top"
+                href: "/users"
             },
             {
                 label: "基本情報の確認・変更",
-                href: "/account"
+                href: "/users/myinfo/registerdata"
             },
             {
                 label: "パスワードの変更",
-                href: "/account/password"
+                href: "/users/myinfo/password"
             },
             {
                 label: "支払い情報登録・変更",
-                href: "/account/payment"
+                href: "/users/myinfo/payment"
             },
             {
                 label: "有料プラン",
-                href: "/account/paid-plan"
+                href: "/users/myinfo/paidplans"
             },
         ]
     },

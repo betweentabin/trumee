@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 import { FaPrint, FaDownload, FaEye, FaEdit, FaArrowLeft } from 'react-icons/fa';
 import '../print.css';
 import { getAuthHeaders } from '@/utils/auth';
+import { buildApiUrl } from '@/config/api';
 
 interface Resume {
   id: string;
@@ -43,10 +44,12 @@ export default function PrintPage() {
   const to = (p: string) => (userIdFromPath ? `/users/${userIdFromPath}${p}` : p);
   const searchParams = useSearchParams();
   const resumeId = searchParams.get('id');
+  const openParam = searchParams.get('open');
   const [resumes, setResumes] = useState<Resume[]>([]);
   const [selectedResume, setSelectedResume] = useState<Resume | null>(null);
   const [loading, setLoading] = useState(true);
   const [printMode, setPrintMode] = useState(false);
+  const hasAutoOpened = useRef(false);
 
   useEffect(() => {
     fetchResumes();
@@ -65,13 +68,24 @@ export default function PrintPage() {
         const data = await response.json();
         const resumeList = data.results || data;
         setResumes(resumeList);
-        
-        // アクティブな履歴書があれば選択
-        const activeResume = resumeList.find((r: Resume) => r.is_active);
-        if (activeResume) {
-          setSelectedResume(activeResume);
-        } else if (resumeList.length > 0) {
-          setSelectedResume(resumeList[0]);
+
+        // クエリのidがあれば優先選択
+        if (resumeId) {
+          const target = resumeList.find((r: Resume) => String(r.id) === String(resumeId));
+          if (target) {
+            setSelectedResume(target);
+          } else {
+            const fallback = resumeList.find((r: Resume) => r.is_active) || resumeList[0];
+            if (fallback) setSelectedResume(fallback);
+          }
+        } else {
+          // アクティブな履歴書があれば選択
+          const activeResume = resumeList.find((r: Resume) => r.is_active);
+          if (activeResume) {
+            setSelectedResume(activeResume);
+          } else if (resumeList.length > 0) {
+            setSelectedResume(resumeList[0]);
+          }
         }
       } else if (response.status === 401) {
         // 認証切れでもページ遷移はしない（ユーザー体験を阻害しない）
@@ -87,6 +101,39 @@ export default function PrintPage() {
     }
   };
 
+  const buildResumeData = (resume: Resume) => {
+    const extra = resume.extra_data || {};
+    // skills may be a multi-line string; split into array
+    const skillsArray = (resume.skills || '')
+      .split('\n')
+      .map((s) => s.trim())
+      .filter(Boolean);
+
+    return {
+      step1: {
+        name: extra.fullName || '',
+        email: extra.email || '',
+        phone: extra.phone || '',
+        birthDate: extra.birthDate || '',
+        address: extra.address || '',
+      },
+      step2: {
+        education: Array.isArray(extra.education) ? extra.education : [],
+      },
+      step3: {
+        experience: Array.isArray(extra.workExperiences) ? extra.workExperiences : [],
+      },
+      step4: {
+        skills: skillsArray,
+        certifications: Array.isArray(extra.certifications) ? extra.certifications : [],
+        languages: Array.isArray(extra.languages) ? extra.languages : [],
+      },
+      step5: {
+        selfPR: resume.self_pr || '',
+      },
+    } as any;
+  };
+
   const handlePrint = () => {
     if (!selectedResume) {
       toast.error('印刷する履歴書を選択してください');
@@ -100,19 +147,63 @@ export default function PrintPage() {
     }, 100);
   };
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
     if (!selectedResume) {
       toast.error('ダウンロードする履歴書を選択してください');
       return;
     }
-    
-    // PDFダウンロード機能（将来実装）
-    toast.info('PDF ダウンロード機能は準備中です');
+    try {
+      const response = await fetch(buildApiUrl('/resumes/download-pdf/'), {
+        method: 'POST',
+        headers: {
+          ...getAuthHeaders(),
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ resumeData: buildResumeData(selectedResume) }),
+      });
+      if (!response.ok) {
+        const errText = await response.text();
+        throw new Error(`PDF生成に失敗しました: ${response.status} ${errText?.slice(0, 120)}`);
+      }
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `職務経歴書_${new Date().toISOString().split('T')[0]}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+      toast.success('PDFをダウンロードしました');
+    } catch (e: any) {
+      console.error('PDF download error:', e);
+      toast.error(e?.message || 'PDFのダウンロードに失敗しました');
+    }
   };
 
-  const handlePreview = () => {
-    if (selectedResume) {
-      router.push(to(`/career/view/${selectedResume.id}`));
+  const handlePreview = async () => {
+    if (!selectedResume) return;
+    try {
+      const response = await fetch(buildApiUrl('/resumes/download-pdf/'), {
+        method: 'POST',
+        headers: {
+          ...getAuthHeaders(),
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ resumeData: buildResumeData(selectedResume) }),
+      });
+      if (!response.ok) {
+        const errText = await response.text();
+        throw new Error(`PDF生成に失敗しました: ${response.status} ${errText?.slice(0, 120)}`);
+      }
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(new Blob([blob], { type: 'application/pdf' }));
+      window.open(url, '_blank');
+      // Do not revoke immediately; give the new tab time to load
+      setTimeout(() => window.URL.revokeObjectURL(url), 10_000);
+    } catch (e: any) {
+      console.error('PDF preview error:', e);
+      toast.error(e?.message || 'PDFのプレビューに失敗しました');
     }
   };
 
@@ -121,6 +212,18 @@ export default function PrintPage() {
       router.push(to(`/career/edit/${selectedResume.id}`));
     }
   };
+
+  // Auto-open PDF preview or download when requested via query
+  useEffect(() => {
+    if (!openParam || !selectedResume || hasAutoOpened.current) return;
+    const action = openParam.toLowerCase();
+    hasAutoOpened.current = true;
+    if (action === 'pdf' || action === 'preview') {
+      handlePreview();
+    } else if (action === 'download') {
+      handleDownload();
+    }
+  }, [openParam, selectedResume]);
 
   if (loading) {
     return (
@@ -227,7 +330,7 @@ export default function PrintPage() {
                   className="w-full bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 text-white px-4 py-3 rounded-lg flex items-center justify-center gap-2 transition-colors"
                 >
                   <FaEye />
-                  プレビュー
+                  PDF プレビュー
                 </button>
                 <button
                   onClick={handleEdit}

@@ -11,7 +11,7 @@ const Footer = () => {
                     </Link>
                 </div>
                 <div className="flex flex-col md:flex-row gap-9 mt-6 text-[14px]">
-                    <Link href="/account/top" className="hover:text-[#FF733E] transition-colors">マイページ</Link>
+                    <Link href="/users" className="hover:text-[#FF733E] transition-colors">マイページ</Link>
                     <Link href="/terms-of-use" className="hover:text-[#FF733E] transition-colors">利用規約</Link>
                     <Link href="/contact-us" className="hover:text-[#FF733E] transition-colors">お問い合わせ</Link>
                 </div>
