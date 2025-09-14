@@ -1,5 +1,5 @@
 import { Controller } from "react-hook-form";
-import { Textarea } from "./input";
+import { TextareaInput as Textarea } from "./input";
 
 const MessageBox = ({
   control,
@@ -26,7 +26,6 @@ const MessageBox = ({
               value={value}
               onChange={onChange}
               placeholder="入力してください。"
-              hasError={!!errors.message}
               className="resize-none min-h-[80px] max-h-[150px] w-full px-3 py-2 text-base rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary-default"
             />
           )}
