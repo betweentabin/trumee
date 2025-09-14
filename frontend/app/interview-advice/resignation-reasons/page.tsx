@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useAppSelector } from "@/app/redux/hooks";
 import { buildApiUrl, getApiHeaders } from "@/config/api";
 import toast from "react-hot-toast";
@@ -11,6 +11,7 @@ type ThreadMsg = { id: string; sender: string; text: string; created_at: string 
 
 export default function ResignationReasonsPage() {
   const router = useRouter();
+  const pathname = usePathname();
   const authState = useAppSelector((s) => s.auth);
 
   // 左の折りたたみ
@@ -41,8 +42,9 @@ export default function ResignationReasonsPage() {
   }, []);
 
   useEffect(() => {
-    if (!authState.isAuthenticated) router.push("/auth/login");
-  }, [authState, router]);
+    const hasStoredToken = typeof window !== 'undefined' && !!localStorage.getItem('drf_token_v2');
+    if (!authState.isAuthenticated && !hasStoredToken) router.push('/auth/login');
+  }, [authState.isAuthenticated, router]);
 
   const handleGenerate = async () => {
     if (!currentIssue) {
@@ -122,6 +124,15 @@ export default function ResignationReasonsPage() {
     "その他、質問",
   ];
 
+  // preserve /users/:id prefix
+  const userIdFromPath = useMemo(() => {
+    if (!pathname) return null as string | null;
+    const parts = pathname.split('/').filter(Boolean);
+    if (parts[0] === 'users' && parts[1]) return parts[1];
+    return null;
+  }, [pathname]);
+  const to = (p: string) => (userIdFromPath ? `/users/${userIdFromPath}${p}` : p);
+
   const toPath = (label: string) =>
     label === "転職理由(志望理由)" || label === "志望理由"
       ? "/interview-advice/applying-reasons"
@@ -145,7 +156,7 @@ export default function ResignationReasonsPage() {
           <ol className="flex items-center gap-2">
             <li className="hover:text-gray-700 cursor-pointer" onClick={() => router.push("/")}>TOP</li>
             <li>›</li>
-            <li className="hover:text-gray-700 cursor-pointer" onClick={() => router.push("/interview-advice/applying-reasons")}>面接に関するアドバイス</li>
+            <li className="hover:text-gray-700 cursor-pointer" onClick={() => router.push(to("/interview-advice/applying-reasons"))}>面接に関するアドバイス</li>
             <li>›</li>
             <li className="text-gray-800">退職理由</li>
           </ol>
@@ -158,7 +169,7 @@ export default function ResignationReasonsPage() {
               {navItems.map((t) => (
                 <button
                   key={t}
-                  onClick={() => router.push(toPath(t))}
+                  onClick={() => router.push(to(toPath(t)))}
                   className={`w-full text-left px-4 py-3 border-b last:border-b-0 ${
                     t === "退職理由" ? "bg-[#FFF7E6] font-semibold" : "hover:bg-gray-50"
                   }`}
@@ -301,4 +312,3 @@ export default function ResignationReasonsPage() {
     </div>
   );
 }
-

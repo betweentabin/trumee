@@ -10,7 +10,7 @@ import { buildApiUrl, getApiHeaders } from '@/config/api';
 import toast from 'react-hot-toast';
 
 // Local types
-type ThreadMsg = { id: string; sender: string; text: string; created_at: string };
+type ThreadMsg = { id: string; sender: string; text: string; created_at: string; topic?: string };
 
 export default function ApplyingReasonsPage() {
   const router = useRouter();
@@ -34,6 +34,20 @@ export default function ApplyingReasonsPage() {
   const [thread, setThread] = useState<ThreadMsg[]>([]);
   const [threadInput, setThreadInput] = useState('');
   const endRef = useRef<HTMLDivElement | null>(null);
+  // Chat topic selection
+  const topics = [
+    { key: 'applying', label: '転職理由(志望理由)' },
+    { key: 'retire', label: '退職理由' },
+    { key: 'future', label: '将来やりたいこと' },
+    { key: 'resume', label: '職務経歴書に関する質問' },
+    { key: 'results', label: '実績など' },
+    { key: 'interview', label: '面接対策' },
+    { key: 'aspiration', label: '志望理由' },
+    { key: 'others', label: 'その他、質問' },
+  ] as const;
+  type TopicKey = typeof topics[number]['key'];
+  const [selectedTopic, setSelectedTopic] = useState<TopicKey | null>(null);
+  const topicLabel = (k: TopicKey | null) => (k ? topics.find(t => t.key === k)?.label || '' : '');
 
   // Support both /interview-advice/... and /users/:id/interview-advice/...
   const userIdFromPath = useMemo(() => {
@@ -121,16 +135,16 @@ export default function ApplyingReasonsPage() {
 
   // Thread helpers
   const parseContent = (c: any) => {
-    if (!c) return '';
+    if (!c) return { text: '', topic: undefined as string | undefined };
     try {
       const obj = JSON.parse(c);
       if (obj && typeof obj === 'object') {
-        return obj.message || obj.draft || c;
+        return { text: obj.message || obj.draft || String(c), topic: obj.topic };
       }
     } catch (e) {
       // noop
     }
-    return String(c);
+    return { text: String(c), topic: undefined };
   };
 
   const loadThread = async () => {
@@ -139,12 +153,16 @@ export default function ApplyingReasonsPage() {
       const res = await fetch(url, { headers: getApiHeaders(token) });
       if (!res.ok) return;
       const list = await res.json();
-      const mapped: ThreadMsg[] = (list || []).map((m: any) => ({
-        id: String(m.id),
-        sender: String(m.sender),
-        text: parseContent(m.content),
-        created_at: m.created_at,
-      }));
+      const mapped: ThreadMsg[] = (list || []).map((m: any) => {
+        const parsed = parseContent(m.content);
+        return {
+          id: String(m.id),
+          sender: String(m.sender),
+          text: parsed.text,
+          topic: parsed.topic,
+          created_at: m.created_at,
+        };
+      });
       setThread(mapped);
       endRef.current?.scrollIntoView({ behavior: 'smooth' });
       // mark as read for advice subject
@@ -162,11 +180,11 @@ export default function ApplyingReasonsPage() {
 
   const sendThreadMessage = async () => {
     const text = threadInput.trim();
-    if (!text) return;
+    if (!text || !selectedTopic) return;
     try {
       const body = {
         subject: 'advice',
-        content: JSON.stringify({ type: 'applying_reason_note', message: text }),
+        content: JSON.stringify({ type: 'note', topic: selectedTopic, message: text }),
       };
       const res = await fetch(buildApiUrl('/advice/messages/'), {
         method: 'POST',
@@ -185,6 +203,19 @@ export default function ApplyingReasonsPage() {
   };
 
   useEffect(() => { loadThread(); }, [token]);
+  // When opening a topic, mark read for advice subject
+  useEffect(() => {
+    if (!selectedTopic) return;
+    (async () => {
+      try {
+        await fetch(buildApiUrl('/advice/mark_read/'), {
+          method: 'POST',
+          headers: getApiHeaders(token),
+          body: JSON.stringify({ subject: 'advice' }),
+        });
+      } catch (e) { /* noop */ }
+    })();
+  }, [selectedTopic, token]);
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
@@ -215,18 +246,12 @@ export default function ApplyingReasonsPage() {
           {/* Left navigation */}
           <aside className="lg:col-span-3">
             <div className="bg-white rounded-lg border shadow-sm overflow-hidden">
-              {[
-                '転職理由(志望理由)',
-                '退職理由',
-                '将来やりたいこと',
-                '職務経歴書に関する質問',
-                '実績など',
-                '面接対策',
-                '志望理由',
-                'その他、質問',
-              ].map((t, i) => (
-                <div key={i} className="px-4 py-3 border-b last:border-b-0 text-sm hover:bg-gray-50 cursor-default">
-                  {t}
+              {topics.map((t) => (
+                <div key={t.key} className={`px-4 py-3 border-b last:border-b-0 text-sm flex items-center justify-between ${selectedTopic===t.key ? 'bg-orange-50' : 'hover:bg-gray-50'}`}>
+                  <span>{t.label}</span>
+                  <button aria-label="Open chat" onClick={() => setSelectedTopic(t.key)} className="p-1 rounded hover:bg-gray-200">
+                    <FaPlus />
+                  </button>
                 </div>
               ))}
             </div>
@@ -376,38 +401,45 @@ export default function ApplyingReasonsPage() {
           </main>
         </div>
 
-        {/* Thread */}
-        <section className="mt-8 grid grid-cols-1 lg:grid-cols-12 gap-6">
-          <div className="lg:col-span-9 bg-white rounded-lg shadow-md border">
-            <div className="px-4 py-3 border-b font-semibold">相談スレッド</div>
-            <div className="h-[300px] overflow-y-auto p-4 space-y-2 bg-gray-50">
-              {thread.length === 0 && (
-                <div className="text-center text-gray-400 text-sm py-10">メッセージはありません。</div>
-              )}
-              {thread.map((m) => {
-                const isMine = me && String(m.sender) === String(me.id);
-                return (
-                  <div key={m.id} className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`max-w-[80%] rounded-md p-3 text-sm ${isMine ? 'bg-[#3A2F1C] text-white' : 'bg-white text-gray-900 border'}`}>
-                      <div>{m.text}</div>
-                      <div className="text-[10px] opacity-70 mt-1">{new Date(m.created_at).toLocaleString('ja-JP')}</div>
+        {/* Topic Chat Panel */}
+        {selectedTopic && (
+          <section className="mt-8 grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <div className="lg:col-span-9 bg-white rounded-lg shadow-md border">
+              <div className="px-4 py-3 border-b font-semibold flex items-center justify-between">
+                <span>{topicLabel(selectedTopic)}</span>
+                <button aria-label="Close chat" onClick={() => setSelectedTopic(null)} className="p-1 rounded hover:bg-gray-100">
+                  <FaMinus />
+                </button>
+              </div>
+              <div className="h-[300px] overflow-y-auto p-4 space-y-2 bg-gray-50">
+                {thread.filter(m => (m.topic || 'others') === selectedTopic).length === 0 && (
+                  <div className="text-center text-gray-400 text-sm py-10">メッセージはありません。</div>
+                )}
+                {thread.filter(m => (m.topic || 'others') === selectedTopic).map((m) => {
+                  const isMine = me && String(m.sender) === String(me.id);
+                  return (
+                    <div key={m.id} className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}>
+                      <div className={`max-w-[80%] rounded-md p-3 text-sm ${isMine ? 'bg-[#3A2F1C] text-white' : 'bg-white text-gray-900 border'}`}>
+                        <div>{m.text}</div>
+                        <div className="text-[10px] opacity-70 mt-1">{new Date(m.created_at).toLocaleString('ja-JP')}</div>
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
-              <div ref={endRef} />
+                  );
+                })}
+                <div ref={endRef} />
+              </div>
+              <div className="p-4 border-t flex gap-2">
+                <input
+                  value={threadInput}
+                  onChange={(e) => setThreadInput(e.target.value)}
+                  placeholder="入力してください。"
+                  className="flex-1 rounded-md border px-3 py-2"
+                />
+                <button onClick={sendThreadMessage} className="rounded-md bg-[#FF733E] text-white px-4 py-2">送信</button>
+              </div>
             </div>
-            <div className="p-4 border-t flex gap-2">
-              <input
-                value={threadInput}
-                onChange={(e) => setThreadInput(e.target.value)}
-                placeholder="入力してください。"
-                className="flex-1 rounded-md border px-3 py-2"
-              />
-              <button onClick={sendThreadMessage} className="rounded-md bg-[#FF733E] text-white px-4 py-2">送信</button>
-            </div>
-          </div>
-        </section>
+          </section>
+        )}
       </div>
     </div>
   );

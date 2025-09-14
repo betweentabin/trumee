@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useAppSelector } from "@/app/redux/hooks";
 import useAuthV2 from "@/hooks/useAuthV2";
 import apiClient from "@/lib/api-v2-client";
@@ -14,6 +14,7 @@ type ThreadMsg = { id: string; sender: string; text: string; created_at: string 
 
 export default function PrepareInterviewPage() {
   const router = useRouter();
+  const pathname = usePathname();
   const authState = useAppSelector((s) => s.auth);
   const { currentUser } = useAuthV2();
 
@@ -41,8 +42,18 @@ export default function PrepareInterviewPage() {
   }, []);
 
   useEffect(() => {
-    if (!authState.isAuthenticated) router.push("/auth/login");
-  }, [authState, router]);
+    const hasStoredToken = typeof window !== 'undefined' && !!localStorage.getItem('drf_token_v2');
+    if (!authState.isAuthenticated && !hasStoredToken) router.push('/auth/login');
+  }, [authState.isAuthenticated, router]);
+
+  // preserve /users/:id prefix when present
+  const userIdFromPath = useMemo(() => {
+    if (!pathname) return null as string | null;
+    const parts = pathname.split('/').filter(Boolean);
+    if (parts[0] === 'users' && parts[1]) return parts[1];
+    return null;
+  }, [pathname]);
+  const to = (p: string) => (userIdFromPath ? `/users/${userIdFromPath}${p}` : p);
 
   // check resume presence
   useEffect(() => {
@@ -123,7 +134,7 @@ export default function PrepareInterviewPage() {
           <ol className="flex items-center gap-2">
             <li className="hover:text-gray-700 cursor-pointer" onClick={() => router.push("/")}>TOP</li>
             <li>›</li>
-            <li className="hover:text-gray-700 cursor-pointer" onClick={() => router.push("/interview-advice/applying-reasons")}>面接に関するアドバイス</li>
+            <li className="hover:text-gray-700 cursor-pointer" onClick={() => router.push(to("/interview-advice/applying-reasons"))}>面接に関するアドバイス</li>
             <li>›</li>
             <li className="text-gray-800">面接対策</li>
           </ol>
@@ -145,8 +156,8 @@ export default function PrepareInterviewPage() {
               ].map((t, i) => (
                 <button
                   key={i}
-                  onClick={() =>
-                    router.push(
+                  onClick={() => {
+                    const path =
                       t === "転職理由(志望理由)"
                         ? "/interview-advice/applying-reasons"
                         : t === "職務経歴書に関する質問"
@@ -156,10 +167,10 @@ export default function PrepareInterviewPage() {
                         : t === "面接対策"
                         ? "/interview-advice/prepare-interview"
                         : t === "その他、質問"
-                        ? "/interview-advice/prepare-interview"
-                        : "/interview-advice/prepare-interview"
-                    )
-                  }
+                        ? "/interview-advice/other-questions"
+                        : "/interview-advice/prepare-interview";
+                    router.push(to(path));
+                  }}
                   className={`w-full text-left px-4 py-3 border-b last:border-b-0 ${
                     t === "面接対策" ? "bg-[#FFF7E6] font-semibold" : "hover:bg-gray-50"
                   }`}
@@ -267,4 +278,3 @@ export default function PrepareInterviewPage() {
     </div>
   );
 }
-
