@@ -60,9 +60,9 @@ const Footer = () => {
                             <p className="font-bold mb-2">面接に関するアドバイス</p>
                             <ul className="space-y-1">
                                 <li><Link href="/interview-advice/applying-reasons" className="hover:text-[#FF733E] transition-colors">転職理由（志望理由）</Link></li>
-                                <li><Link href="/interview-advice/resume-questions" className="hover:text-[#FF733E] transition-colors">職務経歴書に関する質問</Link></li>
-                                <li><Link href="/interview-advice/pr-questions" className="hover:text-[#FF733E] transition-colors">自己PRに関係する質問</Link></li>
-                                <li><Link href="/interview-advice/prepare-interview" className="hover:text-[#FF733E] transition-colors">面接対策</Link></li>
+                                <li><Link href="/interview-advice/applying-reasons" className="hover:text-[#FF733E] transition-colors">職務経歴書に関する質問</Link></li>
+                                <li><Link href="/interview-advice/applying-reasons" className="hover:text-[#FF733E] transition-colors">自己PRに関係する質問</Link></li>
+                                <li><Link href="/interview-advice/applying-reasons" className="hover:text-[#FF733E] transition-colors">面接対策</Link></li>
                             </ul>
                             </div>
 

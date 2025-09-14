@@ -217,6 +217,82 @@ def admin_users_v2(request):
     serializer = UserSerializer(page, many=True)
     return paginator.get_paginated_response(serializer.data)
 
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def admin_user_overview(request, user_id):
+    """管理者用: 指定ユーザーの概要情報
+
+    GET /api/v2/admin/users/<uuid:user_id>/overview/
+
+    返却: 基本プロフィールと関連リソースの件数サマリ。
+    """
+    # 管理者のみ許可
+    if not request.user.is_staff:
+        return Response({'detail': '管理者権限が必要です'}, status=status.HTTP_403_FORBIDDEN)
+
+    # ユーザー取得
+    target = get_object_or_404(User, id=user_id)
+
+    # 件数サマリ
+    resumes_count = Resume.objects.filter(user=target).count()
+    experiences_count = Experience.objects.filter(resume__user=target).count()
+
+    # 応募とスカウト（求職者/企業で分岐）
+    applications_as_applicant = Application.objects.filter(applicant=target).count()
+    applications_as_company = Application.objects.filter(company=target).count()
+    scouts_sent = Scout.objects.filter(company=target).count()
+    scouts_received = Scout.objects.filter(seeker=target).count()
+
+    # メッセージ（送受信）
+    from django.db.models import Q
+    messages_total = 0
+    try:
+        messages_total = target.sent_messages.count() + target.received_messages.count()
+    except Exception:
+        # 念のためのフォールバック
+        messages_total = (
+            __import__('core.models', fromlist=['Message']).Message.objects.filter(
+                Q(sender=target) | Q(receiver=target)
+            ).count()
+        )
+
+    # 最終アクティビティ（存在すれば）
+    latest_activity = None
+    try:
+        from .models import ActivityLog
+        latest = ActivityLog.objects.filter(user=target).order_by('-created_at').first()
+        latest_activity = latest.created_at if latest else None
+    except Exception:
+        latest_activity = None
+
+    data = {
+        'user': {
+            'id': str(target.id),
+            'email': target.email,
+            'role': target.role,
+            'full_name': target.full_name,
+            'company_name': getattr(target, 'company_name', ''),
+            'is_active': target.is_active,
+            'is_staff': target.is_staff,
+            'is_premium': target.is_premium,
+            'plan_tier': target.plan_tier,
+            'created_at': target.created_at,
+        },
+        'counts': {
+            'resumes': resumes_count,
+            'experiences': experiences_count,
+            'applications_as_applicant': applications_as_applicant,
+            'applications_as_company': applications_as_company,
+            'scouts_sent': scouts_sent,
+            'scouts_received': scouts_received,
+            'messages_total': messages_total,
+        },
+        'latest_activity_at': latest_activity,
+    }
+
+    return Response(data, status=status.HTTP_200_OK)
+
 # ============================================================================
 # 認証関連エンドポイント
 # ============================================================================
