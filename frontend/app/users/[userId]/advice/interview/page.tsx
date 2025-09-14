@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useParams } from "next/navigation";
 import { buildApiUrl, getApiHeaders } from "@/config/api";
 
 type Msg = { id: string; sender: string; content: string; created_at: string };
@@ -10,6 +11,7 @@ export default function InterviewAdvicePage() {
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const endRef = useRef<HTMLDivElement | null>(null);
+  const params = useParams<{ userId: string }>();
 
   const token = useMemo(() => (typeof window !== "undefined" ? localStorage.getItem("drf_token_v2") || "" : ""), []);
   const me = useMemo(() => {
@@ -19,7 +21,8 @@ export default function InterviewAdvicePage() {
 
   const load = useCallback(async () => {
     try {
-      const url = `${buildApiUrl("/advice/messages/")}?subject=interview`;
+      const userId = params?.userId ? String(params.userId) : "";
+      const url = `${buildApiUrl("/advice/messages/")}?subject=interview${userId ? `&user_id=${encodeURIComponent(userId)}` : ""}`;
       const res = await fetch(url, { headers: getApiHeaders(token) });
       if (!res.ok) return;
       const list = await res.json();
@@ -37,10 +40,11 @@ export default function InterviewAdvicePage() {
     if (!input.trim()) return;
     try {
       setSending(true);
+      const userId = params?.userId ? String(params.userId) : "";
       const res = await fetch(buildApiUrl("/advice/messages/"), {
         method: "POST",
         headers: getApiHeaders(token),
-        body: JSON.stringify({ subject: "interview", content: input.trim() }),
+        body: JSON.stringify({ subject: "interview", content: input.trim(), ...(userId ? { user_id: userId } : {}) }),
       });
       if (!res.ok) return;
       setInput("");
