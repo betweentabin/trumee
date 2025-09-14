@@ -47,6 +47,14 @@ export default function ResumeReviewPage() {
       }));
       // Post-process to mark own messages. We cannot easily know user id here without an extra call; assume last message echo will render on send.
       setMessages(mapped);
+      // mark read for resume advice
+      try {
+        await fetch(`${apiUrl}/api/v2/advice/mark_read/`, {
+          method: 'POST',
+          headers: { ...getAuthHeaders() },
+          body: JSON.stringify({ subject: 'resume_advice' }),
+        });
+      } catch {}
     } catch (e) {
       setError('メッセージの取得に失敗しました');
     }

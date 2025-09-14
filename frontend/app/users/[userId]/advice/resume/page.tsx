@@ -25,6 +25,8 @@ export default function ResumeAdvicePage() {
       const list = await res.json();
       const mapped = (list || []).map((m: any) => ({ id: String(m.id), sender: String(m.sender), content: m.content, created_at: m.created_at }));
       setMessages(mapped);
+      // 既読化
+      try { await fetch(buildApiUrl("/advice/mark_read/"), { method: "POST", headers: getApiHeaders(token), body: JSON.stringify({ subject: "resume_advice" }) }); } catch {}
     } catch { /* noop */ }
   }, [token]);
 
@@ -75,4 +77,3 @@ export default function ResumeAdvicePage() {
     </div>
   );
 }
-

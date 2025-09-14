@@ -3,15 +3,20 @@
 import { useState } from 'react';
 import { Menu, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useAppSelector } from '@/app/redux/hooks';
 
 export default function MobileMenu() {
   const [isOpen, setIsOpen] = useState(false);
   const router = useRouter()
+  const isAuthenticated = useAppSelector(state => state.authV2.isAuthenticated);
   const login = () => {
     router.push('/auth/login');
   }
   const register = () => {  
     router.push('/auth/register');
+  }
+  const goMyPage = () => {
+    router.push('/account/top');
   }
   return (
     <>
@@ -45,9 +50,15 @@ export default function MobileMenu() {
           <button onClick={register} className="bg-orange-500 text-white py-2 rounded-full mt-4">
             添削サービスに申し込む
           </button>
-          <button onClick={login} className="border border-gray-500 text-gray-700 py-2 rounded-full mt-2">
-            ログイン
-          </button>
+          {isAuthenticated ? (
+            <button onClick={goMyPage} className="border border-gray-500 text-gray-700 py-2 rounded-full mt-2">
+              マイページ
+            </button>
+          ) : (
+            <button onClick={login} className="border border-gray-500 text-gray-700 py-2 rounded-full mt-2">
+              ログイン
+            </button>
+          )}
         </nav>
       </div>
 
