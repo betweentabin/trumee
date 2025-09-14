@@ -3,24 +3,13 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAppSelector } from '@/app/redux/hooks';
-import { useSearchSeekers, useCreateScout, useCreateApplication } from '@/hooks/useApi';
+import { useCreateScout, useCreateApplication } from '@/hooks/useApi';
+import apiClient from '@/lib/api-v2-client';
+import type { SeekerProfile } from '@/types/api-v2';
 import { Search, Filter, MapPin, Briefcase, Calendar, Send, UserPlus, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 
-interface SeekerProfile {
-  id: string;
-  email: string;
-  full_name: string;
-  gender?: string;
-  phone?: string;
-  created_at: string;
-  // 追加のプロフィール情報
-  experience_years?: number;
-  skills?: string[];
-  location?: string;
-  desired_salary?: string;
-  resume_id?: string;
-}
+// v2 API の SeekerProfile を利用
 
 export default function CompanySearchPage() {
   const router = useRouter();
@@ -38,39 +27,24 @@ export default function CompanySearchPage() {
   const [selectedSeeker, setSelectedSeeker] = useState<SeekerProfile | null>(null);
   const [scoutMessage, setScoutMessage] = useState('');
   const [showScoutModal, setShowScoutModal] = useState(false);
+  const [searchResults, setSearchResults] = useState<SeekerProfile[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
-  // 🚨 APIクエリを無効化してダミーデータを使用
-  // const { data: searchResults, isLoading, refetch } = useSearchSeekers(searchParams);
-  const searchResults = [
-    {
-      id: '1',
-      email: 'developer1@example.com',
-      full_name: '佐藤花子',
-      gender: 'female',
-      phone: '090-1234-5678',
-      created_at: '2024-01-15T00:00:00Z',
-      experience_years: 3,
-      skills: ['React', 'TypeScript', 'Node.js'],
-      location: '東京都',
-      desired_salary: '500万円～600万円',
-      resume_id: 'resume_1'
-    },
-    {
-      id: '2',
-      email: 'engineer2@example.com',
-      full_name: '田中太郎',
-      gender: 'male',
-      phone: '090-8765-4321',
-      created_at: '2024-01-10T00:00:00Z',
-      experience_years: 5,
-      skills: ['Python', 'Django', 'AWS'],
-      location: '大阪府',
-      desired_salary: '600万円～700万円',
-      resume_id: 'resume_2'
+  const refetch = async () => {
+    setIsLoading(true);
+    try {
+      const res = await apiClient.searchSeekers({
+        keyword: searchParams.q,
+        prefecture: searchParams.location,
+      } as any);
+      setSearchResults(res?.results || []);
+    } catch (e) {
+      console.error(e);
+      toast.error('検索に失敗しました');
+    } finally {
+      setIsLoading(false);
     }
-  ];
-  const isLoading = false;
-  const refetch = () => Promise.resolve();
+  };
 
   // 🚨 認証チェックを無効化
   // useEffect(() => {
@@ -96,7 +70,7 @@ export default function CompanySearchPage() {
   const handleScoutClick = (seeker: SeekerProfile) => {
     setSelectedSeeker(seeker);
     setShowScoutModal(true);
-    setScoutMessage(`${seeker.full_name}様
+    setScoutMessage(`${seeker.full_name || '候補者'} 様
 
 この度は、貴方のプロフィールを拝見し、ぜひ弊社の求人にご興味を持っていただければと思い、ご連絡させていただきました。
 
@@ -114,7 +88,8 @@ ${authState.user?.company_name || '弊社'}では、現在新しいメンバー�
 
     try {
       await createScoutMutation.mutateAsync({
-        seeker: selectedSeeker.id,
+        // v2 API expects seeker: User UUID
+        seeker: (selectedSeeker as any).user || selectedSeeker.id,
         scout_message: scoutMessage,
       });
       toast.success('スカウトを送信しました');
@@ -302,7 +277,7 @@ function SeekerCard({
   onScout, 
   onViewDetails 
 }: { 
-  seeker: any; 
+  seeker: SeekerProfile; 
   onScout: () => void; 
   onViewDetails: () => void;
 }) {
@@ -319,13 +294,13 @@ function SeekerCard({
             <div className="flex-1">
               <h3 className="text-lg font-semibold text-gray-900">{seeker.full_name || '名前未設定'}</h3>
               <div className="flex flex-wrap gap-4 mt-2 text-sm text-gray-600">
-                {seeker.location && (
+                {seeker.prefecture && (
                   <div className="flex items-center gap-1">
                     <MapPin size={16} />
-                    {seeker.location}
+                    {seeker.prefecture}
                   </div>
                 )}
-                {seeker.experience_years !== undefined && (
+                {typeof seeker.experience_years === 'number' && (
                   <div className="flex items-center gap-1">
                     <Briefcase size={16} />
                     経験{seeker.experience_years}年
@@ -333,22 +308,9 @@ function SeekerCard({
                 )}
                 <div className="flex items-center gap-1">
                   <Calendar size={16} />
-                  登録日: {new Date(seeker.created_at).toLocaleDateString()}
+                  更新: {seeker.updated_at ? new Date(seeker.updated_at).toLocaleDateString() : (seeker.created_at ? new Date(seeker.created_at).toLocaleDateString() : '-')}
                 </div>
               </div>
-              
-              {seeker.skills && seeker.skills.length > 0 && (
-                <div className="flex flex-wrap gap-2 mt-3">
-                  {seeker.skills.map((skill: string, index: number) => (
-                    <span
-                      key={index}
-                      className="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded-full"
-                    >
-                      {skill}
-                    </span>
-                  ))}
-                </div>
-              )}
             </div>
           </div>
         </div>

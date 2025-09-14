@@ -130,15 +130,53 @@ export default function PrepareInterviewPage() {
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-800 flex items-center gap-3">
-            <FaHandshake className="text-blue-600" />
-            面接対策
-          </h1>
-          <p className="text-gray-600 mt-2">面接を成功させるための準備チェックリスト</p>
-        </div>
+        {/* Breadcrumbs */}
+        <nav className="text-sm text-gray-500 mb-4" aria-label="breadcrumb">
+          <ol className="flex items-center gap-2">
+            <li className="hover:text-gray-700 cursor-pointer" onClick={() => router.push('/')}>TOP</li>
+            <li>›</li>
+            <li className="hover:text-gray-700 cursor-pointer" onClick={() => router.push('/interview-advice/applying-reasons')}>面接に関するアドバイス</li>
+            <li>›</li>
+            <li className="text-gray-800">面接対策</li>
+          </ol>
+        </nav>
 
-        <div className="bg-white rounded-lg shadow-md overflow-hidden">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          {/* Left navigation */}
+          <aside className="lg:col-span-3">
+            <div className="bg-white rounded-lg border shadow-sm overflow-hidden">
+              {[
+                { label: '転職理由(志望理由)', href: '/interview-advice/applying-reasons' },
+                { label: '職務経歴書に関する質問', href: '/interview-advice/resume-questions' },
+                { label: '自己PRに関係する質問', href: '/interview-advice/pr-questions' },
+                { label: '面接対策', href: '/interview-advice/prepare-interview' },
+              ].map((item, i) => (
+                <button key={i} onClick={() => router.push(item.href)} className={`w-full text-left px-4 py-3 border-b last:border-b-0 ${item.href.endsWith('prepare-interview') ? 'bg-[#FFF7E6] font-semibold' : 'hover:bg-gray-50'}`}>
+                  {item.label}
+                </button>
+              ))}
+            </div>
+          </aside>
+
+          {/* Main content */}
+          <div className="lg:col-span-9">
+            <div className="mb-6">
+              <h1 className="text-3xl font-bold text-gray-800 flex items-center gap-3">
+                <FaHandshake className="text-[#FF733E]" />
+                面接対策
+              </h1>
+              <p className="text-gray-600 mt-2">面接を成功させるための準備チェックリスト</p>
+            </div>
+
+            {/* CTA */}
+            <div className="mb-6 bg-white border rounded-lg p-6">
+              <p className="text-gray-700 mb-4">ここでは想定される質問とあなたの職務経歴書をベースに、回答の添削やアドバイスを受けることができます。面接対策を始めるには、まず職務経歴書を作成してください。</p>
+              <button onClick={() => router.push('/career')} className="px-6 py-3 rounded-lg bg-[#FF733E] text-white hover:bg-orange-70 active:bg-orange-60">
+                職務経歴書を作成する
+              </button>
+            </div>
+
+            <div className="bg-white rounded-lg shadow-md overflow-hidden">
           <div className="flex border-b">
             {tabs.map((tab) => (
               <button
@@ -210,7 +248,7 @@ export default function PrepareInterviewPage() {
               </div>
             </div>
           </div>
-        </div>
+          </div>
 
         <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="bg-white rounded-lg shadow-md p-6">
@@ -241,6 +279,8 @@ export default function PrepareInterviewPage() {
               <li>• 次回への改善点を整理</li>
               <li>• 結果を冷静に待つ</li>
             </ul>
+          </div>
+        </div>
           </div>
         </div>
       </div>

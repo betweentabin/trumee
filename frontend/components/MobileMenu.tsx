@@ -3,21 +3,18 @@
 import { useState } from 'react';
 import { Menu, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { useAppSelector } from '@/app/redux/hooks';
 
 export default function MobileMenu() {
   const [isOpen, setIsOpen] = useState(false);
   const router = useRouter()
   const isAuthenticated = useAppSelector(state => state.authV2.isAuthenticated);
-  const login = () => {
-    router.push('/auth/login');
-  }
-  const register = () => {  
-    router.push('/auth/register');
-  }
-  const goMyPage = () => {
-    router.push('/account/top');
-  }
+  const close = () => setIsOpen(false);
+  const go = (href: string) => { router.push(href); close(); };
+  const login = () => go('/auth/login');
+  const register = () => go('/auth/register');
+  const goMyPage = () => go('/account/top');
   return (
     <>
       {/* Bottom Fixed Bar */}
@@ -37,17 +34,27 @@ export default function MobileMenu() {
         }`}
       >
         <div className="flex justify-end p-4">
-          <button onClick={() => setIsOpen(false)}>
+          <button onClick={close}>
             <X size={24} />
           </button>
         </div>
         <nav className="flex flex-col gap-4 px-6 text-gray-800">
-          <a href="#about-us">私たちについて</a>
-          <a href="#service-flow">サービスの流れ</a>
-          <a href="#success-stories">転職成功事例</a>
-          <a href="#fee-structure">料金体系</a>
-          <a href="#FAQ">FAQ</a>
-          <button onClick={register} className="bg-orange-500 text-white py-2 rounded-full mt-4">
+          <Link href="#about-us" onClick={close}>私たちについて</Link>
+          <Link href="#service-flow" onClick={close}>サービスの流れ</Link>
+          <Link href="#success-stories" onClick={close}>転職成功事例</Link>
+          <Link href="#fee-structure" onClick={close}>料金体系</Link>
+          <Link href="#FAQ" onClick={close}>FAQ</Link>
+
+          <div className="h-px bg-gray-200 my-2" />
+
+          {/* ワイヤーフレーム主要導線 */}
+          <Link href="/scouts" onClick={close} className="hover:text-[#FF733E]">企業からのスカウト状況</Link>
+          <Link href="/interview-advice/applying-reasons" onClick={close} className="hover:text-[#FF733E]">スカウト企業への志望理由作成補助</Link>
+          <Link href="/resume-advice" onClick={close} className="hover:text-[#FF733E]">職務経歴書の添削</Link>
+          <Link href="/resume-advice/print" onClick={close} className="hover:text-[#FF733E]">印刷</Link>
+          <Link href="/interview-advice/prepare-interview" onClick={close} className="hover:text-[#FF733E]">面接対策</Link>
+
+          <button onClick={register} className="bg-[#FF733E] text-white py-2 rounded-full mt-4 hover:bg-orange-70 active:bg-orange-60">
             添削サービスに申し込む
           </button>
           {isAuthenticated ? (
