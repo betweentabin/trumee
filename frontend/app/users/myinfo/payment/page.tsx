@@ -139,10 +139,7 @@ export default function UserPaymentPage() {
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-800 flex items-center gap-3">
-            <FaCreditCard className="text-[#FF733E]" />
-            支払い情報登録・変更
-          </h1>
+          <h1 className="text-3xl font-bold text-gray-800">支払い情報登録・変更</h1>
           <p className="text-gray-600 mt-2">クレジットカード情報を管理します</p>
         </div>
 
@@ -166,7 +163,6 @@ export default function UserPaymentPage() {
 
           {paymentMethods.length === 0 ? (
             <div className="text-center py-12">
-              <FaCreditCard className="mx-auto h-24 w-24 text-gray-300 mb-4" />
               <p className="text-gray-500">カードが登録されていません</p>
             </div>
           ) : (

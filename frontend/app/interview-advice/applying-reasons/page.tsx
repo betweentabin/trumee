@@ -182,7 +182,7 @@ export default function ApplyingReasonsPage() {
           <ol className="flex items-center gap-2">
             <li className="hover:text-gray-700 cursor-pointer" onClick={() => router.push('/')}>TOP</li>
             <li>›</li>
-            <li className="hover:text-gray-700 cursor-pointer" onClick={() => router.push('/users/myinfo/registerdata')}>マイページ</li>
+            <li className="hover:text-gray-700 cursor-pointer" onClick={() => router.push(me?.id ? `/users/${me.id}/myinfo/registerdata` : '/users/myinfo/registerdata')}>マイページ</li>
             <li>›</li>
             <li className="hover:text-gray-700 cursor-pointer" onClick={() => router.push('/interview-advice/applying-reasons')}>面接に関するアドバイス</li>
             <li>›</li>

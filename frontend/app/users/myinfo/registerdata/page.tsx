@@ -3,7 +3,6 @@
 import { useMemo, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAppSelector } from '@/app/redux/hooks';
-import { FaUser, FaBriefcase, FaClipboardList, FaFileAlt } from 'react-icons/fa';
 import useAuthV2 from '@/hooks/useAuthV2';
 import ResumeFileUpload from '@/components/resume/resume-file-upload';
 import Leftpage from '@/components/user/page';
@@ -21,10 +20,10 @@ export default function RegisterDataPage() {
       userId ? `/users/${userId}/${subpath}` : null;
 
     return [
-      { id: 'profile', label: 'プロフィール', icon: FaUser, href: perUser('profile') || `/users/${userId}/profile` },
-      { id: 'history', label: '経歴', icon: FaBriefcase, href: perUser('experience') || `/users/${userId}/experience` },
-      { id: 'hope', label: '希望条件', icon: FaClipboardList, href: perUser('preference') || `/users/${userId}/preference` },
-      { id: 'resume', label: '履歴書', icon: FaFileAlt, href: perUser('resumes') || `/users/${userId}/resumes` },
+      { id: 'profile', label: 'プロフィール', href: perUser('profile') || `/users/${userId}/profile` },
+      { id: 'history', label: '経歴', href: perUser('experience') || `/users/${userId}/experience` },
+      { id: 'hope', label: '希望条件', href: perUser('preference') || `/users/${userId}/preference` },
+      { id: 'resume', label: '履歴書', href: perUser('resumes') || `/users/${userId}/resumes` },
     ];
   }, [userId]);
 
@@ -39,19 +38,15 @@ export default function RegisterDataPage() {
 
         <div className="lg:col-span-9">
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        {sections.map((section) => {
-          const Icon = section.icon;
-          return (
-            <button
-              key={section.id}
-              onClick={() => router.push(section.href)}
-              className="flex flex-col items-center p-4 bg-white border rounded-lg hover:bg-orange-50 hover:border-[#FF733E] transition-colors"
-            >
-              <Icon className="text-3xl text-[#FF733E] mb-2" />
-              <span className="text-sm font-medium">{section.label}</span>
-            </button>
-          );
-        })}
+        {sections.map((section) => (
+          <button
+            key={section.id}
+            onClick={() => router.push(section.href)}
+            className="flex flex-col items-center p-4 bg-white border rounded-lg hover:bg-orange-50 hover:border-[#FF733E] transition-colors"
+          >
+            <span className="text-sm font-medium">{section.label}</span>
+          </button>
+        ))}
       </div>
 
       <div className="bg-white border rounded-lg p-6">

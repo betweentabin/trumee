@@ -1,6 +1,7 @@
 "use client"
 import { useRouter } from "next/navigation";
 import Link from 'next/link';
+import { useMemo } from 'react';
 
 const Footer = () => {
 
@@ -11,6 +12,15 @@ const Footer = () => {
     const login = () => {
         router.push('/auth/login')
     }
+    const uid = useMemo(() => {
+        try {
+            if (typeof window === 'undefined') return undefined;
+            const raw = localStorage.getItem('current_user_v2');
+            return raw ? JSON.parse(raw)?.id : undefined;
+        } catch { return undefined; }
+    }, []);
+    const base = uid ? `/users/${uid}/myinfo` : '/users/myinfo';
+
     return(
         <>
                <footer className="bg-[#FFF8F4] text-[#4B4B4B] text-sm border-t border-gray-200">
@@ -65,11 +75,11 @@ const Footer = () => {
                             <div>
                             <p className="font-bold mb-2">マイページ</p>
                             <ul className="space-y-1">
-                                <li><Link href="/users" className="hover:text-[#FF733E] transition-colors">TOP</Link></li>
-                                <li><Link href="/users/myinfo/registerdata" className="hover:text-[#FF733E] transition-colors">基本情報の確認・変更</Link></li>
-                                <li><Link href="/users/myinfo/password" className="hover:text-[#FF733E] transition-colors">パスワードの変更</Link></li>
-                                <li><Link href="/users/myinfo/payment" className="hover:text-[#FF733E] transition-colors">支払い情報登録・変更</Link></li>
-                                <li><Link href="/users/myinfo/paidplans" className="hover:text-[#FF733E] transition-colors">有料プラン</Link></li>
+                                <li><Link href={uid ? `/users/${uid}` : '/users'} className="hover:text-[#FF733E] transition-colors">TOP</Link></li>
+                                <li><Link href={`${base}/registerdata`} className="hover:text-[#FF733E] transition-colors">基本情報の確認・変更</Link></li>
+                                <li><Link href={`${base}/password`} className="hover:text-[#FF733E] transition-colors">パスワードの変更</Link></li>
+                                <li><Link href={`${base}/payment`} className="hover:text-[#FF733E] transition-colors">支払い情報登録・変更</Link></li>
+                                <li><Link href={`${base}/paidplans`} className="hover:text-[#FF733E] transition-colors">有料プラン</Link></li>
                             </ul>
                             </div>
                         

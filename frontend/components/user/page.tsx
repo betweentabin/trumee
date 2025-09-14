@@ -17,13 +17,13 @@ export default function Leftpage() {
   })();
   const userId = userIdFromPath || (auth?.user?.id as string | undefined);
 
+  const base = userId ? `/users/${userId}/myinfo` : '/users/myinfo';
   const menuItems = [
     { label: 'TOP', href: userId ? `/users/${userId}` : '/users' },
-    // いつでも registerdata を優先表示（プロフィールページに飛ばない）
-    { label: '登録情報の確認・変更', href: '/users/myinfo/registerdata' },
-    { label: 'パスワードの変更', href: '/users/myinfo/password' },
-    { label: '支払い情報登録・変更', href: '/users/myinfo/payment' },
-    { label: '有料プラン', href: '/users/myinfo/paidplans' },
+    { label: '登録情報の確認・変更', href: `${base}/registerdata` },
+    { label: 'パスワードの変更', href: `${base}/password` },
+    { label: '支払い情報登録・変更', href: `${base}/payment` },
+    { label: '有料プラン', href: `${base}/paidplans` },
   ];
 
   return (

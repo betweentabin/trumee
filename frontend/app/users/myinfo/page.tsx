@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAppSelector } from '@/app/redux/hooks';
 import { FaUser, FaLock, FaCreditCard, FaCrown } from 'react-icons/fa';
+import useAuthV2 from '@/hooks/useAuthV2';
 
 export default function MyInfoPage() {
   const router = useRouter();
@@ -16,29 +17,33 @@ export default function MyInfoPage() {
     }
   }, [authState, router]);
 
+  const { currentUser } = useAuthV2();
+  const uid = currentUser?.id || (typeof window !== 'undefined' ? localStorage.getItem('current_user_v2') && JSON.parse(localStorage.getItem('current_user_v2') as string)?.id : undefined);
+  const base = uid ? `/users/${uid}/myinfo` : '/users/myinfo';
+
   const menuItems = [
     {
       title: '基本情報の確認・変更',
       icon: <FaUser className="text-2xl" />,
-      href: '/users/myinfo/registerdata',
+      href: `${base}/registerdata`,
       color: 'bg-[#FF733E]'
     },
     {
       title: 'パスワードの変更',
       icon: <FaLock className="text-2xl" />,
-      href: '/users/myinfo/password',
+      href: `${base}/password`,
       color: 'bg-[#FF733E]'
     },
     {
       title: '支払い情報登録・変更',
       icon: <FaCreditCard className="text-2xl" />,
-      href: '/users/myinfo/payment',
+      href: `${base}/payment`,
       color: 'bg-[#FF733E]'
     },
     {
       title: '有料プラン',
       icon: <FaCrown className="text-2xl" />,
-      href: '/users/myinfo/paidplans',
+      href: `${base}/paidplans`,
       color: 'bg-[#FF733E]'
     }
   ];
