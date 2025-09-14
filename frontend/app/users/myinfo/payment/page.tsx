@@ -35,14 +35,8 @@ export default function UserPaymentPage() {
     initializeAuth();
   }, [initializeAuth]);
 
-  // Redirect to user-specific page if logged in
-  useEffect(() => {
-    if (currentUser?.id) {
-      // Payment page doesn't have a user-specific equivalent, 
-      // so we redirect to profile settings
-      router.replace(`/users/${currentUser.id}/profile`);
-    }
-  }, [currentUser, router]);
+  // Note: Stay on this page for logged-in users.
+  // Previously this redirected to the profile page, which was incorrect.
 
   useEffect(() => {
     if (isAuthenticated === false) {
