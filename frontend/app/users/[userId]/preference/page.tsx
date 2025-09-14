@@ -63,7 +63,6 @@ export default function UserPreferenceByIdPage() {
   };
 
   const handleSave = async () => {
-    if (!target) return;
     try {
       setSaving(true);
       const payload: any = {
@@ -71,7 +70,15 @@ export default function UserPreferenceByIdPage() {
         desired_industries: parseList(form.desired_industries),
         desired_locations: parseList(form.desired_locations),
       };
-      await apiClient.updateResume(target.id, payload);
+      if (target) {
+        await apiClient.updateResume(target.id, payload);
+      } else {
+        // 履歴書がない場合は、その場で新規作成して希望条件のみ保存
+        await apiClient.createResume({
+          title: "メイン履歴書",
+          ...payload,
+        } as any);
+      }
       toast.success("希望条件を保存しました");
       // Refresh public data
       const data = await apiClient.getPublicUserResumes(userId);
@@ -88,21 +95,62 @@ export default function UserPreferenceByIdPage() {
   if (loading) return <div className="p-6">読み込み中...</div>;
   if (error) return <div className="p-6 text-red-600">{error}</div>;
   const isOwner = !!(currentUser?.id && currentUser.id === userId);
-  if (!target) return (
-    <div className="p-6">
-      表示できる希望条件がありません
-      {isOwner && (
-        <div className="mt-3">
-          <button
-            onClick={() => router.push('/auth/step/step4-preference')}
-            className="px-4 py-2 text-sm bg-[#FF733E] text-white rounded-md hover:bg-orange-70 active:bg-orange-60"
-          >
-            希望条件を設定する
-          </button>
+  if (!target) {
+    const notOwnerView = (
+      <div className="p-6">表示できる希望条件がありません</div>
+    );
+    if (!isOwner) return notOwnerView;
+
+    // オーナーはその場で新規作成できるフォームを表示
+    return (
+      <div className="max-w-3xl mx-auto p-6 space-y-4">
+        <div className="flex items-center justify-between mb-4">
+          <h1 className="text-2xl font-bold">希望条件</h1>
         </div>
-      )}
-    </div>
-  );
+        <div className="space-y-4 bg-white border rounded p-4">
+          <div>
+            <label className="block text-xs text-gray-500 mb-1">希望職種</label>
+            <input
+              value={form.desired_job}
+              onChange={(e) => setForm({ ...form, desired_job: e.target.value })}
+              placeholder="例: エンジニア"
+              className="w-full rounded-md border px-3 py-2"
+            />
+          </div>
+          <div>
+            <label className="block text-xs text-gray-500 mb-1">希望業界（カンマ/空白/読点区切り）</label>
+            <input
+              value={form.desired_industries}
+              onChange={(e) => setForm({ ...form, desired_industries: e.target.value })}
+              placeholder="例: IT、メーカー"
+              className="w-full rounded-md border px-3 py-2"
+            />
+          </div>
+          <div>
+            <label className="block text-xs text-gray-500 mb-1">希望勤務地（カンマ/空白/読点区切り）</label>
+            <input
+              value={form.desired_locations}
+              onChange={(e) => setForm({ ...form, desired_locations: e.target.value })}
+              placeholder="例: 東京、大阪"
+              className="w-full rounded-md border px-3 py-2"
+            />
+          </div>
+          <div className="flex gap-2 justify-end">
+            <button
+              onClick={() => setForm({ desired_job: '', desired_industries: '', desired_locations: '' })}
+              className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
+              disabled={saving}
+            >クリア</button>
+            <button
+              onClick={handleSave}
+              className="px-4 py-2 bg-[#FF733E] text-white rounded-md hover:bg-orange-70 active:bg-orange-60 disabled:bg-gray-400"
+              disabled={saving}
+            >{saving ? '保存中...' : '保存する'}</button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-3xl mx-auto p-6 space-y-4">
