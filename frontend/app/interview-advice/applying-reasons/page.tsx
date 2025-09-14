@@ -177,6 +177,16 @@ export default function ApplyingReasonsPage() {
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
+        {/* Breadcrumbs */}
+        <nav className="text-sm text-gray-500 mb-4" aria-label="breadcrumb">
+          <ol className="flex items-center gap-2">
+            <li className="hover:text-gray-700 cursor-pointer" onClick={() => router.push('/')}>TOP</li>
+            <li>›</li>
+            <li className="hover:text-gray-700 cursor-pointer" onClick={() => router.push('/interview-advice/applying-reasons')}>面接に関するアドバイス</li>
+            <li>›</li>
+            <li className="text-gray-800">転職理由(志望理由)</li>
+          </ol>
+        </nav>
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-800 flex items-center gap-3">

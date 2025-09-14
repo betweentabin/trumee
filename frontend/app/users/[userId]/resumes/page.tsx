@@ -33,7 +33,15 @@ export default function UserResumesByIdPage() {
 
   return (
     <div className="max-w-4xl mx-auto p-6">
-      <h1 className="text-2xl font-bold mb-4">公開履歴書</h1>
+      <div className="flex items-center justify-between mb-4">
+        <h1 className="text-2xl font-bold">公開履歴書</h1>
+        <Link
+          href={`/users/${userId}/advice/resume`}
+          className="inline-flex items-center px-4 py-2 bg-[#FF733E] text-white rounded-md hover:bg-[#e9632e] transition-colors"
+        >
+          添削チャットへ
+        </Link>
+      </div>
       {resumes.length === 0 ? (
         <div className="text-sm text-gray-600">公開中の履歴書はありません。</div>
       ) : (

@@ -39,34 +39,15 @@ const Footer = () => {
           </div>
         </div>
 
-        {/* Advice and Links Section */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
-          {/* 職務経歴書に関するアドバイス */}
+        {/* Company Links Section */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+          {/* 採用メニュー */}
           <div>
-            <p className="font-bold mb-2">職務経歴書に関するアドバイス</p>
+            <p className="font-bold mb-2">採用メニュー</p>
             <ul className="ml-4 space-y-1 list-disc">
-              <li><Link href="/resume-advice" className="hover:text-[#FF733E] transition-colors">職務経歴書の添削</Link></li>
-              <li><Link href="/resume-advice/print" className="hover:text-[#FF733E] transition-colors">印刷</Link></li>
-            </ul>
-          </div>
-
-          {/* 面接に関するアドバイス */}
-          <div>
-            <p className="font-bold mb-2">面接に関するアドバイス</p>
-            <ul className="space-y-1 list-disc ml-4">
-              <li><Link href="/interview-advice/applying-reasons" className="hover:text-[#FF733E] transition-colors">転職理由（志望理由）</Link></li>
-              <li><Link href="/interview-advice/resume-questions" className="hover:text-[#FF733E] transition-colors">職務経歴書に関する質問</Link></li>
-              <li><Link href="/interview-advice/pr-questions" className="hover:text-[#FF733E] transition-colors">自己PRに関係する質問</Link></li>
-              <li><Link href="/interview-advice/prepare-interview" className="hover:text-[#FF733E] transition-colors">面接対策</Link></li>
-            </ul>
-          </div>
-
-          {/* 企業からのスカウト確認 */}
-          <div>
-            <p className="font-bold mb-2">企業からのスカウト確認</p>
-            <ul className="space-y-1 list-disc ml-4">
-              <li><Link href="/confirm-scout/status" className="hover:text-[#FF733E] transition-colors">企業からのスカウト状況</Link></li>
-              <li><Link href="/confirm-scout/applying-reasons-assist" className="hover:text-[#FF733E] transition-colors">スカウト企業への志望理由作成補助</Link></li>
+              <li>
+                <Link href="/company" className="hover:text-[#FF733E] transition-colors">求職者の検索</Link>
+              </li>
             </ul>
           </div>
 
@@ -74,11 +55,9 @@ const Footer = () => {
           <div>
             <p className="font-bold mb-2">マイページ</p>
             <ul className="space-y-1 list-disc ml-4">
-              <li><Link href="/account/top" className="hover:text-[#FF733E] transition-colors">TOP</Link></li>
-              <li><Link href="/account/personal-info-license" className="hover:text-[#FF733E] transition-colors">基本情報の確認・変更</Link></li>
-              <li><Link href="/account/password" className="hover:text-[#FF733E] transition-colors">パスワードの変更</Link></li>
-              <li><Link href="/account/payment" className="hover:text-[#FF733E] transition-colors">支払い情報登録・変更</Link></li>
-              <li><Link href="/account/paid-plan" className="hover:text-[#FF733E] transition-colors">有料プラン</Link></li>
+              <li><Link href="/companyinfo" className="hover:text-[#FF733E] transition-colors">登録情報の管理設定</Link></li>
+              <li><Link href="/companyinfo/payment" className="hover:text-[#FF733E] transition-colors">支払い・プランの管理設定</Link></li>
+              <li><Link href="/companyinfo/repassword" className="hover:text-[#FF733E] transition-colors">パスワードの変更</Link></li>
             </ul>
           </div>
         </div>
