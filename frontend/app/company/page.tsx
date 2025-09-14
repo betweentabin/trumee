@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { usePathname, useRouter } from 'next/navigation';
 import useAuthV2 from '@/hooks/useAuthV2';
@@ -32,6 +32,13 @@ export default function Search() {
   
   const [results, setResults] = useState<any[]>([]);
   const [isScouting, setIsScouting] = useState<boolean>(false);
+  const [isSearching, setIsSearching] = useState(false);
+
+  // Pagination & Sorting
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [totalPages, setTotalPages] = useState<number>(1);
+  const [totalCount, setTotalCount] = useState<number>(0);
+  const [sortKey, setSortKey] = useState<string | undefined>(undefined);
 
   const [showPrefectureModal, setShowPrefectureModal] = useState(false);
   const [showIndustryModal, setShowIndustryModal] = useState(false);
@@ -238,7 +245,6 @@ export default function Search() {
     return params;
   }, []);
 
-  const [isSearching, setIsSearching] = useState(false);
   const onSearch = useCallback(async (_data: any) => {
     console.log(_data, 'data');
     setShowPrefectureModal(false);
@@ -247,30 +253,52 @@ export default function Search() {
     setIsSearching(true);
     try {
       const params = buildSearchParams(_data);
-      const resp = await apiV2Client.searchSeekers(params);
-      const arr = Array.isArray(resp) ? resp : (resp?.results ?? []);
-      setResults(arr);
+      const resp: any = await apiV2Client.searchSeekers({ ...params, page: currentPage });
+      const list = Array.isArray(resp) ? resp : (resp?.results ?? []);
+      const count = (resp?.count ?? (Array.isArray(resp) ? resp.length : 0)) as number;
+      const pageSize = (resp?.page_size ?? (list?.length || 20)) as number;
+      const pages = (resp?.total_pages ?? Math.max(1, Math.ceil(count / Math.max(1, pageSize)))) as number;
+
+      // ソート（クライアント側）
+      const sorted = (() => {
+        if (!sortKey) return list;
+        const arr = [...list];
+        switch (sortKey) {
+          case 'newest':
+            return arr.sort((a: any, b: any) => new Date(b.updated_at || b.created_at || 0).getTime() - new Date(a.updated_at || a.created_at || 0).getTime());
+          case 'match_high':
+            return arr.sort((a: any, b: any) => (b.match_score || 0) - (a.match_score || 0));
+          case 'salary_high':
+            return arr.sort((a: any, b: any) => (b.desired_salary || 0) - (a.desired_salary || 0));
+          case 'salary_low':
+            return arr.sort((a: any, b: any) => (a.desired_salary || 0) - (b.desired_salary || 0));
+          default:
+            return arr;
+        }
+      })();
+
+      setResults(sorted);
+      setTotalCount(count || sorted.length);
+      setTotalPages(pages);
     } catch (e) {
       console.error('Search error', e);
       toast.error('検索に失敗しました');
     } finally {
       setIsSearching(false);
     }
-  }, [buildSearchParams]);
+  }, [buildSearchParams, currentPage, sortKey]);
 
+  // 初期ロード: 空条件で検索（ページネーション初期化）
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const data = await search(); // legacy helper
-        console.log("Fetched data:", data);
-        setResults(Array.isArray(data) ? data : (data?.results ?? []));
-      } catch (error) {
-        console.error("Error fetching search data:", error);
-      }
-    };
-
-    fetchData();
+    handleSubmit(onSearch)();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // ページ変更時に再検索
+  useEffect(() => {
+    handleSubmit(onSearch)();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPage, sortKey]);
 
 
   // v2: スカウト送信
@@ -501,11 +529,10 @@ export default function Search() {
           <DefaultSelect
             instanceId="sort_by"
             options={sortOptions}
-            value={undefined}
+            value={sortOptions.find(o => o.value === sortKey)}
             placeholder="条件で並び替え"
-            onChange={(_value) => {
-              // TODO: Implement sorting logic
-              console.log('Sort by:', _value);
+            onChange={(opt: any) => {
+              setSortKey(opt?.value);
             }}
           />
         </div>
@@ -522,6 +549,42 @@ export default function Search() {
             />
           ))
         : null}
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex justify-center items-center gap-2 py-6">
+          <button
+            className="px-3 py-1 rounded border disabled:opacity-50"
+            disabled={currentPage <= 1 || isSearching}
+            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+          >
+            ‹
+          </button>
+          {Array.from({ length: totalPages }).slice(0, 10).map((_, i) => {
+            const page = i + 1;
+            return (
+              <button
+                key={`page-${page}`}
+                className={`px-3 py-1 rounded border ${currentPage === page ? 'bg-gray-200' : ''}`}
+                disabled={isSearching}
+                onClick={() => setCurrentPage(page)}
+              >
+                {page}
+              </button>
+            );
+          })}
+          {totalPages > 10 && (
+            <span className="px-2">…</span>
+          )}
+          <button
+            className="px-3 py-1 rounded border disabled:opacity-50"
+            disabled={currentPage >= totalPages || isSearching}
+            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+          >
+            ›
+          </button>
+        </div>
+      )}
 
       <Controller
         control={control}

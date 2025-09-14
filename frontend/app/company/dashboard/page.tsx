@@ -271,8 +271,7 @@ function OverviewTab() {
         <h3 className="text-lg font-semibold text-gray-900 mb-4">クイックアクション</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Link
-            href={`${companyPrefix}/search`
-            
+            href={`${companyPrefix}/search`}
             className="p-4 border border-gray-200 rounded-lg hover:border-blue-500 hover:shadow-sm transition"
           >
             <Search className="text-blue-600 mb-2" />
