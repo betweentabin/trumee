@@ -219,20 +219,10 @@ export default function AdminSeekerDetailPage() {
     },
   ];
 
-  const adviceMessages = [
-    { id: '1', content: { type: 'resume', message: '履歴書の構成を見直しましょう。' }, created_at: new Date().toISOString() },
-    { id: '2', content: { type: 'self_pr', message: '事例を交えて具体化するのが良いです。' }, created_at: new Date().toISOString() },
-  ];
-
   const interviewQuestions = [
     '転職理由を教えてください。',
     '強みと弱みを教えてください。',
     '直近のプロジェクトでの役割は？',
-  ];
-
-  const interviewAnswers = [
-    { id: 'a1', senderId: 'admin', content: { message: 'STARで回答構成を意識しましょう。' } },
-    { id: 'a2', senderId: String(id), content: { message: '了解しました。' } },
   ];
 
   const Header = (
