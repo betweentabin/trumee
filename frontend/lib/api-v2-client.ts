@@ -382,6 +382,20 @@ class ApiV2Client {
     return response.data;
   }
 
+  // ==========================================================================
+  // アドバイス通知
+  // ==========================================================================
+
+  async getAdviceNotifications(): Promise<any> {
+    const res = await this.client.get('/api/v2/advice/notifications/');
+    return res.data as any;
+  }
+
+  async markAdviceRead(subject?: 'resume_advice' | 'advice' | 'interview'): Promise<any> {
+    const res = await this.client.post('/api/v2/advice/mark_read/', subject ? { subject } : {});
+    return res.data as any;
+  }
+
   // ============================================================================
   // ユーティリティメソッド
   // ============================================================================

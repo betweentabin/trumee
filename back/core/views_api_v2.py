@@ -22,6 +22,7 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
 from django.conf import settings
+from django.utils import timezone
 import jwt
 import datetime
 import os
@@ -1058,6 +1059,63 @@ def advice_messages(request):
         content=content,
     )
     return Response(MessageSerializer(msg).data, status=status.HTTP_201_CREATED)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def advice_notifications(request):
+    """管理者→ユーザー向けアドバイス系メッセージの未読サマリを返す。
+
+    subjects = ['resume_advice', 'advice', 'interview']
+    返却例:
+    {
+      'resume_advice': { 'unread': 2, 'latest_at': '2025-09-13T12:34:56Z' },
+      'advice': { 'unread': 0, 'latest_at': null },
+      'interview': { 'unread': 1, 'latest_at': '...' },
+      'total_unread': 3
+    }
+    """
+    subjects = ['resume_advice', 'advice', 'interview']
+    data = {}
+    total = 0
+    for sub in subjects:
+        qs = Message.objects.filter(
+            receiver=request.user,
+            subject=sub,
+            is_read=False,
+            sender__is_staff=True,
+        ).order_by('-created_at')
+        count = qs.count()
+        latest = qs.first().created_at if count > 0 else None
+        data[sub] = {
+            'unread': count,
+            'latest_at': latest,
+        }
+        total += count
+    data['total_unread'] = total
+    return Response(data, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def advice_mark_read(request):
+    """アドバイス系メッセージを既読化。body: { subject?: 'resume_advice'|'advice'|'interview' }
+    未指定の場合は全件。
+    返却: advice_notifications と同じサマリ
+    """
+    allowed = {'resume_advice', 'advice', 'interview'}
+    subject = (request.data or {}).get('subject')
+    qs = Message.objects.filter(
+        receiver=request.user,
+        is_read=False,
+        sender__is_staff=True,
+    )
+    if subject in allowed:
+        qs = qs.filter(subject=subject)
+    # 既読更新
+    qs.update(is_read=True, read_at=timezone.now())
+    # 最新のサマリを返す
+    return advice_notifications(request)
 
 
 # ====================================================================
