@@ -1,15 +1,15 @@
 const seeker_menu_list = [
     {
         label: "職務経歴書に関するアドバイス",
-        href: "/resumes",
+        href: "/career",
         submenu: [
             {
                 label: "職務経歴書の添削",
-                href: "/resumes"
+                href: "/career"
             },
             {
                 label: "印刷",
-                href: "/resume-advice/print"
+                href: "/career/print"
             }
         ]
     },

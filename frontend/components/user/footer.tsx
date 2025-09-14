@@ -39,8 +39,8 @@ const Footer = () => {
                             <div className="space-y-2">
                                 <p className="font-bold">職務経歴書に関するアドバイス</p>
                                 <ul className="ml-4 space-y-1">
-                                <li><Link href="/resumes" className="hover:text-[#FF733E] transition-colors">職務経歴書の添削</Link></li>
-                                <li><Link href="/resume-advice/print" className="hover:text-[#FF733E] transition-colors">印刷</Link></li>
+                                <li><Link href="/career" className="hover:text-[#FF733E] transition-colors">職務経歴書の添削</Link></li>
+                                <li><Link href="/career/print" className="hover:text-[#FF733E] transition-colors">印刷</Link></li>
                                 </ul>
                             </div>
 

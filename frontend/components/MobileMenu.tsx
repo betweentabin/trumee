@@ -50,8 +50,8 @@ export default function MobileMenu() {
           {/* ワイヤーフレーム主要導線 */}
           <Link href="/scouts" onClick={close} className="hover:text-[#FF733E]">企業からのスカウト状況</Link>
           <Link href="/interview-advice/applying-reasons" onClick={close} className="hover:text-[#FF733E]">スカウト企業への志望理由作成補助</Link>
-          <Link href="/resumes" onClick={close} className="hover:text-[#FF733E]">職務経歴書の添削</Link>
-          <Link href="/resume-advice/print" onClick={close} className="hover:text-[#FF733E]">印刷</Link>
+          <Link href="/career" onClick={close} className="hover:text-[#FF733E]">職務経歴書の添削</Link>
+          <Link href="/career/print" onClick={close} className="hover:text-[#FF733E]">印刷</Link>
           <Link href="/interview-advice/prepare-interview" onClick={close} className="hover:text-[#FF733E]">面接対策</Link>
 
           <button onClick={register} className="bg-[#FF733E] text-white py-2 rounded-full mt-4 hover:bg-orange-70 active:bg-orange-60">
