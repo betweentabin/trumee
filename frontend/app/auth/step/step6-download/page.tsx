@@ -21,6 +21,8 @@ export default function Step6DownloadPage() {
   };
   const { formState, clearFormData } = useFormPersist();
   const [isDownloading, setIsDownloading] = useState(false);
+  const [isEmailing, setIsEmailing] = useState(false);
+  const [agree, setAgree] = useState(false);
 
   // 認証復元（未ログインでも利用可）
   useEffect(() => { initializeAuth(); }, [initializeAuth]);
@@ -34,6 +36,10 @@ export default function Step6DownloadPage() {
   }, [currentUser, router]);
 
   const handleDownloadPDF = async () => {
+    if (!agree) {
+      toast.error('公開案内の確認に同意してください');
+      return;
+    }
     setIsDownloading(true);
     
     try {
@@ -76,6 +82,32 @@ export default function Step6DownloadPage() {
     } finally {
       setIsDownloading(false);
     }
+  };
+
+  const handleSendEmail = async () => {
+    if (!agree) {
+      toast.error('公開案内の確認に同意してください');
+      return;
+    }
+    setIsEmailing(true);
+    try {
+      const response = await fetch(buildApiUrl('/resumes/send-pdf/'), {
+        method: 'POST',
+        headers: {
+          ...getAuthHeaders(),
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ resumeData: formState.stepData }),
+      });
+      if (!response.ok) {
+        const t = await response.text();
+        throw new Error(t?.slice(0,120) || 'メール送信に失敗しました');
+      }
+      toast.success('PDFをメール送信しました');
+    } catch (e: any) {
+      console.error(e);
+      toast.error(e?.message || 'メール送信に失敗しました');
+    } finally { setIsEmailing(false); }
   };
 
   const handleDownloadJSON = () => {
@@ -145,18 +177,34 @@ export default function Step6DownloadPage() {
 
           {/* Download Options */}
           <div className="space-y-4 mb-8">
+            <label className="flex items-start gap-3 p-4 bg-gray-50 rounded-lg border">
+              <input type="checkbox" className="mt-1" checked={agree} onChange={(e)=>setAgree(e.target.checked)} />
+              <span className="text-sm text-gray-700">スキルや経験の公開に関するご案内を確認しました。</span>
+            </label>
             <div className="bg-gray-50 rounded-lg p-6">
               <h3 className="text-lg font-semibold text-gray-800 mb-4">
                 ダウンロードオプション
               </h3>
               
               <div className="space-y-3">
+                {/* Email Send */}
+                <button
+                  onClick={handleSendEmail}
+                  disabled={!agree || isEmailing}
+                  className={`w-full flex items-center justify-center py-3 px-4 border rounded-lg transition ${
+                    !agree || isEmailing
+                      ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                      : 'bg-gray-700 text-white hover:bg-gray-800 border-transparent'
+                  }`}
+                >
+                  {isEmailing ? '送信中…' : 'メールを送信する（PDFを送付します）'}
+                </button>
                 {/* PDF Download */}
                 <button
                   onClick={handleDownloadPDF}
-                  disabled={isDownloading}
+                  disabled={!agree || isDownloading}
                   className={`w-full flex items-center justify-center py-3 px-4 border rounded-lg transition ${
-                    isDownloading
+                    !agree || isDownloading
                       ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
                       : 'bg-[#FF733E] text-white hover:bg-[#e9632e] border-transparent'
                   }`}

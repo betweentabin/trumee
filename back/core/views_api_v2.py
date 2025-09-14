@@ -1031,13 +1031,22 @@ def advice_messages(request):
 
     if request.method == 'GET':
         user_id = request.GET.get('user_id')
-        counterpart = resolve_counterpart(request.user, user_id)
-        if counterpart is None:
-            return Response({'error': 'counterpart_not_found'}, status=status.HTTP_404_NOT_FOUND)
+        # 管理者は対象ユーザーを必須にして相互のメッセージのみ返す
+        if request.user.is_staff:
+            counterpart = resolve_counterpart(request.user, user_id)
+            if counterpart is None:
+                return Response({'error': 'counterpart_not_found'}, status=status.HTTP_404_NOT_FOUND)
+            qs = Message.objects.filter(
+                Q(sender=request.user, receiver=counterpart) |
+                Q(sender=counterpart, receiver=request.user),
+            ).filter(subject=SUBJECT).order_by('created_at')
+            return Response(MessageSerializer(qs, many=True).data)
 
+        # 一般ユーザー: どの管理者とのやり取りでも一覧できるよう、相手を限定しない
         qs = Message.objects.filter(
-            Q(sender=request.user, receiver=counterpart) |
-            Q(sender=counterpart, receiver=request.user),
+            Q(sender=request.user) | Q(receiver=request.user)
+        ).filter(
+            Q(sender__is_staff=True) | Q(receiver__is_staff=True)
         ).filter(subject=SUBJECT).order_by('created_at')
 
         return Response(MessageSerializer(qs, many=True).data)

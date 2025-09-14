@@ -21,11 +21,12 @@ const AdviceScreenTab = ({
   control,
   errors,
 }: any) => {
-  const ADMIN_SENDER_ID = "admin";
-
   // Filter messages according to selected tab/subTab
   const filteredMessages = useMemo(() => {
-    if (!selectedAdviceTab) return [];
+    if (!selectedAdviceTab) return adviceMessages || [];
+
+    // 'all' タブは全件表示
+    if (selectedAdviceTab === 'all') return adviceMessages || [];
 
     const selectedTab = adviceTabs.find((tab: any) => tab.key === selectedAdviceTab);
 
@@ -132,7 +133,10 @@ const AdviceScreenTab = ({
             </div>
           )}
           {filteredMessages.map((msg: any) => {
-            const isAdmin = "admin";
+            // 送信者が対象ユーザー（求職者）でなければ管理者とみなす
+            const isAdmin = msg.senderId && currentUserIdAdvice
+              ? String(msg.senderId) !== String(currentUserIdAdvice)
+              : true;
 
             return (
               <div

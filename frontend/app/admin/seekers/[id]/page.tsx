@@ -206,6 +206,7 @@ export default function AdminSeekerDetailPage() {
 
   // Sample data for tabs (API未実装部分のダミー)
   const adviceTabs = [
+    { key: 'all', label: '全て', isGroup: false },
     { key: 'resume', label: '職務経歴書に関する質問', isGroup: false },
     { key: 'self_pr', label: '自己PRに関する質問', isGroup: false },
     {

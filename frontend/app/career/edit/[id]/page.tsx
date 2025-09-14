@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { FaChevronRight } from 'react-icons/fa';
+// import { FaChevronRight } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 import { getAuthHeaders } from '@/utils/auth';
+import { buildApiUrl } from '@/config/api';
 
 interface WorkExperience {
   company: string;
@@ -44,6 +45,9 @@ export default function EditResumePage() {
   const params = useParams();
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [agreePublish, setAgreePublish] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [downloading, setDownloading] = useState(false);
   const [resumeData, setResumeData] = useState<ResumeData>({
     title: '',
     fullName: '',
@@ -195,45 +199,10 @@ export default function EditResumePage() {
     setResumeData(prev => ({ ...prev, skills: [...prev.skills, ''] }));
   };
 
-  const Sidebar = () => (
-    <div className="w-80 bg-white border-r border-gray-200 p-6">
-      <div className="space-y-1">
-        <div className="py-3 px-4 cursor-pointer hover:bg-gray-50 rounded-lg">
-          <div className="flex items-center justify-between">
-            <span className="text-gray-700">TOP</span>
-            <FaChevronRight className="text-gray-400" />
-          </div>
-        </div>
-        <div className="py-3 px-4 cursor-pointer hover:bg-gray-50 rounded-lg">
-          <div className="flex items-center justify-between">
-            <span className="text-gray-700">登録情報の確認・変更</span>
-            <FaChevronRight className="text-gray-400" />
-          </div>
-        </div>
-        <div className="py-3 px-4 cursor-pointer hover:bg-gray-50 rounded-lg">
-          <div className="flex items-center justify-between">
-            <span className="text-gray-700">パスワードの変更</span>
-            <FaChevronRight className="text-gray-400" />
-          </div>
-        </div>
-        <div className="py-3 px-4 cursor-pointer hover:bg-gray-50 rounded-lg">
-          <div className="flex items-center justify-between">
-            <span className="text-gray-700">支払い情報登録・変更</span>
-            <FaChevronRight className="text-gray-400" />
-          </div>
-        </div>
-        <div className="py-3 px-4 cursor-pointer hover:bg-gray-50 rounded-lg">
-          <div className="flex items-center justify-between">
-            <span className="text-gray-700">有料プラン</span>
-            <FaChevronRight className="text-gray-400" />
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+  // 左メニュー（マイページ項目）は非表示に変更
 
   const StepIndicator = () => {
-    const steps = ['基本情報', '職歴', '学歴', 'スキル'];
+    const steps = ['基本情報', '職歴', '学歴', 'スキル', '自己PR', '完了'];
     return (
       <div className="mb-8">
         <div className="flex items-center justify-between">
@@ -346,10 +315,9 @@ export default function EditResumePage() {
               </div>
             </div>
 
+            {/* 自己PRはステップ5にも配置します（ここでは任意） */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                自己PR
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">自己PR（任意）</label>
               <textarea
                 className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF733E] focus:border-transparent"
                 rows={6}
@@ -385,6 +353,63 @@ export default function EditResumePage() {
                 />
               </div>
             </div>
+          </div>
+        );
+
+      case 5:
+        return (
+          <div className="space-y-6">
+            <h2 className="text-2xl font-bold mb-6">自己PR</h2>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">自己PR</label>
+              <textarea
+                className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF733E] focus:border-transparent"
+                rows={8}
+                placeholder="あなたの強みや経験を簡潔に記載してください"
+                value={resumeData.summary}
+                onChange={(e) => setResumeData(prev => ({ ...prev, summary: e.target.value }))}
+              />
+            </div>
+          </div>
+        );
+
+      case 6:
+        return (
+          <div className="space-y-6">
+            <h2 className="text-2xl font-bold mb-2">職務経歴書の作成が完了しました</h2>
+            <p className="text-gray-600">個人情報を特定されない範囲でスキルや経験をシステム内に公開することに同意後、PDFの保存が行えます。</p>
+
+            <label className="flex items-start gap-3 p-4 bg-gray-50 rounded-lg border">
+              <input type="checkbox" className="mt-1" checked={agreePublish} onChange={(e)=>setAgreePublish(e.target.checked)} />
+              <span className="text-sm text-gray-700">スキルや経験の公開に関するご案内を確認しました。</span>
+            </label>
+
+            <div className="space-y-3">
+              <button
+                disabled={!agreePublish || sending}
+                onClick={async ()=>{
+                  setSending(true);
+                  try {
+                    const ok = await handleSendPdfEmail();
+                    if (ok) toast.success('メールを送信しました');
+                  } catch (e) {
+                    toast.error('メール送信に失敗しました');
+                  } finally { setSending(false); }
+                }}
+                className={`w-full py-3 rounded-lg border ${!agreePublish || sending ? 'bg-gray-200 text-gray-400' : 'bg-gray-700 text-white hover:bg-gray-800'}`}
+              >{sending ? '送信中…' : 'メールを送信する（PDFを送付します）'}</button>
+
+              <button
+                disabled={!agreePublish || downloading}
+                onClick={async ()=>{
+                  setDownloading(true);
+                  try { await handleDownloadPdf(); } finally { setDownloading(false); }
+                }}
+                className={`w-full py-3 rounded-lg border ${!agreePublish || downloading ? 'bg-gray-200 text-gray-400' : 'bg-gray-100 hover:bg-gray-200'}`}
+              >{downloading ? '生成中…' : 'PDFをダウンロードする'}</button>
+            </div>
+
+            <div className="text-sm text-gray-500">「保存」を押すと、編集内容が反映されます。</div>
           </div>
         );
 
@@ -634,6 +659,86 @@ export default function EditResumePage() {
     }
   };
 
+  // helper: build resumeData for PDF API
+  const buildPdfPayload = () => {
+    // step1
+    const step1 = {
+      name: resumeData.fullName,
+      email: resumeData.email,
+      phone: resumeData.phone,
+      birthDate: resumeData.birthDate,
+      address: resumeData.address,
+    };
+    // step2: education
+    const step2 = { education: (resumeData.education || []).map(e => ({
+      startDate: '',
+      endDate: e.graduationDate || '',
+      school: e.school,
+    })) };
+    // step3: experience
+    const step3 = { experience: (resumeData.workExperiences || []).map(e => ({
+      company: e.company,
+      position: e.position,
+      startDate: e.startDate,
+      endDate: e.endDate,
+      description: e.description,
+    })) };
+    // step4: skills
+    const step4 = { skills: (resumeData.skills || []).filter(Boolean) };
+    // step5: self PR
+    const step5 = { selfPR: resumeData.summary || '' };
+    return { step1, step2, step3, step4, step5 };
+  };
+
+  const handleDownloadPdf = async () => {
+    try {
+      const response = await fetch(buildApiUrl('/resumes/download-pdf/'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
+        body: JSON.stringify({ resumeData: buildPdfPayload() }),
+      });
+      if (!response.ok) {
+        const err = await response.text();
+        throw new Error(err?.slice(0,120) || 'PDF生成に失敗しました');
+      }
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(new Blob([blob], { type: 'application/pdf' }));
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `resume_${new Date().toISOString().split('T')[0]}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+      toast.success('PDFをダウンロードしました');
+    } catch (e: any) {
+      console.error(e);
+      toast.error(e?.message || 'PDFのダウンロードに失敗しました');
+    }
+  };
+
+  const handleSendPdfEmail = async (): Promise<boolean> => {
+    const payload = { resumeData: buildPdfPayload() };
+    const res = await fetch(buildApiUrl('/resumes/send-pdf/'), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeaders(),
+      },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) {
+      const t = await res.text();
+      console.error('send-pdf failed', res.status, t);
+      toast.error('メール送信に失敗しました');
+      return false;
+    }
+    return true;
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex">
@@ -645,10 +750,8 @@ export default function EditResumePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
-      <Sidebar />
-      
-      <div className="flex-1 max-w-5xl mx-auto p-8">
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-5xl mx-auto p-8">
         <div className="mb-8">
           <div className="text-sm text-gray-600 mb-4">
             TOP &gt; マイページ
@@ -676,7 +779,7 @@ export default function EditResumePage() {
               前へ
             </button>
 
-            {currentStep < 4 ? (
+            {currentStep < 6 ? (
               <button
                 onClick={() => setCurrentStep(prev => prev + 1)}
                 className="px-8 py-3 bg-[#FF733E] text-white rounded-lg hover:bg-[#FF8659] font-medium"
