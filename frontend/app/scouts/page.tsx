@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import apiClient from '@/lib/api-v2-client';
 import useAuthV2 from '@/hooks/useAuthV2';
 import toast from 'react-hot-toast';
@@ -16,6 +16,7 @@ type Scout = any; // API差異があるため一旦ワイドに受ける
 
 export default function ScoutsPage() {
   const router = useRouter();
+  const pathname = usePathname();
   const [scouts, setScouts] = useState<Scout[]>([]);
   const [loading, setLoading] = useState(true);
   // フィルター（未適用）
@@ -40,6 +41,15 @@ export default function ScoutsPage() {
     'エンジニア', '製造・工場', '物流', '金融',
   ];
   const { isAuthenticated, initializeAuth } = useAuthV2();
+
+  // Support both /scouts and /users/:id/scouts URLs
+  const userIdFromPath = useMemo(() => {
+    if (!pathname) return null as string | null;
+    const parts = pathname.split('/').filter(Boolean);
+    if (parts[0] === 'users' && parts[1]) return parts[1];
+    return null;
+  }, [pathname]);
+  const to = (path: string) => (userIdFromPath ? `/users/${userIdFromPath}${path}` : path);
 
   // 認証初期化
   useEffect(() => {
@@ -184,11 +194,11 @@ export default function ScoutsPage() {
             <div className="bg-white rounded-lg border shadow-sm divide-y">
               <button
                 className="w-full text-left px-4 py-3 hover:bg-gray-50"
-                onClick={() => router.push('/scouts')}
+                onClick={() => router.push(to('/scouts'))}
               >企業からのスカウト状況</button>
               <button
                 className="w-full text-left px-4 py-3 hover:bg-gray-50"
-                onClick={() => router.push('/interview-advice/applying-reasons')}
+                onClick={() => router.push(to('/interview-advice/applying-reasons'))}
               >スカウト企業への志望理由作成補助</button>
             </div>
           </aside>

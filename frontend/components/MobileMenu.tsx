@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Menu, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -9,6 +9,15 @@ import { useAppSelector } from '@/app/redux/hooks';
 export default function MobileMenu() {
   const [isOpen, setIsOpen] = useState(false);
   const router = useRouter()
+  const uid = useMemo(() => {
+    try {
+      if (typeof window === 'undefined') return undefined;
+      const raw = localStorage.getItem('current_user_v2');
+      return raw ? JSON.parse(raw)?.id : undefined;
+    } catch { return undefined; }
+  }, []);
+  const scoutsHref = uid ? `/users/${uid}/scouts` : '/scouts';
+  const applyingReasonsHref = uid ? `/users/${uid}/interview-advice/applying-reasons` : '/interview-advice/applying-reasons';
   const isAuthenticated = useAppSelector(state => state.authV2.isAuthenticated);
   const close = () => setIsOpen(false);
   const go = (href: string) => { router.push(href); close(); };
@@ -48,8 +57,8 @@ export default function MobileMenu() {
           <div className="h-px bg-gray-200 my-2" />
 
           {/* ワイヤーフレーム主要導線 */}
-          <Link href="/scouts" onClick={close} className="hover:text-[#FF733E]">企業からのスカウト状況</Link>
-          <Link href="/interview-advice/applying-reasons" onClick={close} className="hover:text-[#FF733E]">スカウト企業への志望理由作成補助</Link>
+          <Link href={scoutsHref} onClick={close} className="hover:text-[#FF733E]">企業からのスカウト状況</Link>
+          <Link href={applyingReasonsHref} onClick={close} className="hover:text-[#FF733E]">スカウト企業への志望理由作成補助</Link>
           <Link href="/career" onClick={close} className="hover:text-[#FF733E]">職務経歴書の添削</Link>
           <Link href="/career/print" onClick={close} className="hover:text-[#FF733E]">印刷</Link>
           <Link href="/interview-advice/prepare-interview" onClick={close} className="hover:text-[#FF733E]">面接対策</Link>
