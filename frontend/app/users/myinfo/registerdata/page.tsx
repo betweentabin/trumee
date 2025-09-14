@@ -6,6 +6,7 @@ import { useAppSelector } from '@/app/redux/hooks';
 import { FaUser, FaBriefcase, FaClipboardList, FaFileAlt } from 'react-icons/fa';
 import useAuthV2 from '@/hooks/useAuthV2';
 import ResumeFileUpload from '@/components/resume/resume-file-upload';
+import Leftpage from '@/components/user/page';
 
 export default function RegisterDataPage() {
   const router = useRouter();
@@ -28,9 +29,15 @@ export default function RegisterDataPage() {
   }, [userId]);
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
+    <div className="max-w-7xl mx-auto p-6">
       <h1 className="text-2xl font-bold mb-6">登録情報</h1>
-      
+
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <aside className="lg:col-span-3">
+          <Leftpage />
+        </aside>
+
+        <div className="lg:col-span-9">
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         {sections.map((section) => {
           const Icon = section.icon;
@@ -38,9 +45,9 @@ export default function RegisterDataPage() {
             <button
               key={section.id}
               onClick={() => router.push(section.href)}
-              className="flex flex-col items-center p-4 bg-white border rounded-lg hover:bg-blue-50 hover:border-blue-300 transition-colors"
+              className="flex flex-col items-center p-4 bg-white border rounded-lg hover:bg-orange-50 hover:border-[#FF733E] transition-colors"
             >
-              <Icon className="text-3xl text-blue-500 mb-2" />
+              <Icon className="text-3xl text-[#FF733E] mb-2" />
               <span className="text-sm font-medium">{section.label}</span>
             </button>
           );
@@ -54,22 +61,22 @@ export default function RegisterDataPage() {
         </p>
         
         <div className="space-y-3">
-          <div className="border-l-4 border-blue-500 pl-4">
+          <div className="border-l-4 border-[#FF733E] pl-4">
             <h3 className="font-semibold">プロフィール</h3>
             <p className="text-sm text-gray-600">基本情報や連絡先を管理</p>
           </div>
           
-          <div className="border-l-4 border-green-500 pl-4">
+          <div className="border-l-4 border-[#FF733E] pl-4">
             <h3 className="font-semibold">経歴</h3>
             <p className="text-sm text-gray-600">職歴・学歴・スキルを登録</p>
           </div>
           
-          <div className="border-l-4 border-yellow-500 pl-4">
+          <div className="border-l-4 border-[#FF733E] pl-4">
             <h3 className="font-semibold">希望条件</h3>
             <p className="text-sm text-gray-600">希望する職種・勤務地・年収を設定</p>
           </div>
           
-          <div className="border-l-4 border-purple-500 pl-4">
+          <div className="border-l-4 border-[#FF733E] pl-4">
             <h3 className="font-semibold">履歴書</h3>
             <p className="text-sm text-gray-600">履歴書の作成・管理・ダウンロード</p>
           </div>
@@ -79,6 +86,8 @@ export default function RegisterDataPage() {
       {/* 履歴書（ファイル）アップロード */}
       <div className="mt-8">
         <ResumeFileUpload />
+      </div>
+        </div>
       </div>
     </div>
   );

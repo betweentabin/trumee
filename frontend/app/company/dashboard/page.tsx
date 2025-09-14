@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useAppSelector } from '@/app/redux/hooks';
 import useAuthV2 from '@/hooks/useAuthV2';
 import { 
@@ -18,6 +18,10 @@ import toast from 'react-hot-toast';
 
 export default function CompanyDashboard() {
   const router = useRouter();
+  const pathname = usePathname();
+  const parts = (pathname || '').split('/').filter(Boolean);
+  const companyIdFromPath = parts[0] === 'company' && parts[1] && parts[1] !== 'dashboard' ? parts[1] : null;
+  const companyPrefix = companyIdFromPath ? `/company/${companyIdFromPath}` : '/company';
   const authState = useAppSelector(state => state.auth);
   // 🚨 認証チェックを無効化
   // const { isAuthenticated, currentUser, initializeAuth } = useAuthV2();
@@ -52,7 +56,7 @@ export default function CompanyDashboard() {
             </div>
             <div className="flex items-center gap-4">
               <Link
-                href="/company/search"
+                href={`${companyPrefix}/search`}
                 className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center gap-2"
               >
                 <Search size={18} />
@@ -267,7 +271,8 @@ function OverviewTab() {
         <h3 className="text-lg font-semibold text-gray-900 mb-4">クイックアクション</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Link
-            href="/company/search"
+            href={`${companyPrefix}/search`
+            
             className="p-4 border border-gray-200 rounded-lg hover:border-blue-500 hover:shadow-sm transition"
           >
             <Search className="text-blue-600 mb-2" />
@@ -275,7 +280,7 @@ function OverviewTab() {
             <p className="text-sm text-gray-600 mt-1">条件に合う人材を探す</p>
           </Link>
           <Link
-            href="/company/job/new"
+            href={`${companyPrefix}/jobs/new`}
             className="p-4 border border-gray-200 rounded-lg hover:border-blue-500 hover:shadow-sm transition"
           >
             <Calendar className="text-green-600 mb-2" />
@@ -283,7 +288,7 @@ function OverviewTab() {
             <p className="text-sm text-gray-600 mt-1">新しい求人を作成</p>
           </Link>
           <Link
-            href="/company/settings"
+            href="/companyinfo"
             className="p-4 border border-gray-200 rounded-lg hover:border-blue-500 hover:shadow-sm transition"
           >
             <Filter className="text-purple-600 mb-2" />
@@ -365,7 +370,7 @@ function ScoutsTab() {
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-lg font-semibold text-gray-900">送信スカウト一覧</h3>
         <Link
-          href="/company/search"
+          href={`${companyPrefix}/search`}
           className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700"
         >
           新規スカウト

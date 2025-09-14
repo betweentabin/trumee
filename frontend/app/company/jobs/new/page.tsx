@@ -2,12 +2,17 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation';
 import apiV2Client from '@/lib/api-v2-client';
 import toast from 'react-hot-toast';
 import useAuthV2 from '@/hooks/useAuthV2';
 
 export default function CompanyNewJobPage() {
   const { initializeAuth, requireRole } = useAuthV2();
+  const pathname = usePathname();
+  const parts = (pathname || '').split('/').filter(Boolean);
+  const companyIdFromPath = parts[0] === 'company' && parts[1] && parts.includes('jobs') ? parts[1] : null;
+  const backHref = companyIdFromPath ? `/company/${companyIdFromPath}` : '/company';
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [requirements, setRequirements] = useState('');
@@ -42,7 +47,7 @@ export default function CompanyNewJobPage() {
     <div className="max-w-3xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-900">求人を作成</h1>
-        <Link href="/company" className="text-sm text-gray-600 hover:text-gray-900">戻る</Link>
+        <Link href={backHref} className="text-sm text-gray-600 hover:text-gray-900">戻る</Link>
       </div>
 
       <div className="bg-white rounded-lg shadow p-6 space-y-6">

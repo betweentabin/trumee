@@ -19,7 +19,8 @@ export default function Leftpage() {
 
   const menuItems = [
     { label: 'TOP', href: userId ? `/users/${userId}` : '/users' },
-    { label: '登録情報の確認・変更', href: userId ? `/users/${userId}/profile` : '/users/myinfo/registerdata' },
+    // いつでも registerdata を優先表示（プロフィールページに飛ばない）
+    { label: '登録情報の確認・変更', href: '/users/myinfo/registerdata' },
     { label: 'パスワードの変更', href: '/users/myinfo/password' },
     { label: '支払い情報登録・変更', href: '/users/myinfo/payment' },
     { label: '有料プラン', href: '/users/myinfo/paidplans' },
@@ -34,7 +35,7 @@ export default function Leftpage() {
             key={index}
             href={item.href}
             className={`flex items-center justify-between px-4 py-3 text-sm hover:bg-gray-100 ${
-              isActive ? 'bg-gray-200 font-semibold' : ''
+              isActive ? 'bg-orange-50 font-semibold border-l-4 border-[#FF733E]' : ''
             }`}
           >
             <span>{item.label}</span>

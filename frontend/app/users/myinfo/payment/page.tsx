@@ -137,15 +137,21 @@ export default function UserPaymentPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-7xl mx-auto">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-800 flex items-center gap-3">
-            <FaCreditCard className="text-blue-600" />
+            <FaCreditCard className="text-[#FF733E]" />
             支払い情報登録・変更
           </h1>
           <p className="text-gray-600 mt-2">クレジットカード情報を管理します</p>
         </div>
 
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <aside className="lg:col-span-3">
+            <Leftpage />
+          </aside>
+
+          <div className="lg:col-span-9">
         <div className="bg-white rounded-lg shadow-md p-6">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-xl font-semibold">登録済みカード</h2>
@@ -226,7 +232,7 @@ export default function UserPaymentPage() {
                         })}
                         placeholder="1234 5678 9012 3456"
                         maxLength={19}
-                        className="w-full p-3 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full p-3 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF733E]"
                         required
                       />
                       <FaCreditCard className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
@@ -242,7 +248,7 @@ export default function UserPaymentPage() {
                       value={cardForm.cardHolder}
                       onChange={(e) => setCardForm({...cardForm, cardHolder: e.target.value})}
                       placeholder="TARO YAMADA"
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF733E]"
                       required
                     />
                   </div>
@@ -255,7 +261,7 @@ export default function UserPaymentPage() {
                       <select
                         value={cardForm.expiryMonth}
                         onChange={(e) => setCardForm({...cardForm, expiryMonth: e.target.value})}
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF733E]"
                         required
                       >
                         <option value="">MM</option>
@@ -274,7 +280,7 @@ export default function UserPaymentPage() {
                       <select
                         value={cardForm.expiryYear}
                         onChange={(e) => setCardForm({...cardForm, expiryYear: e.target.value})}
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF733E]"
                         required
                       >
                         <option value="">YY</option>
@@ -297,7 +303,7 @@ export default function UserPaymentPage() {
                           onChange={(e) => setCardForm({...cardForm, cvv: e.target.value})}
                           placeholder="123"
                           maxLength={4}
-                          className="w-full p-3 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full p-3 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF733E]"
                           required
                         />
                         <FaLock className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-xs" />
@@ -327,25 +333,27 @@ export default function UserPaymentPage() {
           </div>
         )}
 
-        <div className="mt-8 bg-blue-50 rounded-lg p-6">
+        <div className="mt-8 bg-orange-50 rounded-lg p-6">
           <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
-            <FaLock className="text-blue-600" />
+            <FaLock className="text-[#FF733E]" />
             セキュリティについて
           </h3>
           <ul className="space-y-2 text-gray-700">
             <li className="flex items-start gap-2">
-              <span className="text-blue-600">✓</span>
+              <span className="text-[#FF733E]">✓</span>
               <span>カード情報は暗号化されて安全に保管されます</span>
             </li>
             <li className="flex items-start gap-2">
-              <span className="text-blue-600">✓</span>
+              <span className="text-[#FF733E]">✓</span>
               <span>PCI DSS準拠のセキュアな決済システムを使用しています</span>
             </li>
             <li className="flex items-start gap-2">
-              <span className="text-blue-600">✓</span>
+              <span className="text-[#FF733E]">✓</span>
               <span>不正利用防止のため、定期的にセキュリティチェックを実施しています</span>
             </li>
           </ul>
+        </div>
+          </div>
         </div>
       </div>
     </div>

@@ -103,7 +103,7 @@ export default function UserPasswordPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="px-8 py-3 rounded-md bg-black text-white hover:opacity-90 disabled:opacity-60"
+                  className="px-8 py-3 rounded-md bg-[#FF733E] text-white hover:bg-[#e9632e] disabled:opacity-60"
                 >{loading ? '保存中…' : '保存する'}</button>
               </div>
             </form>

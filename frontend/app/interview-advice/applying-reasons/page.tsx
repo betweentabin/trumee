@@ -182,6 +182,8 @@ export default function ApplyingReasonsPage() {
           <ol className="flex items-center gap-2">
             <li className="hover:text-gray-700 cursor-pointer" onClick={() => router.push('/')}>TOP</li>
             <li>›</li>
+            <li className="hover:text-gray-700 cursor-pointer" onClick={() => router.push('/users/myinfo/registerdata')}>マイページ</li>
+            <li>›</li>
             <li className="hover:text-gray-700 cursor-pointer" onClick={() => router.push('/interview-advice/applying-reasons')}>面接に関するアドバイス</li>
             <li>›</li>
             <li className="text-gray-800">転職理由(志望理由)</li>
@@ -272,7 +274,7 @@ export default function ApplyingReasonsPage() {
                       value={companyName}
                       onChange={(e) => setCompanyName(e.target.value)}
                       placeholder="例: 株式会社ABC"
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF733E]"
                     />
                   </div>
                   <div>
@@ -282,7 +284,7 @@ export default function ApplyingReasonsPage() {
                       value={position}
                       onChange={(e) => setPosition(e.target.value)}
                       placeholder="例: システムエンジニア"
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF733E]"
                     />
                   </div>
                   <div>
@@ -291,7 +293,7 @@ export default function ApplyingReasonsPage() {
                       value={reasons}
                       onChange={(e) => setReasons(e.target.value)}
                       placeholder="これまでの経験や強みを記入してください..."
-                      className="w-full h-32 p-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full h-32 p-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-[#FF733E]"
                     />
                   </div>
                   <div className="flex flex-col sm:flex-row gap-3">
@@ -319,7 +321,7 @@ export default function ApplyingReasonsPage() {
                 </h2>
                 {generatedReason ? (
                   <div className="space-y-4">
-                    <div className="p-4 bg-blue-50 border-l-4 border-blue-500 rounded">
+                    <div className="p-4 bg-orange-50 border-l-4 border-[#FF733E] rounded">
                       <pre className="whitespace-pre-wrap text-gray-700 font-sans">{generatedReason}</pre>
                     </div>
                     <div className="flex gap-3">

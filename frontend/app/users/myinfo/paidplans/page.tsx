@@ -116,7 +116,7 @@ export default function UserPaidPlansPage() {
               <button
                 disabled={joining}
                 onClick={() => setJoining(true)}
-                className="inline-flex items-center justify-center px-6 py-3 rounded-full bg-black text-white hover:opacity-90 disabled:opacity-60"
+                className="inline-flex items-center justify-center px-6 py-3 rounded-full bg-[#FF733E] text-white hover:bg-[#e9632e] disabled:opacity-60"
               >{joining ? '処理中…' : '有料プランに加入する'}</button>
             </div>
           </div>

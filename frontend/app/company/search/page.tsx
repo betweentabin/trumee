@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useAppSelector } from '@/app/redux/hooks';
 import { useCreateScout, useCreateApplication } from '@/hooks/useApi';
 import apiClient from '@/lib/api-v2-client';
@@ -13,6 +13,7 @@ import toast from 'react-hot-toast';
 
 export default function CompanySearchPage() {
   const router = useRouter();
+  const pathname = usePathname();
   const authState = useAppSelector(state => state.auth);
   const createScoutMutation = useCreateScout();
   const createApplicationMutation = useCreateApplication();
@@ -109,7 +110,13 @@ ${authState.user?.company_name || '弊社'}では、現在新しいメンバー�
           <div className="flex justify-between items-center py-4">
             <h1 className="text-2xl font-bold text-gray-900">求職者検索</h1>
             <button
-              onClick={() => router.push('/company/dashboard')}
+              onClick={() => {
+                // /company/[companyId]/search -> /company/[companyId]/dashboard
+                const parts = (pathname || '').split('/').filter(Boolean);
+                const cid = parts[1];
+                const to = parts[0] === 'company' && cid ? `/company/${cid}/dashboard` : '/company/dashboard';
+                router.push(to);
+              }}
               className="text-gray-600 hover:text-gray-900"
             >
               ダッシュボードに戻る
@@ -200,7 +207,10 @@ ${authState.user?.company_name || '弊社'}では、現在新しいメンバー�
                 key={seeker.id}
                 seeker={seeker}
                 onScout={() => handleScoutClick(seeker)}
-                onViewDetails={() => router.push(`/company/seeker/${seeker.id}`)}
+                onViewDetails={() => {
+                  // 将来の詳細ページに備えたプレースホルダ
+                  // 現状は何もしない
+                }}
               />
             ))
           ) : (
