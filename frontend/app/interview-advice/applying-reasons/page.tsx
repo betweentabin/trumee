@@ -111,7 +111,9 @@ export default function ApplyingReasonsPage() {
       if (obj && typeof obj === 'object') {
         return obj.message || obj.draft || c;
       }
-    } catch {}
+    } catch (e) {
+      // noop
+    }
     return String(c);
   };
 
@@ -151,7 +153,7 @@ export default function ApplyingReasonsPage() {
       }
       setThreadInput('');
       await loadThread();
-    } catch {
+    } catch (e) {
       toast.error('メッセージ送信に失敗しました');
     }
   };
