@@ -24,7 +24,10 @@ export default function AchievementsPage() {
   const token = useMemo(()=> (typeof window!=='undefined'? localStorage.getItem('drf_token_v2') || '' : ''), []);
   const me = useMemo(()=>{ if (typeof window==='undefined') return null as any; try { return JSON.parse(localStorage.getItem('current_user_v2')||'null'); } catch { return null as any; } }, []);
 
-  useEffect(()=>{ if (!authState.isAuthenticated) router.push('/auth/login'); }, [authState, router]);
+  useEffect(()=>{
+    const hasStoredToken = typeof window !== 'undefined' && !!localStorage.getItem('drf_token_v2');
+    if (!authState.isAuthenticated && !hasStoredToken) router.push('/auth/login');
+  }, [authState.isAuthenticated, router]);
 
   const handleGenerate = () => {
     if (!result) return toast.error('成果（結果）を入力してください');
@@ -151,4 +154,3 @@ export default function AchievementsPage() {
     </div>
   );
 }
-

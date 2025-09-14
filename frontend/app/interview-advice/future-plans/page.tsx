@@ -26,7 +26,10 @@ export default function FuturePlansPage() {
     try { return JSON.parse(localStorage.getItem('current_user_v2') || 'null'); } catch { return null as any; }
   }, []);
 
-  useEffect(() => { if (!authState.isAuthenticated) router.push('/auth/login'); }, [authState, router]);
+  useEffect(() => {
+    const hasStoredToken = typeof window !== 'undefined' && !!localStorage.getItem('drf_token_v2');
+    if (!authState.isAuthenticated && !hasStoredToken) router.push('/auth/login');
+  }, [authState.isAuthenticated, router]);
 
   const handleGenerate = () => {
     if (!vision) return toast.error('将来やりたいことを入力してください');
@@ -151,4 +154,3 @@ export default function FuturePlansPage() {
     </div>
   );
 }
-

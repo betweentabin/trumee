@@ -17,10 +17,11 @@ export default function PaidPlanPage() {
   const [role, setRole] = useState<'user' | 'company'>('user');
 
   useEffect(() => {
-    if (!authState.isAuthenticated) {
+    const hasStoredToken = typeof window !== 'undefined' && !!localStorage.getItem('drf_token_v2');
+    if (!authState.isAuthenticated && !hasStoredToken) {
       router.push('/auth/login');
     }
-  }, [authState, router]);
+  }, [authState.isAuthenticated, router]);
 
   // ログインユーザー情報から現在のプランとロールを取得
   useEffect(() => {

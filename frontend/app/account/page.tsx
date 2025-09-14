@@ -24,12 +24,13 @@ export default function AccountPage() {
   });
 
   useEffect(() => {
-    if (!authState.isAuthenticated) {
+    const hasStoredToken = typeof window !== 'undefined' && !!localStorage.getItem('drf_token_v2');
+    if (!authState.isAuthenticated && !hasStoredToken) {
       router.push('/auth/login');
       return;
     }
     fetchUserData();
-  }, [authState, router]);
+  }, [authState.isAuthenticated, router]);
 
   const fetchUserData = async () => {
     try {

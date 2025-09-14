@@ -12,10 +12,11 @@ export default function MyInfoPage() {
   const authState = useAppSelector(state => state.auth);
 
   useEffect(() => {
-    if (!authState.isAuthenticated) {
+    const hasStoredToken = typeof window !== 'undefined' && !!localStorage.getItem('drf_token_v2');
+    if (!authState.isAuthenticated && !hasStoredToken) {
       router.push('/auth/login');
     }
-  }, [authState, router]);
+  }, [authState.isAuthenticated, router]);
 
   const { currentUser } = useAuthV2();
   const uid = currentUser?.id || (typeof window !== 'undefined' ? localStorage.getItem('current_user_v2') && JSON.parse(localStorage.getItem('current_user_v2') as string)?.id : undefined);

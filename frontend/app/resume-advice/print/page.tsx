@@ -17,12 +17,13 @@ export default function ResumePrintPage() {
   });
 
   useEffect(() => {
-    if (!authState.isAuthenticated) {
+    const hasStoredToken = typeof window !== 'undefined' && !!localStorage.getItem('drf_token_v2');
+    if (!authState.isAuthenticated && !hasStoredToken) {
       router.push('/auth/login');
+      return;
     }
-    // 職務経歴書のデータを取得
     fetchResumeData();
-  }, [authState, router]);
+  }, [authState.isAuthenticated, router]);
 
   const fetchResumeData = async () => {
     try {

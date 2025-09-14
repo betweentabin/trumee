@@ -20,7 +20,10 @@ export default function OtherQuestionsPage() {
   const token = useMemo(()=> (typeof window!=='undefined' ? localStorage.getItem('drf_token_v2') || '' : ''), []);
   const me = useMemo(()=>{ if (typeof window==='undefined') return null as any; try { return JSON.parse(localStorage.getItem('current_user_v2')||'null'); } catch { return null as any; } }, []);
 
-  useEffect(()=>{ if(!authState.isAuthenticated) router.push('/auth/login'); }, [authState, router]);
+  useEffect(()=>{
+    const hasStoredToken = typeof window !== 'undefined' && !!localStorage.getItem('drf_token_v2');
+    if(!authState.isAuthenticated && !hasStoredToken) router.push('/auth/login');
+  }, [authState.isAuthenticated, router]);
 
   const parseContent = (c:any)=>{ try{ const o = JSON.parse(c); return o.message || o.draft || c; } catch { return String(c||''); } };
   const loadThread = async ()=>{
@@ -114,4 +117,3 @@ export default function OtherQuestionsPage() {
     </div>
   );
 }
-

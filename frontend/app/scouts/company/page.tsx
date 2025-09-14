@@ -34,11 +34,12 @@ export default function ScoutsCompanyPage() {
 
   // 認証チェック
   useEffect(() => {
-    if (!authState.isAuthenticated) {
+    const hasStoredToken = typeof window !== 'undefined' && !!localStorage.getItem('drf_token_v2');
+    if (!authState.isAuthenticated && !hasStoredToken) {
       router.push('/auth/login');
       toast.error('ログインが必要です');
     }
-  }, [authState, router]);
+  }, [authState.isAuthenticated, router]);
 
   const scouts: Scout[] = scoutsData?.results || scoutsData || [];
 

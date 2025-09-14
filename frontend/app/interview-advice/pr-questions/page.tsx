@@ -10,11 +10,13 @@ export default function PRQuestionsPage() {
   const authState = useAppSelector(state => state.auth);
   const [selectedQuestion, setSelectedQuestion] = useState(0);
 
+  // Prevent premature redirect before persisted auth is ready
   useEffect(() => {
-    if (!authState.isAuthenticated) {
+    const hasStoredToken = typeof window !== 'undefined' && !!localStorage.getItem('drf_token_v2');
+    if (!authState.isAuthenticated && !hasStoredToken) {
       router.push('/auth/login');
     }
-  }, [authState, router]);
+  }, [authState.isAuthenticated, router]);
 
   const prQuestions = [
     {

@@ -27,12 +27,13 @@ export default function ScoutStatusPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!authState.isAuthenticated) {
+    const hasStoredToken = typeof window !== 'undefined' && !!localStorage.getItem('drf_token_v2');
+    if (!authState.isAuthenticated && !hasStoredToken) {
       router.push('/auth/login');
       return;
     }
     fetchScouts();
-  }, [authState, router]);
+  }, [authState.isAuthenticated, router]);
 
   const fetchScouts = async () => {
     try {

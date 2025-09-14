@@ -34,11 +34,13 @@ export default function ApplyingReasonsPage() {
   const [threadInput, setThreadInput] = useState('');
   const endRef = useRef<HTMLDivElement | null>(null);
 
+  // Avoid early redirect before persisted auth rehydrates
   useEffect(() => {
-    if (!authState.isAuthenticated) {
+    const hasStoredToken = typeof window !== 'undefined' && !!localStorage.getItem('drf_token_v2');
+    if (!authState.isAuthenticated && !hasStoredToken) {
       router.push('/auth/login');
     }
-  }, [authState, router]);
+  }, [authState.isAuthenticated, router]);
 
   const handleGenerate = async () => {
     if (!companyName || !position) {

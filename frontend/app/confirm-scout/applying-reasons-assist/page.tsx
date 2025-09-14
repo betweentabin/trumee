@@ -27,11 +27,13 @@ export default function ApplyingReasonsAssistPage() {
   const [generatedResponse, setGeneratedResponse] = useState('');
   const [loading, setLoading] = useState(false);
 
+  // Avoid redirecting before persisted auth rehydrates
   useEffect(() => {
-    if (!authState.isAuthenticated) {
+    const hasStoredToken = typeof window !== 'undefined' && !!localStorage.getItem('drf_token_v2');
+    if (!authState.isAuthenticated && !hasStoredToken) {
       router.push('/auth/login');
     }
-  }, [authState, router]);
+  }, [authState.isAuthenticated, router]);
 
   const handleGenerate = async () => {
     if (!formData.interests || !formData.experience) {

@@ -11,10 +11,11 @@ export default function ResumeQuestionsPage() {
   const [selectedCategory, setSelectedCategory] = useState('experience');
 
   useEffect(() => {
-    if (!authState.isAuthenticated) {
+    const hasStoredToken = typeof window !== 'undefined' && !!localStorage.getItem('drf_token_v2');
+    if (!authState.isAuthenticated && !hasStoredToken) {
       router.push('/auth/login');
     }
-  }, [authState, router]);
+  }, [authState.isAuthenticated, router]);
 
   const categories = [
     { id: 'experience', name: '職務経歴', icon: '💼' },

@@ -14,10 +14,11 @@ export default function ResumeAdvicePage() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!authState.isAuthenticated) {
+    const hasStoredToken = typeof window !== 'undefined' && !!localStorage.getItem('drf_token_v2');
+    if (!authState.isAuthenticated && !hasStoredToken) {
       router.push('/auth/login');
     }
-  }, [authState, router]);
+  }, [authState.isAuthenticated, router]);
 
   const handleSubmit = async () => {
     if (!resumeText.trim()) {
