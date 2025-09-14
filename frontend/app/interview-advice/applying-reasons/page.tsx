@@ -3,7 +3,7 @@
 import React from 'react';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useAppSelector } from '@/app/redux/hooks';
 import { FaBriefcase, FaLightbulb, FaPencilAlt, FaStar, FaPlus, FaMinus } from 'react-icons/fa';
 import { buildApiUrl, getApiHeaders } from '@/config/api';
@@ -14,6 +14,7 @@ type ThreadMsg = { id: string; sender: string; text: string; created_at: string 
 
 export default function ApplyingReasonsPage() {
   const router = useRouter();
+  const pathname = usePathname();
   const authState = useAppSelector(state => state.auth);
   const [companyName, setCompanyName] = useState('');
   const [position, setPosition] = useState('');
@@ -33,6 +34,15 @@ export default function ApplyingReasonsPage() {
   const [thread, setThread] = useState<ThreadMsg[]>([]);
   const [threadInput, setThreadInput] = useState('');
   const endRef = useRef<HTMLDivElement | null>(null);
+
+  // Support both /interview-advice/... and /users/:id/interview-advice/...
+  const userIdFromPath = useMemo(() => {
+    if (!pathname) return null as string | null;
+    const parts = pathname.split('/').filter(Boolean);
+    if (parts[0] === 'users' && parts[1]) return parts[1];
+    return null;
+  }, [pathname]);
+  const to = (path: string) => (userIdFromPath ? `/users/${userIdFromPath}${path}` : path);
 
   // Avoid early redirect before persisted auth rehydrates
   useEffect(() => {
@@ -186,7 +196,7 @@ export default function ApplyingReasonsPage() {
             <li>›</li>
             <li className="hover:text-gray-700 cursor-pointer" onClick={() => router.push(me?.id ? `/users/${me.id}/myinfo/registerdata` : '/users/myinfo/registerdata')}>マイページ</li>
             <li>›</li>
-            <li className="hover:text-gray-700 cursor-pointer" onClick={() => router.push('/interview-advice/applying-reasons')}>面接に関するアドバイス</li>
+            <li className="hover:text-gray-700 cursor-pointer" onClick={() => router.push(to('/interview-advice/applying-reasons'))}>面接に関するアドバイス</li>
             <li>›</li>
             <li className="text-gray-800">転職理由(志望理由)</li>
           </ol>
