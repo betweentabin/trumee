@@ -241,6 +241,46 @@ export default function ApplyingReasonsPage() {
           <p className="text-gray-600 mt-2">企業への志望理由を作成するお手伝いをします</p>
         </div>
 
+        {/* Topic Chat Panel (moved above main grid) */}
+        {selectedTopic && (
+          <section className="mb-8 grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <div className="lg:col-span-9 bg-white rounded-lg shadow-md border">
+              <div className="px-4 py-3 border-b font-semibold flex items-center justify-between">
+                <span>{topicLabel(selectedTopic)}</span>
+                <button aria-label="Close chat" onClick={() => setSelectedTopic(null)} className="p-1 rounded hover:bg-gray-100">
+                  <FaMinus />
+                </button>
+              </div>
+              <div className="h-[300px] overflow-y-auto p-4 space-y-2 bg-gray-50">
+                {thread.filter(m => (m.topic || 'others') === selectedTopic).length === 0 && (
+                  <div className="text-center text-gray-400 text-sm py-10">メッセージはありません。</div>
+                )}
+                {thread.filter(m => (m.topic || 'others') === selectedTopic).map((m) => {
+                  const isMine = me && String(m.sender) === String(me.id);
+                  return (
+                    <div key={m.id} className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}>
+                      <div className={`max-w-[80%] rounded-md p-3 text-sm ${isMine ? 'bg-[#3A2F1C] text-white' : 'bg-white text-gray-900 border'}`}>
+                        <div>{m.text}</div>
+                        <div className="text-[10px] opacity-70 mt-1">{new Date(m.created_at).toLocaleString('ja-JP')}</div>
+                      </div>
+                    </div>
+                  );
+                })}
+                <div ref={endRef} />
+              </div>
+              <div className="p-4 border-t flex gap-2">
+                <input
+                  value={threadInput}
+                  onChange={(e) => setThreadInput(e.target.value)}
+                  placeholder="入力してください。"
+                  className="flex-1 rounded-md border px-3 py-2"
+                />
+                <button onClick={sendThreadMessage} className="rounded-md bg-[#FF733E] text-white px-4 py-2">送信</button>
+              </div>
+            </div>
+          </section>
+        )}
+
         {/* Main Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Left navigation */}
@@ -401,45 +441,7 @@ export default function ApplyingReasonsPage() {
           </main>
         </div>
 
-        {/* Topic Chat Panel */}
-        {selectedTopic && (
-          <section className="mt-8 grid grid-cols-1 lg:grid-cols-12 gap-6">
-            <div className="lg:col-span-9 bg-white rounded-lg shadow-md border">
-              <div className="px-4 py-3 border-b font-semibold flex items-center justify-between">
-                <span>{topicLabel(selectedTopic)}</span>
-                <button aria-label="Close chat" onClick={() => setSelectedTopic(null)} className="p-1 rounded hover:bg-gray-100">
-                  <FaMinus />
-                </button>
-              </div>
-              <div className="h-[300px] overflow-y-auto p-4 space-y-2 bg-gray-50">
-                {thread.filter(m => (m.topic || 'others') === selectedTopic).length === 0 && (
-                  <div className="text-center text-gray-400 text-sm py-10">メッセージはありません。</div>
-                )}
-                {thread.filter(m => (m.topic || 'others') === selectedTopic).map((m) => {
-                  const isMine = me && String(m.sender) === String(me.id);
-                  return (
-                    <div key={m.id} className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}>
-                      <div className={`max-w-[80%] rounded-md p-3 text-sm ${isMine ? 'bg-[#3A2F1C] text-white' : 'bg-white text-gray-900 border'}`}>
-                        <div>{m.text}</div>
-                        <div className="text-[10px] opacity-70 mt-1">{new Date(m.created_at).toLocaleString('ja-JP')}</div>
-                      </div>
-                    </div>
-                  );
-                })}
-                <div ref={endRef} />
-              </div>
-              <div className="p-4 border-t flex gap-2">
-                <input
-                  value={threadInput}
-                  onChange={(e) => setThreadInput(e.target.value)}
-                  placeholder="入力してください。"
-                  className="flex-1 rounded-md border px-3 py-2"
-                />
-                <button onClick={sendThreadMessage} className="rounded-md bg-[#FF733E] text-white px-4 py-2">送信</button>
-              </div>
-            </div>
-          </section>
-        )}
+        {/* Topic Chat Panel (end) */}
       </div>
     </div>
   );
