@@ -1,5 +1,7 @@
 'use client';
 
+import React from 'react';
+
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAppSelector } from '@/app/redux/hooks';
@@ -133,6 +135,14 @@ export default function ApplyingReasonsPage() {
       }));
       setThread(mapped);
       endRef.current?.scrollIntoView({ behavior: 'smooth' });
+      // mark as read for advice subject
+      try {
+        await fetch(buildApiUrl('/advice/mark_read/'), {
+          method: 'POST',
+          headers: getApiHeaders(token),
+          body: JSON.stringify({ subject: 'advice' }),
+        });
+      } catch (e) { /* noop */ }
     } catch (e) {
       // noop
     }
@@ -167,6 +177,7 @@ export default function ApplyingReasonsPage() {
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
+        {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-800 flex items-center gap-3">
             <FaBriefcase className="text-[#FF733E]" />
@@ -175,6 +186,7 @@ export default function ApplyingReasonsPage() {
           <p className="text-gray-600 mt-2">企業への志望理由を作成するお手伝いをします</p>
         </div>
 
+        {/* Main Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Left navigation */}
           <aside className="lg:col-span-3">
@@ -197,7 +209,7 @@ export default function ApplyingReasonsPage() {
           </aside>
 
           {/* Right content */}
-          <div className="lg:col-span-9 space-y-6">
+          <main className="lg:col-span-9 space-y-6">
             {/* Collapsible sections */}
             <div className="bg-white rounded-lg shadow-sm border">
               <button onClick={() => setOpenReason(!openReason)} className="w-full flex items-center justify-between px-4 py-3 font-semibold">
@@ -238,119 +250,86 @@ export default function ApplyingReasonsPage() {
               )}
             </div>
 
+            {/* Two-column: Form and Generated */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <h2 className="text-xl font-semibold mb-4">基本情報入力</h2>
-            
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  企業名
-                </label>
-                <input
-                  type="text"
-                  value={companyName}
-                  onChange={(e) => setCompanyName(e.target.value)}
-                  placeholder="例: 株式会社ABC"
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  希望職種
-                </label>
-                <input
-                  type="text"
-                  value={position}
-                  onChange={(e) => setPosition(e.target.value)}
-                  placeholder="例: システムエンジニア"
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  あなたの強み・経験（任意）
-                </label>
-                <textarea
-                  value={reasons}
-                  onChange={(e) => setReasons(e.target.value)}
-                  placeholder="これまでの経験や強みを記入してください..."
-                  className="w-full h-32 p-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              <div className="flex flex-col sm:flex-row gap-3">
-                <button
-                  onClick={handleGenerate}
-                  disabled={loading}
-                  className="flex-1 py-3 bg-[#FF733E] text-white rounded-lg hover:bg-orange-70 active:bg-orange-60 transition disabled:bg-gray-400"
-                >
-                  {loading ? '生成中...' : '志望理由を生成'}
-                </button>
-                <button
-                  onClick={handleSendAdvice}
-                  className="flex-1 py-3 border border-gray-300 rounded-lg hover:bg-gray-50"
-                >
-                  相談を送信
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-              <FaLightbulb className="text-yellow-500" />
-              生成された志望理由
-            </h2>
-            
-            {generatedReason ? (
-              <div className="space-y-4">
-                <div className="p-4 bg-blue-50 border-l-4 border-blue-500 rounded">
-                  <pre className="whitespace-pre-wrap text-gray-700 font-sans">{generatedReason}</pre>
-                </div>
-                <div className="flex gap-3">
-                  <button className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
-                    コピー
-                  </button>
-                  <button className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition">
-                    編集
-                  </button>
+              <div className="bg-white rounded-lg shadow-md p-6">
+                <h2 className="text-xl font-semibold mb-4">基本情報入力</h2>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">企業名</label>
+                    <input
+                      type="text"
+                      value={companyName}
+                      onChange={(e) => setCompanyName(e.target.value)}
+                      placeholder="例: 株式会社ABC"
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">希望職種</label>
+                    <input
+                      type="text"
+                      value={position}
+                      onChange={(e) => setPosition(e.target.value)}
+                      placeholder="例: システムエンジニア"
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">あなたの強み・経験（任意）</label>
+                    <textarea
+                      value={reasons}
+                      onChange={(e) => setReasons(e.target.value)}
+                      placeholder="これまでの経験や強みを記入してください..."
+                      className="w-full h-32 p-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <button
+                      onClick={handleGenerate}
+                      disabled={loading}
+                      className="flex-1 py-3 bg-[#FF733E] text-white rounded-lg hover:bg-orange-70 active:bg-orange-60 transition disabled:bg-gray-400"
+                    >
+                      {loading ? '生成中...' : '志望理由を生成'}
+                    </button>
+                    <button
+                      onClick={handleSendAdvice}
+                      className="flex-1 py-3 border border-gray-300 rounded-lg hover:bg-gray-50"
+                    >
+                      相談を送信
+                    </button>
+                  </div>
                 </div>
               </div>
-            ) : (
-              <div className="h-96 flex items-center justify-center text-gray-400">
-                <div className="text-center">
-                  <FaPencilAlt className="text-6xl mx-auto mb-4" />
-                  <p>企業情報を入力して志望理由を生成してください</p>
-                </div>
+
+              <div className="bg-white rounded-lg shadow-md p-6">
+                <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+                  <FaLightbulb className="text-yellow-500" />
+                  生成された志望理由
+                </h2>
+                {generatedReason ? (
+                  <div className="space-y-4">
+                    <div className="p-4 bg-blue-50 border-l-4 border-blue-500 rounded">
+                      <pre className="whitespace-pre-wrap text-gray-700 font-sans">{generatedReason}</pre>
+                    </div>
+                    <div className="flex gap-3">
+                      <button className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">コピー</button>
+                      <button className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition">編集</button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="h-96 flex items-center justify-center text-gray-400">
+                    <div className="text-center">
+                      <FaPencilAlt className="text-6xl mx-auto mb-4" />
+                      <p>企業情報を入力して志望理由を生成してください</p>
+                    </div>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-        </div>
-
-        <div className="mt-8 bg-white rounded-lg shadow-md p-6">
-          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-            <FaStar className="text-yellow-500" />
-            志望理由作成のポイント
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="p-4 bg-yellow-50 rounded-lg">
-              <h4 className="font-medium text-gray-800 mb-2">企業研究</h4>
-              <p className="text-sm text-gray-600">企業の理念、事業内容、強みを理解しましょう</p>
-            </div>
-            <div className="p-4 bg-yellow-50 rounded-lg">
-              <h4 className="font-medium text-gray-800 mb-2">自己分析</h4>
-              <p className="text-sm text-gray-600">自分の強みと企業のニーズをマッチングさせましょう</p>
-            </div>
-            <div className="p-4 bg-yellow-50 rounded-lg">
-              <h4 className="font-medium text-gray-800 mb-2">具体性</h4>
-              <p className="text-sm text-gray-600">具体的な経験やスキルを交えて説明しましょう</p>
-            </div>
             </div>
 
-            <div className="mt-2 bg-white rounded-lg shadow-md p-6">
+            {/* Tips */}
+            <div className="bg-white rounded-lg shadow-md p-6">
               <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
                 <FaStar className="text-yellow-500" />
                 志望理由作成のポイント
@@ -366,15 +345,15 @@ export default function ApplyingReasonsPage() {
                 </div>
                 <div className="p-4 bg-yellow-50 rounded-lg">
                   <h4 className="font-medium text-gray-800 mb-2">具体性</h4>
-                  <p className="text-sm text-gray-600">実例や数値を交えて説明しましょう</p>
+                  <p className="text-sm text-gray-600">具体的な経験やスキルを交えて説明しましょう</p>
                 </div>
               </div>
             </div>
-          </div>
+          </main>
         </div>
 
         {/* Thread */}
-        <div className="mt-8 grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <section className="mt-8 grid grid-cols-1 lg:grid-cols-12 gap-6">
           <div className="lg:col-span-9 bg-white rounded-lg shadow-md border">
             <div className="px-4 py-3 border-b font-semibold">相談スレッド</div>
             <div className="h-[300px] overflow-y-auto p-4 space-y-2 bg-gray-50">
@@ -404,7 +383,7 @@ export default function ApplyingReasonsPage() {
               <button onClick={sendThreadMessage} className="rounded-md bg-[#FF733E] text-white px-4 py-2">送信</button>
             </div>
           </div>
-        </div>
+        </section>
       </div>
     </div>
   );
