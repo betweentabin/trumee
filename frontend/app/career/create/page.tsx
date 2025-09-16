@@ -802,34 +802,34 @@ export default function CreateResumePage() {
           {renderStep()}
 
           {currentStep <= 5 && (
-          <div className="flex justify-between mt-8">
-            <button
-              onClick={() => setCurrentStep(prev => Math.max(1, prev - 1))}
-              className={`px-6 py-2 rounded-lg ${
-                currentStep === 1
-                  ? 'bg-gray-300 cursor-not-allowed'
-                  : 'bg-gray-600 text-white hover:bg-gray-700'
-              }`}
-              disabled={currentStep === 1}
-            >
-              前へ
-            </button>
-            {currentStep < 6 ? (
+            <div className="flex justify-between mt-8">
               <button
-                onClick={() => setCurrentStep(prev => Math.min(6, prev + 1))}
-                className="px-6 py-2 bg-[#FF733E] text-white rounded-lg hover:bg-[#FF8659]"
+                onClick={() => setCurrentStep(prev => Math.max(1, prev - 1))}
+                className={`px-6 py-2 rounded-lg ${
+                  currentStep === 1
+                    ? 'bg-gray-300 cursor-not-allowed'
+                    : 'bg-gray-600 text-white hover:bg-gray-700'
+                }`}
+                disabled={currentStep === 1}
               >
-                次へ
+                前へ
               </button>
-            ) : (
-              <button
-                onClick={handleSubmit}
-                className="px-8 py-2 bg-[#FF733E] text-white rounded-lg hover:bg-[#FF8659]"
-              >
-                保存して完了
-              </button>
-            )}
-          </div>
+              {currentStep < 5 ? (
+                <button
+                  onClick={() => setCurrentStep(prev => Math.min(6, prev + 1))}
+                  className="px-6 py-2 bg-[#FF733E] text-white rounded-lg hover:bg-[#FF8659]"
+                >
+                  次へ
+                </button>
+              ) : (
+                <button
+                  onClick={handleSubmit}
+                  className="px-8 py-2 bg-[#FF733E] text-white rounded-lg hover:bg-[#FF8659]"
+                >
+                  保存して完了
+                </button>
+              )}
+            </div>
           )}
         </div>
       </div>
