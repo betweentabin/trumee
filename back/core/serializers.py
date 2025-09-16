@@ -206,11 +206,12 @@ class ResumeCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Resume
         fields = [
-            'title', 'description', 'objective', 'desired_job', 
+            'id', 'title', 'description', 'objective', 'desired_job', 
             'desired_industries', 'desired_locations',
             'skills', 'self_pr', 'experiences', 'certifications',
             'extra_data'
         ]
+        read_only_fields = ['id']
     
     def create(self, validated_data):
         experiences_data = validated_data.pop('experiences', [])

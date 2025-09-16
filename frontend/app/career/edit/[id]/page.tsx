@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { useRouter, useParams, usePathname } from 'next/navigation';
 // import { FaChevronRight } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 import { getAuthHeaders } from '@/utils/auth';
@@ -43,6 +43,13 @@ interface ResumeData {
 export default function EditResumePage() {
   const router = useRouter();
   const params = useParams();
+  const pathname = usePathname();
+  const userIdFromPath = (() => {
+    if (!pathname) return null;
+    const parts = pathname.split('/').filter(Boolean);
+    return parts[0] === 'users' && parts[1] ? parts[1] : null;
+  })();
+  const to = (p: string) => (userIdFromPath ? `/users/${userIdFromPath}${p}` : p);
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(true);
   const [agreePublish, setAgreePublish] = useState(false);
@@ -854,10 +861,10 @@ export default function EditResumePage() {
             <h1 className="text-3xl font-bold text-gray-900">職務経歴書編集</h1>
             <div className="flex gap-2">
               <button
-                onClick={() => setCurrentStep(5)}
+                onClick={() => router.push(to(`/career/print?id=${params.id}&open=pdf`)) }
                 className="px-4 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-900"
               >
-                プレビュー
+                PDFプレビュー
               </button>
               <button
                 onClick={handleSubmit}

@@ -617,12 +617,12 @@ export default function CreateResumePage() {
               <div className="flex justify-center gap-3">
                 <button
                   onClick={() => {
-                    if (createdId) router.push(to(`/career/preview?id=${createdId}`));
+                    if (createdId) router.push(to(`/career/print?id=${createdId}&open=pdf`));
                     else setCurrentStep(5);
                   }}
                   className="px-4 py-2 bg-[#FF733E] text-white rounded-md hover:bg-[#FF8659]"
                 >
-                  プレビュー
+                  PDFプレビュー
                 </button>
                 <button
                   onClick={() => router.push(to('/career'))}
