@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { getAuthHeaders } from '@/utils/auth';
+import { buildApiUrl } from '@/config/api';
 
 interface WorkExperience {
   company: string;
@@ -51,6 +52,9 @@ export default function CreateResumePage() {
   const [currentStep, setCurrentStep] = useState(1);
   const [isCompleted, setIsCompleted] = useState(false);
   const [createdId, setCreatedId] = useState<string | null>(null);
+  const [agreePublish, setAgreePublish] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [downloading, setDownloading] = useState(false);
   const [resumeData, setResumeData] = useState<ResumeData>({
     title: '',
     fullName: '',
@@ -260,6 +264,83 @@ export default function CreateResumePage() {
       localStorage.removeItem(DRAFT_KEY);
       toast.success('下書きを削除しました');
     } catch {}
+  };
+
+  // ---- PDF helpers (共通ペイロードビルダー) ----
+  const buildPdfPayload = () => {
+    const skillsArray = (resumeData.skills || []).filter(Boolean);
+    return {
+      step1: {
+        name: resumeData.fullName,
+        email: resumeData.email,
+        phone: resumeData.phone,
+        birthDate: resumeData.birthDate,
+        address: resumeData.address,
+      },
+      step2: { education: resumeData.education || [] },
+      step3: { experience: resumeData.workExperiences || [] },
+      step4: { skills: skillsArray },
+      step5: { selfPR: resumeData.summary || '' },
+    } as any;
+  };
+
+  const handleDownloadPdf = async () => {
+    try {
+      setDownloading(true);
+      const response = await fetch(buildApiUrl('/resumes/download-pdf/'), {
+        method: 'POST',
+        headers: {
+          ...getAuthHeaders(),
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ resumeData: buildPdfPayload() }),
+      });
+      if (!response.ok) {
+        const t = await response.text();
+        throw new Error(t?.slice(0, 160) || 'PDF生成に失敗しました');
+      }
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `職務経歴書_${new Date().toISOString().split('T')[0]}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+      toast.success('PDFをダウンロードしました');
+    } catch (e: any) {
+      console.error(e);
+      toast.error(e?.message || 'PDFのダウンロードに失敗しました');
+    } finally {
+      setDownloading(false);
+    }
+  };
+
+  const handleSendPdfEmail = async (): Promise<boolean> => {
+    try {
+      setSending(true);
+      const res = await fetch(buildApiUrl('/resumes/send-pdf/'), {
+        method: 'POST',
+        headers: {
+          ...getAuthHeaders(),
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ resumeData: buildPdfPayload() }),
+      });
+      if (!res.ok) {
+        const t = await res.text();
+        throw new Error(t?.slice(0, 160) || 'メール送信に失敗しました');
+      }
+      toast.success('メールを送信しました');
+      return true;
+    } catch (e: any) {
+      console.error(e);
+      toast.error(e?.message || 'メール送信に失敗しました');
+      return false;
+    } finally {
+      setSending(false);
+    }
   };
 
   const renderStep = () => {
@@ -610,27 +691,47 @@ export default function CreateResumePage() {
 
       case 6:
         return (
-          <div className="space-y-6">
-            <h2 className="text-2xl font-semibold mb-4">完了</h2>
-            <div className="bg-white border rounded p-6 text-center space-y-4">
-              <div>職務経歴書の作成が完了しました。</div>
-              <div className="flex justify-center gap-3">
-                <button
-                  onClick={() => {
-                    if (createdId) router.push(to(`/career/print?id=${createdId}&open=pdf`));
-                    else setCurrentStep(5);
-                  }}
-                  className="px-4 py-2 bg-[#FF733E] text-white rounded-md hover:bg-[#FF8659]"
-                >
-                  PDFプレビュー
-                </button>
-                <button
-                  onClick={() => router.push(to('/career'))}
-                  className="px-4 py-2 border rounded-md hover:bg-gray-50"
-                >
-                  一覧へ
-                </button>
-              </div>
+          <div className="space-y-8">
+            {/* タイトル */}
+            <div className="text-center">
+              <h2 className="text-2xl md:text-3xl font-semibold">職務経歴書の作成が完了しました</h2>
+            </div>
+            {/* ステッパー（1〜6の丸） */}
+            <div className="flex items-center justify-between max-w-3xl mx-auto">
+              {[1,2,3,4,5,6].map((n, idx) => (
+                <div key={n} className="flex items-center w-full">
+                  <div className={`w-9 h-9 rounded-full flex items-center justify-center text-white text-sm ${n <= 6 ? 'bg-[#3E3E3E]' : 'bg-gray-300'}`}>{n}</div>
+                  {idx < 5 && <div className="flex-1 h-[2px] bg-gray-300 mx-2" />}
+                </div>
+              ))}
+            </div>
+            {/* 説明文 */}
+            <div className="text-center text-gray-700 leading-relaxed">
+              <p>個人情報を特定されない範囲でスキルや経験をシステム内に公開することに同意後、<br className="hidden md:inline"/>PDFの保存が行えます。目的に応じて選択してください。</p>
+            </div>
+            {/* 同意チェック */}
+            <div className="flex items-center justify-center">
+              <label className="flex items-center gap-3 text-sm text-gray-700">
+                <input type="checkbox" checked={agreePublish} onChange={(e)=>setAgreePublish(e.target.checked)} className="w-4 h-4" />
+                <span>スキルや経験の公開に関するご案内を確認する。</span>
+              </label>
+            </div>
+            {/* アクションボタン */}
+            <div className="max-w-3xl mx-auto space-y-4">
+              <button
+                disabled={!agreePublish || sending}
+                onClick={handleSendPdfEmail}
+                className={`w-full rounded-xl border px-6 py-6 text-center ${!agreePublish || sending ? 'bg-gray-200 text-gray-400' : 'bg-white hover:bg-gray-50 text-gray-800'} shadow`}
+              >
+                メールを送信する(PDFを送付します)
+              </button>
+              <button
+                disabled={!agreePublish || downloading}
+                onClick={handleDownloadPdf}
+                className={`w-full rounded-xl border px-6 py-6 text-center ${!agreePublish || downloading ? 'bg-gray-200 text-gray-400' : 'bg-white hover:bg-gray-50 text-gray-800'} shadow`}
+              >
+                PDFをダウンロードする
+              </button>
             </div>
           </div>
         );
