@@ -1,6 +1,7 @@
 "use client";
 import React from "react";
 import Image from "next/image";
+import LogoTop from '@/logo/logo_top.png';
 import { useRouter } from "next/navigation";
 import { clearAuthData } from "@/utils/auth";
 // Firebase imports removed - using Django auth only
@@ -31,7 +32,7 @@ const Header = () => {
         {/* Left Logo */}
         <div className="flex items-center">
           <Image
-            src="/logo/logo_top.png"
+            src={LogoTop}
             alt="Logo"
             width={210}
             height={40}

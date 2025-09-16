@@ -23,6 +23,8 @@ function getContentType(filename: string): string {
   }
 }
 
+export const runtime = 'nodejs';
+
 export async function GET(
   _req: NextRequest,
   { params }: { params: { path: string[] } }
@@ -50,4 +52,3 @@ export async function GET(
     return new Response('Not found', { status: 404 });
   }
 }
-

@@ -11,6 +11,7 @@ import ImageCardWithBg from "@/components/image-with-bg";
 import { accordion_list, section_desc_1, section_info_list, section_job_seekers_desc, section_log_desc_list, section_usage_list } from "../../seeker/page";
 
 import Image from 'next/image';
+import LogoWhite from '@/logo/logo_white.png';
 import MobileMenu from "@/components/MobileMenu";
 
 const services = [
@@ -272,7 +273,7 @@ export default function Dashboard() {
         <div className="md:w-[700px] lg:w-[1000px] xl:w-[1200px] 2xl:w-[1400px] flex flex-col items-center gap-6 z-100">
           <div className="w-32 h-10 flex flex-col items-center justify-center text-white">
             <img 
-                src={"/logo/logo_white.png"}
+                src={LogoWhite.src}
                 className="w-[166px] h-[28px]"
                 alt="Xrosspoint"
             />
@@ -354,7 +355,7 @@ export default function Dashboard() {
         <div className="md:w-[700px] lg:w-[1000px] xl:w-[1200px] 2xl:w-[1400px] flex flex-col items-center gap-6 z-100">
           <div className="w-32 h-10 flex flex-col items-center justify-center text-white">
             <img 
-                src={"/logo/logo_white.png"}
+                src={LogoWhite.src}
                 className="w-[166px] h-[28px]"
                 alt="Xrosspoint"
             />

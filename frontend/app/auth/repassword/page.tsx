@@ -9,6 +9,7 @@ import Link from 'next/link';
 import toast from 'react-hot-toast';
 import Layout from '@/components/auth/layout';
 import Image from 'next/image';
+import LogoMix from '@/logo/logo_mix.png';
 
 export default function PasswordResetPage() {
   const router = useRouter();
@@ -142,7 +143,7 @@ export default function PasswordResetPage() {
           {/* Logo */}
           <div className="text-center mb-8">
             <Image 
-              src="/logo/logo_mix.png" 
+              src={LogoMix} 
               alt="Resume Truemee" 
               width={200} 
               height={60} 

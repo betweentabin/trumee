@@ -62,4 +62,7 @@ pip install --no-cache-dir firebase-admin==7.0.0
 # Image processing
 pip install --no-cache-dir Pillow==11.0.0
 
+# PDF generation
+pip install --no-cache-dir reportlab==4.2.5
+
 echo "All requirements installed successfully!"

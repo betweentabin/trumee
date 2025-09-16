@@ -1,5 +1,6 @@
 "use client"
 import React from "react";
+import LogoTop from '@/logo/logo_top.png';
 import { useRouter } from 'next/navigation';
 
 
@@ -18,7 +19,7 @@ const Header = () => {
         <div className="flex items-center justify-between h-20 px-6 md:px-12 lg:px-16">
           {/* Left Logo */}
           <div className="flex items-center">
-            <img src="/logo/logo_top.png" alt="Logo" className="h-10 w-[210px] mr-3" />
+            <img src={LogoTop.src} alt="Logo" className="h-10 w-[210px] mr-3" />
             {/* <p className="text-2xl font-semibold">Trumee</p> */}
           </div>
   
