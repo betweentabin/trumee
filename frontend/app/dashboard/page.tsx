@@ -11,7 +11,7 @@ import ImageCardWithBg from "@/components/image-with-bg";
 import { accordion_list, section_desc_1, section_info_list, section_job_seekers_desc, section_log_desc_list, section_usage_list } from "../../seeker/page";
 
 import Image from 'next/image';
-import LogoWhite from '@/logo/logo_white.png';
+import LogoWhite from '@/public/logo/logo_white.png';
 import MobileMenu from "@/components/MobileMenu";
 
 const services = [

@@ -1,6 +1,6 @@
 "use client"
 import React from "react";
-import LogoTop from '@/logo/logo_top.png';
+import LogoTop from '@/public/logo/logo_top.png';
 import { useRouter } from 'next/navigation';
 
 

@@ -7,7 +7,7 @@ import { API_CONFIG, buildApiUrl, handleApiError } from '@/config/api';
 import toast from 'react-hot-toast';
 import Layout from '@/components/auth/layout';
 import Image from 'next/image';
-import LogoMix from '@/logo/logo_mix.png';
+import LogoMix from '@/public/logo/logo_mix.png';
 import { useAuth } from '@/hooks/useAuth';
 // Firebase imports removed - using Django auth only
 // import { createUserWithEmailAndPassword } from 'firebase/auth';

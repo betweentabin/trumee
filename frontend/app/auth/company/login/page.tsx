@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import Layout from '@/components/auth/layout';
 import Image from 'next/image';
-import LogoBlack from '@/logo/logo_black.png';
+import LogoBlack from '@/public/logo/logo_black.png';
 import { useLogin } from '@/hooks/useApi';
 import { useAppDispatch } from '@/app/redux/hooks';
 

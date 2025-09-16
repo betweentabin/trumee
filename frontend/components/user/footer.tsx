@@ -2,7 +2,7 @@
 import { useRouter } from "next/navigation";
 import Link from 'next/link';
 import { useMemo } from 'react';
-import LogoMix from '@/logo/logo_mix.png';
+import LogoMix from '@/public/logo/logo_mix.png';
 
 const Footer = () => {
     const router = useRouter()

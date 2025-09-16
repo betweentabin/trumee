@@ -1,7 +1,7 @@
 "use client"
 import React from "react";
-import LogoMix from '@/logo/logo_mix.png';
-import Logo from '@/logo/logo.png';
+import LogoMix from '@/public/logo/logo_mix.png';
+import Logo from '@/public/logo/logo.png';
 import { useRouter } from 'next/navigation';
 
 

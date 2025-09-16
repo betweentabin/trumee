@@ -1,7 +1,7 @@
 "use client"
 import { useRouter } from "next/navigation";
 import Link from 'next/link';
-import LogoTop from '@/logo/logo_top.png';
+import LogoTop from '@/public/logo/logo_top.png';
 import { useMemo } from 'react';
 
 const Footer = () => {

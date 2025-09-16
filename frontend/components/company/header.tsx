@@ -1,7 +1,7 @@
 "use client"
 import React from "react";
 import Image from "next/image";
-import LogoTop from '@/logo/logo_top.png';
+import LogoTop from '@/public/logo/logo_top.png';
 import { useRouter } from 'next/navigation';
 import Link from "next/link";
 import toast from 'react-hot-toast';

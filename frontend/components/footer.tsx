@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import LogoMix from '@/logo/logo_mix.png';
+import LogoMix from '@/public/logo/logo_mix.png';
 
 const Footer = () => {
 

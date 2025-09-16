@@ -9,7 +9,7 @@ import Link from 'next/link';
 import toast from 'react-hot-toast';
 import Layout from '@/components/auth/layout';
 import Image from 'next/image';
-import LogoMix from '@/logo/logo_mix.png';
+import LogoMix from '@/public/logo/logo_mix.png';
 
 export default function PasswordResetPage() {
   const router = useRouter();
