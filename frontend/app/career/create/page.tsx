@@ -171,7 +171,9 @@ export default function CreateResumePage() {
           workExperiences: resumeData.workExperiences,
           education: resumeData.education,
           certifications: resumeData.certifications,
-          languages: resumeData.languages
+          languages: resumeData.languages,
+          completed: true,
+          completedAt: new Date().toISOString(),
         }
       };
 
@@ -201,7 +203,8 @@ export default function CreateResumePage() {
           email: resumeData.email,
           desiredPosition: resumeData.desiredPosition,
           createdAt: new Date().toISOString().split('T')[0],
-          updatedAt: new Date().toISOString().split('T')[0]
+          updatedAt: new Date().toISOString().split('T')[0],
+          isComplete: true,
         };
         const storedCareerResumes = localStorage.getItem('debug_career_resumes');
         const existingResumes = storedCareerResumes ? JSON.parse(storedCareerResumes) : [];

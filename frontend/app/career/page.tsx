@@ -19,6 +19,7 @@ interface Resume {
   desiredPosition: string;
   createdAt: string;
   updatedAt: string;
+  isComplete?: boolean;
 }
 
 export default function CareerPage() {
@@ -35,6 +36,7 @@ export default function CareerPage() {
   // const { isAuthenticated, initializeAuth } = useAuthV2();
   const [resumes, setResumes] = useState<Resume[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showCompletedOnly, setShowCompletedOnly] = useState(false);
 
   // 初回ロードでAPIから取得。失敗時はローカルのダミーデータにフォールバック
   useEffect(() => {
@@ -59,6 +61,11 @@ export default function CareerPage() {
           desiredPosition: r?.desired_job || '',
           createdAt: r?.created_at,
           updatedAt: r?.updated_at,
+          isComplete: Boolean(
+            r?.is_complete ||
+            r?.extra_data?.completed ||
+            ((r?.skills && r?.self_pr) && ((r?.experiences?.length || 0) > 0 || (r?.extra_data?.workExperiences?.length || 0) > 0))
+          ),
         }));
         setResumes(list);
         return;
@@ -140,72 +147,97 @@ export default function CareerPage() {
         {/* Local draft banner/card (from create page's draft key) */}
         <LocalDraftCard to={to} />
 
-        {resumes.length === 0 ? (
-          <div className="bg-white rounded-lg shadow-md p-12 text-center">
-            <FaFileAlt className="mx-auto h-24 w-24 text-gray-300 mb-4" />
-            <h3 className="text-xl font-medium text-gray-900 mb-2">
-              職務経歴書がありません
-            </h3>
-            <p className="text-gray-500 mb-6">
-              新規作成ボタンをクリックして、職務経歴書を作成しましょう
-            </p>
-            <Link href={to('/career/create')}>
-              <button className="px-6 py-3 bg-[#FF733E] text-white rounded-lg hover:bg-[#FF8659] transition">
-                職務経歴書を作成する
-              </button>
-            </Link>
+        {/* Filter toggle */}
+        <div className="flex items-center justify-end mb-4">
+          <div className="flex gap-2">
+            <button
+              onClick={() => setShowCompletedOnly(false)}
+              className={`px-3 py-1 rounded border ${!showCompletedOnly ? 'bg-gray-800 text-white border-gray-800' : 'bg-white text-gray-700 border-gray-300'}`}
+            >
+              すべて
+            </button>
+            <button
+              onClick={() => setShowCompletedOnly(true)}
+              className={`px-3 py-1 rounded border ${showCompletedOnly ? 'bg-[#FF733E] text-white border-[#FF733E]' : 'bg-white text-gray-700 border-gray-300'}`}
+            >
+              完了のみ
+            </button>
           </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {resumes.map((resume) => (
-              <div key={resume.id} className="bg-white rounded-lg shadow-md hover:shadow-lg transition">
-                <div className="p-6">
-                  <h3 className="text-xl font-semibold text-gray-800 mb-2">
-                    {resume.title || '無題の職務経歴書'}
-                  </h3>
-                  <div className="space-y-2 text-sm text-gray-600">
-                    <p>氏名: {resume.fullName}</p>
-                    <p>希望職種: {resume.desiredPosition || '未設定'}</p>
-                    <div className="flex items-center gap-1">
-                      <FaClock className="text-gray-400" />
-                      <span>更新: {new Date(resume.updatedAt).toLocaleDateString('ja-JP')}</span>
+        </div>
+
+        {(() => {
+          const filtered = showCompletedOnly ? resumes.filter(r => r.isComplete) : resumes;
+          if (resumes.length === 0) {
+            return (
+              <div className="bg-white rounded-lg shadow-md p-12 text-center">
+                <FaFileAlt className="mx-auto h-24 w-24 text-gray-300 mb-4" />
+                <h3 className="text-xl font-medium text-gray-900 mb-2">職務経歴書がありません</h3>
+                <p className="text-gray-500 mb-6">新規作成ボタンをクリックして、職務経歴書を作成しましょう</p>
+                <Link href={to('/career/create')}>
+                  <button className="px-6 py-3 bg-[#FF733E] text-white rounded-lg hover:bg-[#FF8659] transition">職務経歴書を作成する</button>
+                </Link>
+              </div>
+            );
+          }
+          if (filtered.length === 0) {
+            return (
+              <div className="bg-white rounded-lg shadow p-8 text-center text-gray-600">完了した職務経歴書はまだありません</div>
+            );
+          }
+          return (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filtered.map((resume) => (
+                <div key={resume.id} className="bg-white rounded-lg shadow-md hover:shadow-lg transition">
+                  <div className="p-6">
+                    <h3 className="text-xl font-semibold text-gray-800 mb-2">{resume.title || '無題の職務経歴書'}</h3>
+                    <div className="mb-2">
+                      {resume.isComplete ? (
+                        <span className="inline-block text-xs px-2 py-1 bg-green-100 text-green-700 rounded">完了</span>
+                      ) : (
+                        <span className="inline-block text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded">下書き</span>
+                      )}
+                    </div>
+                    <div className="space-y-2 text-sm text-gray-600">
+                      <p>氏名: {resume.fullName}</p>
+                      <p>希望職種: {resume.desiredPosition || '未設定'}</p>
+                      <div className="flex items-center gap-1">
+                        <FaClock className="text-gray-400" />
+                        <span>更新: {new Date(resume.updatedAt).toLocaleDateString('ja-JP')}</span>
+                      </div>
                     </div>
                   </div>
-                </div>
-                <div className="border-t px-6 py-4 flex justify-between">
-                  <div className="flex gap-2">
-                    <Link href={to(`/career/print?id=${resume.id}&open=pdf`)} prefetch={false}>
-                      <button className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded transition">
-                        <FaEye />
-                      </button>
-                    </Link>
-                    <Link href={to(`/career/edit/${resume.id}`)}>
-                      <button className="p-2 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded transition">
-                        <FaEdit />
-                      </button>
-                    </Link>
-                    <Link href={to(`/career/print?id=${resume.id}`)} prefetch={false}>
-                      <button className="p-2 text-gray-600 hover:text-purple-600 hover:bg-purple-50 rounded transition">
-                        <FaPrint />
-                      </button>
-                    </Link>
-                    <Link href={to(`/career/print?id=${resume.id}&open=download`)} prefetch={false}>
-                      <button className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded transition" title="PDFダウンロード">
-                        <FaDownload />
-                      </button>
-                    </Link>
+                  <div className="border-t px-6 py-4 flex justify-between">
+                    <div className="flex gap-2">
+                      <Link href={to(`/career/print?id=${resume.id}&open=pdf`)} prefetch={false}>
+                        <button className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded transition">
+                          <FaEye />
+                        </button>
+                      </Link>
+                      <Link href={to(`/career/edit/${resume.id}`)}>
+                        <button className="p-2 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded transition">
+                          <FaEdit />
+                        </button>
+                      </Link>
+                      <Link href={to(`/career/print?id=${resume.id}`)} prefetch={false}>
+                        <button className="p-2 text-gray-600 hover:text-purple-600 hover:bg-purple-50 rounded transition">
+                          <FaPrint />
+                        </button>
+                      </Link>
+                      <Link href={to(`/career/print?id=${resume.id}&open=download`)} prefetch={false}>
+                        <button className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded transition" title="PDFダウンロード">
+                          <FaDownload />
+                        </button>
+                      </Link>
+                    </div>
+                    <button onClick={() => handleDelete(resume.id)} className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded transition">
+                      <FaTrash />
+                    </button>
                   </div>
-                  <button
-                    onClick={() => handleDelete(resume.id)}
-                    className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded transition"
-                  >
-                    <FaTrash />
-                  </button>
                 </div>
-              </div>
-            ))}
-          </div>
-        )}
+              ))}
+            </div>
+          );
+        })()}
       </div>
     </div>
   );
