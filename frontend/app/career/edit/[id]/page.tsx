@@ -315,17 +315,7 @@ export default function EditResumePage() {
               </div>
             </div>
 
-            {/* 自己PRはステップ5にも配置します（ここでは任意） */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">自己PR（任意）</label>
-              <textarea
-                className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF733E] focus:border-transparent"
-                rows={6}
-                placeholder="あなたの強みや経験を簡潔に記載してください"
-                value={resumeData.summary}
-                onChange={(e) => setResumeData(prev => ({ ...prev, summary: e.target.value }))}
-              />
-            </div>
+            {/* 自己PRは後続ステップで入力 */}
 
             <div className="grid grid-cols-2 gap-6">
               <div>
@@ -353,23 +343,128 @@ export default function EditResumePage() {
                 />
               </div>
             </div>
+            {/* 学歴（基本情報に含める） */}
+            <div className="space-y-4">
+              <h3 className="font-semibold">学歴</h3>
+              {(resumeData.education || []).map((edu, index) => (
+                <div key={index} className="border border-gray-200 rounded-lg p-6 space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">学校名</label>
+                      <input
+                        type="text"
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF733E] focus:border-transparent"
+                        value={edu.school}
+                        onChange={(e) => {
+                          const updated = [...resumeData.education];
+                          updated[index].school = e.target.value;
+                          setResumeData(prev => ({ ...prev, education: updated }));
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">学位</label>
+                      <input
+                        type="text"
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF733E] focus:border-transparent"
+                        value={edu.degree}
+                        onChange={(e) => {
+                          const updated = [...resumeData.education];
+                          updated[index].degree = e.target.value;
+                          setResumeData(prev => ({ ...prev, education: updated }));
+                        }}
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">専攻</label>
+                      <input
+                        type="text"
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF733E] focus:border-transparent"
+                        value={edu.field}
+                        onChange={(e) => {
+                          const updated = [...resumeData.education];
+                          updated[index].field = e.target.value;
+                          setResumeData(prev => ({ ...prev, education: updated }));
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">卒業年月</label>
+                      <input
+                        type="date"
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF733E] focus:border-transparent"
+                        value={edu.graduationDate}
+                        onChange={(e) => {
+                          const updated = [...resumeData.education];
+                          updated[index].graduationDate = e.target.value;
+                          setResumeData(prev => ({ ...prev, education: updated }));
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+              <button
+                onClick={() => setResumeData(prev => ({ ...prev, education: [...prev.education, { school: '', degree: '', field: '', graduationDate: '' }] }))}
+                className="mt-2 text-[#FF733E] hover:text-[#FF8659] font-medium"
+              >
+                + 学歴を追加
+              </button>
+            </div>
           </div>
         );
 
       case 5:
         return (
           <div className="space-y-6">
-            <h2 className="text-2xl font-bold mb-6">自己PR</h2>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">自己PR</label>
-              <textarea
-                className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF733E] focus:border-transparent"
-                rows={8}
-                placeholder="あなたの強みや経験を簡潔に記載してください"
-                value={resumeData.summary}
-                onChange={(e) => setResumeData(prev => ({ ...prev, summary: e.target.value }))}
-              />
+            <h2 className="text-2xl font-bold mb-6">職務要約（プレビュー）</h2>
+            <div className="bg-gray-50 border rounded-lg p-6 space-y-3">
+              <div><span className="text-xs text-gray-500">タイトル</span><div>{resumeData.title || '（未設定）'}</div></div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div><span className="text-xs text-gray-500">氏名</span><div>{resumeData.fullName || '（未設定）'}</div></div>
+                <div><span className="text-xs text-gray-500">メール</span><div>{resumeData.email || '（未設定）'}</div></div>
+                <div><span className="text-xs text-gray-500">電話</span><div>{resumeData.phone || '（未設定）'}</div></div>
+                <div><span className="text-xs text-gray-500">住所</span><div>{resumeData.address || '（未設定）'}</div></div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div><span className="text-xs text-gray-500">希望職種</span><div>{resumeData.desiredPosition || '（未設定）'}</div></div>
+                <div><span className="text-xs text-gray-500">希望年収</span><div>{resumeData.desiredSalary || '（未設定）'}</div></div>
+              </div>
+              <div>
+                <span className="text-xs text-gray-500">自己PR</span>
+                <div className="whitespace-pre-wrap">{resumeData.summary || '（未入力）'}</div>
+              </div>
+              <div>
+                <span className="text-xs text-gray-500">職歴</span>
+                <div className="space-y-2 mt-1">
+                  {(resumeData.workExperiences || []).map((w, i) => (
+                    <div key={i} className="border rounded p-2">
+                      <div className="font-medium">{w.company || '会社名未設定'} / {w.position || '役職未設定'}</div>
+                      <div className="text-xs text-gray-500">{w.startDate || '----/--'} ~ {w.endDate || '----/--'}</div>
+                      {w.description && <div className="mt-1 text-sm whitespace-pre-wrap">{w.description}</div>}
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <span className="text-xs text-gray-500">学歴</span>
+                <div className="space-y-2 mt-1">
+                  {(resumeData.education || []).map((e, i) => (
+                    <div key={i} className="border rounded p-2">
+                      <div className="font-medium">{e.school || '学校名未設定'} / {e.degree || '学位未設定'}</div>
+                      <div className="text-xs text-gray-500">{e.field || '専攻未設定'} / {e.graduationDate || '卒業年月未設定'}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <span className="text-xs text-gray-500">スキル</span>
+                <div className="mt-1 text-sm">{(resumeData.skills || []).filter(Boolean).join(', ') || '（未入力）'}</div>
+              </div>
             </div>
+            <div className="text-sm text-gray-500">この内容で「保存」を押すと反映されます。</div>
           </div>
         );
 
@@ -520,68 +615,67 @@ export default function EditResumePage() {
       case 3:
         return (
           <div className="space-y-6">
-            <h2 className="text-2xl font-bold mb-6">学歴</h2>
-            {resumeData.education.map((edu, index) => (
-              <div key={index} className="border border-gray-200 rounded-lg p-6 space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">学校名</label>
-                    <input
-                      type="text"
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF733E] focus:border-transparent"
-                      value={edu.school}
-                      onChange={(e) => {
-                        const updated = [...resumeData.education];
-                        updated[index].school = e.target.value;
-                        setResumeData(prev => ({ ...prev, education: updated }));
+            <h2 className="text-2xl font-bold mb-6">スキル・資格</h2>
+            <div>
+              <h3 className="font-semibold mb-3">スキル</h3>
+              {resumeData.skills.map((skill, index) => (
+                <div key={index} className="flex gap-2 mb-2">
+                  <input
+                    type="text"
+                    className="flex-1 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF733E] focus:border-transparent"
+                    value={skill}
+                    onChange={(e) => {
+                      const updated = [...resumeData.skills];
+                      updated[index] = e.target.value;
+                      setResumeData(prev => ({ ...prev, skills: updated }));
+                    }}
+                    placeholder="例: JavaScript"
+                  />
+                  {resumeData.skills.length > 1 && (
+                    <button
+                      onClick={() => {
+                        const updated = [...resumeData.skills];
+                        updated.splice(index, 1);
+                        setResumeData(prev => ({ ...prev, skills: updated }));
                       }}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">学位</label>
-                    <input
-                      type="text"
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF733E] focus:border-transparent"
-                      value={edu.degree}
-                      onChange={(e) => {
-                        const updated = [...resumeData.education];
-                        updated[index].degree = e.target.value;
-                        setResumeData(prev => ({ ...prev, education: updated }));
-                      }}
-                    />
-                  </div>
+                      className="px-3 py-1 text-red-500 hover:text-red-700"
+                    >
+                      ×
+                    </button>
+                  )}
                 </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">専攻</label>
-                    <input
-                      type="text"
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF733E] focus:border-transparent"
-                      value={edu.field}
-                      onChange={(e) => {
-                        const updated = [...resumeData.education];
-                        updated[index].field = e.target.value;
-                        setResumeData(prev => ({ ...prev, education: updated }));
-                      }}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">卒業年月</label>
-                    <input
-                      type="date"
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF733E] focus:border-transparent"
-                      value={edu.graduationDate}
-                      onChange={(e) => {
-                        const updated = [...resumeData.education];
-                        updated[index].graduationDate = e.target.value;
-                        setResumeData(prev => ({ ...prev, education: updated }));
-                      }}
-                    />
-                  </div>
+              ))}
+              <button
+                onClick={() => setResumeData(prev => ({ ...prev, skills: [...prev.skills, ''] }))}
+                className="mt-2 text-[#FF733E] hover:text-[#FF8659] font-medium"
+              >
+                + スキルを追加
+              </button>
+            </div>
+            <div>
+              <h3 className="font-semibold mb-3">資格</h3>
+              {resumeData.certifications.map((cert, index) => (
+                <div key={index} className="flex gap-2 mb-2">
+                  <input
+                    type="text"
+                    className="flex-1 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF733E] focus:border-transparent"
+                    value={cert}
+                    onChange={(e) => {
+                      const updated = [...resumeData.certifications];
+                      updated[index] = e.target.value;
+                      setResumeData(prev => ({ ...prev, certifications: updated }));
+                    }}
+                    placeholder="例: TOEIC 800点"
+                  />
                 </div>
-              </div>
-            ))}
+              ))}
+              <button
+                onClick={() => setResumeData(prev => ({ ...prev, certifications: [...prev.certifications, ''] }))}
+                className="mt-2 text-[#FF733E] hover:text-[#FF8659] font-medium"
+              >
+                + 資格を追加
+              </button>
+            </div>
           </div>
         );
 
@@ -756,7 +850,23 @@ export default function EditResumePage() {
           <div className="text-sm text-gray-600 mb-4">
             TOP &gt; マイページ
           </div>
-          <h1 className="text-3xl font-bold text-gray-900">職務経歴書編集</h1>
+          <div className="flex items-center justify-between gap-4">
+            <h1 className="text-3xl font-bold text-gray-900">職務経歴書編集</h1>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setCurrentStep(5)}
+                className="px-4 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-900"
+              >
+                プレビュー
+              </button>
+              <button
+                onClick={handleSubmit}
+                className="px-4 py-2 border rounded-md text-[#FF733E] border-[#FF733E] hover:bg-orange-50"
+              >
+                保存
+              </button>
+            </div>
+          </div>
         </div>
 
         <div className="bg-white rounded-lg shadow-sm p-8">

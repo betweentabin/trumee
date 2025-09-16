@@ -208,7 +208,8 @@ class ResumeCreateSerializer(serializers.ModelSerializer):
         fields = [
             'title', 'description', 'objective', 'desired_job', 
             'desired_industries', 'desired_locations',
-            'skills', 'self_pr', 'experiences', 'certifications'
+            'skills', 'self_pr', 'experiences', 'certifications',
+            'extra_data'
         ]
     
     def create(self, validated_data):
@@ -217,6 +218,7 @@ class ResumeCreateSerializer(serializers.ModelSerializer):
         # educations_data = validated_data.pop('educations', [])
         certifications_data = validated_data.pop('certifications', [])
         
+        # extra_data はここでそのまま保存（JSONField）
         resume = Resume.objects.create(**validated_data)
         
         # 職歴作成
@@ -248,7 +250,8 @@ class ResumeUpdateSerializer(serializers.ModelSerializer):
         fields = [
             'title', 'description', 'objective', 'desired_job', 
             'desired_industries', 'desired_locations',
-            'skills', 'self_pr', 'is_active', 'experiences', 'educations', 'certifications'
+            'skills', 'self_pr', 'is_active', 'experiences', 'educations', 'certifications',
+            'extra_data'
         ]
     
     def update(self, instance, validated_data):
@@ -256,7 +259,7 @@ class ResumeUpdateSerializer(serializers.ModelSerializer):
         educations_data = validated_data.pop('educations', None)
         certifications_data = validated_data.pop('certifications', None)
         
-        # 基本情報更新
+        # 基本情報更新（extra_data も含む）
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
         instance.save()
