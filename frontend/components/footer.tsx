@@ -1,5 +1,4 @@
 import Link from 'next/link';
-import LogoMix from '@/public/logo/logo_mix.png';
 
 const Footer = () => {
 
@@ -8,7 +7,7 @@ const Footer = () => {
             <div className="flex p-8 flex-col justify-center items-center">
                 <div className="flex items-center">
                     <Link href="/">
-                        <img src={LogoMix.src} alt="Logo" className="h-10 w-10 mr-3 cursor-pointer" />
+                        <img src="/logo/logo_mix.png" alt="Logo" className="h-10 w-10 mr-3 cursor-pointer" />
                     </Link>
                 </div>
                 <div className="flex flex-col md:flex-row gap-9 mt-6 text-[14px]">

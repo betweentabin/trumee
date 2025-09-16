@@ -7,7 +7,6 @@ import { API_CONFIG, buildApiUrl, handleApiError } from '@/config/api';
 import toast from 'react-hot-toast';
 import Layout from '@/components/auth/layout';
 import Image from 'next/image';
-import LogoMix from '@/public/logo/logo_mix.png';
 import { useAuth } from '@/hooks/useAuth';
 
 interface FormData {
@@ -244,7 +243,7 @@ export default function CompanyRegisterPage() {
           {/* Logo */}
           <div className="text-center mb-8">
             <Image 
-              src={LogoMix}
+              src="/logo/logo_mix.png"
               alt="Resume Truemee" 
               width={200} 
               height={60} 

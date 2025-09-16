@@ -2,7 +2,6 @@
 import { useRouter } from "next/navigation";
 import Link from 'next/link';
 import { useMemo } from 'react';
-import LogoMix from '@/public/logo/logo_mix.png';
 
 const Footer = () => {
     const router = useRouter()
@@ -34,7 +33,7 @@ const Footer = () => {
                     <div className="flex justify-between">
                         <div className="mb-4">                           
                             <Link href="/">
-                                <img src={LogoMix.src} alt="Xrosspoint" className="h-6 mr-2 cursor-pointer" />  
+                                <img src="/logo/logo_mix.png" alt="Xrosspoint" className="h-6 mr-2 cursor-pointer" />  
                             </Link>                        
                         </div>
                         <div className="flex gap-4">

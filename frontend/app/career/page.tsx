@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import useAuthV2 from '@/hooks/useAuthV2';
 import { getAuthHeaders } from '@/utils/auth';
+import { buildApiUrl } from '@/config/api';
 import toast from 'react-hot-toast';
 import { FaPlus, FaEdit, FaEye, FaPrint, FaTrash, FaClock, FaFileAlt } from 'react-icons/fa';
 import { FaDownload } from 'react-icons/fa';
@@ -43,8 +44,7 @@ export default function CareerPage() {
 
   const fetchResumes = async () => {
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-      const res = await fetch(`${apiUrl}/api/v2/resumes/`, {
+      const res = await fetch(buildApiUrl('/resumes/'), {
         headers: {
           ...getAuthHeaders(),
         },
@@ -87,8 +87,7 @@ export default function CareerPage() {
     if (!confirm('この職務経歴書を削除してもよろしいですか？')) return;
     
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-      const response = await fetch(`${apiUrl}/api/v2/resumes/${id}/`, {
+      const response = await fetch(buildApiUrl(`/resumes/${id}/`), {
         method: 'DELETE',
         headers: {
           ...getAuthHeaders(),
@@ -137,6 +136,9 @@ export default function CareerPage() {
             </Link>
           </div>
         </div>
+
+        {/* Local draft banner/card (from create page's draft key) */}
+        <LocalDraftCard to={to} />
 
         {resumes.length === 0 ? (
           <div className="bg-white rounded-lg shadow-md p-12 text-center">
@@ -204,6 +206,51 @@ export default function CareerPage() {
             ))}
           </div>
         )}
+      </div>
+    </div>
+  );
+}
+
+// --- Local Draft Card component ---
+function LocalDraftCard({ to }: { to: (p: string) => string }) {
+  const router = useRouter();
+  const [draft, setDraft] = useState<any | null>(null);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('career_create_draft_v2');
+      if (raw) setDraft(JSON.parse(raw));
+    } catch {}
+  }, []);
+
+  if (!draft) return null;
+
+  const resumeData = draft?.resumeData || {};
+  const title = resumeData?.title || '未タイトルの下書き';
+  const savedAt = draft?.savedAt || '';
+
+  const handleContinue = () => router.push(to('/career/create'));
+  const handleDiscard = () => {
+    try {
+      localStorage.removeItem('career_create_draft_v2');
+      setDraft(null);
+    } catch {}
+  };
+
+  return (
+    <div className="mb-8">
+      <div className="bg-white border border-orange-200 rounded-lg p-4 shadow-sm flex items-center justify-between">
+        <div>
+          <div className="text-sm text-orange-600 font-semibold">ローカル下書きがあります</div>
+          <div className="text-gray-800 font-medium">{title}</div>
+          {savedAt && (
+            <div className="text-xs text-gray-500">最終保存: {new Date(savedAt).toLocaleString('ja-JP')}</div>
+          )}
+        </div>
+        <div className="flex gap-2">
+          <button onClick={handleContinue} className="px-4 py-2 bg-[#FF733E] text-white rounded-md hover:bg-[#FF8659]">続きから</button>
+          <button onClick={handleDiscard} className="px-4 py-2 border rounded-md text-gray-600 hover:bg-gray-100">下書き削除</button>
+        </div>
       </div>
     </div>
   );
