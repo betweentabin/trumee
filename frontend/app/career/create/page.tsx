@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import toast from 'react-hot-toast';
+import { getAuthHeaders } from '@/utils/auth';
 
 interface WorkExperience {
   company: string;
@@ -48,6 +49,8 @@ export default function CreateResumePage() {
   })();
   const to = (p: string) => (userIdFromPath ? `/users/${userIdFromPath}${p}` : p);
   const [currentStep, setCurrentStep] = useState(1);
+  const [isCompleted, setIsCompleted] = useState(false);
+  const [createdId, setCreatedId] = useState<string | null>(null);
   const [resumeData, setResumeData] = useState<ResumeData>({
     title: '',
     fullName: '',
@@ -145,8 +148,6 @@ export default function CreateResumePage() {
 
   const handleSubmit = async () => {
     try {
-      const token = localStorage.getItem('access_token');
-      
       // バックエンドのResumeモデルに合わせてデータを変換
       const apiData = {
         desired_job: resumeData.desiredPosition || '',
@@ -170,47 +171,50 @@ export default function CreateResumePage() {
         }
       };
 
-      // 🚨 API呼び出しを無効化（401エラー対策）
-      // const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-      // const response = await fetch(`${apiUrl}/api/v2/resumes/`, {
-      //   method: 'POST',
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //     'Authorization': `Bearer ${token}`
-      //   },
-      //   body: JSON.stringify(apiData)
-      // });
+      let newId: string | null = null;
+      try {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+        const response = await fetch(`${apiUrl}/api/v2/resumes/`, {
+          method: 'POST',
+          headers: {
+            ...getAuthHeaders(),
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(apiData)
+        });
+        if (response.ok) {
+          const data = await response.json();
+          newId = String(data.id);
+          toast.success('職務経歴書を保存しました');
+        } else {
+          // API失敗時はフォールバック保存
+          throw new Error('API error');
+        }
+      } catch (e) {
+        const fallback = {
+          id: Date.now().toString(),
+          title: resumeData.title || '無題の職務経歴書',
+          fullName: resumeData.fullName,
+          email: resumeData.email,
+          desiredPosition: resumeData.desiredPosition,
+          createdAt: new Date().toISOString().split('T')[0],
+          updatedAt: new Date().toISOString().split('T')[0]
+        };
+        const storedCareerResumes = localStorage.getItem('debug_career_resumes');
+        const existingResumes = storedCareerResumes ? JSON.parse(storedCareerResumes) : [];
+        const updatedResumes = [fallback, ...existingResumes];
+        localStorage.setItem('debug_career_resumes', JSON.stringify(updatedResumes));
+        newId = fallback.id;
+        console.log('Resume data to create (fallback):', apiData);
+        toast.success('職務経歴書を保存しました（ローカル）');
+      }
 
-      // if (response.ok) {
-      //   const data = await response.json();
-      //   toast.success('職務経歴書を作成しました');
-      //   router.push(`/career/view/${data.id}`);
-      // } else {
-      //   const errorData = await response.json();
-      //   console.error('API Error:', errorData);
-      //   toast.error(errorData.message || '作成に失敗しました');
-      // }
-
-      // ダミー応答（デバッグモード）+ localStorageに保存
-      const newCareerResume = {
-        id: Date.now().toString(),
-        title: resumeData.title || '無題の職務経歴書',
-        fullName: resumeData.fullName,
-        email: resumeData.email,
-        desiredPosition: resumeData.desiredPosition,
-        createdAt: new Date().toISOString().split('T')[0],
-        updatedAt: new Date().toISOString().split('T')[0]
-      };
-      
-      const storedCareerResumes = localStorage.getItem('debug_career_resumes');
-      const existingResumes = storedCareerResumes ? JSON.parse(storedCareerResumes) : [];
-      const updatedResumes = [newCareerResume, ...existingResumes];
-      localStorage.setItem('debug_career_resumes', JSON.stringify(updatedResumes));
-      
-      console.log('Resume data to create:', apiData);
-      console.log('Saved career resume to localStorage:', newCareerResume);
-      toast.success('職務経歴書を作成しました（デバッグモード）');
-      router.push(to('/career'));
+      // 完了ステップへ
+      setCreatedId(newId);
+      setIsCompleted(true);
+      setCurrentStep(6);
+      // 下書きをクリア
+      clearDraft();
     } catch (error) {
       console.error('Failed to create resume:', error);
       toast.error('エラーが発生しました');
@@ -263,7 +267,7 @@ export default function CreateResumePage() {
       case 1:
         return (
           <div className="space-y-6">
-            <h2 className="text-2xl font-semibold mb-4">基本情報（自己PRなし）</h2>
+            <h2 className="text-2xl font-semibold mb-4">基本情報（学歴を含む）</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium mb-2">タイトル</label>
@@ -344,6 +348,59 @@ export default function CreateResumePage() {
                   placeholder="例: 500万円〜"
                 />
               </div>
+            </div>
+            {/* 学歴（基本情報に含める） */}
+            <div className="space-y-4">
+              <h3 className="font-semibold">学歴</h3>
+              {resumeData.education.map((edu, index) => (
+                <div key={index} className="border rounded-lg p-4 space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-2">学校名</label>
+                      <input
+                        type="text"
+                        className="w-full p-2 border rounded-lg"
+                        value={edu.school}
+                        onChange={(e) => handleEducationChange(index, 'school', e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-2">学位</label>
+                      <input
+                        type="text"
+                        className="w-full p-2 border rounded-lg"
+                        value={edu.degree}
+                        onChange={(e) => handleEducationChange(index, 'degree', e.target.value)}
+                        placeholder="例: 学士"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-2">専攻</label>
+                      <input
+                        type="text"
+                        className="w-full p-2 border rounded-lg"
+                        value={edu.field}
+                        onChange={(e) => handleEducationChange(index, 'field', e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-2">卒業年月</label>
+                      <input
+                        type="date"
+                        className="w-full p-2 border rounded-lg"
+                        value={edu.graduationDate}
+                        onChange={(e) => handleEducationChange(index, 'graduationDate', e.target.value)}
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+              <button
+                onClick={addEducation}
+                className="w-full py-2 border-2 border-dashed border-gray-300 rounded-lg hover:border-gray-400"
+              >
+                + 学歴を追加
+              </button>
             </div>
           </div>
         );
@@ -426,62 +483,6 @@ export default function CreateResumePage() {
       case 3:
         return (
           <div className="space-y-6">
-            <h2 className="text-2xl font-semibold mb-4">学歴</h2>
-            {resumeData.education.map((edu, index) => (
-              <div key={index} className="border rounded-lg p-4 space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-2">学校名</label>
-                    <input
-                      type="text"
-                      className="w-full p-2 border rounded-lg"
-                      value={edu.school}
-                      onChange={(e) => handleEducationChange(index, 'school', e.target.value)}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-2">学位</label>
-                    <input
-                      type="text"
-                      className="w-full p-2 border rounded-lg"
-                      value={edu.degree}
-                      onChange={(e) => handleEducationChange(index, 'degree', e.target.value)}
-                      placeholder="例: 学士"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-2">専攻</label>
-                    <input
-                      type="text"
-                      className="w-full p-2 border rounded-lg"
-                      value={edu.field}
-                      onChange={(e) => handleEducationChange(index, 'field', e.target.value)}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-2">卒業年月</label>
-                    <input
-                      type="date"
-                      className="w-full p-2 border rounded-lg"
-                      value={edu.graduationDate}
-                      onChange={(e) => handleEducationChange(index, 'graduationDate', e.target.value)}
-                    />
-                  </div>
-                </div>
-              </div>
-            ))}
-            <button
-              onClick={addEducation}
-              className="w-full py-2 border-2 border-dashed border-gray-300 rounded-lg hover:border-gray-400"
-            >
-              + 学歴を追加
-            </button>
-          </div>
-        );
-
-      case 4:
-        return (
-          <div className="space-y-6">
             <h2 className="text-2xl font-semibold mb-4">スキル・資格</h2>
             <div>
               <h3 className="font-semibold mb-3">スキル</h3>
@@ -538,7 +539,7 @@ export default function CreateResumePage() {
           </div>
         );
 
-      case 5:
+      case 4:
         return (
           <div className="space-y-6">
             <h2 className="text-2xl font-semibold mb-4">自己PR</h2>
@@ -555,10 +556,10 @@ export default function CreateResumePage() {
           </div>
         );
 
-      case 6:
+      case 5:
         return (
           <div className="space-y-6">
-            <h2 className="text-2xl font-semibold mb-4">職務経歴（プレビュー）</h2>
+            <h2 className="text-2xl font-semibold mb-4">職務要約（プレビュー）</h2>
             <div className="bg-gray-50 border rounded-lg p-4 space-y-3">
               <div><span className="text-xs text-gray-500">タイトル</span><div>{resumeData.title || '（未設定）'}</div></div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -603,7 +604,34 @@ export default function CreateResumePage() {
                 <div className="mt-1 text-sm">{resumeData.skills.filter(Boolean).join(', ') || '（未入力）'}</div>
               </div>
             </div>
-            <div className="text-sm text-gray-500">この内容で「作成する」を押すと保存されます。</div>
+            <div className="text-sm text-gray-500">この内容で「保存して完了」を押すと保存されます。</div>
+          </div>
+        );
+
+      case 6:
+        return (
+          <div className="space-y-6">
+            <h2 className="text-2xl font-semibold mb-4">完了</h2>
+            <div className="bg-white border rounded p-6 text-center space-y-4">
+              <div>職務経歴書の作成が完了しました。</div>
+              <div className="flex justify-center gap-3">
+                <button
+                  onClick={() => {
+                    if (createdId) router.push(to(`/career/preview?id=${createdId}`));
+                    else setCurrentStep(5);
+                  }}
+                  className="px-4 py-2 bg-[#FF733E] text-white rounded-md hover:bg-[#FF8659]"
+                >
+                  プレビュー
+                </button>
+                <button
+                  onClick={() => router.push(to('/career'))}
+                  className="px-4 py-2 border rounded-md hover:bg-gray-50"
+                >
+                  一覧へ
+                </button>
+              </div>
+            </div>
           </div>
         );
 
@@ -631,9 +659,15 @@ export default function CreateResumePage() {
               >
                 下書き削除
               </button>
+              <button
+                onClick={() => setCurrentStep(5)}
+                className="px-4 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-900"
+              >
+                プレビュー
+              </button>
             </div>
           </div>
-          {/* Clickable Stepper: 6 steps */}
+          {/* Clickable Stepper: 6 steps (基本情報→職歴→スキル→自己PR→職務要約→完了) */}
           <div className="flex justify-between items-center mt-6">
             {[1, 2, 3, 4, 5, 6].map((step) => (
               <button
@@ -654,16 +688,17 @@ export default function CreateResumePage() {
           <div className="flex justify-between mt-2 text-sm">
             <button className={`text-left flex-1 mx-1 ${currentStep === 1 ? 'font-semibold text-gray-900' : 'text-gray-600'}`} onClick={() => setCurrentStep(1)}>基本情報</button>
             <button className={`text-center flex-1 mx-1 ${currentStep === 2 ? 'font-semibold text-gray-900' : 'text-gray-600'}`} onClick={() => setCurrentStep(2)}>職歴</button>
-            <button className={`text-center flex-1 mx-1 ${currentStep === 3 ? 'font-semibold text-gray-900' : 'text-gray-600'}`} onClick={() => setCurrentStep(3)}>学歴</button>
-            <button className={`text-center flex-1 mx-1 ${currentStep === 4 ? 'font-semibold text-gray-900' : 'text-gray-600'}`} onClick={() => setCurrentStep(4)}>スキル</button>
-            <button className={`text-center flex-1 mx-1 ${currentStep === 5 ? 'font-semibold text-gray-900' : 'text-gray-600'}`} onClick={() => setCurrentStep(5)}>自己PR</button>
-            <button className={`text-right flex-1 mx-1 ${currentStep === 6 ? 'font-semibold text-gray-900' : 'text-gray-600'}`} onClick={() => setCurrentStep(6)}>職務経歴</button>
+            <button className={`text-center flex-1 mx-1 ${currentStep === 3 ? 'font-semibold text-gray-900' : 'text-gray-600'}`} onClick={() => setCurrentStep(3)}>スキル</button>
+            <button className={`text-center flex-1 mx-1 ${currentStep === 4 ? 'font-semibold text-gray-900' : 'text-gray-600'}`} onClick={() => setCurrentStep(4)}>自己PR</button>
+            <button className={`text-center flex-1 mx-1 ${currentStep === 5 ? 'font-semibold text-gray-900' : 'text-gray-600'}`} onClick={() => setCurrentStep(5)}>職務要約</button>
+            <button className={`text-right flex-1 mx-1 ${currentStep === 6 ? 'font-semibold text-gray-900' : 'text-gray-600'}`} onClick={() => setCurrentStep(6)}>完了</button>
           </div>
         </div>
 
         <div className="bg-white rounded-lg shadow-md p-6">
           {renderStep()}
 
+          {currentStep <= 5 && (
           <div className="flex justify-between mt-8">
             <button
               onClick={() => setCurrentStep(prev => Math.max(1, prev - 1))}
@@ -688,10 +723,11 @@ export default function CreateResumePage() {
                 onClick={handleSubmit}
                 className="px-8 py-2 bg-[#FF733E] text-white rounded-lg hover:bg-[#FF8659]"
               >
-                作成する
+                保存して完了
               </button>
             )}
           </div>
+          )}
         </div>
       </div>
     </div>

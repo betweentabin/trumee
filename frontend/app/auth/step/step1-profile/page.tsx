@@ -202,20 +202,7 @@ export default function Step1ProfilePage() {
           </div>
         </div>
 
-        {/* Self PR Section */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            自己PR
-          </label>
-          <textarea
-            name="experience"
-            value={formData.experience}
-            onChange={handleChange}
-            rows={5}
-            placeholder="あなたの強みや経験を簡潔に記載してください"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#FF6B35] focus:border-[#FF6B35]"
-          />
-        </div>
+        {/* Self PR は後続ステップで入力するため、この画面では非表示 */}
 
         {/* Desired Conditions Section */}
         <div className="grid grid-cols-2 gap-4">
