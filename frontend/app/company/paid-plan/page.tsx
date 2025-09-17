@@ -55,22 +55,22 @@ export default function CompanyPaidPlanPage() {
       <div className="max-w-7xl mx-auto">
         <div className="mb-8 text-center">
           <h1 className="text-3xl font-bold text-gray-800 flex items-center justify-center gap-3">
-            <FaBuilding className="text-[#FF733E]" /> 企業向け 有料プラン
+            <FaBuilding className="text-primary-600" /> 企業向け 有料プラン
           </h1>
           <p className="text-gray-600 mt-2">採用活動を加速するプランを選択</p>
         </div>
 
         <div className="mb-6 bg-[#FFF5F3] rounded-lg p-4 text-center">
-          <p className="text-[#FF733E]">
+          <p className="text-primary-600">
             現在のプラン: <span className="font-bold">{plans.find(p => p.id === currentPlan)?.name || '未契約'}</span>
           </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {plans.map(plan => (
-            <div key={plan.id} className={`bg-white rounded-lg shadow-lg overflow-hidden ${plan.id === 'standard' ? 'ring-2 ring-[#FF733E]' : ''} ${currentPlan === plan.id ? 'border-2 border-green-500' : ''}`}>
+            <div key={plan.id} className={`bg-white rounded-lg shadow-lg overflow-hidden ${plan.id === 'standard' ? 'ring-2 ring-primary-600' : ''} ${currentPlan === plan.id ? 'border-2 border-green-500' : ''}`}>
               {plan.id === 'standard' && (
-                <div className="bg-[#FF733E] text-white text-center py-2 font-bold">おすすめ</div>
+                <div className="bg-primary-600 text-white text-center py-2 font-bold">おすすめ</div>
               )}
               <div className="p-6">
                 <div className="text-center mb-6">
@@ -94,7 +94,7 @@ export default function CompanyPaidPlanPage() {
                 <button
                   onClick={() => changePlan(plan.id as PlanTier)}
                   disabled={loading || currentPlan === plan.id}
-                  className={`w-full mt-6 py-3 rounded-lg font-medium transition ${currentPlan === plan.id ? 'bg-gray-200 text-gray-500 cursor-not-allowed' : plan.id === 'standard' ? 'bg-[#FF733E] text-white hover:bg-[#FF8659]' : 'bg-gray-600 text-white hover:bg-gray-700'}`}
+                  className={`w-full mt-6 py-3 rounded-lg font-medium transition ${currentPlan === plan.id ? 'bg-gray-200 text-gray-500 cursor-not-allowed' : plan.id === 'standard' ? 'bg-primary-600 text-white hover:bg-primary-700' : 'bg-secondary-900 text-white hover:bg-secondary-800'}`}
                 >
                   {currentPlan === plan.id ? '選択中' : 'このプランに変更'}
                 </button>
@@ -106,4 +106,3 @@ export default function CompanyPaidPlanPage() {
     </div>
   );
 }
-

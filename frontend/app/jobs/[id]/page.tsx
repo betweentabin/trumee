@@ -30,10 +30,9 @@ export default function JobDetailPage() {
           </section>
         </div>
         <div className="mt-6">
-          <button className="px-6 py-3 rounded-full text-white bg-[#FF733E] hover:bg-[#e9632e]">この求人に応募</button>
+          <button className="px-6 py-3 rounded-full text-white bg-primary-600 hover:bg-primary-700">この求人に応募</button>
         </div>
       </div>
     </div>
   );
 }
-

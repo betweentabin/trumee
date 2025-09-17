@@ -176,7 +176,7 @@ export default function UserProfileByIdPage() {
             {!isEditing ? (
               <button
                 onClick={startEditing}
-                className="px-4 py-2 text-sm bg-[#FF733E] text-white rounded-md hover:bg-[#FF8659]"
+                className="px-4 py-2 text-sm bg-primary-600 hover:bg-primary-700 text-white rounded-md"
               >
                 プロフィールを編集する
               </button>

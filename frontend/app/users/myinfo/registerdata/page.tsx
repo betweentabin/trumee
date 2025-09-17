@@ -42,7 +42,7 @@ export default function RegisterDataPage() {
           <button
             key={section.id}
             onClick={() => router.push(section.href)}
-            className="flex flex-col items-center p-4 bg-white border rounded-lg hover:bg-orange-50 hover:border-[#FF733E] transition-colors"
+            className="flex flex-col items-center p-4 bg-white border rounded-lg hover:bg-orange-50 hover:border-primary-600 transition-colors"
           >
             <span className="text-sm font-medium">{section.label}</span>
           </button>
@@ -56,22 +56,22 @@ export default function RegisterDataPage() {
         </p>
         
         <div className="space-y-3">
-          <div className="border-l-4 border-[#FF733E] pl-4">
+          <div className="border-l-4 border-primary-600 pl-4">
             <h3 className="font-semibold">プロフィール</h3>
             <p className="text-sm text-gray-600">基本情報や連絡先を管理</p>
           </div>
           
-          <div className="border-l-4 border-[#FF733E] pl-4">
+          <div className="border-l-4 border-primary-600 pl-4">
             <h3 className="font-semibold">職務経歴書の記載</h3>
             <p className="text-sm text-gray-600">職歴・学歴・スキルを登録</p>
           </div>
           
-          <div className="border-l-4 border-[#FF733E] pl-4">
+          <div className="border-l-4 border-primary-600 pl-4">
             <h3 className="font-semibold">希望条件</h3>
             <p className="text-sm text-gray-600">希望する職種・勤務地・年収を設定</p>
           </div>
           
-          <div className="border-l-4 border-[#FF733E] pl-4">
+          <div className="border-l-4 border-primary-600 pl-4">
             <h3 className="font-semibold">履歴書</h3>
             <p className="text-sm text-gray-600">履歴書の作成・管理・ダウンロード</p>
           </div>

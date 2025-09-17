@@ -24,14 +24,14 @@ export default function DefaultButton({
     return href ? (
         <Link
             href={href}
-            className={`px-8 py-2 flex items-center justify-center gap-x-2 ${rounded ? "rounded-full" : "rounded-lg"} ${variant === "primary" ? "bg-[#FF733E] text-white" : "border-border-gray border border-solid bg-white text-black"} relative ${className ?? ""} hover:bg-orange-70 active:bg-orange-60 hover:text-primary-active`}
+            className={`px-8 py-2 flex items-center justify-center gap-x-2 ${rounded ? "rounded-full" : "rounded-lg"} ${variant === "primary" ? "bg-primary-600 hover:bg-primary-700 active:bg-primary-800 text-white" : "bg-secondary-900 hover:bg-secondary-800 active:bg-secondary-700 text-white"} relative ${className ?? ""}`}
         >
             {label}
         </Link>
     ) : (
         <button
             disabled={disabled}
-            className={`px-8 py-2 flex items-center justify-center gap-x-2 ${rounded ? "rounded-full" : "rounded-lg"} ${variant === "primary" ? "bg-[#FF733E] text-white" : "border-border-gray border border-solid bg-white text-black"} relative ${className ?? ""} hover:bg-orange-70 active:bg-orange-60 hover:text-primary-active`}
+            className={`px-8 py-2 flex items-center justify-center gap-x-2 ${rounded ? "rounded-full" : "rounded-lg"} ${variant === "primary" ? "bg-primary-600 hover:bg-primary-700 active:bg-primary-800 text-white" : "bg-secondary-900 hover:bg-secondary-800 active:bg-secondary-700 text-white"} relative ${className ?? ""} ${disabled ? "opacity-60 cursor-not-allowed" : ""}`}
             onClick={onClick}
         >
             {label}

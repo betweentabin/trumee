@@ -131,7 +131,7 @@ export default function ResumesPage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#FF733E]"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
       </div>
     );
   }
@@ -149,7 +149,7 @@ export default function ResumesPage() {
           </div>
           <Link
             href="/resumes/new"
-            className="inline-flex items-center px-4 py-2 bg-[#FF733E] text-white rounded-md hover:bg-[#e9632e] transition-colors"
+            className="inline-flex items-center px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors"
           >
             <FaPlus className="mr-2" />
             新規作成
@@ -168,7 +168,7 @@ export default function ResumesPage() {
             </p>
             <Link
               href="/resumes/new"
-              className="inline-flex items-center px-4 py-2 bg-[#FF733E] text-white rounded-md hover:bg-[#e9632e] transition-colors"
+              className="inline-flex items-center px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors"
             >
               <FaPlus className="mr-2" />
               最初の履歴書を作成

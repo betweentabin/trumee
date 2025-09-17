@@ -79,8 +79,8 @@ export default function UserPaymentPage() {
           <h2 className="text-xl font-semibold mb-4">お支払いの管理</h2>
           <p className="text-gray-700 mb-6">クレジットカード情報は当サイトでは保存しません。Stripeの安全なチェックアウトで決済・管理します。</p>
           <div className="flex flex-col md:flex-row gap-3">
-            <button onClick={() => gotoStripeCheckout('premium')} disabled={loading} className="px-6 py-3 bg-[#FF733E] text-white rounded-lg hover:bg-orange-70 disabled:bg-gray-400">Stripeでプラン購入</button>
-            <button onClick={() => gotoStripeCheckout('basic')} disabled={loading} className="px-6 py-3 bg-gray-700 text-white rounded-lg hover:bg-gray-800 disabled:bg-gray-400">単発決済（例）</button>
+            <button onClick={() => gotoStripeCheckout('premium')} disabled={loading} className="px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-lg disabled:bg-secondary-300">Stripeでプラン購入</button>
+            <button onClick={() => gotoStripeCheckout('basic')} disabled={loading} className="px-6 py-3 bg-secondary-900 hover:bg-secondary-800 text-white rounded-lg disabled:bg-secondary-300">単発決済（例）</button>
           </div>
         </div>
 
@@ -88,20 +88,20 @@ export default function UserPaymentPage() {
 
         <div className="mt-8 bg-orange-50 rounded-lg p-6">
           <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
-            <FaLock className="text-[#FF733E]" />
+            <FaLock className="text-primary-600" />
             セキュリティについて
           </h3>
           <ul className="space-y-2 text-gray-700">
             <li className="flex items-start gap-2">
-              <span className="text-[#FF733E]">✓</span>
+              <span className="text-primary-600">✓</span>
               <span>カード情報は暗号化されて安全に保管されます</span>
             </li>
             <li className="flex items-start gap-2">
-              <span className="text-[#FF733E]">✓</span>
+              <span className="text-primary-600">✓</span>
               <span>PCI DSS準拠のセキュアな決済システムを使用しています</span>
             </li>
             <li className="flex items-start gap-2">
-              <span className="text-[#FF733E]">✓</span>
+              <span className="text-primary-600">✓</span>
               <span>不正利用防止のため、定期的にセキュリティチェックを実施しています</span>
             </li>
           </ul>

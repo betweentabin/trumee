@@ -206,7 +206,7 @@ export default function CompanyLoginPage() {
               または{' '}
               <Link
                 href="/auth/company/register"
-                className="font-medium text-[#FF733E] hover:text-[#e9632e]"
+                className="font-medium text-primary-600 hover:text-primary-700"
               >
                 新規登録はこちら
               </Link>
@@ -232,8 +232,8 @@ export default function CompanyLoginPage() {
                   value={formData.email}
                   onChange={handleChange}
                   className={`mt-1 appearance-none relative block w-full px-3 py-2 border ${
-                    errors.email ? 'border-red-300' : 'border-gray-300'
-                  } placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-[#FF733E] focus:border-[#FF733E] focus:z-10 sm:text-sm`}
+                    errors.email ? 'border-red-300' : 'border-secondary-300'
+                  } placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-primary-600 focus:border-primary-600 focus:z-10 sm:text-sm`}
                   placeholder="example@company.com"
                 />
                 {errors.email && (
@@ -253,8 +253,8 @@ export default function CompanyLoginPage() {
                   value={formData.password}
                   onChange={handleChange}
                   className={`mt-1 appearance-none relative block w-full px-3 py-2 border ${
-                    errors.password ? 'border-red-300' : 'border-gray-300'
-                  } placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-[#FF733E] focus:border-[#FF733E] focus:z-10 sm:text-sm`}
+                    errors.password ? 'border-red-300' : 'border-secondary-300'
+                  } placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-primary-600 focus:border-primary-600 focus:z-10 sm:text-sm`}
                   placeholder="パスワードを入力"
                 />
                 {errors.password && (
@@ -267,7 +267,7 @@ export default function CompanyLoginPage() {
               <div className="text-sm">
                 <Link
                   href="/auth/company/repassword"
-                  className="font-medium text-[#FF733E] hover:text-[#e9632e]"
+                  className="font-medium text-primary-600 hover:text-primary-700"
                 >
                   パスワードをお忘れですか？
                 </Link>
@@ -278,7 +278,7 @@ export default function CompanyLoginPage() {
               <button
                 type="submit"
                 disabled={isLoading || !acceptedTerms}
-                className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-[#FF733E] hover:bg-[#e9632e] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#FF733E] disabled:opacity-50 disabled:cursor-not-allowed"
+                className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-600 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isLoading ? 'ログイン中...' : 'ログイン'}
               </button>
@@ -287,14 +287,14 @@ export default function CompanyLoginPage() {
             <div className="text-xs text-gray-600 flex items-start gap-2">
               <input id="agree" type="checkbox" className="mt-0.5" checked={acceptedTerms} onChange={(e)=>setAcceptedTerms(e.target.checked)} />
               <label htmlFor="agree">
-                <span>私は <a className="text-[#FF733E] underline" href="/terms-of-use" target="_blank" rel="noreferrer">利用規約</a> と <a className="text-[#FF733E] underline" href="/account/personal-info-license" target="_blank" rel="noreferrer">個人情報利用許諾</a> に同意します。</span>
+                <span>私は <a className="text-primary-600 underline" href="/terms-of-use" target="_blank" rel="noreferrer">利用規約</a> と <a className="text-primary-600 underline" href="/account/personal-info-license" target="_blank" rel="noreferrer">個人情報利用許諾</a> に同意します。</span>
               </label>
             </div>
 
             <div className="text-center">
               <Link
                 href="/auth/login"
-                className="font-medium text-[#FF733E] hover:text-[#e9632e] text-sm"
+                className="font-medium text-primary-600 hover:text-primary-700 text-sm"
               >
                 求職者ログインはこちら
               </Link>
@@ -306,7 +306,7 @@ export default function CompanyLoginPage() {
             <button
               type="button"
               onClick={handleToggleApiVersion}
-              className="inline-flex items-center px-3 py-1.5 border border-gray-300 text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#FF733E]"
+              className="inline-flex items-center px-3 py-1.5 border border-secondary-300 text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-600"
             >
               <svg
                 className={`mr-2 h-4 w-4 ${useV2Api ? 'text-green-500' : 'text-gray-400'}`}

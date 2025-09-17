@@ -46,7 +46,7 @@ export default function UserExperienceByIdPage() {
         <div className="mt-3">
           <button
             onClick={() => router.push('/auth/step/step3-experience')}
-            className="px-4 py-2 text-sm bg-[#FF733E] text-white rounded-md hover:bg-orange-70 active:bg-orange-60"
+            className="px-4 py-2 text-sm bg-primary-600 hover:bg-primary-700 text-white rounded-md"
           >
             職歴を登録する
           </button>
@@ -64,7 +64,7 @@ export default function UserExperienceByIdPage() {
         {isOwner && (
           <button
             onClick={() => router.push('/auth/step/step3-experience')}
-            className="px-3 py-1.5 text-sm bg-[#FF733E] text-white rounded-md hover:bg-orange-70 active:bg-orange-60"
+            className="px-3 py-1.5 text-sm bg-primary-600 hover:bg-primary-700 text-white rounded-md"
           >
             編集する
           </button>

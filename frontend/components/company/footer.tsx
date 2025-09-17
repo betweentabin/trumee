@@ -26,13 +26,13 @@ const Footer = () => {
           <div className="flex gap-4 justify-center sm:justify-start">
             <button
               onClick={register}
-              className="bg-[#FF733E] text-white px-4 py-2 rounded-full text-sm font-medium shadow hover:bg-[#e9632e] transition"
+              className="bg-primary-600 text-white px-4 py-2 rounded-full text-sm font-medium shadow hover:bg-primary-700 transition"
             >
               会員登録する
             </button>
             <button
               onClick={login}
-              className="px-4 py-2 text-sm border border-gray-400 rounded-full text-black hover:bg-gray-100 transition"
+              className="px-4 py-2 text-sm rounded-full bg-secondary-900 hover:bg-secondary-800 text-white transition"
             >
               ログイン
             </button>
@@ -46,7 +46,7 @@ const Footer = () => {
             <p className="font-bold mb-2">採用メニュー</p>
             <ul className="ml-4 space-y-1 list-disc">
               <li>
-                <Link href="/company" className="hover:text-[#FF733E] transition-colors">求職者の検索</Link>
+                <Link href="/company" className="hover:text-primary-600 transition-colors">求職者の検索</Link>
               </li>
             </ul>
           </div>
@@ -55,9 +55,9 @@ const Footer = () => {
           <div>
             <p className="font-bold mb-2">マイページ</p>
             <ul className="space-y-1 list-disc ml-4">
-              <li><Link href="/companyinfo" className="hover:text-[#FF733E] transition-colors">登録情報の管理設定</Link></li>
-              <li><Link href="/companyinfo/payment" className="hover:text-[#FF733E] transition-colors">支払い・プランの管理設定</Link></li>
-              <li><Link href="/companyinfo/repassword" className="hover:text-[#FF733E] transition-colors">パスワードの変更</Link></li>
+              <li><Link href="/companyinfo" className="hover:text-primary-600 transition-colors">登録情報の管理設定</Link></li>
+              <li><Link href="/companyinfo/payment" className="hover:text-primary-600 transition-colors">支払い・プランの管理設定</Link></li>
+              <li><Link href="/companyinfo/repassword" className="hover:text-primary-600 transition-colors">パスワードの変更</Link></li>
             </ul>
           </div>
         </div>

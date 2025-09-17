@@ -28,10 +28,10 @@ export default function MobileMenu() {
     <>
       {/* Bottom Fixed Bar */}
       <div className="fixed bottom-0 left-0 flex w-[100%] max-w-[768px] items-center md:hidden z-50">
-        <button onClick={() => setIsOpen(true)} className="text-white h-[60px] w-[60px]  px-4 py-3 bg-[#4D433F]">
+        <button onClick={() => setIsOpen(true)} className="text-white h-[60px] w-[60px]  px-4 py-3 bg-secondary-700">
           <Menu size={24} />
         </button>
-        <span className="text-white font-semibold w-[100%] h-[60px] pl-4 flex justify-center items-center bg-[#FF733E]">
+        <span className="text-white font-semibold w-[100%] h-[60px] pl-4 flex justify-center items-center bg-primary-600">
           Webで簡単！添削サービスに申し込む
         </span>
       </div>
@@ -57,21 +57,21 @@ export default function MobileMenu() {
           <div className="h-px bg-gray-200 my-2" />
 
           {/* ワイヤーフレーム主要導線 */}
-          <Link href={scoutsHref} onClick={close} className="hover:text-[#FF733E]">企業からのスカウト状況</Link>
-          <Link href={applyingReasonsHref} onClick={close} className="hover:text-[#FF733E]">スカウト企業への志望理由作成補助</Link>
-          <Link href="/career" onClick={close} className="hover:text-[#FF733E]">職務経歴書の添削</Link>
-          <Link href="/career/print" onClick={close} className="hover:text-[#FF733E]">印刷</Link>
-          <Link href="/interview-advice/prepare-interview" onClick={close} className="hover:text-[#FF733E]">面接対策</Link>
+          <Link href={scoutsHref} onClick={close} className="hover:text-primary-600">企業からのスカウト状況</Link>
+          <Link href={applyingReasonsHref} onClick={close} className="hover:text-primary-600">スカウト企業への志望理由作成補助</Link>
+          <Link href="/career" onClick={close} className="hover:text-primary-600">職務経歴書の添削</Link>
+          <Link href="/career/print" onClick={close} className="hover:text-primary-600">印刷</Link>
+          <Link href="/interview-advice/prepare-interview" onClick={close} className="hover:text-primary-600">面接対策</Link>
 
-          <button onClick={register} className="bg-[#FF733E] text-white py-2 rounded-full mt-4 hover:bg-orange-70 active:bg-orange-60">
+          <button onClick={register} className="bg-primary-600 hover:bg-primary-700 text-white py-2 rounded-full mt-4">
             添削サービスに申し込む
           </button>
           {isAuthenticated ? (
-            <button onClick={goMyPage} className="border border-gray-500 text-gray-700 py-2 rounded-full mt-2">
+            <button onClick={goMyPage} className="bg-secondary-900 hover:bg-secondary-800 text-white py-2 rounded-full mt-2">
               マイページ
             </button>
           ) : (
-            <button onClick={login} className="border border-gray-500 text-gray-700 py-2 rounded-full mt-2">
+            <button onClick={login} className="bg-secondary-900 hover:bg-secondary-800 text-white py-2 rounded-full mt-2">
               ログイン
             </button>
           )}

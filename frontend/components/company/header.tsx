@@ -55,7 +55,7 @@ const Header = () => {
             <button onClick={mypage}>
             マイページ
             </button>
-            <button onClick={logout} className="px-4 py-2 text-sm border border-gray-400 rounded-full text-black hover:bg-gray-100 transition">
+            <button onClick={logout} className="px-4 py-2 text-sm rounded-full bg-secondary-900 hover:bg-secondary-800 text-white transition">
             ログアウト
             </button>
           </div>

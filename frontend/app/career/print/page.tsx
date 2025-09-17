@@ -320,7 +320,7 @@ export default function PrintPage() {
                 <button
                   onClick={handlePreview}
                   disabled={!selectedResume}
-                  className="w-full bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 text-white px-4 py-3 rounded-lg flex items-center justify-center gap-2 transition-colors"
+                  className="w-full bg-primary-600 hover:bg-primary-700 disabled:bg-gray-400 text-white px-4 py-3 rounded-lg flex items-center justify-center gap-2 transition-colors"
                 >
                   <FaEye />
                   PDF プレビュー
@@ -328,7 +328,7 @@ export default function PrintPage() {
                 <button
                   onClick={handleEdit}
                   disabled={!selectedResume}
-                  className="w-full bg-orange-600 hover:bg-orange-700 disabled:bg-gray-400 text-white px-4 py-3 rounded-lg flex items-center justify-center gap-2 transition-colors"
+                  className="w-full bg-secondary-900 hover:bg-secondary-800 disabled:bg-gray-400 text-white px-4 py-3 rounded-lg flex items-center justify-center gap-2 transition-colors"
                 >
                   <FaEdit />
                   編集
@@ -358,7 +358,7 @@ export default function PrintPage() {
                     if (!summaryText) return null;
                     return (
                       <section className="mb-6">
-                        <h2 className="text-lg font-semibold border-b-2 border-gray-300 pb-2 mb-3">職務要約</h2>
+                        <h2 className="text-lg font-semibold border-b-2 border-secondary-400 pb-2 mb-3">職務要約</h2>
                         <p className="whitespace-pre-line">{summaryText}</p>
                       </section>
                     );
@@ -366,7 +366,7 @@ export default function PrintPage() {
 
                   {selectedResume.extra_data?.workExperiences && selectedResume.extra_data.workExperiences.length > 0 && (
                     <section className="mb-6">
-                      <h2 className="text-lg font-semibold border-b-2 border-gray-300 pb-2 mb-3">
+                      <h2 className="text-lg font-semibold border-b-2 border-secondary-400 pb-2 mb-3">
                         職歴
                       </h2>
                       {selectedResume.extra_data.workExperiences.map((exp: any, index: number) => (
@@ -399,7 +399,7 @@ export default function PrintPage() {
                   {/* 自己PR（最後尾） */}
                   {selectedResume.self_pr && (
                     <section className="mt-8">
-                      <h2 className="text-lg font-semibold border-b-2 border-gray-300 pb-2 mb-3">自己PR</h2>
+                      <h2 className="text-lg font-semibold border-b-2 border-secondary-400 pb-2 mb-3">自己PR</h2>
                       <p className="whitespace-pre-line">{selectedResume.self_pr}</p>
                     </section>
                   )}

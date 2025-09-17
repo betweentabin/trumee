@@ -88,7 +88,7 @@ export default function UserResumesByIdPage() {
           </div>
           <Link
             href={to("/career/create")}
-            className="inline-flex items-center px-4 py-2 bg-[#FF733E] text-white rounded-md hover:bg-[#e9632e] transition-colors"
+            className="inline-flex items-center px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors"
           >
             <FaPlus className="mr-2" />
             新規作成
@@ -100,7 +100,7 @@ export default function UserResumesByIdPage() {
             <p className="text-gray-600 mb-6">まだ履歴書がありません</p>
             <Link
               href={to("/career/create")}
-              className="inline-flex items-center px-4 py-2 bg-[#FF733E] text-white rounded-md hover:bg-[#e9632e] transition-colors"
+              className="inline-flex items-center px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors"
             >
               <FaPlus className="mr-2" />
               最初の履歴書を作成

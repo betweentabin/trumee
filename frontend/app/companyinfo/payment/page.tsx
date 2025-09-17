@@ -39,10 +39,10 @@ export default function CompanyPaymentPage() {
       <div className="bg-white rounded-lg shadow p-6">
         <p className="text-gray-700 mb-4">クレジットカード情報は当サイトでは保存しません。Stripeの安全なチェックアウトで決済・管理します。</p>
         <div className="flex flex-col md:flex-row gap-3">
-          <button onClick={() => gotoStripeCheckout('premium')} className="px-6 py-3 bg-[#FF733E] text-white rounded-lg hover:bg-orange-70 flex items-center gap-2">
+          <button onClick={() => gotoStripeCheckout('premium')} className="px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-lg flex items-center gap-2">
             <FaShoppingCart /> プレミアムプランに加入
           </button>
-          <button onClick={() => gotoStripeCheckout('credits100')} className="px-6 py-3 bg-gray-700 text-white rounded-lg hover:bg-gray-800 flex items-center gap-2">
+          <button onClick={() => gotoStripeCheckout('credits100')} className="px-6 py-3 bg-secondary-900 hover:bg-secondary-800 text-white rounded-lg flex items-center gap-2">
             追加スカウト100通（¥10,000）
           </button>
         </div>

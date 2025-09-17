@@ -143,7 +143,7 @@ export default function UserPreferenceByIdPage() {
             >クリア</button>
             <button
               onClick={handleSave}
-              className="px-4 py-2 bg-[#FF733E] text-white rounded-md hover:bg-orange-70 active:bg-orange-60 disabled:bg-gray-400"
+              className="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-md disabled:bg-secondary-300"
               disabled={saving}
             >{saving ? '保存中...' : '保存する'}</button>
           </div>
@@ -159,7 +159,7 @@ export default function UserPreferenceByIdPage() {
         {isOwner && !editing && (
           <button
             onClick={() => setEditing(true)}
-            className="px-3 py-1.5 text-sm bg-[#FF733E] text-white rounded-md hover:bg-orange-70 active:bg-orange-60"
+            className="px-3 py-1.5 text-sm bg-primary-600 hover:bg-primary-700 text-white rounded-md"
           >
             編集する
           </button>
@@ -220,7 +220,7 @@ export default function UserPreferenceByIdPage() {
             >キャンセル</button>
             <button
               onClick={handleSave}
-              className="px-4 py-2 bg-[#FF733E] text-white rounded-md hover:bg-orange-70 active:bg-orange-60 disabled:bg-gray-400"
+              className="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-md disabled:bg-secondary-300"
               disabled={saving}
             >{saving ? '保存中...' : '保存する'}</button>
           </div>

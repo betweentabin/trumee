@@ -24,10 +24,10 @@ const Header = () => {
   
           {/* Right Buttons */}
           <div className="flex items-center gap-4">
-            <button onClick={login} className="px-4 py-2 text-sm border border-gray-400 rounded-full text-black hover:bg-gray-100 transition">
+            <button onClick={login} className="px-4 py-2 text-sm rounded-full bg-secondary-900 hover:bg-secondary-800 text-white transition">
               ログイン
             </button>
-            <button onClick={register} className="bg-[#FF733E] text-white px-4 py-2 rounded-full text-sm font-medium shadow hover:bg-[#e9632e] transition">
+            <button onClick={register} className="bg-primary-600 text-white px-4 py-2 rounded-full text-sm font-medium shadow hover:bg-primary-700 transition">
               登録する
             </button>
           </div>

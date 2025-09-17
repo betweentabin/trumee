@@ -482,7 +482,7 @@ export default function CreateResumePage() {
               ))}
               <button
                 onClick={addEducation}
-                className="w-full py-2 border-2 border-dashed border-gray-300 rounded-lg hover:border-gray-400"
+                className="w-full py-2 border-2 border-dashed border-secondary-400 rounded-lg hover:border-secondary-500"
               >
                 + 学歴を追加
               </button>
@@ -530,7 +530,7 @@ export default function CreateResumePage() {
                     <label className="block text-sm font-medium mb-2">開始</label>
                     <input
                       type="month"
-                      className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-[#FF733E] focus:border-transparent"
+                      className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent"
                       value={exp.startDate}
                       onChange={(e) => handleWorkExperienceChange(index, 'startDate', e.target.value)}
                     />
@@ -539,7 +539,7 @@ export default function CreateResumePage() {
                     <label className="block text-sm font-medium mb-2">終了</label>
                     <input
                       type="month"
-                      className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-[#FF733E] focus:border-transparent"
+                      className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent"
                       value={exp.endDate}
                       onChange={(e) => handleWorkExperienceChange(index, 'endDate', e.target.value)}
                     />
@@ -548,7 +548,7 @@ export default function CreateResumePage() {
                 <div>
                   <label className="block text-sm font-medium mb-2">職務内容</label>
                   <textarea
-                    className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-[#FF733E] focus:border-transparent"
+                    className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent"
                     rows={3}
                     value={exp.description}
                     onChange={(e) => handleWorkExperienceChange(index, 'description', e.target.value)}
@@ -560,7 +560,7 @@ export default function CreateResumePage() {
                     <input
                       key={i}
                       type="text"
-                      className="w-full mb-2 p-3 border rounded-lg focus:ring-2 focus:ring-[#FF733E] focus:border-transparent"
+                      className="w-full mb-2 p-3 border rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent"
                       value={ach}
                       onChange={(e) => {
                         const updated = [...(resumeData.workExperiences[index].achievements || [])];
@@ -577,16 +577,16 @@ export default function CreateResumePage() {
                       updated.push('');
                       handleWorkExperienceChange(index, 'achievements', updated);
                     }}
-                    className="text-[#FF733E] text-sm"
+                    className="text-primary-600 text-sm"
                   >
                     + 実績を追加
                   </button>
                 </div>
               </div>
             ))}
-            <button
-              onClick={addWorkExperience}
-              className="w-full py-2 border-2 border-dashed border-gray-300 rounded-lg hover:border-gray-400"
+              <button
+                onClick={addWorkExperience}
+                className="w-full py-2 border-2 border-dashed border-secondary-400 rounded-lg hover:border-secondary-500"
             >
               + 職歴を追加
             </button>
@@ -620,7 +620,7 @@ export default function CreateResumePage() {
               ))}
               <button
                 onClick={addSkill}
-                className="mt-2 text-[#FF733E] hover:text-blue-800"
+                className="mt-2 text-primary-600 hover:text-primary-700"
               >
                 + スキルを追加
               </button>
@@ -644,7 +644,7 @@ export default function CreateResumePage() {
               ))}
               <button
                 onClick={() => setResumeData(prev => ({ ...prev, certifications: [...prev.certifications, ''] }))}
-                className="mt-2 text-[#FF733E] hover:text-blue-800"
+                className="mt-2 text-primary-600 hover:text-primary-700"
               >
                 + 資格を追加
               </button>
@@ -674,7 +674,7 @@ export default function CreateResumePage() {
           <div className="space-y-6">
             <h2 className="text-2xl font-semibold mb-4">職務要約</h2>
             <textarea
-              className="w-full p-4 border rounded-lg min-h-48 focus:ring-2 focus:ring-[#FF733E] focus:border-transparent"
+              className="w-full p-4 border rounded-lg min-h-48 focus:ring-2 focus:ring-primary-600 focus:border-transparent"
               placeholder="これまでのご経験を要約して記載してください（例：◯年の開発経験／主要実績・得意領域 など）"
               value={resumeData.jobSummary || ''}
               onChange={(e) => handleInputChange('jobSummary', e.target.value)}

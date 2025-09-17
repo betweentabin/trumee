@@ -81,7 +81,7 @@ export default function ResumeFileUpload() {
       </p>
 
       <div
-        className={`flex flex-col items-center justify-center p-8 border-2 rounded-md ${dragOver ? 'border-blue-500 bg-blue-50' : 'border-dashed border-gray-300'}`}
+        className={`flex flex-col items-center justify-center p-8 border-2 rounded-md ${dragOver ? 'border-blue-500 bg-blue-50' : 'border-dashed border-secondary-300'}`}
         onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
         onDragLeave={() => setDragOver(false)}
         onDrop={onDrop}
@@ -100,7 +100,7 @@ export default function ResumeFileUpload() {
             type="button"
             onClick={() => inputRef.current?.click()}
             disabled={uploading}
-            className="px-4 py-2 bg-[#FF733E] text-white rounded-md hover:bg-[#e9632e] disabled:bg-gray-400"
+            className="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-md disabled:bg-secondary-300"
           >
             {uploading ? 'アップロード中...' : 'ファイルを選択'}
           </button>
@@ -143,4 +143,3 @@ export default function ResumeFileUpload() {
     </div>
   );
 }
-

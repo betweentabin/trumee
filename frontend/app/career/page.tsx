@@ -152,13 +152,13 @@ export default function CareerPage() {
           <div className="flex gap-2">
             <button
               onClick={() => setShowCompletedOnly(false)}
-              className={`px-3 py-1 rounded border ${!showCompletedOnly ? 'bg-gray-800 text-white border-gray-800' : 'bg-white text-gray-700 border-gray-300'}`}
+              className={`px-3 py-1 rounded border ${!showCompletedOnly ? 'bg-secondary-900 text-white border-secondary-900' : 'bg-white text-gray-700 border-secondary-300'}`}
             >
               すべて
             </button>
             <button
               onClick={() => setShowCompletedOnly(true)}
-              className={`px-3 py-1 rounded border ${showCompletedOnly ? 'bg-[#FF733E] text-white border-[#FF733E]' : 'bg-white text-gray-700 border-gray-300'}`}
+              className={`px-3 py-1 rounded border ${showCompletedOnly ? 'bg-primary-600 text-white border-primary-600' : 'bg-white text-gray-700 border-secondary-300'}`}
             >
               完了のみ
             </button>
@@ -174,7 +174,7 @@ export default function CareerPage() {
                 <h3 className="text-xl font-medium text-gray-900 mb-2">職務経歴書がありません</h3>
                 <p className="text-gray-500 mb-6">新規作成ボタンをクリックして、職務経歴書を作成しましょう</p>
                 <Link href={to('/career/create')}>
-                  <button className="px-6 py-3 bg-[#FF733E] text-white rounded-lg hover:bg-[#FF8659] transition">職務経歴書を作成する</button>
+                  <button className="px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition">職務経歴書を作成する</button>
                 </Link>
               </div>
             );

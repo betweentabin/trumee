@@ -27,25 +27,25 @@ export default function MyInfoPage() {
       title: '基本情報の確認・変更',
       icon: <FaUser className="text-2xl" />,
       href: `${base}/registerdata`,
-      color: 'bg-[#FF733E]'
+      color: 'bg-primary-600'
     },
     {
       title: 'パスワードの変更',
       icon: <FaLock className="text-2xl" />,
       href: `${base}/password`,
-      color: 'bg-[#FF733E]'
+      color: 'bg-primary-600'
     },
     {
       title: '支払い情報登録・変更',
       icon: <FaCreditCard className="text-2xl" />,
       href: `${base}/payment`,
-      color: 'bg-[#FF733E]'
+      color: 'bg-primary-600'
     },
     {
       title: '有料プラン',
       icon: <FaCrown className="text-2xl" />,
       href: `${base}/paidplans`,
-      color: 'bg-[#FF733E]'
+      color: 'bg-primary-600'
     }
   ];
 
