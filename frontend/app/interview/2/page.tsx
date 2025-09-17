@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
+import { getAuthHeaders } from '@/utils/auth';
 
 export default function InterviewPage2() {
   const router = useRouter();
@@ -16,6 +17,31 @@ export default function InterviewPage2() {
   const [achievements, setAchievements] = useState('');
   const [challenges, setChallenges] = useState('');
   const [skills, setSkills] = useState('');
+  const [derived, setDerived] = useState<string[]>([]);
+
+  // 履歴書から想定質問を生成
+  useEffect(() => {
+    (async () => {
+      try {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+        const res = await fetch(`${apiUrl}/api/v2/resumes/`, { headers: { ...getAuthHeaders() } });
+        if (!res.ok) return;
+        const data = await res.json();
+        const list = data.results || data || [];
+        const r = list.find((x: any) => x.is_active) || list[0];
+        const extra = r?.extra_data || {};
+        const experiences = Array.isArray(extra.workExperiences) ? extra.workExperiences : [];
+        const qs: string[] = [];
+        experiences.forEach((e: any) => {
+          if (e?.company) qs.push(`${e.company}での役割と主な成果は？`);
+          if (e?.position) qs.push(`${e.position}として最も難しかった課題と解決方法は？`);
+          if (Array.isArray(e?.achievements) && e.achievements.filter(Boolean).length) qs.push(`実績のうち、最も誇れるものは？数値で説明できますか？`);
+        });
+        if (r?.skills) qs.push('履歴書のスキル欄で強調したいスキルと裏付けとなる事例は？');
+        setDerived(qs.slice(0, 8));
+      } catch { /* ignore */ }
+    })();
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
@@ -52,6 +78,15 @@ export default function InterviewPage2() {
               className="w-full h-32 p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
             />
           </div>
+
+          {derived.length > 0 && (
+            <div className="bg-white rounded-lg shadow-md p-6">
+              <h2 className="text-xl font-semibold mb-4">履歴書からの想定質問</h2>
+              <ul className="list-disc pl-5 space-y-2 text-gray-700">
+                {derived.map((q, i) => (<li key={i}>{q}</li>))}
+              </ul>
+            </div>
+          )}
 
           <div className="flex justify-between">
             <button

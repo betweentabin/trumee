@@ -30,6 +30,7 @@ export default function CompanyLoginPage() {
     password: '',
     general: '',
   });
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
 
   useEffect(() => {
     const savedApiVersion = localStorage.getItem('useV2Api');
@@ -104,6 +105,10 @@ export default function CompanyLoginPage() {
     e.preventDefault();
     
     if (!validateForm()) {
+      return;
+    }
+    if (!acceptedTerms) {
+      setErrors(prev => ({ ...prev, general: '利用規約に同意してください' }));
       return;
     }
 
@@ -272,11 +277,18 @@ export default function CompanyLoginPage() {
             <div>
               <button
                 type="submit"
-                disabled={isLoading}
+                disabled={isLoading || !acceptedTerms}
                 className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-[#FF733E] hover:bg-[#e9632e] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#FF733E] disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isLoading ? 'ログイン中...' : 'ログイン'}
               </button>
+            </div>
+
+            <div className="text-xs text-gray-600 flex items-start gap-2">
+              <input id="agree" type="checkbox" className="mt-0.5" checked={acceptedTerms} onChange={(e)=>setAcceptedTerms(e.target.checked)} />
+              <label htmlFor="agree">
+                <span>私は <a className="text-[#FF733E] underline" href="/terms-of-use" target="_blank" rel="noreferrer">利用規約</a> と <a className="text-[#FF733E] underline" href="/account/personal-info-license" target="_blank" rel="noreferrer">個人情報利用許諾</a> に同意します。</span>
+              </label>
             </div>
 
             <div className="text-center">

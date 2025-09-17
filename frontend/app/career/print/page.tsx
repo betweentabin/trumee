@@ -213,17 +213,10 @@ export default function PrintPage() {
     }
   };
 
-  // Auto-open PDF preview or download when requested via query
+  // Auto-open disabled based on spec: avoid opening PDF automatically
   useEffect(() => {
-    if (!openParam || !selectedResume || hasAutoOpened.current) return;
-    const action = openParam.toLowerCase();
-    hasAutoOpened.current = true;
-    if (action === 'pdf' || action === 'preview') {
-      handlePreview();
-    } else if (action === 'download') {
-      handleDownload();
-    }
-  }, [openParam, selectedResume]);
+    // intentionally no-op to prevent sudden PDF open
+  }, []);
 
   if (loading) {
     return (
@@ -357,56 +350,19 @@ export default function PrintPage() {
                     </div>
                   </div>
 
-                  {/* 基本情報 */}
-                  {selectedResume.extra_data && (
-                    <section className="mb-6">
-                      <div className="grid grid-cols-2 gap-4 mb-4">
-                        <div>
-                          <span className="font-semibold">氏名: </span>
-                          {selectedResume.extra_data.fullName}
-                        </div>
-                        <div>
-                          <span className="font-semibold">Email: </span>
-                          {selectedResume.extra_data.email}
-                        </div>
-                        <div>
-                          <span className="font-semibold">電話: </span>
-                          {selectedResume.extra_data.phone}
-                        </div>
-                        <div>
-                          <span className="font-semibold">希望年収: </span>
-                          {selectedResume.extra_data.desiredSalary}
-                        </div>
-                      </div>
-                    </section>
-                  )}
-
-                  {selectedResume.desired_job && (
-                    <section className="mb-6">
-                      <h2 className="text-lg font-semibold border-b-2 border-gray-300 pb-2 mb-3">
-                        希望職種
-                      </h2>
-                      <p>{selectedResume.desired_job}</p>
-                    </section>
-                  )}
-
-                  {selectedResume.self_pr && (
-                    <section className="mb-6">
-                      <h2 className="text-lg font-semibold border-b-2 border-gray-300 pb-2 mb-3">
-                        自己PR
-                      </h2>
-                      <p className="whitespace-pre-line">{selectedResume.self_pr}</p>
-                    </section>
-                  )}
-
-                  {selectedResume.skills && (
-                    <section className="mb-6">
-                      <h2 className="text-lg font-semibold border-b-2 border-gray-300 pb-2 mb-3">
-                        スキル・技術
-                      </h2>
-                      <p className="whitespace-pre-line">{selectedResume.skills}</p>
-                    </section>
-                  )}
+                  {/* 職務要約（最上部） */}
+                  {(() => {
+                    const jobSummary = (selectedResume.extra_data as any)?.jobSummary as string | undefined;
+                    const fallback = selectedResume.self_pr;
+                    const summaryText = jobSummary || fallback;
+                    if (!summaryText) return null;
+                    return (
+                      <section className="mb-6">
+                        <h2 className="text-lg font-semibold border-b-2 border-gray-300 pb-2 mb-3">職務要約</h2>
+                        <p className="whitespace-pre-line">{summaryText}</p>
+                      </section>
+                    );
+                  })()}
 
                   {selectedResume.extra_data?.workExperiences && selectedResume.extra_data.workExperiences.length > 0 && (
                     <section className="mb-6">
@@ -425,8 +381,26 @@ export default function PrintPage() {
                           {exp.description && (
                             <p className="text-gray-700 whitespace-pre-line">{exp.description}</p>
                           )}
+                          {Array.isArray(exp.achievements) && exp.achievements.filter(Boolean).length > 0 && (
+                            <div className="mt-2">
+                              <div className="font-semibold">実績</div>
+                              <ul className="list-disc pl-5 space-y-1">
+                                {exp.achievements.filter(Boolean).map((a: string, i: number) => (
+                                  <li key={i} className="text-gray-700 whitespace-pre-line">{a}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
                         </div>
                       ))}
+                    </section>
+                  )}
+
+                  {/* 自己PR（最後尾） */}
+                  {selectedResume.self_pr && (
+                    <section className="mt-8">
+                      <h2 className="text-lg font-semibold border-b-2 border-gray-300 pb-2 mb-3">自己PR</h2>
+                      <p className="whitespace-pre-line">{selectedResume.self_pr}</p>
                     </section>
                   )}
                 </div>

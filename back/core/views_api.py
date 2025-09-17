@@ -462,9 +462,10 @@ def create_stripe_checkout_session(request):
         
         # プラン別の価格設定
         prices = {
-            'basic': 5000,  # 5,000円
-            'premium': 10000,  # 10,000円
-            'enterprise': 30000,  # 30,000円
+            'basic': 5000,      # 5,000円（単発）
+            'premium': 10000,   # 10,000円（サブスク）
+            'enterprise': 30000,# 30,000円（サブスク）
+            'credits100': 10000 # スカウト追加100通（単発）
         }
         
         amount = prices.get(plan_type, 5000)
@@ -476,14 +477,14 @@ def create_stripe_checkout_session(request):
                 'price_data': {
                     'currency': 'jpy',
                     'product_data': {
-                        'name': f'Resume Truemee {plan_type.title()} Plan',
-                        'description': f'{plan_type.title()}プランの購読',
+                        'name': 'Resume Truemee 決済',
+                        'description': 'プラン/追加クレジット購入',
                     },
                     'unit_amount': amount * 100,  # Stripeは最小単位で扱う
                 },
                 'quantity': 1,
             }],
-            mode='subscription' if plan_type != 'basic' else 'payment',
+            mode='subscription' if plan_type in ['premium','enterprise'] else 'payment',
             success_url='http://localhost:3000/payment/success?session_id={CHECKOUT_SESSION_ID}',
             cancel_url='http://localhost:3000/payment/cancel',
             customer_email=request.user.email,

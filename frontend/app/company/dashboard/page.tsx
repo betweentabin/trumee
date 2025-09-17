@@ -114,6 +114,21 @@ export default function CompanyDashboard() {
         </div>
 
         {/* タブナビゲーション */}
+        {/* スカウト残数インフォ */}
+        <div className="mb-6 bg-yellow-50 border border-yellow-200 text-yellow-800 rounded p-4">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+            <div>
+              現在のスカウト送信数: <span className="font-bold">{(stats as any)?.scouts_sent || 0}</span> / 100
+            </div>
+            <div className="text-sm">
+              100通に達した場合、
+              <a href="/companyinfo/payment" className="underline font-semibold">追加100通（¥10,000）</a>
+              の購入が可能です。
+            </div>
+          </div>
+        </div>
+
+        {/* タブナビゲーション */}
         <div className="bg-white rounded-lg shadow-sm mb-6">
           <div className="border-b">
             <nav className="flex -mb-px">

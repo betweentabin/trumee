@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import toast from 'react-hot-toast';
+import { getAuthHeaders } from '@/utils/auth';
 import { 
   FaPlay, 
   FaPause, 
@@ -41,6 +42,32 @@ export default function InterviewPage3() {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [completedQuestions, setCompletedQuestions] = useState<string[]>([]);
   const [userAnswer, setUserAnswer] = useState('');
+
+  const [extraQs, setExtraQs] = useState<MockInterview[]>([]);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+        const res = await fetch(`${apiUrl}/api/v2/resumes/`, { headers: { ...getAuthHeaders() } });
+        if (!res.ok) return;
+        const data = await res.json();
+        const list = data.results || data || [];
+        const r = list.find((x: any) => x.is_active) || list[0];
+        const extra = r?.extra_data || {};
+        const experiences = Array.isArray(extra.workExperiences) ? extra.workExperiences : [];
+        const derived: MockInterview[] = experiences.slice(0, 3).map((e: any, idx: number) => ({
+          id: `r${idx}`,
+          question: `${e.company || '前職'}での貢献を具体的に教えてください（役割・施策・成果）`,
+          category: 'experience',
+          difficulty: 'medium',
+          timeLimit: 180,
+          tips: ['STARで簡潔に', '数値・具体例', '学びと再現可能性']
+        }));
+        setExtraQs(derived);
+      } catch { /* ignore */ }
+    })();
+  }, []);
 
   const mockQuestions: MockInterview[] = [
     {
@@ -225,9 +252,10 @@ export default function InterviewPage3() {
     }
   };
 
+  const allQuestions = [...mockQuestions, ...extraQs];
   const filteredQuestions = selectedCategory === 'all' 
-    ? mockQuestions 
-    : mockQuestions.filter(q => q.category === selectedCategory);
+    ? allQuestions 
+    : allQuestions.filter(q => q.category === selectedCategory);
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
@@ -330,13 +358,13 @@ export default function InterviewPage3() {
               <div className="bg-green-50 rounded-lg p-6">
                 <h3 className="text-lg font-semibold mb-2 text-green-800">📊 進捗状況</h3>
                 <div className="text-2xl font-bold text-green-600">
-                  {completedQuestions.length} / {mockQuestions.length}
+                  {completedQuestions.length} / {allQuestions.length}
                 </div>
                 <div className="text-sm text-green-700">質問完了</div>
                 <div className="w-full bg-green-200 rounded-full h-2 mt-3">
                   <div 
                     className="bg-green-600 h-2 rounded-full transition-all"
-                    style={{ width: `${(completedQuestions.length / mockQuestions.length) * 100}%` }}
+                    style={{ width: `${(completedQuestions.length / allQuestions.length) * 100}%` }}
                   ></div>
                 </div>
               </div>

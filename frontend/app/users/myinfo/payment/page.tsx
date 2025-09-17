@@ -3,10 +3,11 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Leftpage from '@/components/user/page';
-import { FaCreditCard, FaCalendarAlt, FaLock, FaPlus, FaTrash } from 'react-icons/fa';
+import { FaLock } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 import useAuthV2 from '@/hooks/useAuthV2';
 import { getAccessToken } from '@/utils/auth';
+import { buildApiUrl } from '@/config/api';
 
 interface PaymentMethod {
   id: string;
@@ -20,17 +21,8 @@ interface PaymentMethod {
 
 export default function UserPaymentPage() {
   const router = useRouter();
-  const { isAuthenticated, initializeAuth, currentUser } = useAuthV2();
-  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
-  const [showAddCard, setShowAddCard] = useState(false);
+  const { isAuthenticated, initializeAuth } = useAuthV2();
   const [loading, setLoading] = useState(false);
-  const [cardForm, setCardForm] = useState({
-    cardNumber: '',
-    cardHolder: '',
-    expiryMonth: '',
-    expiryYear: '',
-    cvv: ''
-  });
 
   useEffect(() => {
     initializeAuth();
@@ -50,89 +42,21 @@ export default function UserPaymentPage() {
     if (isAuthenticated) fetchPaymentMethods();
   }, [isAuthenticated, router]);
 
-  const fetchPaymentMethods = async () => {
+  const gotoStripeCheckout = async (plan: 'basic' | 'premium' | 'enterprise' = 'premium') => {
     try {
-      // 支払い方法の取得シミュレーション
-      const mockMethods: PaymentMethod[] = [
-        {
-          id: '1',
-          type: 'card',
-          last4: '4242',
-          brand: 'Visa',
-          expiryMonth: '12',
-          expiryYear: '2025',
-          isDefault: true
-        }
-      ];
-      setPaymentMethods(mockMethods);
-    } catch (error) {
-      console.error('Error fetching payment methods:', error);
-    }
-  };
-
-  const handleAddCard = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-
-    try {
-      // カード追加のシミュレーション
-      setTimeout(() => {
-        const newCard: PaymentMethod = {
-          id: Date.now().toString(),
-          type: 'card',
-          last4: cardForm.cardNumber.slice(-4),
-          brand: 'Visa',
-          expiryMonth: cardForm.expiryMonth,
-          expiryYear: cardForm.expiryYear,
-          isDefault: paymentMethods.length === 0
-        };
-        setPaymentMethods([...paymentMethods, newCard]);
-        setShowAddCard(false);
-        setCardForm({
-          cardNumber: '',
-          cardHolder: '',
-          expiryMonth: '',
-          expiryYear: '',
-          cvv: ''
-        });
-        setLoading(false);
-        toast.success('カードを追加しました');
-      }, 1000);
-    } catch (error) {
+      setLoading(true);
+      const res = await fetch(buildApiUrl('/payments/checkout/'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('drf_token_v2')}` },
+        body: JSON.stringify({ plan_type: plan })
+      });
+      const data = await res.json();
+      if (!res.ok || !data?.checkout_url) throw new Error(data?.error || 'チェックアウトの作成に失敗しました');
+      window.location.href = data.checkout_url;
+    } catch (e: any) {
+      toast.error(e?.message || 'Stripeチェックアウトに遷移できませんでした');
+    } finally {
       setLoading(false);
-      toast.error('カードの追加に失敗しました');
-    }
-  };
-
-  const handleDeleteCard = async (cardId: string) => {
-    if (confirm('このカードを削除してもよろしいですか？')) {
-      setPaymentMethods(paymentMethods.filter(card => card.id !== cardId));
-      toast.success('カードを削除しました');
-    }
-  };
-
-  const handleSetDefault = async (cardId: string) => {
-    setPaymentMethods(paymentMethods.map(card => ({
-      ...card,
-      isDefault: card.id === cardId
-    })));
-    toast.success('デフォルトカードを変更しました');
-  };
-
-  const formatCardNumber = (value: string) => {
-    const v = value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
-    const matches = v.match(/\d{4,16}/g);
-    const match = (matches && matches[0]) || '';
-    const parts = [];
-
-    for (let i = 0, len = match.length; i < len; i += 4) {
-      parts.push(match.substring(i, i + 4));
-    }
-
-    if (parts.length) {
-      return parts.join(' ');
-    } else {
-      return value;
     }
   };
 
@@ -151,184 +75,15 @@ export default function UserPaymentPage() {
 
           <div className="lg:col-span-9">
         <div className="bg-white rounded-lg shadow-md p-6">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-semibold">登録済みカード</h2>
-            <button
-              onClick={() => setShowAddCard(true)}
-              className="px-4 py-2 bg-[#FF733E] text-white rounded-lg hover:bg-orange-70 active:bg-orange-60 transition flex items-center gap-2"
-            >
-              <FaPlus />
-              カードを追加
-            </button>
+          <h2 className="text-xl font-semibold mb-4">お支払いの管理</h2>
+          <p className="text-gray-700 mb-6">クレジットカード情報は当サイトでは保存しません。Stripeの安全なチェックアウトで決済・管理します。</p>
+          <div className="flex flex-col md:flex-row gap-3">
+            <button onClick={() => gotoStripeCheckout('premium')} disabled={loading} className="px-6 py-3 bg-[#FF733E] text-white rounded-lg hover:bg-orange-70 disabled:bg-gray-400">Stripeでプラン購入</button>
+            <button onClick={() => gotoStripeCheckout('basic')} disabled={loading} className="px-6 py-3 bg-gray-700 text-white rounded-lg hover:bg-gray-800 disabled:bg-gray-400">単発決済（例）</button>
           </div>
-
-          {paymentMethods.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-gray-500">カードが登録されていません</p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {paymentMethods.map((card) => (
-                <div key={card.id} className="border rounded-lg p-4 flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-8 bg-gradient-to-r from-blue-500 to-blue-600 rounded flex items-center justify-center text-white text-xs">
-                      {card.brand}
-                    </div>
-                    <div>
-                      <p className="font-medium">•••• {card.last4}</p>
-                      <p className="text-sm text-gray-600">
-                        有効期限: {card.expiryMonth}/{card.expiryYear}
-                      </p>
-                    </div>
-                    {card.isDefault && (
-                      <span className="px-2 py-1 bg-green-100 text-green-700 rounded text-sm">
-                        デフォルト
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {!card.isDefault && (
-                      <button
-                        onClick={() => handleSetDefault(card.id)}
-                        className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded transition"
-                      >
-                        デフォルトに設定
-                      </button>
-                    )}
-                    <button
-                      onClick={() => handleDeleteCard(card.id)}
-                      className="p-2 text-red-600 hover:bg-red-50 rounded transition"
-                    >
-                      <FaTrash />
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
         </div>
 
-        {showAddCard && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-lg p-6 max-w-md w-full">
-              <h3 className="text-xl font-semibold mb-4">新しいカードを追加</h3>
-              
-              <form onSubmit={handleAddCard}>
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      カード番号
-                    </label>
-                    <div className="relative">
-                      <input
-                        type="text"
-                        value={cardForm.cardNumber}
-                        onChange={(e) => setCardForm({
-                          ...cardForm,
-                          cardNumber: formatCardNumber(e.target.value)
-                        })}
-                        placeholder="1234 5678 9012 3456"
-                        maxLength={19}
-                        className="w-full p-3 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF733E]"
-                        required
-                      />
-                      <FaCreditCard className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      カード名義
-                    </label>
-                    <input
-                      type="text"
-                      value={cardForm.cardHolder}
-                      onChange={(e) => setCardForm({...cardForm, cardHolder: e.target.value})}
-                      placeholder="TARO YAMADA"
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF733E]"
-                      required
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-3 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        月
-                      </label>
-                      <select
-                        value={cardForm.expiryMonth}
-                        onChange={(e) => setCardForm({...cardForm, expiryMonth: e.target.value})}
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF733E]"
-                        required
-                      >
-                        <option value="">MM</option>
-                        {Array.from({length: 12}, (_, i) => i + 1).map(month => (
-                          <option key={month} value={month.toString().padStart(2, '0')}>
-                            {month.toString().padStart(2, '0')}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        年
-                      </label>
-                      <select
-                        value={cardForm.expiryYear}
-                        onChange={(e) => setCardForm({...cardForm, expiryYear: e.target.value})}
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF733E]"
-                        required
-                      >
-                        <option value="">YY</option>
-                        {Array.from({length: 10}, (_, i) => new Date().getFullYear() + i).map(year => (
-                          <option key={year} value={year.toString().slice(-2)}>
-                            {year.toString().slice(-2)}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        CVV
-                      </label>
-                      <div className="relative">
-                        <input
-                          type="text"
-                          value={cardForm.cvv}
-                          onChange={(e) => setCardForm({...cardForm, cvv: e.target.value})}
-                          placeholder="123"
-                          maxLength={4}
-                          className="w-full p-3 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF733E]"
-                          required
-                        />
-                        <FaLock className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-xs" />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-6 flex justify-end gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setShowAddCard(false)}
-                    className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition"
-                  >
-                    キャンセル
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="px-4 py-2 bg-[#FF733E] text-white rounded-lg hover:bg-orange-70 active:bg-orange-60 transition disabled:bg-gray-400"
-                  >
-                    {loading ? '追加中...' : 'カードを追加'}
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
+        {/* No in-app card form; managed on Stripe */}
 
         <div className="mt-8 bg-orange-50 rounded-lg p-6">
           <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">

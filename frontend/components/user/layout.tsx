@@ -12,23 +12,21 @@ export default function Layout({
     <div>
       <Header />
       <Headertitle />
-      <div className='bg-white flex p-9'>
-      
-        <div className="flex flex-col md:flex-row max-w-[1440px] w-full gap-5 mx-auto px-5">
-              {/* Left side: Full width on mobile, 1/3 on md+ */}
-              <div className="w-full md:w-1/3">
-                <Leftpage />
-              </div>
-        
-              {/* Right side: Full width on mobile, 2/3 on md+ */}
-              <div className="w-full md:w-2/3">
-                {children}
-              </div>
-            </div>
-      
+      <div className='bg-white p-9'>
+        <div className="max-w-[1440px] w-full mx-auto px-5">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+            {/* Left: sticky on desktop */}
+            <aside className="lg:col-span-3 lg:sticky lg:top-24 h-fit">
+              <Leftpage />
+            </aside>
+            {/* Right */}
+            <main className="lg:col-span-9">
+              {children}
+            </main>
+          </div>
+        </div>
       </div>
       <Footer />
-      {/* <FooterBar /> */}
     </div>
   )
 }

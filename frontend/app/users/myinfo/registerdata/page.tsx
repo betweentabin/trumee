@@ -21,7 +21,7 @@ export default function RegisterDataPage() {
 
     return [
       { id: 'profile', label: 'プロフィール', href: perUser('profile') || `/users/${userId}/profile` },
-      { id: 'history', label: '経歴', href: perUser('experience') || `/users/${userId}/experience` },
+      { id: 'history', label: '職務経歴書の記載', href: perUser('experience') || `/users/${userId}/experience` },
       { id: 'hope', label: '希望条件', href: perUser('preference') || `/users/${userId}/preference` },
       { id: 'resume', label: '履歴書', href: perUser('resumes') || `/users/${userId}/resumes` },
     ];
@@ -62,7 +62,7 @@ export default function RegisterDataPage() {
           </div>
           
           <div className="border-l-4 border-[#FF733E] pl-4">
-            <h3 className="font-semibold">経歴</h3>
+            <h3 className="font-semibold">職務経歴書の記載</h3>
             <p className="text-sm text-gray-600">職歴・学歴・スキルを登録</p>
           </div>
           

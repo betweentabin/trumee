@@ -130,10 +130,17 @@ class CompanyProfile(models.Model):
     industry = models.CharField(max_length=100, blank=True, db_index=True)
     company_description = models.TextField(blank=True)
     headquarters = models.CharField(max_length=200, blank=True)
-    
+
     # 担当者情報
     contact_person = models.CharField(max_length=100, blank=True)
     contact_department = models.CharField(max_length=100, blank=True)
+
+    # 請求書送付先
+    billing_company_name = models.CharField(max_length=200, blank=True)
+    billing_department = models.CharField(max_length=100, blank=True)
+    billing_zip = models.CharField(max_length=20, blank=True)
+    billing_address = models.CharField(max_length=300, blank=True)
+    billing_email = models.EmailField(blank=True)
     
     updated_at = models.DateTimeField(auto_now=True)
     

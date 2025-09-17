@@ -29,7 +29,8 @@ interface ResumeData {
   phone: string;
   address: string;
   birthDate: string;
-  summary: string;
+  summary: string; // 自己PR
+  jobSummary?: string; // 職務要約
   desiredPosition: string;
   desiredSalary: string;
   workExperiences: WorkExperience[];
@@ -63,6 +64,7 @@ export default function CreateResumePage() {
     address: '',
     birthDate: '',
     summary: '',
+    jobSummary: '',
     desiredPosition: '',
     desiredSalary: '',
     workExperiences: [{
@@ -282,7 +284,7 @@ export default function CreateResumePage() {
       step2: { education: resumeData.education || [] },
       step3: { experience: resumeData.workExperiences || [] },
       step4: { skills: skillsArray },
-      step5: { selfPR: resumeData.summary || '' },
+      step5: { selfPR: resumeData.summary || '', jobSummary: resumeData.jobSummary || '' },
     } as any;
   };
 
@@ -350,7 +352,7 @@ export default function CreateResumePage() {
       case 1:
         return (
           <div className="space-y-6">
-            <h2 className="text-2xl font-semibold mb-4">基本情報（学歴を含む）</h2>
+            <h2 className="text-2xl font-semibold mb-4">基本情報・学歴</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium mb-2">タイトル</label>
@@ -396,7 +398,7 @@ export default function CreateResumePage() {
                 <label className="block text-sm font-medium mb-2">生年月日</label>
                 <input
                   type="date"
-                  className="w-full p-2 border rounded-lg"
+                  className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-[#FF733E] focus:border-transparent"
                   value={resumeData.birthDate}
                   onChange={(e) => handleInputChange('birthDate', e.target.value)}
                 />
@@ -525,19 +527,19 @@ export default function CreateResumePage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-2">開始日</label>
+                    <label className="block text-sm font-medium mb-2">開始</label>
                     <input
-                      type="date"
-                      className="w-full p-2 border rounded-lg"
+                      type="month"
+                      className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-[#FF733E] focus:border-transparent"
                       value={exp.startDate}
                       onChange={(e) => handleWorkExperienceChange(index, 'startDate', e.target.value)}
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-2">終了日</label>
+                    <label className="block text-sm font-medium mb-2">終了</label>
                     <input
-                      type="date"
-                      className="w-full p-2 border rounded-lg"
+                      type="month"
+                      className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-[#FF733E] focus:border-transparent"
                       value={exp.endDate}
                       onChange={(e) => handleWorkExperienceChange(index, 'endDate', e.target.value)}
                     />
@@ -546,11 +548,39 @@ export default function CreateResumePage() {
                 <div>
                   <label className="block text-sm font-medium mb-2">職務内容</label>
                   <textarea
-                    className="w-full p-2 border rounded-lg"
+                    className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-[#FF733E] focus:border-transparent"
                     rows={3}
                     value={exp.description}
                     onChange={(e) => handleWorkExperienceChange(index, 'description', e.target.value)}
                   />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">実績（箇条書き推奨）</label>
+                  {(exp.achievements || []).map((ach, i) => (
+                    <input
+                      key={i}
+                      type="text"
+                      className="w-full mb-2 p-3 border rounded-lg focus:ring-2 focus:ring-[#FF733E] focus:border-transparent"
+                      value={ach}
+                      onChange={(e) => {
+                        const updated = [...(resumeData.workExperiences[index].achievements || [])];
+                        updated[i] = e.target.value;
+                        handleWorkExperienceChange(index, 'achievements', updated);
+                      }}
+                      placeholder="例：新規顧客開拓で前年比120%達成 など"
+                    />
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const updated = [...(resumeData.workExperiences[index].achievements || [])];
+                      updated.push('');
+                      handleWorkExperienceChange(index, 'achievements', updated);
+                    }}
+                    className="text-[#FF733E] text-sm"
+                  >
+                    + 実績を追加
+                  </button>
                 </div>
               </div>
             ))}
@@ -642,52 +672,15 @@ export default function CreateResumePage() {
       case 5:
         return (
           <div className="space-y-6">
-            <h2 className="text-2xl font-semibold mb-4">職務要約（プレビュー）</h2>
-            <div className="bg-gray-50 border rounded-lg p-4 space-y-3">
-              <div><span className="text-xs text-gray-500">タイトル</span><div>{resumeData.title || '（未設定）'}</div></div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div><span className="text-xs text-gray-500">氏名</span><div>{resumeData.fullName || '（未設定）'}</div></div>
-                <div><span className="text-xs text-gray-500">メール</span><div>{resumeData.email || '（未設定）'}</div></div>
-                <div><span className="text-xs text-gray-500">電話</span><div>{resumeData.phone || '（未設定）'}</div></div>
-                <div><span className="text-xs text-gray-500">住所</span><div>{resumeData.address || '（未設定）'}</div></div>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div><span className="text-xs text-gray-500">希望職種</span><div>{resumeData.desiredPosition || '（未設定）'}</div></div>
-                <div><span className="text-xs text-gray-500">希望年収</span><div>{resumeData.desiredSalary || '（未設定）'}</div></div>
-              </div>
-              <div>
-                <span className="text-xs text-gray-500">自己PR</span>
-                <div className="whitespace-pre-wrap">{resumeData.summary || '（未入力）'}</div>
-              </div>
-              <div>
-                <span className="text-xs text-gray-500">職歴</span>
-                <div className="space-y-2 mt-1">
-                  {resumeData.workExperiences.map((w, i) => (
-                    <div key={i} className="border rounded p-2">
-                      <div className="font-medium">{w.company || '会社名未設定'} / {w.position || '役職未設定'}</div>
-                      <div className="text-xs text-gray-500">{w.startDate || '----/--'} ~ {w.endDate || '----/--'}</div>
-                      {w.description && <div className="mt-1 text-sm whitespace-pre-wrap">{w.description}</div>}
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <span className="text-xs text-gray-500">学歴</span>
-                <div className="space-y-2 mt-1">
-                  {resumeData.education.map((e, i) => (
-                    <div key={i} className="border rounded p-2">
-                      <div className="font-medium">{e.school || '学校名未設定'} / {e.degree || '学位未設定'}</div>
-                      <div className="text-xs text-gray-500">{e.field || '専攻未設定'} / {e.graduationDate || '卒業年月未設定'}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <span className="text-xs text-gray-500">スキル</span>
-                <div className="mt-1 text-sm">{resumeData.skills.filter(Boolean).join(', ') || '（未入力）'}</div>
-              </div>
-            </div>
-            <div className="text-sm text-gray-500">この内容で「保存して完了」を押すと保存されます。</div>
+            <h2 className="text-2xl font-semibold mb-4">職務要約</h2>
+            <textarea
+              className="w-full p-4 border rounded-lg min-h-48 focus:ring-2 focus:ring-[#FF733E] focus:border-transparent"
+              placeholder="これまでのご経験を要約して記載してください（例：◯年の開発経験／主要実績・得意領域 など）"
+              value={resumeData.jobSummary || ''}
+              onChange={(e) => handleInputChange('jobSummary', e.target.value)}
+              rows={8}
+            />
+            <div className="text-sm text-gray-500">プレビューは印刷画面で確認できます（氏名や住所などの個人情報は載りません）。</div>
           </div>
         );
 
@@ -766,7 +759,7 @@ export default function CreateResumePage() {
                 onClick={() => setCurrentStep(5)}
                 className="px-4 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-900"
               >
-                プレビュー
+                職務要約
               </button>
             </div>
           </div>

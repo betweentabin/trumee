@@ -12,6 +12,7 @@ interface MenuItem {
 const menuItems: MenuItem[] = [
   { label: '登録情報の管理設定', href: '/companyinfo' },
   { label: '支払い・プランの管理設定', href: '/companyinfo/payment' },
+  { label: '請求書の送付先', href: '/companyinfo/billing' },
   { label: 'パスワードの変更', href: '/companyinfo/repassword' },
 ];
 

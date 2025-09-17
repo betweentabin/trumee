@@ -208,7 +208,7 @@ export default function CareerPage() {
                   </div>
                   <div className="border-t px-6 py-4 flex justify-between">
                     <div className="flex gap-2">
-                      <Link href={to(`/career/print?id=${resume.id}&open=pdf`)} prefetch={false}>
+                      <Link href={to(`/career/print?id=${resume.id}`)} prefetch={false}>
                         <button className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded transition">
                           <FaEye />
                         </button>

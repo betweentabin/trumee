@@ -99,7 +99,7 @@ export default function Step2EducationPage() {
   };
 
   return (
-    <StepLayout currentStep={2} stepTitle="職務経歴書編集">
+    <StepLayout currentStep={2} stepTitle="学歴">
       <div className="space-y-6">
         <div>
           <h2 className="text-lg font-bold mb-4">学歴</h2>

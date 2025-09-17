@@ -114,7 +114,9 @@ class CompanyProfileSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'user', 'company_name', 'capital', 'company_url', 'campaign_code',
             'employee_count', 'founded_year', 'industry', 'company_description',
-            'headquarters', 'contact_person', 'contact_department', 'updated_at'
+            'headquarters', 'contact_person', 'contact_department',
+            'billing_company_name', 'billing_department', 'billing_zip', 'billing_address', 'billing_email',
+            'updated_at'
         ]
         read_only_fields = ['user', 'updated_at']
 

@@ -861,10 +861,10 @@ export default function EditResumePage() {
             <h1 className="text-3xl font-bold text-gray-900">職務経歴書編集</h1>
             <div className="flex gap-2">
               <button
-                onClick={() => router.push(to(`/career/print?id=${params.id}&open=pdf`)) }
+                onClick={() => router.push(to(`/career/print?id=${params.id}`)) }
                 className="px-4 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-900"
               >
-                PDFプレビュー
+                プレビュー／印刷
               </button>
               <button
                 onClick={handleSubmit}

@@ -55,7 +55,7 @@ export default function ServiceCards() {
             label: 'プロフィール',
             href: perUser('profile') || `/users/${currentUser?.id}/profile`,
           }, {
-            label: '経歴',
+            label: '職務経歴書の記載',
             href: perUser('experience') || `/users/${currentUser?.id}/experience`,
           }, {
             label: '希望条件',

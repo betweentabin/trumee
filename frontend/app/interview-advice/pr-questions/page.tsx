@@ -4,11 +4,13 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAppSelector } from '@/app/redux/hooks';
 import { FaUserTie, FaStar, FaMicrophone, FaLightbulb } from 'react-icons/fa';
+import { getAuthHeaders } from '@/utils/auth';
 
 export default function PRQuestionsPage() {
   const router = useRouter();
   const authState = useAppSelector(state => state.auth);
   const [selectedQuestion, setSelectedQuestion] = useState(0);
+  const [resumeContext, setResumeContext] = useState<{ self_pr?: string; skills?: string } | null>(null);
 
   // Prevent premature redirect before persisted auth is ready
   useEffect(() => {
@@ -17,6 +19,22 @@ export default function PRQuestionsPage() {
       router.push('/auth/login');
     }
   }, [authState.isAuthenticated, router]);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+        const res = await fetch(`${apiUrl}/api/v2/resumes/`, { headers: { ...getAuthHeaders() } });
+        if (!res.ok) return;
+        const data = await res.json();
+        const list = data.results || data || [];
+        const r = list.find((x: any) => x.is_active) || list[0];
+        if (r) {
+          setResumeContext({ self_pr: r.self_pr, skills: r.skills });
+        }
+      } catch { /* ignore */ }
+    })();
+  }, []);
 
   const prQuestions = [
     {
@@ -92,6 +110,13 @@ export default function PRQuestionsPage() {
             自己PRに関する質問
           </h1>
           <p className="text-gray-600 mt-2">面接で効果的な自己PRをするための質問対策</p>
+          {resumeContext && (
+            <div className="mt-4 p-4 bg-blue-50 rounded border border-blue-200 text-sm text-blue-800">
+              <div className="font-semibold mb-1">履歴書の文脈</div>
+              {resumeContext.self_pr && (<div className="mb-1"><span className="font-medium">自己PR:</span> {resumeContext.self_pr.slice(0, 120)}{resumeContext.self_pr.length > 120 ? '…' : ''}</div>)}
+              {resumeContext.skills && (<div><span className="font-medium">スキル:</span> {resumeContext.skills.split('\n').filter(Boolean).slice(0,5).join(', ')}</div>)}
+            </div>
+          )}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

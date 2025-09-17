@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { FaCreditCard, FaPlus, FaTrash } from 'react-icons/fa';
+import { FaShoppingCart } from 'react-icons/fa';
 import toast from 'react-hot-toast';
+import { buildApiUrl } from '@/config/api';
 
 interface PaymentMethod {
   id: string;
@@ -15,105 +16,35 @@ interface PaymentMethod {
 }
 
 export default function CompanyPaymentPage() {
-  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
-
-  useEffect(() => {
-    fetchPaymentMethods();
-  }, []);
-
-  const fetchPaymentMethods = async () => {
+  const gotoStripeCheckout = async (plan: 'basic' | 'premium' | 'enterprise' | 'credits100' = 'premium') => {
     try {
-      // 支払い方法の取得シミュレーション
-      const mockMethods: PaymentMethod[] = [
-        {
-          id: '1',
-          type: 'card',
-          last4: '4242',
-          brand: 'Visa',
-          expiryMonth: '12',
-          expiryYear: '2025',
-          isDefault: true
-        }
-      ];
-      setPaymentMethods(mockMethods);
-    } catch (error) {
-      console.error('Error fetching payment methods:', error);
+      const res = await fetch(buildApiUrl('/payments/checkout/'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('drf_token_v2')}` },
+        body: JSON.stringify({ plan_type: plan })
+      });
+      const data = await res.json();
+      if (!res.ok || !data?.checkout_url) throw new Error(data?.error || 'チェックアウトの作成に失敗しました');
+      window.location.href = data.checkout_url;
+    } catch (e: any) {
+      toast.error(e?.message || 'Stripeチェックアウトに遷移できませんでした');
     }
-  };
-
-  const handleDeleteCard = async (cardId: string) => {
-    if (confirm('このカードを削除してもよろしいですか？')) {
-      setPaymentMethods(paymentMethods.filter(card => card.id !== cardId));
-      toast.success('カードを削除しました');
-    }
-  };
-
-  const handleSetDefault = async (cardId: string) => {
-    setPaymentMethods(paymentMethods.map(card => ({
-      ...card,
-      isDefault: card.id === cardId
-    })));
-    toast.success('デフォルトカードを変更しました');
   };
 
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold mb-6">支払い情報管理</h1>
+      <h1 className="text-2xl font-bold mb-6">支払い・プランの管理設定</h1>
 
       <div className="bg-white rounded-lg shadow p-6">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-lg font-semibold">登録済みカード</h2>
-          <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2">
-            <FaPlus />
-            カードを追加
+        <p className="text-gray-700 mb-4">クレジットカード情報は当サイトでは保存しません。Stripeの安全なチェックアウトで決済・管理します。</p>
+        <div className="flex flex-col md:flex-row gap-3">
+          <button onClick={() => gotoStripeCheckout('premium')} className="px-6 py-3 bg-[#FF733E] text-white rounded-lg hover:bg-orange-70 flex items-center gap-2">
+            <FaShoppingCart /> プレミアムプランに加入
+          </button>
+          <button onClick={() => gotoStripeCheckout('credits100')} className="px-6 py-3 bg-gray-700 text-white rounded-lg hover:bg-gray-800 flex items-center gap-2">
+            追加スカウト100通（¥10,000）
           </button>
         </div>
-
-        {paymentMethods.length === 0 ? (
-          <div className="text-center py-12">
-            <FaCreditCard className="mx-auto h-16 w-16 text-gray-300 mb-4" />
-            <p className="text-gray-500">カードが登録されていません</p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {paymentMethods.map((card) => (
-              <div key={card.id} className="border rounded-lg p-4 flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-8 bg-blue-500 rounded flex items-center justify-center text-white text-xs">
-                    {card.brand}
-                  </div>
-                  <div>
-                    <p className="font-medium">•••• {card.last4}</p>
-                    <p className="text-sm text-gray-600">
-                      有効期限: {card.expiryMonth}/{card.expiryYear}
-                    </p>
-                  </div>
-                  {card.isDefault && (
-                    <span className="px-2 py-1 bg-green-100 text-green-700 rounded text-sm">
-                      デフォルト
-                    </span>
-                  )}
-                </div>
-                <div className="flex items-center gap-2">
-                  {!card.isDefault && (
-                    <button
-                      onClick={() => handleSetDefault(card.id)}
-                      className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded"
-                    >
-                      デフォルトに設定
-                    </button>
-                  )}
-                  <button
-                    onClick={() => handleDeleteCard(card.id)}
-                    className="p-2 text-red-600 hover:bg-red-50 rounded"
-                  >
-                    <FaTrash />
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
       </div>
     </div>
   );

@@ -215,12 +215,10 @@ export default function Dashboard() {
               >
                 <div className="flex flex-row items-center gap-2">
                   <div className="flex-none w-12 h-12 rounded-full bg-[#FFE3D9] text-primary-active flex items-center justify-center">
-                    <Image
+                    <img
                       src={service.icon}
                       alt=""
-                      width={24}
-                      height={24}
-                      className="w-[23.54px] h-[23.54px]"
+                      className="w-[23.54px] h-[23.54px] object-contain"
                     />
                   </div>
                   <span className="font-semibold text-lg">{service.title}</span>
