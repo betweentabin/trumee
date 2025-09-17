@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import { buildApiUrl } from '@/config/api';
+import { getAuthHeaders } from '@/utils/auth';
 
 interface BillingForm {
   billing_company_name: string;
@@ -26,7 +27,7 @@ export default function CompanyBillingPage() {
     (async () => {
       try {
         const res = await fetch(buildApiUrl('/company/profile/'), {
-          headers: { Authorization: `Bearer ${localStorage.getItem('drf_token_v2')}` },
+          headers: { ...getAuthHeaders() },
         });
         if (res.ok) {
           const data = await res.json();
@@ -43,7 +44,7 @@ export default function CompanyBillingPage() {
       setLoading(true);
       const res = await fetch(buildApiUrl('/company/profile/'), {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('drf_token_v2')}` },
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
         body: JSON.stringify(form),
       });
       if (!res.ok) throw new Error('保存に失敗しました');
@@ -88,4 +89,3 @@ export default function CompanyBillingPage() {
     </div>
   );
 }
-

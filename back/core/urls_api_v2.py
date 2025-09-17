@@ -7,6 +7,7 @@ API v2 URL設定
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from . import views_api_v2
+from . import views_api  # reuse Stripe checkout in v2 namespace
 
 # DRF Router設定
 router = DefaultRouter()
@@ -74,6 +75,9 @@ urlpatterns = [
     # Resume PDF endpoints
     path('resumes/download-pdf/', views_api_v2.download_resume_pdf, name='download-resume-pdf'),
     path('resumes/send-pdf/', views_api_v2.send_resume_pdf, name='send-resume-pdf'),
+
+    # Payments (Stripe)
+    path('payments/checkout/', views_api.create_stripe_checkout_session, name='stripe-checkout-v2'),
     
     # 添削メッセージ（管理者↔ユーザー）
     path('advice/messages/', views_api_v2.advice_messages, name='advice-messages'),

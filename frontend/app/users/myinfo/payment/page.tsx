@@ -8,6 +8,7 @@ import toast from 'react-hot-toast';
 import useAuthV2 from '@/hooks/useAuthV2';
 import { getAccessToken } from '@/utils/auth';
 import { buildApiUrl } from '@/config/api';
+import { getAuthHeaders } from '@/utils/auth';
 
 interface PaymentMethod {
   id: string;
@@ -47,7 +48,7 @@ export default function UserPaymentPage() {
       setLoading(true);
       const res = await fetch(buildApiUrl('/payments/checkout/'), {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('drf_token_v2')}` },
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
         body: JSON.stringify({ plan_type: plan })
       });
       const data = await res.json();
