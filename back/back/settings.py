@@ -139,10 +139,15 @@ DATABASE_URL = os.environ.get('DATABASE_URL')
 DB_ENGINE = os.environ.get('DB_ENGINE', 'sqlite')
 
 if DATABASE_URL:
-    # Railway環境やHerokuなどでDATABASE_URLが設定されている場合
+    # Railway/HerokuなどでDATABASE_URLが設定されている場合
     import dj_database_url
+    ssl_require = os.environ.get('DATABASE_SSL_REQUIRE', 'true').lower() == 'true'
     DATABASES = {
-        'default': dj_database_url.parse(DATABASE_URL)
+        'default': dj_database_url.parse(
+            DATABASE_URL,
+            conn_max_age=int(os.environ.get('DB_CONN_MAX_AGE', '600')),
+            ssl_require=ssl_require,
+        )
     }
 elif DB_ENGINE == 'postgresql':
     # ローカルPostgreSQL環境

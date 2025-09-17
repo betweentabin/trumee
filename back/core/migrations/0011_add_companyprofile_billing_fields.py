@@ -8,30 +8,29 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.add_field(
+        migrations.AddField(
             model_name='companyprofile',
             name='billing_company_name',
             field=models.CharField(blank=True, max_length=200),
         ),
-        migrations.add_field(
+        migrations.AddField(
             model_name='companyprofile',
             name='billing_department',
             field=models.CharField(blank=True, max_length=100),
         ),
-        migrations.add_field(
+        migrations.AddField(
             model_name='companyprofile',
             name='billing_zip',
             field=models.CharField(blank=True, max_length=20),
         ),
-        migrations.add_field(
+        migrations.AddField(
             model_name='companyprofile',
             name='billing_address',
             field=models.CharField(blank=True, max_length=300),
         ),
-        migrations.add_field(
+        migrations.AddField(
             model_name='companyprofile',
             name='billing_email',
             field=models.EmailField(blank=True, max_length=254),
         ),
     ]
-
