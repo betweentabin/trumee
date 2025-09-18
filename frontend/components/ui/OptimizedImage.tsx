@@ -10,7 +10,8 @@ interface OptimizedImageProps extends Omit<ImageProps, 'onError'> {
 const OptimizedImage: React.FC<OptimizedImageProps> = ({
   src,
   alt,
-  fallbackSrc = '/images/placeholder.png',
+  // Use SVG placeholder that exists under public/images
+  fallbackSrc = '/images/placeholder.svg',
   ...props
 }) => {
   const [imgSrc, setImgSrc] = useState(src);
