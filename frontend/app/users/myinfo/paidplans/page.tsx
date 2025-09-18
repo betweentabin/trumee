@@ -8,7 +8,7 @@ import { getAccessToken, getAuthHeaders } from '@/utils/auth';
 import { plansByRole, PlanTier, PlanDef } from '@/config/plans';
 import { buildApiUrl } from '@/config/api';
 import toast from 'react-hot-toast';
-import { FaCheck, FaSpinner } from 'react-icons/fa';
+import { FaSpinner } from 'react-icons/fa';
 
 export default function UserPaidPlansPage() {
   const router = useRouter();
@@ -134,96 +134,6 @@ export default function UserPaidPlansPage() {
               <p className="text-[#14795A]">
                 現在のプラン: <span className="font-bold">{plans.find(p => p.id === currentPlan)?.name || '未契約'}</span>
               </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-              {plans.map(plan => {
-                const isActive = plan.id === currentPlan;
-                const interval = plan.interval === 'year' ? '年' : '月';
-                const badge = plan.badge;
-                const canCheckout = Boolean(plan.stripePriceId);
-                const isLoading = loadingPlan === plan.id;
-
-                const onSelect = () => {
-                  if (isActive || isLoading) return;
-                  if (canCheckout) {
-                    gotoStripeCheckout(plan);
-                  } else {
-                    changePlan(plan);
-                  }
-                };
-
-                const buttonLabel = isActive
-                  ? '利用中のプラン'
-                  : canCheckout
-                    ? isLoading
-                      ? '処理中…'
-                      : 'Stripeで申し込む'
-                    : isLoading
-                      ? '変更中…'
-                      : 'このプランに変更';
-
-                return (
-                  <div
-                    key={plan.id}
-                    className={`bg-white rounded-2xl overflow-hidden border transition ${
-                      isActive ? 'border-green-400' : 'border-transparent'
-                    } ${plan.highlight ? 'ring-2 ring-[#14795A] shadow-xl' : 'shadow-lg'}`}
-                  >
-                    {badge && (
-                      <div className="bg-[#14795A] text-white text-center py-2 text-sm font-semibold">
-                        {badge}
-                      </div>
-                    )}
-                    <div className="p-6 flex flex-col h-full">
-                      <div className="text-center mb-6 space-y-2">
-                        <h2 className="text-2xl font-bold text-gray-900">{plan.name}</h2>
-                        {plan.tagline && <p className="text-sm text-gray-500">{plan.tagline}</p>}
-                        <div className="flex items-baseline justify-center gap-2">
-                          <span className="text-4xl font-extrabold text-gray-900">¥{plan.price.toLocaleString()}</span>
-                          <span className="text-sm text-gray-500">/{interval}</span>
-                        </div>
-                        {isActive && (
-                          <span className="inline-flex items-center gap-2 px-3 py-1 text-sm bg-green-100 text-green-700 rounded-full">
-                            <span className="w-2 h-2 bg-green-600 rounded-full" />
-                            現在のプラン
-                          </span>
-                        )}
-                      </div>
-
-                      <ul className="space-y-3 text-sm text-gray-700 flex-1">
-                        {plan.features.map((feature, index) => (
-                          <li key={index} className="flex items-start gap-2">
-                            <FaCheck className="text-green-500 mt-1" />
-                            <span>{feature}</span>
-                          </li>
-                        ))}
-                      </ul>
-
-                      <button
-                        onClick={onSelect}
-                        disabled={isLoading || isActive}
-                        className={`w-full mt-8 py-3 rounded-lg font-medium transition ${
-                          isActive
-                            ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
-                            : plan.highlight
-                              ? 'bg-[#14795A] text-white hover:bg-[#116a4f]'
-                              : 'bg-gray-800 text-white hover:bg-gray-700'
-                        }`}
-                      >
-                        {isLoading && !isActive ? (
-                          <span className="flex items-center justify-center gap-2">
-                            <FaSpinner className="animate-spin" />
-                            {buttonLabel}
-                          </span>
-                        ) : (
-                          buttonLabel
-                        )}
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
             </div>
 
             {/* Hero Offer: 職務経歴書の添削 */}
