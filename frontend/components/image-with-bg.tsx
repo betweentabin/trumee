@@ -25,12 +25,12 @@ const ImageCardWithBg = ({
 }: ImageCardWithBgProps) => {
     return (
         <div 
-            className="absolute z-20"
+            className="absolute z-20 overflow-hidden"
             style={{
-                left: left ? `${left}%` : undefined,
-                right: right ? `${right}%` : undefined,
-                top: top ? `${top}%` : undefined,
-                bottom: bottom ? `${bottom}%` : undefined,
+                left: left !== undefined ? `${left}%` : undefined,
+                right: right !== undefined ? `${right}%` : undefined,
+                top: top !== undefined ? `${top}%` : undefined,
+                bottom: bottom !== undefined ? `${bottom}%` : undefined,
                 width: `${width}%`,
                 height: height ? `${height}%` : undefined,
                 aspectRatio: 100 / 129,
@@ -41,6 +41,7 @@ const ImageCardWithBg = ({
                 src={src}
                 fill={true}
                 alt={alt ?? "image card"}
+                className="object-cover"
             />
         </div>
     );
