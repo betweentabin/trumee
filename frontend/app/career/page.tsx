@@ -8,8 +8,7 @@ import useAuthV2 from '@/hooks/useAuthV2';
 import { getAuthHeaders } from '@/utils/auth';
 import { buildApiUrl } from '@/config/api';
 import toast from 'react-hot-toast';
-import { FaPlus, FaEdit, FaEye, FaPrint, FaTrash, FaClock, FaFileAlt } from 'react-icons/fa';
-import { FaDownload } from 'react-icons/fa';
+import { FaPlus, FaEdit, FaEye, FaPrint, FaTrash, FaClock, FaFileAlt, FaDownload, FaSpinner } from 'react-icons/fa';
 
 interface Resume {
   id: string;
@@ -37,6 +36,7 @@ export default function CareerPage() {
   const [resumes, setResumes] = useState<Resume[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCompletedOnly, setShowCompletedOnly] = useState(false);
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
   // 初回ロードでAPIから取得。失敗時はローカルのダミーデータにフォールバック
   useEffect(() => {
@@ -90,6 +90,88 @@ export default function CareerPage() {
     }
   };
 
+  const buildResumeData = (resume: any) => {
+    const extra = resume?.extra_data || {};
+    const toArray = (value: any) => (Array.isArray(value) ? value : []);
+    const skillsArray = (resume?.skills || '')
+      .split('\n')
+      .map((s: string) => s.trim())
+      .filter(Boolean);
+
+    return {
+      step1: {
+        name: extra.fullName || '',
+        email: extra.email || '',
+        phone: extra.phone || '',
+        birthDate: extra.birthDate || '',
+        address: extra.address || '',
+      },
+      step2: {
+        education: toArray(extra.education),
+      },
+      step3: {
+        experience: toArray(extra.workExperiences),
+      },
+      step4: {
+        skills: skillsArray,
+        certifications: toArray(extra.certifications),
+        languages: toArray(extra.languages),
+      },
+      step5: {
+        selfPR: resume?.self_pr || '',
+      },
+    } as const;
+  };
+
+  const handleDirectDownload = async (id: string) => {
+    if (downloadingId) return;
+    const shouldDownload = confirm('PDFをダウンロードしますか？');
+    if (!shouldDownload) return;
+    setDownloadingId(id);
+    const toastId = toast.loading('PDFを生成しています…');
+    try {
+      const detailResponse = await fetch(buildApiUrl(`/resumes/${id}/`), {
+        headers: {
+          ...getAuthHeaders(),
+        },
+      });
+      if (!detailResponse.ok) {
+        throw new Error('detail');
+      }
+      const detail = await detailResponse.json();
+      const payload = buildResumeData(detail);
+      const pdfResponse = await fetch(buildApiUrl('/resumes/download-pdf/'), {
+        method: 'POST',
+        headers: {
+          ...getAuthHeaders(),
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ resumeData: payload }),
+      });
+      if (!pdfResponse.ok) {
+        const errText = await pdfResponse.text();
+        throw new Error(`${pdfResponse.status} ${errText}`);
+      }
+
+      const blob = await pdfResponse.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `職務経歴書_${new Date().toISOString().split('T')[0]}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+      toast.success('PDFのダウンロードを開始しました');
+    } catch (error) {
+      console.error('Resume PDF download failed', error);
+      toast.error('PDFのダウンロードに失敗しました');
+    } finally {
+      toast.dismiss(toastId);
+      setDownloadingId(null);
+    }
+  };
+
   const handleDelete = async (id: string) => {
     if (!confirm('この職務経歴書を削除してもよろしいですか？')) return;
     
@@ -130,7 +212,7 @@ export default function CareerPage() {
             <p className="text-gray-600 mt-2">あなたの職務経歴書を管理できます</p>
           </div>
           <div className="flex items-center gap-3">
-            <Link href={to('/advice/resume')}>
+            <Link href={to('/resume-advice/review')}>
               <button className="flex items-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition">
                 添削チャットへ
               </button>
@@ -223,11 +305,18 @@ export default function CareerPage() {
                           <FaPrint />
                         </button>
                       </Link>
-                      <Link href={to(`/career/print?id=${resume.id}&open=download`)} prefetch={false}>
-                        <button className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded transition" title="PDFダウンロード">
+                      <button
+                        onClick={() => handleDirectDownload(resume.id)}
+                        className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded transition disabled:opacity-60"
+                        title="PDFダウンロード"
+                        disabled={downloadingId === resume.id}
+                      >
+                        {downloadingId === resume.id ? (
+                          <FaSpinner className="animate-spin" />
+                        ) : (
                           <FaDownload />
-                        </button>
-                      </Link>
+                        )}
+                      </button>
                     </div>
                     <button onClick={() => handleDelete(resume.id)} className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded transition">
                       <FaTrash />

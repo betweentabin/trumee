@@ -44,7 +44,6 @@ export default function PrintPage() {
   const to = (p: string) => (userIdFromPath ? `/users/${userIdFromPath}${p}` : p);
   const searchParams = useSearchParams();
   const resumeId = searchParams.get('id');
-  const openParam = searchParams.get('open');
   const [resumes, setResumes] = useState<Resume[]>([]);
   const [selectedResume, setSelectedResume] = useState<Resume | null>(null);
   const [loading, setLoading] = useState(true);
@@ -212,11 +211,6 @@ export default function PrintPage() {
       router.push(to(`/career/edit/${selectedResume.id}`));
     }
   };
-
-  // Auto-open disabled based on spec: avoid opening PDF automatically
-  useEffect(() => {
-    // intentionally no-op to prevent sudden PDF open
-  }, []);
 
   if (loading) {
     return (

@@ -457,48 +457,67 @@ def create_stripe_checkout_session(request):
     stripe.api_key = settings.STRIPE_SECRET_KEY
     
     try:
-        # プラン情報を取得
-        plan_type = request.data.get('plan_type', 'basic')
-        
-        # プラン別の価格設定
-        prices = {
-            'basic': 5000,      # 5,000円（単発）
-            'premium': 10000,   # 10,000円（サブスク）
-            'enterprise': 30000,# 30,000円（サブスク）
-            'credits100': 10000 # スカウト追加100通（単発）
+        plan_type = request.data.get('plan_type') or 'basic'
+        price_id = request.data.get('price_id')
+        interval = request.data.get('interval')
+        mode = request.data.get('mode')
+        role = request.data.get('role')
+
+        metadata = {
+            'user_id': str(request.user.id),
+            'plan_type': plan_type,
         }
-        
-        amount = prices.get(plan_type, 5000)
-        
-        # Checkout Session作成
-        session = stripe.checkout.Session.create(
-            payment_method_types=['card'],
-            line_items=[{
-                'price_data': {
-                    'currency': 'jpy',
-                    'product_data': {
-                        'name': 'Resume Truemee 決済',
-                        'description': 'プラン/追加クレジット購入',
-                    },
-                    'unit_amount': amount * 100,  # Stripeは最小単位で扱う
-                },
-                'quantity': 1,
-            }],
-            mode='subscription' if plan_type in ['premium','enterprise'] else 'payment',
-            success_url='http://localhost:3000/payment/success?session_id={CHECKOUT_SESSION_ID}',
-            cancel_url='http://localhost:3000/payment/cancel',
-            customer_email=request.user.email,
-            metadata={
-                'user_id': str(request.user.id),
-                'plan_type': plan_type,
+        if role:
+            metadata['role'] = role
+
+        if price_id:
+            session = stripe.checkout.Session.create(
+                payment_method_types=['card'],
+                line_items=[{
+                    'price': price_id,
+                    'quantity': 1,
+                }],
+                mode=mode or ('subscription' if interval in ['month', 'year'] else 'payment'),
+                success_url='http://localhost:3000/payment/success?session_id={CHECKOUT_SESSION_ID}',
+                cancel_url='http://localhost:3000/payment/cancel',
+                customer_email=request.user.email,
+                metadata=metadata,
+            )
+        else:
+            prices = {
+                'basic': 5000,
+                'premium': 10000,
+                'enterprise': 30000,
+                'credits100': 10000,
             }
-        )
-        
+
+            amount = prices.get(plan_type, 5000)
+
+            session = stripe.checkout.Session.create(
+                payment_method_types=['card'],
+                line_items=[{
+                    'price_data': {
+                        'currency': 'jpy',
+                        'product_data': {
+                            'name': 'Resume Truemee 決済',
+                            'description': 'プラン/追加クレジット購入',
+                        },
+                        'unit_amount': amount * 100,
+                    },
+                    'quantity': 1,
+                }],
+                mode='subscription' if plan_type in ['premium', 'enterprise'] else 'payment',
+                success_url='http://localhost:3000/payment/success?session_id={CHECKOUT_SESSION_ID}',
+                cancel_url='http://localhost:3000/payment/cancel',
+                customer_email=request.user.email,
+                metadata=metadata,
+            )
+
         return Response({
             'checkout_url': session.url,
             'session_id': session.id
         })
-        
+
     except Exception as e:
         return Response(
             {'error': str(e)}, 

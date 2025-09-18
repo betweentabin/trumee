@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import apiClient from "@/lib/api-v2-client";
 import useAuthV2 from "@/hooks/useAuthV2";
+import { normalizeResumeExperiences } from "@/app/utils/resume";
 
 export default function UserExperienceByIdPage() {
   const router = useRouter();
@@ -55,7 +56,7 @@ export default function UserExperienceByIdPage() {
     </div>
   );
 
-  const experiences = target.experiences || [];
+  const experiences = useMemo(() => normalizeResumeExperiences(target), [target]);
 
   return (
     <div className="max-w-3xl mx-auto p-6">
@@ -74,12 +75,12 @@ export default function UserExperienceByIdPage() {
         {experiences.length === 0 && (
           <div className="text-sm text-gray-600">公開されている職歴がありません。</div>
         )}
-        {experiences.map((exp: any) => (
+        {experiences.map((exp) => (
           <div key={exp.id} className="bg-white border rounded p-4">
             <div className="flex items-center justify-between">
               <div className="font-semibold">{exp.company}</div>
               <div className="text-xs text-gray-500">
-                {exp.period_from} - {exp.period_to || '現在'}
+                {exp.period_from || '不明'} - {exp.period_to || '現在'}
               </div>
             </div>
             {exp.position && (

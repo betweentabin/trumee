@@ -32,41 +32,77 @@ export default function PreviewPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // デバッグモード: localStorageに保存した一覧から対象IDを取得
-    const stored = localStorage.getItem('debug_career_resumes');
-    const list: SimpleResume[] = stored ? JSON.parse(stored) : [];
-    if (resumeId) {
-      const found = list.find((r) => String(r.id) === String(resumeId)) || null;
-      setResume(found);
-    }
-    // サーバーからの取得（ローカルに無い場合に補完）
-    const fetchFromServer = async () => {
-      if (resumeId && !found) {
-        try {
+    let isMounted = true;
+    const load = async () => {
+      if (!resumeId) {
+        if (isMounted) {
+          setResume(null);
+          setLoading(false);
+        }
+        return;
+      }
+
+      if (isMounted) {
+        setLoading(true);
+        setResume(null);
+      }
+
+      let matched: SimpleResume | null = null;
+
+      try {
+        const stored = localStorage.getItem('debug_career_resumes');
+        if (stored) {
+          try {
+            const list: SimpleResume[] = JSON.parse(stored);
+            matched = list.find(r => String(r.id) === String(resumeId)) || null;
+          } catch (parseError) {
+            console.warn('Failed to parse cached resumes', parseError);
+          }
+        }
+
+        if (matched && isMounted) {
+          setResume(matched);
+        }
+
+        if (!matched) {
           const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
           const res = await fetch(`${apiUrl}/api/v2/resumes/${resumeId}/`, {
             headers: {
               ...getAuthHeaders(),
             },
           });
+
           if (res.ok) {
             const data = await res.json();
-            setResume({
-              id: String(data.id),
-              title: data?.extra_data?.title || data?.desired_job,
-              fullName: data?.extra_data?.fullName,
-              email: data?.extra_data?.email,
-              desiredPosition: data?.desired_job,
-              createdAt: data?.created_at,
-              updatedAt: data?.updated_at,
-            });
+            if (isMounted) {
+              setResume({
+                id: String(data.id),
+                title: data?.extra_data?.title || data?.desired_job,
+                fullName: data?.extra_data?.fullName,
+                email: data?.extra_data?.email,
+                desiredPosition: data?.desired_job,
+                createdAt: data?.created_at,
+                updatedAt: data?.updated_at,
+              });
+            }
+          } else {
+            console.warn('Failed to fetch resume preview', res.status);
           }
-        } catch (e) {
-          // 無視（未ログイン/ネットワーク等）
+        }
+      } catch (error) {
+        console.error('Unexpected error while loading resume preview', error);
+      } finally {
+        if (isMounted) {
+          setLoading(false);
         }
       }
     };
-    fetchFromServer().finally(() => setLoading(false));
+
+    load();
+
+    return () => {
+      isMounted = false;
+    };
   }, [resumeId]);
 
   if (loading) {
