@@ -87,6 +87,10 @@ out/
 .cache/
 public
 
+# Allow Next.js public assets
+!frontend/public/
+!frontend/public/**
+
 # Storybook build outputs
 .out
 .storybook-out
