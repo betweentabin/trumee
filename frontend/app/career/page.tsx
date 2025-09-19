@@ -119,6 +119,7 @@ export default function CareerPage() {
       },
       step5: {
         selfPR: resume?.self_pr || '',
+        jobSummary: extra.jobSummary || '',
       },
     } as const;
   };

@@ -237,7 +237,6 @@ export default function SeekerTabs({
               sendingAdvice={sendingAdvice}
               handleSubmit={handleSubmit}
               sendAdviceMessage={sendAdviceMessage}
-              selectedAdviceType={selectedAdviceType}
               messageEndRef={messageEndRef}
               reset={reset}
               refetchAdvice={refetchAdvice}

@@ -129,6 +129,7 @@ export default function PrintPage() {
       },
       step5: {
         selfPR: resume.self_pr || '',
+        jobSummary: extra.jobSummary || '',
       },
     } as any;
   };

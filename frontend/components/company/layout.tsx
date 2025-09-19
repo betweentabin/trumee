@@ -1,13 +1,46 @@
-import Leftpage from "./page"
-import Footer from "./footer"
-import Header from "./header"
-import Headertitle from "./headertitle"
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+import Leftpage from "./page";
+import Footer from "./footer";
+import Header from "./header";
+import Headertitle from "./headertitle";
+import LegalComplianceModal from "./legal-compliance-modal";
+import useAuthV2 from "@/hooks/useAuthV2";
+
+const MODAL_ACK_VERSION = "20250418";
+
+const buildAckKey = (userId: number | string) => `company_legal_ack_${MODAL_ACK_VERSION}_${userId}`;
 
 export default function Layout({
   children
 }: {
   children: React.ReactNode, headertitle: string
 }) {
+  const { currentUser } = useAuthV2();
+  const [showLegalModal, setShowLegalModal] = useState(false);
+
+  const ackKey = useMemo(() => {
+    if (!currentUser?.id) return undefined;
+    return buildAckKey(currentUser.id);
+  }, [currentUser?.id]);
+
+  useEffect(() => {
+    if (!ackKey) return;
+    if (typeof window === 'undefined') return;
+    const alreadyAcknowledged = window.localStorage.getItem(ackKey);
+    if (!alreadyAcknowledged && currentUser?.role === 'company') {
+      setShowLegalModal(true);
+    }
+  }, [ackKey, currentUser?.role]);
+
+  const handleAcknowledge = () => {
+    if (ackKey && typeof window !== 'undefined') {
+      window.localStorage.setItem(ackKey, new Date().toISOString());
+    }
+    setShowLegalModal(false);
+  };
+
   return (
     <div>
       <Header />
@@ -28,6 +61,7 @@ export default function Layout({
       
       </div>
       <Footer />
+      <LegalComplianceModal isOpen={showLegalModal} onAcknowledge={handleAcknowledge} />
       {/* <FooterBar /> */}
     </div>
   )

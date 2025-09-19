@@ -5,10 +5,9 @@ import { useParams } from "next/navigation";
 import { buildApiUrl, getApiHeaders } from "@/config/api";
 import ResumePreview from "@/components/pure/resume/preview";
 import { useForm } from "react-hook-form";
+import { emptyResumePreview, fetchResumePreview, ResumePreviewData } from "@/utils/resume-preview";
 
 type Msg = { id: string; sender: string; content: string; created_at: string };
-
-type PreviewFormValues = Record<string, any>;
 
 export default function ResumeAdvicePage() {
   // Chat states
@@ -17,9 +16,7 @@ export default function ResumeAdvicePage() {
   const endRef = useRef<HTMLDivElement | null>(null);
 
   // Resume preview states
-  const [userName, setUserName] = useState<string | undefined>(undefined);
-  const [jobhistoryList, setJobhistoryList] = useState<string[]>([]);
-  const [formValues, setFormValues] = useState<PreviewFormValues>({});
+  const [resumePreview, setResumePreview] = useState<ResumePreviewData>(emptyResumePreview);
 
   const params = useParams<{ userId: string }>();
 
@@ -30,18 +27,6 @@ export default function ResumeAdvicePage() {
   }, []);
 
   // Helpers
-  const fmtYM = (d?: string | null) => {
-    if (!d) return "";
-    try {
-      const dt = new Date(d);
-      const y = dt.getFullYear();
-      const m = String(dt.getMonth() + 1).padStart(2, "0");
-      return `${y}/${m}`;
-    } catch {
-      return String(d);
-    }
-  };
-
   // Load chat messages
   const loadMessages = useCallback(async () => {
     try {
@@ -64,42 +49,10 @@ export default function ResumeAdvicePage() {
     const userId = params?.userId ? String(params.userId) : "";
     if (!userId) return;
     try {
-      // User name
-      try {
-        const r = await fetch(buildApiUrl(`/users/${encodeURIComponent(userId)}/`), { headers: getApiHeaders(token) });
-        if (r.ok) {
-          const u = await r.json();
-          if (u?.full_name) setUserName(u.full_name);
-        }
-      } catch {}
-
-      // Resumes (public)
-      const res = await fetch(buildApiUrl(`/users/${encodeURIComponent(userId)}/resumes/`), { headers: getApiHeaders(token) });
-      if (!res.ok) return;
-      const resumes = await res.json();
-      const target = Array.isArray(resumes) ? (resumes.find((x: any) => x.is_active) || resumes[0]) : null;
-      const exps: any[] = target?.experiences || [];
-
-      const keys = exps.map((_: any, idx: number) => `exp_${idx}`);
-      const fv: PreviewFormValues = {};
-      exps.forEach((e: any, idx: number) => {
-        const key = keys[idx];
-        fv[key] = {
-          since: fmtYM(e.period_from),
-          to: fmtYM(e.period_to),
-          company: e.company || "",
-          business: e.business || "",
-          capital: e.capital || "",
-          people: e.team_size || e.people || "",
-          duty: e.position || e.duty || "",
-          work_content: e.tasks || e.work_content || "",
-        };
-      });
-      setJobhistoryList(keys);
-      setFormValues(fv);
+      const data = await fetchResumePreview({ userId, token });
+      setResumePreview(data);
     } catch {
-      setJobhistoryList([]);
-      setFormValues({});
+      setResumePreview(emptyResumePreview);
     }
   }, [params?.userId, token]);
 
@@ -137,9 +90,9 @@ export default function ResumeAdvicePage() {
           {/* Left: Resume preview */}
           <div className="flex-1 flex flex-col items-start justify-start bg-white p-4 md:p-8 border-b md:border-b-0 md:border-r border-black min-h-[500px] md:min-h-[900px] overflow-y-auto">
             <ResumePreview
-              userName={userName}
-              jobhistoryList={jobhistoryList}
-              formValues={formValues}
+              userName={resumePreview.userName}
+              jobhistoryList={resumePreview.jobhistoryList}
+              formValues={resumePreview.formValues}
               className="w-full max-w-3xl mx-auto mb-8"
             />
           </div>

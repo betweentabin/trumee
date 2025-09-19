@@ -182,9 +182,14 @@ export default function ApplyingReasonsPage() {
     const text = threadInput.trim();
     if (!text || !selectedTopic) return;
     try {
+      const payload = {
+        type: selectedTopic,
+        topic: selectedTopic,
+        message: text,
+      };
       const body = {
         subject: 'advice',
-        content: JSON.stringify({ type: 'note', topic: selectedTopic, message: text }),
+        content: JSON.stringify(payload),
       };
       const res = await fetch(buildApiUrl('/advice/messages/'), {
         method: 'POST',

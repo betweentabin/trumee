@@ -6,6 +6,8 @@ import { buildApiUrl, getApiHeaders, API_CONFIG } from '@/config/api';
 import AdviceScreenTab from '@/components/admin/AdviceScreenTab';
 import InterviewPreparationTab from '@/components/admin/InterviewPreparationTab';
 import { useForm } from 'react-hook-form';
+import ResumePreview from '@/components/pure/resume/preview';
+import { emptyResumePreview, fetchResumePreview, ResumePreviewData } from '@/utils/resume-preview';
 
 type AdminSeeker = {
   id: string;
@@ -32,6 +34,9 @@ export default function AdminSeekerDetailPage() {
   const [sendError, setSendError] = useState<string | null>(null);
   const [selectedAdviceTab, setSelectedAdviceTab] = useState<string>('resume');
   const [selectedAdviceSubTab, setSelectedAdviceSubTab] = useState<string | null>(null);
+  const [resumePreview, setResumePreview] = useState<ResumePreviewData>(emptyResumePreview);
+  const [resumeLoading, setResumeLoading] = useState(false);
+  const [resumeError, setResumeError] = useState<string | null>(null);
 
   const token = useMemo(() => {
     if (typeof window === 'undefined') return '';
@@ -82,6 +87,35 @@ export default function AdminSeekerDetailPage() {
   useEffect(() => {
     loadReviewMessages();
   }, [loadReviewMessages]);
+
+  useEffect(() => {
+    if (!id) return;
+    let canceled = false;
+    const loadResumePreview = async () => {
+      try {
+        setResumeLoading(true);
+        setResumeError(null);
+        const data = await fetchResumePreview({ userId: String(id), token });
+        if (!canceled) {
+          setResumePreview(data);
+        }
+      } catch (err) {
+        console.error('resume preview load failed', err);
+        if (!canceled) {
+          setResumePreview(emptyResumePreview);
+          setResumeError('職務経歴書の取得に失敗しました。');
+        }
+      } finally {
+        if (!canceled) {
+          setResumeLoading(false);
+        }
+      }
+    };
+    loadResumePreview();
+    return () => {
+      canceled = true;
+    };
+  }, [id, token]);
 
   const sendReviewMessage = useCallback(async () => {
     if (!reviewInput.trim()) return;
@@ -278,10 +312,25 @@ export default function AdminSeekerDetailPage() {
             <div className="flex flex-col md:flex-row">
               {/* left: resume preview mock */}
               <div className="flex-1 p-6 border-b md:border-b-0 md:border-r border-gray-200">
-                <div className="text-lg font-semibold mb-4">職務経歴書</div>
-                <div className="h-[600px] rounded-md border bg-gray-50 p-4 text-gray-600">
-                  職務経歴書のプレビュー（準備中）
+                <div className="flex items-center justify-between mb-4">
+                  <div className="text-lg font-semibold">職務経歴書</div>
+                  {resumeLoading && <span className="text-xs text-gray-500">読み込み中...</span>}
                 </div>
+                {resumeError && <div className="text-sm text-red-600 mb-3">{resumeError}</div>}
+                {resumePreview.jobhistoryList.length === 0 ? (
+                  <div className="h-[600px] rounded-md border bg-gray-50 p-4 text-gray-500 flex items-center justify-center text-center">
+                    職務経歴書が登録されていません。
+                  </div>
+                ) : (
+                  <div className="max-h-[600px] overflow-y-auto">
+                    <ResumePreview
+                      userName={resumePreview.userName || user?.full_name}
+                      jobhistoryList={resumePreview.jobhistoryList}
+                      formValues={resumePreview.formValues}
+                      className="w-full max-w-3xl mx-auto"
+                    />
+                  </div>
+                )}
               </div>
               {/* right: comments + input */}
               <div className="w-full md:w-[360px] p-6">
@@ -346,7 +395,6 @@ export default function AdminSeekerDetailPage() {
               sendingAdvice={sendingAdvice}
               handleSubmit={adviceForm.handleSubmit}
               sendAdviceMessage={sendAdviceMessage as any}
-              selectedAdviceType={selectedAdviceTab}
               messageEndRef={{ current: null }}
               reset={adviceForm.reset}
               refetchAdvice={() => {}}

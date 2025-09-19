@@ -1,6 +1,222 @@
 'use client';
 
-import { FaShieldAlt, FaLock, FaUserShield, FaExclamationTriangle, FaCheckCircle } from 'react-icons/fa';
+import { ReactNode } from 'react';
+
+interface Section {
+  title: string;
+  body: ReactNode;
+}
+
+const sections: Section[] = [
+  {
+    title: '第1条（個人情報の定義）',
+    body: (
+      <p>
+        本プライバシーポリシーにおいて「個人情報」とは、個人情報保護法に定める個人情報をいい、氏名、生年月日その他の記述等により特定の個人を識別できる情報、ならびに他の情報と照合することで特定の個人を識別できる情報を指します。
+      </p>
+    ),
+  },
+  {
+    title: '第2条（個人情報の取得方法）',
+    body: (
+      <div className="space-y-2">
+        <p>当社は、本サービスの提供に必要な範囲で次のような方法により個人情報を取得します。</p>
+        <ul className="list-disc list-inside space-y-1">
+          <li>会員登録時・サービス利用申込時にご入力いただく情報</li>
+          <li>お問い合わせや各種フォームからご提供いただく情報</li>
+          <li>サービス利用履歴、アクセスログ、Cookie等を通じて自動的に取得する情報</li>
+        </ul>
+      </div>
+    ),
+  },
+  {
+    title: '第3条（個人情報の利用目的）',
+    body: (
+      <div className="space-y-2">
+        <p>当社は、取得した個人情報を次の目的のために利用します。</p>
+        <ol className="list-decimal list-inside space-y-1">
+          <li>転職支援サービスおよび関連機能の提供・運営</li>
+          <li>サービスに関する案内、連絡、各種通知の送付</li>
+          <li>お問い合わせへの対応および本人確認</li>
+          <li>サービス品質の維持・向上、新サービスの企画・開発</li>
+          <li>キャンペーン等に関する情報提供（同意を頂いた場合）</li>
+          <li>当社サービスの利用状況の分析、統計データの作成</li>
+          <li>法令、利用規約等に基づく権利行使および義務の履行</li>
+        </ol>
+      </div>
+    ),
+  },
+  {
+    title: '第4条（個人情報の利用目的の変更）',
+    body: (
+      <div className="space-y-2">
+        <p>当社は、利用目的が変更前と関連性を有すると合理的に認められる場合に限り、個人情報の利用目的を変更することがあります。その際には、変更後の目的を当社所定の方法で公表または通知します。</p>
+      </div>
+    ),
+  },
+  {
+    title: '第5条（個人情報の管理）',
+    body: (
+      <div className="space-y-2">
+        <p>当社は、個人情報を正確かつ最新の内容に保つよう努め、利用目的の達成に必要な範囲で適切に保管・管理します。また、個人情報の漏えい、滅失、き損を防止するために必要かつ適切な措置を講じます。</p>
+      </div>
+    ),
+  },
+  {
+    title: '第6条（個人情報取扱いの委託）',
+    body: (
+      <div className="space-y-2">
+        <p>当社は、利用目的の達成に必要な範囲において、個人情報の取り扱いの全部または一部を外部に委託する場合があります。この場合、委託先に対して適切な監督を行い、個人情報の安全管理が図られるよう努めます。</p>
+      </div>
+    ),
+  },
+  {
+    title: '第7条（Cookieの利用）',
+    body: (
+      <p>
+        当社は、お客様により一層のサービスを提供するため、Cookie（クッキー）と呼ばれる技術を利用しています。Cookieとは、サーバーから利用者のブラウザに送信され、お客様が使用しているコンピュータのストレージに蓄積される情報のことです。当社が送信するCookieの情報には、第三者が利用者個人を特定できる情報は含まれておらず、お客様のプライバシーが侵害されることはありません。また、お客様は、使用しているブラウザの設定により、Cookieの受け取りを拒否することが可能です。但し、受け取り拒否をされた場合、一部サービスの利便性が低下する可能性がありますので、予めご了承ください。
+      </p>
+    ),
+  },
+  {
+    title: '第8条（アクセス解析や広告配信サービスの利用）',
+    body: (
+      <div className="space-y-3">
+        <p>当社は、サービスの利用状況を分析し、より良いサービスを提供するために、アクセス解析ツールや広告配信サービスを利用する場合があります。主な注意点は以下のとおりです。</p>
+        <ul className="list-disc list-inside space-y-3">
+          <li>
+            <span className="font-semibold">アクセス解析ツールの利用</span>
+            <ul className="list-disc list-inside ml-5 mt-1 space-y-1">
+              <li>Googleアナリティクスなどのツールを導入している場合、Cookie等を通じて匿名のトラフィックデータが収集されることがあります。これにより個人が特定されることはありません。</li>
+              <li>お客様がGoogleアナリティクスなどによるデータ収集を望まない場合は、Googleが提供するブラウザ向けのオプトアウトアドオンなどをご利用いただけます。</li>
+            </ul>
+          </li>
+          <li>
+            <span className="font-semibold">広告配信サービスの利用</span>
+            <ul className="list-disc list-inside ml-5 mt-1 space-y-1">
+              <li>広告配信事業者によるCookie等の技術を用いて、お客様のサイト訪問履歴などをもとにした行動ターゲティング広告を行うことがあります。</li>
+              <li>配信停止（オプトアウト）を希望する場合は、各広告配信事業者の提供するオプトアウトページ等をご参照ください。</li>
+            </ul>
+          </li>
+          <li>
+            <span className="font-semibold">取得データの取り扱い</span>
+            <ul className="list-disc list-inside ml-5 mt-1 space-y-1">
+              <li>アクセス解析や広告配信サービスにより取得されるデータは、統計情報・傾向分析に利用するものであり、法令や本ポリシーで認められない用途での利用や、個人を特定する行為は行いません。</li>
+            </ul>
+          </li>
+        </ul>
+      </div>
+    ),
+  },
+  {
+    title: '第9条（個人情報の安全管理措置）',
+    body: (
+      <p>
+        当社は、個人情報への不正アクセス、個人情報の紛失・破壊・改ざん・漏洩等の防止その他個人情報の安全管理のために、組織的、物理的及び技術的な安全管理措置を適切に講じます。
+      </p>
+    ),
+  },
+  {
+    title: '第10条（個人情報の第三者への提供）',
+    body: (
+      <p>
+        本サイト上で利用者のご要望されたサービスの種類によっては、利用者の個人情報を第三者に通知する場合があり、この場合は当該サービスのご利用申し込みの都度、第三者への情報提供についてご案内し、利用者のご了解を頂きます。ただし、人命や人権を保護するために緊急を要する場合、または司法機関、警察等の公共機関による法令に基づく要請に協力する場合、その他法令に従う場合には、利用者にお断りすることなく情報開示することがあります。
+      </p>
+    ),
+  },
+  {
+    title: '第11条（プライバシーポリシーの変更）',
+    body: (
+      <p>
+        当社は、個人情報保護方針（プライバシーポリシー）の取り扱い方法について適宜見直しを行い、改訂することがあります。ただし、法令上利用者の同意が必要となるような本ポリシーの変更を行う場合、変更後の本ポリシーは、当社所定の方法で変更に同意した利用者に対してのみ適用されるものとします。なお、当社は、本ポリシーを変更する場合には、変更後の本ポリシー施行時期及び内容を当社のサイト上での表示その他の適切な方法により周知し、または利用者に通知します。
+      </p>
+    ),
+  },
+  {
+    title: '第12条（個人情報の訂正及び削除）',
+    body: (
+      <div className="space-y-2">
+        <p>
+          利用者は、当社の保有する自己の個人情報が誤った情報である場合には、当社が定める手続きにより、当社に対して個人情報の訂正、追加、または削除（以下、「訂正等」といいます）を請求することができます。
+        </p>
+        <p>
+          当社は、利用者から前項の請求を受けてその請求に応じる必要があると判断した場合には、遅滞なく、当該個人情報の訂正等を行うものとします。
+        </p>
+        <p>
+          当社は、前項の規定に基づき訂正等を行った場合、または訂正等を行わない旨の決定をしたときは遅滞なく、これを利用者に通知します。
+        </p>
+      </div>
+    ),
+  },
+  {
+    title: '第13条（個人情報の利用停止等）',
+    body: (
+      <div className="space-y-2">
+        <p>
+          当社は、利用者から、個人情報が利用目的の範囲を超えて取り扱われているという理由、または不正の手段により取得されたものであるという理由により、その利用の停止または消去（以下、「利用停止等」といいます）を求められた場合には、遅滞なく必要な調査を行います。
+        </p>
+        <p>
+          前項の調査結果に基づき、その請求に応じる必要があると判断した場合には、遅滞なく、当該個人情報の利用停止等を行います。
+        </p>
+        <p>
+          当社は、前項の規定に基づき利用停止等を行った場合、または利用停止等を行わない旨の決定をしたときは、遅滞なく、これを利用者に通知します。
+        </p>
+        <p>
+          前二項にかかわらず、利用停止等に多額の費用を有する場合その他利用停止等を行うことが困難な場合であって、利用者の権利利益を保護するために必要なこれに代わるべき措置をとれる場合は、この代替策を講じるものとします。
+        </p>
+      </div>
+    ),
+  },
+  {
+    title: '第14条（個人情報の開示）',
+    body: (
+      <div className="space-y-2">
+        <p>
+          当社は、お客様より個人情報の開示を求められたときは、お客様本人に対し、これを遅滞なく開示します。ただし、開示することにより次のいずれかに該当する場合は、その全部または一部を開示しないこともあり、開示しない決定をした場合には、その旨を遅滞なく通知します。なお、個人情報の開示に際しては、1件当たり1,000円の手数料を申し受けます。
+        </p>
+        <ul className="list-disc list-inside space-y-1">
+          <li>本人または第三者の生命、身体、財産その他の権利利益を害する恐れがある場合</li>
+          <li>当社の業務の適正な実施に著しい支障を及ぼす恐れがある場合</li>
+          <li>その他法令に違反することとなる場合</li>
+        </ul>
+        <p>
+          前項の定めにかかわらず、履歴情報及び特性情報などの個人情報以外の情報については、原則として開示致しません。
+        </p>
+      </div>
+    ),
+  },
+  {
+    title: '第15条（未成年者のお客様に対する個人情報の取り扱い）',
+    body: (
+      <p>
+        未成年者のお客様から個人情報を提供して頂く場合は、必要に応じて、保護者の同意を得て、本サービスをご利用頂くものとします。
+      </p>
+    ),
+  },
+  {
+    title: '第16条（免責事項）',
+    body: (
+      <p>
+        本サービス上に外部サービスへのリンクが設定されている場合、外部サービスより取得された各種情報の利用により生じた一切の損害について、当社は一切の責任を負いません。
+      </p>
+    ),
+  },
+  {
+    title: '第17条（お問い合わせ）',
+    body: (
+      <div className="space-y-2">
+        <p>本ポリシーに関するご意見、ご質問、苦情の申し出その他お客様情報の取り扱いに関するお問い合わせは、下記の相談窓口までお願い致します。</p>
+        <div className="rounded-md bg-gray-50 p-4 space-y-1">
+          <p>会社名：Xrosspoint株式会社</p>
+          <p>住所：〒160-0023 東京都新宿区西新宿７丁目７−２６ ワコーレ新宿第一ビル914</p>
+          <p>電話番号：050-5527-0429</p>
+          <p>メールアドレス：truemee＠xrosspoint.co.jp</p>
+          <p>受付時間：平日10:00～18:00（年末年始・祝日を除く）</p>
+        </div>
+      </div>
+    ),
+  },
+];
 
 export default function PersonalInfoLicensePage() {
   return (
@@ -8,192 +224,25 @@ export default function PersonalInfoLicensePage() {
       <div className="max-w-4xl mx-auto">
         <div className="bg-white rounded-lg shadow-md p-8">
           <div className="mb-8 text-center">
-            <h1 className="text-3xl font-bold text-gray-800 flex items-center justify-center gap-3">
-              <FaShieldAlt className="text-[#FF733E]" />
-              個人情報利用許諾
-            </h1>
-            <p className="text-gray-600 mt-2">最終更新日: 2024年1月1日</p>
+            <h1 className="text-3xl font-bold text-gray-800">個人情報利用許諾</h1>
+            <p className="text-gray-600 mt-2">制定日：2025年4月18日</p>
           </div>
 
-          <div className="prose max-w-none">
-            <section className="mb-8">
-              <h2 className="text-2xl font-semibold mb-4 flex items-center gap-2">
-                <FaUserShield className="text-[#FF733E]" />
-                個人情報の取り扱いについて
-              </h2>
-              <div className="bg-[#FFF5F3] rounded-lg p-4">
-                <p>
-                  株式会社TruMeee（以下「当社」といいます）は、お客様の個人情報の重要性を認識し、
-                  その保護を徹底するため、個人情報保護法および関連法令を遵守し、
-                  以下のプライバシーポリシーに基づき個人情報を取り扱います。
-                </p>
-              </div>
+          <div className="space-y-8">
+            <section className="bg-[#FFF5F3] rounded-lg p-5 text-sm leading-relaxed text-gray-700">
+              株式会社Xrosspoint株式会社（以下「当社」といいます）は、お客様の個人情報の重要性を認識し、関連法令を遵守するとともに、本プライバシーポリシーに基づき適切に取り扱います。
             </section>
 
-            <section className="mb-8">
-              <h2 className="text-2xl font-semibold mb-4">第1条（個人情報の定義）</h2>
-              <div className="bg-gray-50 rounded-lg p-4 space-y-2">
-                <p>
-                  本プライバシーポリシーにおいて「個人情報」とは、個人情報保護法に定める個人情報をいい、
-                  生存する個人に関する情報であって、当該情報に含まれる氏名、生年月日その他の記述等により
-                  特定の個人を識別することができるもの（他の情報と容易に照合することができ、
-                  それにより特定の個人を識別することができるものを含む）をいいます。
-                </p>
-              </div>
-            </section>
-
-            <section className="mb-8">
-              <h2 className="text-2xl font-semibold mb-4">第2条（個人情報の収集）</h2>
-              <div className="bg-gray-50 rounded-lg p-4">
-                <p className="mb-3">当社は、以下の方法で個人情報を収集いたします：</p>
-                <ul className="list-disc list-inside space-y-2">
-                  <li>サービス利用登録時にご提供いただく情報</li>
-                  <li>職務経歴書作成時にご入力いただく情報</li>
-                  <li>お問い合わせ時にご提供いただく情報</li>
-                  <li>サービス利用時に自動的に収集される情報（IPアドレス、Cookie情報等）</li>
-                </ul>
-              </div>
-            </section>
-
-            <section className="mb-8">
-              <h2 className="text-2xl font-semibold mb-4 flex items-center gap-2">
-                <FaCheckCircle className="text-green-600" />
-                第3条（個人情報の利用目的）
-              </h2>
-              <div className="bg-green-50 rounded-lg p-4">
-                <p className="mb-3">当社は、収集した個人情報を以下の目的で利用いたします：</p>
-                <ol className="list-decimal list-inside space-y-2">
-                  <li>転職支援サービスの提供および運営</li>
-                  <li>お客様への連絡、通知、お知らせの送付</li>
-                  <li>お客様からのお問い合わせへの対応</li>
-                  <li>利用規約違反等への対応</li>
-                  <li>サービスの改善、新サービスの開発</li>
-                  <li>統計データの作成（個人を特定できない形式）</li>
-                  <li>マーケティング活動（お客様の同意がある場合）</li>
-                  <li>その他、上記利用目的に付随する目的</li>
-                </ol>
-              </div>
-            </section>
-
-            <section className="mb-8">
-              <h2 className="text-2xl font-semibold mb-4">第4条（個人情報の第三者提供）</h2>
-              <div className="bg-gray-50 rounded-lg p-4">
-                <p className="mb-3">
-                  当社は、以下の場合を除き、お客様の同意なく第三者に個人情報を提供することはありません：
-                </p>
-                <ul className="list-disc list-inside space-y-2">
-                  <li>法令に基づく場合</li>
-                  <li>人の生命、身体または財産の保護のために必要がある場合</li>
-                  <li>公衆衛生の向上または児童の健全な育成の推進のために必要がある場合</li>
-                  <li>国の機関もしくは地方公共団体またはその委託を受けた者が法令の定める事務を遂行することに対して協力する必要がある場合</li>
-                  <li>予め次の事項を告知あるいは公表し、かつ当社が個人情報保護委員会に届出をした場合
-                    <ul className="list-circle list-inside ml-4 mt-2">
-                      <li>利用目的に第三者への提供を含むこと</li>
-                      <li>第三者に提供されるデータの項目</li>
-                      <li>第三者への提供の手段または方法</li>
-                      <li>本人の求めに応じて個人情報の第三者への提供を停止すること</li>
-                      <li>本人の求めを受け付ける方法</li>
-                    </ul>
-                  </li>
-                </ul>
-              </div>
-            </section>
-
-            <section className="mb-8">
-              <h2 className="text-2xl font-semibold mb-4 flex items-center gap-2">
-                <FaLock className="text-[#FF733E]" />
-                第5条（個人情報の安全管理）
-              </h2>
-              <div className="bg-[#FFF5F3] rounded-lg p-4">
-                <p>
-                  当社は、個人情報の漏洩、滅失または毀損の防止その他の個人情報の安全管理のために、
-                  以下の措置を講じています：
-                </p>
-                <ul className="list-disc list-inside space-y-2 mt-3">
-                  <li>SSL暗号化通信の使用</li>
-                  <li>アクセス権限の管理</li>
-                  <li>個人情報へのアクセスログの記録</li>
-                  <li>定期的なセキュリティ監査</li>
-                  <li>従業員への個人情報保護教育</li>
-                </ul>
-              </div>
-            </section>
-
-            <section className="mb-8">
-              <h2 className="text-2xl font-semibold mb-4">第6条（Cookieの使用）</h2>
-              <div className="bg-gray-50 rounded-lg p-4">
-                <p>
-                  当社のウェブサイトでは、お客様により良いサービスを提供するためにCookieを使用しています。
-                  Cookieは、ウェブサイトがお客様のコンピューターを識別するための小さなテキストファイルです。
-                  お客様は、ブラウザの設定によりCookieの受け取りを拒否することができますが、
-                  その場合、一部のサービスがご利用いただけなくなる可能性があります。
-                </p>
-              </div>
-            </section>
-
-            <section className="mb-8">
-              <h2 className="text-2xl font-semibold mb-4">第7条（個人情報の開示・訂正・削除）</h2>
-              <div className="bg-gray-50 rounded-lg p-4">
-                <p className="mb-3">
-                  お客様は、当社に対して以下の請求を行うことができます：
-                </p>
-                <ol className="list-decimal list-inside space-y-2">
-                  <li>個人情報の開示</li>
-                  <li>個人情報の内容が事実と異なる場合の訂正、追加または削除</li>
-                  <li>個人情報の利用停止または消去</li>
-                  <li>個人情報の第三者への提供の停止</li>
-                </ol>
-                <p className="mt-3">
-                  請求にあたっては、本人確認のための書類の提出をお願いする場合があります。
-                </p>
-              </div>
-            </section>
-
-            <section className="mb-8">
-              <h2 className="text-2xl font-semibold mb-4 flex items-center gap-2">
-                <FaExclamationTriangle className="text-yellow-600" />
-                第8条（未成年者の個人情報）
-              </h2>
-              <div className="bg-yellow-50 rounded-lg p-4">
-                <p>
-                  18歳未満の未成年者が当社のサービスを利用する場合は、
-                  保護者の同意を得たうえでご利用ください。
-                  保護者の同意なく未成年者の個人情報が送信された場合でも、
-                  保護者の同意があったものとみなします。
-                </p>
-              </div>
-            </section>
-
-            <section className="mb-8">
-              <h2 className="text-2xl font-semibold mb-4">第9条（プライバシーポリシーの変更）</h2>
-              <div className="bg-gray-50 rounded-lg p-4">
-                <p>
-                  当社は、法令の変更、サービス内容の変更、その他の事情により、
-                  本プライバシーポリシーを変更することがあります。
-                  変更後のプライバシーポリシーは、当社ウェブサイト上に表示した時点から効力を生じるものとします。
-                </p>
-              </div>
-            </section>
-
-            <section className="mb-8">
-              <h2 className="text-2xl font-semibold mb-4">第10条（お問い合わせ窓口）</h2>
-              <div className="bg-gray-50 rounded-lg p-4">
-                <p>個人情報の取り扱いに関するお問い合わせは、以下の窓口までご連絡ください：</p>
-                <div className="mt-3">
-                  <p>株式会社TruMeee 個人情報保護管理者</p>
-                  <p>メール: privacy@trumeee.com</p>
-                  <p>電話: 03-1234-5678（平日 9:00-18:00）</p>
-                  <p>住所: 〒100-0001 東京都千代田区千代田1-1-1</p>
-                </div>
-              </div>
-            </section>
+            {sections.map((section) => (
+              <section key={section.title} className="space-y-4">
+                <h2 className="text-2xl font-semibold text-gray-800">{section.title}</h2>
+                <div className="text-sm leading-relaxed text-gray-700 space-y-3">{section.body}</div>
+              </section>
+            ))}
           </div>
 
-          <div className="mt-8 p-4 bg-[#FFF5F3] rounded-lg">
-            <p className="text-center text-gray-700">
-              本個人情報利用許諾は2024年1月1日から施行されます。<br />
-              ご不明な点がございましたら、上記お問い合わせ窓口までご連絡ください。
-            </p>
+          <div className="mt-10 rounded-lg bg-[#FFF5F3] p-4 text-center text-sm text-gray-700">
+            本プライバシーポリシーに関する最新情報は、当社ウェブサイトにて随時ご確認いただけます。
           </div>
         </div>
       </div>

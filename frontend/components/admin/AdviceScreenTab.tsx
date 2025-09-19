@@ -12,7 +12,6 @@ const AdviceScreenTab = ({
   sendingAdvice,
   handleSubmit,
   sendAdviceMessage,
-  selectedAdviceType,
   messageEndRef,
   reset,
   refetchAdvice,
@@ -21,6 +20,29 @@ const AdviceScreenTab = ({
   control,
   errors,
 }: any) => {
+  const getTypeKey = (tab: any, subKey?: string | null) => {
+    if (!tab) return null;
+    if (tab.isGroup) {
+      if (!subKey) return null;
+      const subTab = tab.subTabs?.find((s: any) => s.key === subKey);
+      return subTab?.type || subTab?.key || tab.type || tab.key;
+    }
+    return tab.type || tab.key;
+  };
+
+  const currentTab = useMemo(
+    () => adviceTabs.find((tab: any) => tab.key === selectedAdviceTab),
+    [adviceTabs, selectedAdviceTab]
+  );
+
+  const resolvedAdviceType = useMemo(() => {
+    const typeFromTab = getTypeKey(currentTab, selectedAdviceSubTab);
+    if (typeFromTab) return typeFromTab;
+    if (selectedAdviceTab === 'all') return 'all';
+    // フォールバックとして key を返す
+    return selectedAdviceSubTab || currentTab?.key || selectedAdviceTab;
+  }, [currentTab, selectedAdviceTab, selectedAdviceSubTab]);
+
   // Filter messages according to selected tab/subTab
   const filteredMessages = useMemo(() => {
     if (!selectedAdviceTab) return adviceMessages || [];
@@ -28,28 +50,32 @@ const AdviceScreenTab = ({
     // 'all' タブは全件表示
     if (selectedAdviceTab === 'all') return adviceMessages || [];
 
-    const selectedTab = adviceTabs.find((tab: any) => tab.key === selectedAdviceTab);
+    if (!currentTab) return adviceMessages || [];
 
-    if (!selectedTab) return [];
+    const typeKey = getTypeKey(currentTab, selectedAdviceSubTab);
 
-    // If tab is group and subTab is selected, filter by subTab key
-    if (selectedTab.isGroup && selectedAdviceSubTab) {
-      return adviceMessages.filter(
-        (msg: any) => msg.content?.type === selectedAdviceSubTab
-      );
+    const matchesCategory = (msg: any) => {
+      const messageType = msg.content?.type || msg.content?.topic;
+      if (!typeKey) {
+        // グループタブで未選択の場合はグループ key で比較
+        const fallbackKey = selectedAdviceSubTab || currentTab.key;
+        return messageType === fallbackKey;
+      }
+      if (messageType === typeKey) return true;
+      if (selectedAdviceSubTab && messageType === selectedAdviceSubTab) return true;
+      if (messageType === currentTab.key) return true;
+      const messageTopic = msg.content?.topic;
+      return messageTopic === typeKey || messageTopic === selectedAdviceSubTab;
+    };
+
+    if (currentTab.isGroup && !selectedAdviceSubTab) {
+      // サブタブ未選択時は全件
+      return adviceMessages || [];
     }
 
-    // If tab is not group, filter by tab key
-    if (!selectedTab.isGroup) {
-      return adviceMessages.filter(
-        (msg: any) => msg.content?.type === selectedAdviceTab
-      );
-    }
-
-    // If group tab but no subTab selected, show none or all?
-    // Here, show none:
-    return [];
-  }, [adviceMessages, selectedAdviceTab, selectedAdviceSubTab, adviceTabs]);
+    return (adviceMessages || []).filter((msg: any) => matchesCategory(msg));
+  
+  }, [adviceMessages, currentTab, selectedAdviceSubTab, selectedAdviceTab]);
 
 
   return (
@@ -167,9 +193,11 @@ const AdviceScreenTab = ({
             control={control}
             errors={errors}
             isPending={sendingAdvice}
-            onSubmit={handleSubmit((data: any) =>
-              sendAdviceMessage({ message: data.message, type: selectedAdviceType })
-            )}
+            onSubmit={handleSubmit((data: any) => {
+              const typeKey = resolvedAdviceType === 'all' ? null : resolvedAdviceType;
+              if (!typeKey) return;
+              sendAdviceMessage({ message: data.message, type: typeKey });
+            })}
           />
         </div>
       </div>

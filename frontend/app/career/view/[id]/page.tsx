@@ -77,6 +77,7 @@ export default function ViewResumePage() {
         },
         step5: {
           selfPR: resume.self_pr || '',
+          jobSummary: extra.jobSummary || '',
         },
       };
 

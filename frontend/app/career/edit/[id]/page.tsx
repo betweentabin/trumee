@@ -31,6 +31,7 @@ interface ResumeData {
   address: string;
   birthDate: string;
   summary: string;
+  jobSummary: string;
   desiredPosition: string;
   desiredSalary: string;
   workExperiences: WorkExperience[];
@@ -63,6 +64,7 @@ export default function EditResumePage() {
     address: '',
     birthDate: '',
     summary: '',
+    jobSummary: '',
     desiredPosition: '',
     desiredSalary: '',
     workExperiences: [{
@@ -108,6 +110,7 @@ export default function EditResumePage() {
           address: extra.address || '',
           birthDate: extra.birthDate || '',
           summary: data?.self_pr || '',
+          jobSummary: extra.jobSummary || '',
           desiredPosition: data?.desired_job || '',
           desiredSalary: extra.desiredSalary || '',
           // Keep experiences/education only in extra_data for now to avoid nested validation
@@ -442,6 +445,10 @@ export default function EditResumePage() {
               <div>
                 <span className="text-xs text-gray-500">自己PR</span>
                 <div className="whitespace-pre-wrap">{resumeData.summary || '（未入力）'}</div>
+              </div>
+              <div>
+                <span className="text-xs text-gray-500">職務要約</span>
+                <div className="whitespace-pre-wrap">{resumeData.jobSummary || '（未入力）'}</div>
               </div>
               <div>
                 <span className="text-xs text-gray-500">職歴</span>
@@ -783,11 +790,15 @@ export default function EditResumePage() {
       startDate: e.startDate,
       endDate: e.endDate,
       description: e.description,
+      achievements: (e.achievements || []).filter(Boolean),
     })) };
     // step4: skills
     const step4 = { skills: (resumeData.skills || []).filter(Boolean) };
     // step5: self PR
-    const step5 = { selfPR: resumeData.summary || '' };
+    const step5 = {
+      selfPR: resumeData.summary || '',
+      jobSummary: resumeData.jobSummary || '',
+    };
     return { step1, step2, step3, step4, step5 };
   };
 
