@@ -23,31 +23,54 @@ export default function CompanyBillingPage() {
   });
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const res = await fetch(buildApiUrl('/company/profile/'), {
-          headers: { ...getAuthHeaders() },
-        });
-        if (res.ok) {
-          const data = await res.json();
-          setForm((prev) => ({ ...prev, ...data }));
-        }
-      } catch (e) {
-        // ignore
-      }
-    })();
-  }, []);
+useEffect(() => {
+  (async () => {
+    try {
+      const res = await fetch(buildApiUrl('/company/profile/'), {
+        headers: { ...getAuthHeaders() },
+      });
+      if (!res.ok) return;
+
+      const data = await res.json();
+      setForm((prev) => ({
+        ...prev,
+        billing_company_name: data.billing_company_name || '',
+        billing_department: data.billing_department || '',
+        billing_zip: data.billing_zip || '',
+        billing_address: data.billing_address || '',
+        billing_email: data.billing_email || '',
+      }));
+    } catch (e) {
+      // ignore
+    }
+  })();
+}, []);
 
   const save = async () => {
+    const payload = {
+      billing_company_name: form.billing_company_name?.trim() || '',
+      billing_department: form.billing_department?.trim() || '',
+      billing_zip: form.billing_zip?.trim() || '',
+      billing_address: form.billing_address?.trim() || '',
+      billing_email: form.billing_email?.trim() || '',
+    };
+
     try {
       setLoading(true);
       const res = await fetch(buildApiUrl('/company/profile/'), {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
-        body: JSON.stringify(form),
+        body: JSON.stringify(payload),
       });
-      if (!res.ok) throw new Error('保存に失敗しました');
+      if (!res.ok) {
+        const detail = await res.json().catch(() => undefined);
+        const message = detail && typeof detail === 'object'
+          ? Object.values(detail)
+              .map((value) => Array.isArray(value) ? value.join(' / ') : String(value))
+              .join('\n')
+          : '保存に失敗しました';
+        throw new Error(message);
+      }
       toast.success('請求書送付先を保存しました');
     } catch (e: any) {
       toast.error(e?.message || 'エラーが発生しました');
