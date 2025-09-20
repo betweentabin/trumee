@@ -31,11 +31,12 @@ const Header = () => {
         {/* Left Logo */}
         <div className="flex items-center">
           <Image
-            src="/logo/logo_top.png"
-            alt="Logo"
+            src="/logo/logo_mix.png"
+            alt="Truemee ロゴ"
             width={210}
             height={40}
             className="h-10 w-[210px] mr-3"
+            priority
           />
         </div>
 

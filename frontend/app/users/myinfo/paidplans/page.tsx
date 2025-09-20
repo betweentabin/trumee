@@ -8,7 +8,7 @@ import { getAccessToken, getAuthHeaders } from '@/utils/auth';
 import { plansByRole, PlanTier, PlanDef } from '@/config/plans';
 import { buildApiUrl } from '@/config/api';
 import toast from 'react-hot-toast';
-import { FaSpinner } from 'react-icons/fa';
+import { FaSpinner, FaCheckCircle, FaTimesCircle, FaLock, FaStar } from 'react-icons/fa';
 
 export default function UserPaidPlansPage() {
   const router = useRouter();
@@ -97,6 +97,84 @@ export default function UserPaidPlansPage() {
     }
   };
 
+  type FeatureStatus = 'included' | 'excluded' | 'partial';
+
+  const featureMatrix: Array<{
+    key: string;
+    label: string;
+    availability: Record<PlanTier, FeatureStatus>;
+    partialNote?: string;
+  }> = [
+    {
+      key: 'resume-review',
+      label: '職務経歴書の添削',
+      availability: {
+        starter: 'included',
+        standard: 'included',
+        premium: 'included',
+      },
+    },
+    {
+      key: 'interview-questions',
+      label: '面接で聞かれそうなQの事前案内',
+      partialNote: 'スターターは一部のみ閲覧可能（鍵付き）',
+      availability: {
+        starter: 'partial',
+        standard: 'included',
+        premium: 'included',
+      },
+    },
+    {
+      key: 'motivation-review',
+      label: 'スカウト企業の志望理由添削',
+      availability: {
+        starter: 'excluded',
+        standard: 'included',
+        premium: 'included',
+      },
+    },
+    {
+      key: 'interview-prep',
+      label: '面接対策セッション（模擬面接含む）',
+      availability: {
+        starter: 'excluded',
+        standard: 'excluded',
+        premium: 'included',
+      },
+    },
+    {
+      key: 'refund',
+      label: '2社マッチング成立で全額返金保証',
+      availability: {
+        starter: 'included',
+        standard: 'included',
+        premium: 'included',
+      },
+    },
+  ];
+
+  const renderStatusIcon = (status: FeatureStatus) => {
+    switch (status) {
+      case 'included':
+        return <FaCheckCircle className="text-primary-600" aria-hidden />;
+      case 'partial':
+        return <FaLock className="text-amber-500" aria-hidden />;
+      default:
+        return <FaTimesCircle className="text-gray-300" aria-hidden />;
+    }
+  };
+
+  const renderStatusLabel = (status: FeatureStatus) => {
+    switch (status) {
+      case 'included':
+        return '利用可能';
+      case 'partial':
+        return '一部公開';
+      default:
+        return '対象外';
+    }
+  };
+
   useEffect(() => { initializeAuth(); }, [initializeAuth]);
   useEffect(() => {
     if (isAuthenticated === false) {
@@ -127,96 +205,145 @@ export default function UserPaidPlansPage() {
           <div className="lg:col-span-9">
             <div className="mb-6">
               <h1 className="text-3xl font-bold text-gray-900">有料プラン</h1>
-              <p className="mt-2 text-gray-600">有料プランに関する説明があります。</p>
+              <p className="mt-2 text-gray-600">
+                あなたの転職活動を段階的にサポートする3つのプランをご用意しています。
+              </p>
             </div>
 
-            <div className="mb-6 bg-[#E8F5F2] rounded-lg p-4 text-center">
-              <p className="text-[#14795A]">
+            <div className="mb-6 rounded-lg bg-orange-50 border border-orange-200 p-4 text-center">
+              <p className="text-orange-700">
                 現在のプラン: <span className="font-bold">{plans.find(p => p.id === currentPlan)?.name || '未契約'}</span>
               </p>
             </div>
 
-            {/* Hero Offer: 職務経歴書の添削 */}
-            <div className="mb-6 border rounded-xl overflow-hidden">
-              <div className="flex items-stretch">
-                <div className="bg-[#143D33] text-white px-6 py-5 font-semibold flex items-center justify-center min-w-[220px]">職務経歴書の添削</div>
-                <div className="flex-1 px-6 py-5 flex items-center justify-between">
-                  <div className="text-gray-800 flex items-baseline gap-3">
-                    <span className="line-through text-gray-400">50,000円</span>
-                    <span className="text-2xl font-bold">0円</span>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+              {plans.map((plan) => {
+                const isCurrent = plan.id === currentPlan;
+                const isLoading = loadingPlan === plan.id;
+                const primaryBtnLabel = isCurrent ? 'ご利用中' : plan.highlight ? 'おすすめプランを申し込む' : 'アップグレード';
+                const action = () => {
+                  if (isCurrent || isLoading) return;
+                  if (plan.stripePriceId) {
+                    gotoStripeCheckout(plan);
+                  } else {
+                    changePlan(plan);
+                  }
+                };
+
+                const cardClass = plan.highlight
+                  ? 'relative bg-white border-2 border-primary-500 shadow-xl rounded-2xl p-6'
+                  : 'bg-white border border-gray-200 shadow-sm rounded-2xl p-6';
+
+                return (
+                  <div key={plan.id} className={cardClass}>
+                    {plan.highlight && (
+                      <div className="absolute -top-4 left-1/2 -translate-x-1/2 flex items-center gap-1 rounded-full bg-primary-500 px-3 py-1 text-xs font-semibold text-white shadow">
+                        <FaStar className="text-yellow-300" />
+                        おすすめ
+                      </div>
+                    )}
+                    <div className="mb-4">
+                      <h2 className="text-xl font-bold text-gray-900">{plan.name}プラン</h2>
+                      <p className="text-sm text-gray-500">{plan.description}</p>
+                    </div>
+
+                    <div className="mb-5">
+                      <div className="text-sm text-gray-500">通常価格</div>
+                      <div className="text-3xl font-extrabold text-gray-900">
+                        ¥{plan.price.toLocaleString()}
+                        <span className="text-base font-normal text-gray-500 ml-1">/ 件</span>
+                      </div>
+                      {plan.id === 'starter' && (
+                        <div className="mt-1 text-xs font-semibold text-primary-600">期間限定：無料提供中（初回往復）</div>
+                      )}
+                      <div className="mt-2 text-xs text-gray-500">2社マッチング成立でシステム利用料を全額返金</div>
+                    </div>
+
+                    <ul className="space-y-3 mb-6">
+                      {featureMatrix.map((feature) => {
+                        const status = feature.availability[plan.id];
+                        const statusLabel = renderStatusLabel(status);
+                        return (
+                          <li key={feature.key} className="flex items-start gap-3 text-sm text-gray-800">
+                            <span className="mt-0.5">{renderStatusIcon(status)}</span>
+                            <div>
+                              <p className={`font-medium ${status === 'excluded' ? 'text-gray-400' : ''}`}>
+                                {feature.label}
+                              </p>
+                              <p className={`text-xs ${status === 'partial' ? 'text-amber-600' : 'text-gray-500'}`}>
+                                {status === 'partial' && feature.partialNote ? feature.partialNote : statusLabel}
+                              </p>
+                            </div>
+                          </li>
+                        );
+                      })}
+                    </ul>
+
+                    <button
+                      onClick={action}
+                      disabled={isCurrent || isLoading}
+                      className={`w-full flex items-center justify-center gap-2 rounded-full px-4 py-3 text-sm font-semibold transition ${
+                        isCurrent
+                          ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                          : 'bg-primary-600 text-white hover:bg-primary-700'
+                      }`}
+                    >
+                      {isLoading ? (
+                        <>
+                          <FaSpinner className="animate-spin" />
+                          決済ページを準備中…
+                        </>
+                      ) : (
+                        primaryBtnLabel
+                      )}
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="rounded-2xl border border-primary-100 bg-white p-6 shadow-sm">
+                <h3 className="flex items-center gap-2 text-lg font-semibold text-primary-700">
+                  <FaCheckCircle className="text-primary-500" /> プレミアムプランの特典
+                </h3>
+                <ul className="mt-3 space-y-2 text-sm text-gray-700">
+                  <li>・模擬面接とフィードバックで本番に備えられます。</li>
+                  <li>・面接で聞かれやすい質問を事前に共有し、回答例づくりを伴走します。</li>
+                  <li>・志望企業ごとのアピールポイントをプロが整理します。</li>
+                </ul>
+              </div>
+
+              <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+                <h3 className="flex items-center gap-2 text-lg font-semibold text-gray-800">
+                  <FaStar className="text-amber-400" /> よくある質問
+                </h3>
+                <div className="mt-3 space-y-3 text-sm text-gray-700">
+                  <div>
+                    <p className="font-semibold">Q. プランは途中で変更できますか？</p>
+                    <p>A. はい、マイページからいつでもアップグレードやダウングレードが可能です。</p>
+                  </div>
+                  <div>
+                    <p className="font-semibold">Q. 返金保証の条件は？</p>
+                    <p>A. 弊社経由で2社以上とマッチングした場合にシステム利用料を全額返金します。</p>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* 面接アドバイス */}
-            <div className="mb-6 border rounded-xl overflow-hidden">
-              <div className="flex items-stretch">
-                <div className="bg-[#143D33] text-white px-6 py-5 font-semibold min-w-[220px] flex items-center">面接アドバイス</div>
-                <div className="flex-1 px-6 py-5 text-gray-700">各質問ごとの対策が可能（最初は一部無料可）</div>
-              </div>
-            </div>
-
-            {/* 各 20,000円 セクション */}
-            <div className="mb-10">
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                {['転職理由 志望動機', '職務経歴書関連', '自己PR対策', '面接全般'].map((t) => (
-                  <div key={t} className="border rounded-xl h-24 flex items-center justify-center text-gray-800 bg-white">{t}</div>
-                ))}
-              </div>
-              <div className="text-center mt-3 text-gray-700">各 20,000円</div>
-            </div>
-
-            {/* 自己理解3点セット */}
-            <div className="mb-10">
-              <div className="text-center mb-3 text-gray-800">自己理解3点セット</div>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                {['転職理由', '職務経歴書', '自己PR'].map((t) => (
-                  <div key={t} className="border rounded-xl h-24 flex items-center justify-center bg-white text-gray-800">{t}</div>
-                ))}
-              </div>
-              <div className="text-center mt-3 text-gray-800">50,000円</div>
-            </div>
-
-            {/* 面接アドバイスフルパッケージ */}
-            <div className="mb-10">
-              <div className="text-center mb-3 text-gray-800">面接アドバイスフルパッケージ（全対策セット）</div>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                {['転職理由 志望動機', '職務経歴書関連', '自己PR対策', '面接全般'].map((t) => (
-                  <div key={t} className="border rounded-xl h-24 flex items-center justify-center bg-white text-gray-800">{t}</div>
-                ))}
-              </div>
-              <div className="text-center mt-3 text-gray-800">60,000円</div>
-            </div>
-
-            {/* 転職サポートプラン */}
-            <div className="mb-12">
-              <div className="text-center mb-3 text-gray-800">転職サポートプラン</div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {['職務経歴書の添削', '面接アドバイスフルパッケージ'].map((t) => (
-                  <div key={t} className="border rounded-xl h-24 flex items-center justify-center bg-white text-gray-800">{t}</div>
-                ))}
-              </div>
-              <div className="text-center mt-3 text-gray-800">
-                110,000円（職務経歴書添削 + 面接アドバイスフルパッケージ含む）
-              </div>
-              <div className="text-center text-sm text-gray-600 mt-1">弊社経由で転職成功した場合、システム利用料を全額返金！</div>
-            </div>
-
-            {/* CTA */}
-            <div className="text-center">
+            <div className="mt-10 text-center">
               <button
                 disabled={!!loadingPlan}
                 onClick={handleHighlightCheckout}
-                className="inline-flex items-center justify-center px-6 py-3 rounded-full bg-[#FF733E] text-white hover:bg-[#e9632e] disabled:opacity-60"
+                className="inline-flex items-center justify-center gap-2 rounded-full bg-primary-600 px-8 py-3 text-base font-semibold text-white shadow hover:bg-primary-700 disabled:opacity-70"
               >
                 {loadingPlan ? (
-                  <span className="flex items-center gap-2">
+                  <>
                     <FaSpinner className="animate-spin" />
-                    決済ページを準備中…
-                  </span>
+                    おすすめプランを確認中…
+                  </>
                 ) : (
-                  '有料プランに加入する'
+                  '一番人気のスタンダードプランを見る'
                 )}
               </button>
             </div>

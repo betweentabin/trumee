@@ -75,6 +75,50 @@ const normalizeDate = (value: unknown): string => {
   return '';
 };
 
+const parseTimestamp = (value: unknown): number => {
+  if (value === null || value === undefined) return 0;
+  if (typeof value === 'number') {
+    return Number.isFinite(value) ? value : 0;
+  }
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (!trimmed) return 0;
+
+    // Handle Unix timestamp strings
+    if (/^\d+$/.test(trimmed)) {
+      const numeric = Number(trimmed);
+      if (Number.isFinite(numeric)) {
+        return numeric > 10_000_000_000 ? numeric : numeric * 1000;
+      }
+    }
+
+    const parsed = new Date(trimmed);
+    if (!Number.isNaN(parsed.getTime())) {
+      return parsed.getTime();
+    }
+  }
+  if (value instanceof Date && !Number.isNaN(value.getTime())) {
+    return value.getTime();
+  }
+  return 0;
+};
+
+const resolveResumeTimestamp = (resume: any): number => {
+  if (!resume) return 0;
+  const candidates: unknown[] = [
+    pickField(resume, ['updated_at', 'updatedAt']),
+    pickField(resume, ['created_at', 'createdAt']),
+    pickField(resume, ['submitted_at', 'submittedAt']),
+    pickField(resume?.extra_data, ['updated_at', 'updatedAt', 'lastEditedAt']),
+    pickField(resume?.extra_data, ['created_at', 'createdAt', 'generatedAt']),
+  ];
+
+  return candidates.reduce((max, current) => {
+    const ts = parseTimestamp(current);
+    return ts > max ? ts : max;
+  }, 0);
+};
+
 const buildPreviewFromExperiences = (experiences: any[]) => {
   const jobhistoryList = experiences.map((_, idx) => `exp_${idx}`);
   const formValues: Record<string, any> = {};
@@ -144,7 +188,16 @@ export const fetchResumePreview = async ({ userId, token }: FetchResumePreviewPa
       };
     }
 
-    const resume = list.find((item: any) => item?.is_active) || list[0];
+    const sortedByRecency = [...list].sort((a, b) => {
+      const diff = resolveResumeTimestamp(b) - resolveResumeTimestamp(a);
+      if (diff !== 0) return diff;
+      // fall back to keeping active resumes ahead if timestamps match
+      if (a?.is_active && !b?.is_active) return -1;
+      if (!a?.is_active && b?.is_active) return 1;
+      return 0;
+    });
+
+    const resume = sortedByRecency[0];
     const experiencesFromSerializer = Array.isArray(resume?.experiences) ? resume.experiences : [];
     const extraExperiences = Array.isArray(resume?.extra_data?.workExperiences)
       ? resume.extra_data.workExperiences
