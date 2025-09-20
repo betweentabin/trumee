@@ -1,6 +1,9 @@
 import { useDispatch, useSelector } from 'react-redux';
 import { useCallback, useEffect } from 'react';
 import { RootState, AppDispatch } from '@/app/redux/store';
+import { saveResumeDraft as saveResumeDraftApi } from '@/features/resume/form/api';
+import { ExperienceDraft, PreferenceDraft } from '@/features/resume/form/types';
+import { EMPLOYMENT_TYPE_VALUE_BY_LABEL } from '@/features/resume/form/constants';
 import {
   setCurrentStep,
   updateProfile,
@@ -98,31 +101,43 @@ export const useFormPersist = () => {
         }
       }
 
-      // Save resume data
+      // Save resume data via unified API
       if (formState.stepData.experiences.length > 0 || formState.stepData.skills || formState.stepData.selfPR) {
-        const resumeData = {
-          email: user?.email,
-          experiences: formState.stepData.experiences,
-          skill: formState.stepData.skills ? { id: 1, skill: formState.stepData.skills } : undefined,
-          profile: formState.stepData.selfPR ? { id: 1, profile: formState.stepData.selfPR } : undefined,
-          job: formState.stepData.preference ? {
-            id: 1,
-            job: formState.stepData.preference.desiredJobTypes?.join(', ') || '',
-            desired_industries: formState.stepData.preference.desiredIndustries,
-            desired_locations: formState.stepData.preference.desiredLocations,
-          } : undefined,
-          submittedAt: new Date().toISOString(),
+        const experiencesDraft: ExperienceDraft[] = formState.stepData.experiences.map((exp, idx) => ({
+          id: exp.id ?? idx + 1,
+          company: exp.company || '',
+          periodFrom: exp.periodFrom || '',
+          periodTo: exp.periodTo || '',
+          employmentType: EMPLOYMENT_TYPE_VALUE_BY_LABEL[exp.employmentType || ''] || 'fulltime',
+          business: exp.business || '',
+          capital: exp.capital || '',
+          teamSize: exp.teamSize || '',
+          tasks: exp.tasks || '',
+          position: exp.position || '',
+          industry: exp.industry || '',
+        }));
+
+        const preferenceDraft: PreferenceDraft = {
+          desiredSalary: formState.stepData.preference?.desiredSalary || '',
+          desiredIndustries: formState.stepData.preference?.desiredIndustries || [],
+          desiredJobTypes: formState.stepData.preference?.desiredJobTypes || [],
+          desiredLocations: formState.stepData.preference?.desiredLocations || [],
+          workStyle: formState.stepData.preference?.workStyle || '',
+          availableDate: formState.stepData.preference?.availableDate || '',
         };
 
-        const resumeResponse = await fetch(buildApiUrl(API_CONFIG.endpoints.saveResume), {
-          method: 'POST',
-          headers,
-          body: JSON.stringify(resumeData),
+        await saveResumeDraftApi({
+          title: '職務経歴書',
+          description: '',
+          objective: '',
+          skills: formState.stepData.skills || '',
+          selfPr: formState.stepData.selfPR || '',
+          isActive: true,
+          experiences: experiencesDraft,
+          preference: preferenceDraft,
+          educations: [],
+          certifications: [],
         });
-
-        if (!resumeResponse.ok) {
-          throw new Error('Failed to save resume');
-        }
       }
 
       dispatch(saveForm());

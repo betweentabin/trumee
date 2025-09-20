@@ -1,11 +1,14 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import apiClient from '@/lib/api-v2-client';
-import { useCreateResume } from '@/hooks/useApiV2';
 import useAuthV2 from '@/hooks/useAuthV2';
-import { CreateResumeRequest, ExperienceFormData, EducationFormData, CertificationFormData } from '@/types/api-v2';
+import { EducationFormData, CertificationFormData } from '@/types/api-v2';
+import { ExperienceDraft, PreferenceDraft, ResumeDraft } from '@/features/resume/form/types';
+import ResumeExperiencesForm, { ResumeExperiencesFormHandle } from '@/features/resume/form/ResumeExperiencesForm';
+import ResumePreferencesForm, { ResumePreferencesFormHandle } from '@/features/resume/form/ResumePreferencesForm';
+import { saveResumeDraft } from '@/features/resume/form/api';
 import toast from 'react-hot-toast';
 import { FaSave, FaArrowLeft, FaPlus, FaTrash } from 'react-icons/fa';
 
@@ -19,8 +22,6 @@ interface ResumeFormData {
   languages: string;
   hobbies: string;
   is_active: boolean;
-  // API v2用の詳細データ
-  experiences: ExperienceFormData[];
   educations: EducationFormData[];
   certificationDetails: CertificationFormData[];
 }
@@ -39,8 +40,6 @@ export default function NewResumePage() {
     }
   }, []); // routerを依存配列から除外
 
-  const createResumeV2 = useCreateResume();
-
   const [formData, setFormData] = useState<ResumeFormData>({
     title: '',
     description: '',
@@ -51,11 +50,45 @@ export default function NewResumePage() {
     languages: '',
     hobbies: '',
     is_active: false,
-    // API v2用の詳細データ
-    experiences: [],
     educations: [],
     certificationDetails: [],
   });
+
+  const [experiences, setExperiences] = useState<ExperienceDraft[]>([
+    {
+      id: 1,
+      company: '',
+      periodFrom: '',
+      periodTo: '',
+      employmentType: 'fulltime',
+      business: '',
+      capital: '',
+      teamSize: '',
+      tasks: '',
+      position: '',
+      industry: '',
+    },
+  ]);
+
+  const [preference, setPreference] = useState<PreferenceDraft>({
+    desiredSalary: '',
+    desiredIndustries: [],
+    desiredJobTypes: [],
+    desiredLocations: [],
+    workStyle: '',
+    availableDate: '',
+  });
+
+  const experiencesRef = useRef<ResumeExperiencesFormHandle>(null);
+  const preferenceRef = useRef<ResumePreferencesFormHandle>(null);
+
+  const handleExperiencesChange = (next: ExperienceDraft[]) => {
+    setExperiences(next);
+  };
+
+  const handlePreferenceChange = (next: PreferenceDraft) => {
+    setPreference(next);
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
@@ -74,47 +107,62 @@ export default function NewResumePage() {
     }
 
     if (useV2API) {
-      // API v2を使用
-      const resumeData: CreateResumeRequest = {
+      const validExperiences = experiencesRef.current?.validate() ?? true;
+      const validPreference = preferenceRef.current?.validate() ?? true;
+      if (!validExperiences || !validPreference) {
+        return;
+      }
+
+      const draft: ResumeDraft = {
         title: formData.title,
         description: formData.description,
         objective: formData.objective,
         skills: formData.skills,
-        experiences: formData.experiences.map((exp, index) => ({
-          ...exp,
-          order: index,  // インデックスをorderとして設定
-        })),
-        educations: formData.educations.map((edu, index) => ({
-          ...edu,
-          order: index,  // インデックスをorderとして設定
-        })),
-        certifications: formData.certificationDetails.map((cert, index) => ({
-          ...cert,
-          order: index,  // インデックスをorderとして設定
-        })),
+        selfPr: '',
+        isActive: formData.is_active,
+        experiences,
+        preference,
+        educations: formData.educations,
+        certifications: formData.certificationDetails,
       };
 
-      // DRFトークン認証でAPI v2を使用
-      createResumeV2.mutate(resumeData, {
-        onSuccess: (response) => {
-          toast.success('履歴書を作成しました');
-          router.push('/resumes');
-        },
-        onError: (error: any) => {
-          console.error('Failed to create resume:', error);
-          if (error.response?.status === 401) {
-            toast.error('ログインが必要です');
-            router.push('/auth/login');
-          } else {
-            toast.error('履歴書の作成に失敗しました');
-          }
+      try {
+        setLoading(true);
+        await saveResumeDraft(draft);
+        toast.success('履歴書を作成しました');
+        router.push('/resumes');
+      } catch (error: any) {
+        console.error('Failed to create resume:', error);
+        toast.error('履歴書の作成に失敗しました');
+        if (error?.response?.status === 401) {
+          router.push('/auth/login');
         }
-      });
+      } finally {
+        setLoading(false);
+      }
     } else {
       // 従来のAPIもDRFトークンで呼び出し
       setLoading(true);
       try {
-        const response = await apiClient.createResume(formData);
+        const legacyExperiences = experiences.map((exp) => ({
+          company: exp.company,
+          period_from: exp.periodFrom,
+          period_to: exp.periodTo || undefined,
+          employment_type: exp.employmentType,
+          position: exp.position,
+          business: exp.business,
+          capital: exp.capital,
+          team_size: exp.teamSize,
+          tasks: exp.tasks,
+          industry: exp.industry,
+          achievements: '',
+          technologies_used: [],
+        }));
+        const resumeData: any = {
+          ...formData,
+          experiences: legacyExperiences,
+        };
+        const response = await apiClient.createResume(resumeData);
         toast.success('履歴書を作成しました');
         router.push('/resumes');
       } catch (error: any) {
@@ -129,42 +177,6 @@ export default function NewResumePage() {
         setLoading(false);
       }
     }
-  };
-
-  // 職歴追加
-  const addExperience = () => {
-    setFormData(prev => ({
-      ...prev,
-      experiences: [...prev.experiences, {
-        company: '',
-        period_from: '',
-        period_to: '',
-        employment_type: 'fulltime',
-        tasks: '',
-        position: '',
-        business: '',
-        achievements: '',
-        technologies_used: [],
-      }]
-    }));
-  };
-
-  // 職歴削除
-  const removeExperience = (index: number) => {
-    setFormData(prev => ({
-      ...prev,
-      experiences: prev.experiences.filter((_, i) => i !== index)
-    }));
-  };
-
-  // 職歴更新
-  const updateExperience = (index: number, field: keyof ExperienceFormData, value: any) => {
-    setFormData(prev => ({
-      ...prev,
-      experiences: prev.experiences.map((exp, i) => 
-        i === index ? { ...exp, [field]: value } : exp
-      )
-    }));
   };
 
   // 学歴追加
@@ -394,104 +406,19 @@ export default function NewResumePage() {
           </div>
 
           {/* API v2 詳細フォーム */}
-          {useV2API && (
-            <>
-              {/* 職歴詳細セクション */}
-              <div className="border-t pt-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-medium text-gray-900">職歴詳細</h3>
-                  <button
-                    type="button"
-                    onClick={addExperience}
-                    className="inline-flex items-center px-3 py-1 bg-[#FF733E] text-white text-sm rounded-md hover:bg-[#FF8659]"
-                  >
-                    <FaPlus className="mr-1" />
-                    追加
-                  </button>
-                </div>
-                
-                {formData.experiences.map((experience, index) => (
-                  <div key={index} className="bg-gray-50 p-4 rounded-md mb-4">
-                    <div className="flex items-center justify-between mb-4">
-                      <h4 className="font-medium text-gray-700">職歴 {index + 1}</h4>
-                      <button
-                        type="button"
-                        onClick={() => removeExperience(index)}
-                        className="text-red-600 hover:text-red-800"
-                      >
-                        <FaTrash />
-                      </button>
-                    </div>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          会社名 <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                          type="text"
-                          value={experience.company}
-                          onChange={(e) => updateExperience(index, 'company', e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-[#FF733E] focus:border-[#FF733E]"
-                          placeholder="会社名を入力"
-                        />
-                      </div>
-                      
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          役職
-                        </label>
-                        <input
-                          type="text"
-                          value={experience.position || ''}
-                          onChange={(e) => updateExperience(index, 'position', e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-[#FF733E] focus:border-[#FF733E]"
-                          placeholder="役職を入力"
-                        />
-                      </div>
-                      
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          開始日
-                        </label>
-                        <input
-                          type="date"
-                          value={experience.period_from}
-                          onChange={(e) => updateExperience(index, 'period_from', e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-[#FF733E] focus:border-[#FF733E]"
-                        />
-                      </div>
-                      
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          終了日
-                        </label>
-                        <input
-                          type="date"
-                          value={experience.period_to || ''}
-                          onChange={(e) => updateExperience(index, 'period_to', e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-[#FF733E] focus:border-[#FF733E]"
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="mt-4">
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        業務内容
-                      </label>
-                      <textarea
-                        value={experience.tasks}
-                        onChange={(e) => updateExperience(index, 'tasks', e.target.value)}
-                        rows={3}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                        placeholder="担当した業務内容を記入してください"
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
+      {useV2API && (
+        <>
+          <div className="border-t pt-6">
+            <h3 className="text-lg font-medium text-gray-900 mb-4">職歴詳細</h3>
+            <ResumeExperiencesForm ref={experiencesRef} value={experiences} onChange={handleExperiencesChange} />
+          </div>
 
-              {/* 学歴詳細セクション */}
+          <div className="border-t pt-6">
+            <h3 className="text-lg font-medium text-gray-900 mb-4">希望条件</h3>
+            <ResumePreferencesForm ref={preferenceRef} value={preference} onChange={handlePreferenceChange} />
+          </div>
+
+          {/* 学歴詳細セクション */}          {/* 学歴詳細セクション */}
               <div className="border-t pt-6">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-medium text-gray-900">学歴詳細</h3>
