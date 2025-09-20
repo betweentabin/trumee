@@ -95,7 +95,7 @@ export default function AdminSeekerDetailPage() {
       try {
         setResumeLoading(true);
         setResumeError(null);
-        const data = await fetchResumePreview({ userId: String(id), token });
+        const data = await fetchResumePreview({ userId: String(id), token, forAdmin: true });
         if (!canceled) {
           setResumePreview(data);
         }
@@ -103,7 +103,8 @@ export default function AdminSeekerDetailPage() {
         console.error('resume preview load failed', err);
         if (!canceled) {
           setResumePreview(emptyResumePreview);
-          setResumeError('職務経歴書の取得に失敗しました。');
+          const message = err instanceof Error ? err.message : '職務経歴書の取得に失敗しました。';
+          setResumeError(message);
         }
       } finally {
         if (!canceled) {

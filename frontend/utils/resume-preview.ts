@@ -17,6 +17,7 @@ export const emptyResumePreview: ResumePreviewData = {
 type FetchResumePreviewParams = {
   userId: string;
   token?: string;
+  forAdmin?: boolean;
 };
 
 const toStringSafe = (value: unknown): string => {
@@ -154,7 +155,7 @@ const buildPreviewFromExperiences = (experiences: any[]) => {
   return { jobhistoryList, formValues };
 };
 
-export const fetchResumePreview = async ({ userId, token }: FetchResumePreviewParams): Promise<ResumePreviewData> => {
+export const fetchResumePreview = async ({ userId, token, forAdmin }: FetchResumePreviewParams): Promise<ResumePreviewData> => {
   if (!userId) return { ...emptyResumePreview };
 
   const headers = getApiHeaders(token);
@@ -171,12 +172,26 @@ export const fetchResumePreview = async ({ userId, token }: FetchResumePreviewPa
   }
 
   try {
-    const res = await fetch(buildApiUrl(`/users/${encodeURIComponent(userId)}/resumes/`), { headers });
+    const endpoint = forAdmin
+      ? `/admin/users/${encodeURIComponent(userId)}/resumes/`
+      : `/users/${encodeURIComponent(userId)}/resumes/`;
+    const res = await fetch(buildApiUrl(endpoint), { headers });
     if (!res.ok) {
-      return {
-        ...emptyResumePreview,
-        userName,
-      };
+      let message = `履歴書の取得に失敗しました (${res.status})`;
+      try {
+        const errorPayload = await res.json();
+        message = errorPayload?.detail || errorPayload?.error || message;
+      } catch {
+        try {
+          const text = await res.text();
+          if (text) message = text;
+        } catch {
+          /* noop */
+        }
+      }
+      const error = new Error(message);
+      (error as any).status = res.status;
+      throw error;
     }
 
     const payload = await res.json();
