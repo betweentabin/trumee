@@ -48,13 +48,17 @@ export default function ResumeAdvicePage() {
   const loadResume = useCallback(async () => {
     const userId = params?.userId ? String(params.userId) : "";
     if (!userId) return;
+    const isOwner = me && String(me.id) === userId;
     try {
-      const data = await fetchResumePreview({ userId, token });
-      setResumePreview(data);
+      const data = await fetchResumePreview({ userId, token, forOwner: Boolean(isOwner) });
+      const fallbackName = !data.userName && isOwner
+        ? me?.full_name || me?.fullName || me?.username || me?.email
+        : data.userName;
+      setResumePreview({ ...data, userName: fallbackName });
     } catch {
       setResumePreview(emptyResumePreview);
     }
-  }, [params?.userId, token]);
+  }, [params?.userId, token, me]);
 
   useEffect(() => { loadMessages(); }, [loadMessages]);
   useEffect(() => { loadResume(); }, [loadResume]);

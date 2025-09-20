@@ -18,6 +18,7 @@ type FetchResumePreviewParams = {
   userId: string;
   token?: string;
   forAdmin?: boolean;
+  forOwner?: boolean;
 };
 
 const toStringSafe = (value: unknown): string => {
@@ -155,7 +156,7 @@ const buildPreviewFromExperiences = (experiences: any[]) => {
   return { jobhistoryList, formValues };
 };
 
-export const fetchResumePreview = async ({ userId, token, forAdmin }: FetchResumePreviewParams): Promise<ResumePreviewData> => {
+export const fetchResumePreview = async ({ userId, token, forAdmin, forOwner }: FetchResumePreviewParams): Promise<ResumePreviewData> => {
   if (!userId) return { ...emptyResumePreview };
 
   const headers = getApiHeaders(token);
@@ -174,7 +175,9 @@ export const fetchResumePreview = async ({ userId, token, forAdmin }: FetchResum
   try {
     const endpoint = forAdmin
       ? `/admin/users/${encodeURIComponent(userId)}/resumes/`
-      : `/users/${encodeURIComponent(userId)}/resumes/`;
+      : forOwner
+        ? `/seeker/resumes/`
+        : `/users/${encodeURIComponent(userId)}/resumes/`;
     const res = await fetch(buildApiUrl(endpoint), { headers });
     if (!res.ok) {
       let message = `履歴書の取得に失敗しました (${res.status})`;
