@@ -212,8 +212,9 @@ class ApiV2Client {
   // 公開履歴書（閲覧用）
   async getPublicUserResumes(userId: string): Promise<Resume[]> {
     const url = `${API_ENDPOINTS.PUBLIC_USER_BASE}${userId}/resumes/`;
-    const res = await this.client.get<Resume[]>(url);
-    return res.data as any;
+    const res = await this.client.get<Resume[] | { results?: Resume[] }>(url);
+    const data = res.data as any;
+    return Array.isArray(data) ? data : (Array.isArray(data?.results) ? data.results : []);
   }
 
   async getPublicUserResumeDetail(userId: string, resumeId: string): Promise<Resume> {

@@ -23,7 +23,8 @@ export default function UserExperienceByIdPage() {
         // 自分のページなら認証付きの一覧、他人なら公開一覧
         const isOwner = !!(currentUser?.id && currentUser.id === userId);
         const data = isOwner ? await apiClient.getResumes() : await apiClient.getPublicUserResumes(userId);
-        setResumes(Array.isArray(data) ? data : (data || []));
+        const list = Array.isArray(data) ? data : [];
+        setResumes(list);
       } catch (e: any) {
         console.error('Experience load error', e);
         setError(e?.response?.data?.error || '職歴の取得に失敗しました');

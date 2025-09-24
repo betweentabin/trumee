@@ -1,4 +1,4 @@
-FROM python:3.11-slim
+FROM public.ecr.aws/docker/library/python:3.11-slim
 
 # Force complete rebuild - v4.0 - $(date)
 RUN echo "Forced rebuild at $(date) - CACHE_BUST_v17_MANUAL_DATA" > /rebuild.txt
