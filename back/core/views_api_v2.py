@@ -16,6 +16,7 @@ from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.authtoken.models import Token
 from django.shortcuts import get_object_or_404
 from django.db import transaction
+from django.db import connection
 from django.db.models.functions import Cast
 from django.db.models import IntegerField
 from django.contrib.auth import authenticate
@@ -729,6 +730,9 @@ def search_seekers_v2(request):
             return []
         prefectures = get_list_param('prefectures')
         industries = get_list_param('industries')
+        # 希望条件（新規追加）
+        desired_locations = get_list_param('desired_locations')
+        desired_industries = get_list_param('desired_industries')
         experience_years_min = request.GET.get('experience_years_min')
         experience_years_max = request.GET.get('experience_years_max')
         min_experience = request.GET.get('min_experience')  # 互換性のため
@@ -748,19 +752,40 @@ def search_seekers_v2(request):
                 Q(user__resumes__self_pr__icontains=keyword)
             )
         
-        if prefecture:
-            queryset = queryset.filter(prefecture=prefecture)
-        if prefectures:
-            queryset = queryset.filter(prefecture__in=prefectures)
+        # 居住地 or 希望勤務地
+        if prefecture or prefectures or desired_locations:
+            from django.db.models import Q
+            pref_q = Q()
+            if prefecture:
+                pref_q |= Q(prefecture=prefecture)
+            if prefectures:
+                pref_q |= Q(prefecture__in=prefectures)
+            if desired_locations:
+                # DBによりJSON contains可否が異なるため分岐
+                if connection.vendor == 'postgresql':
+                    for loc in desired_locations:
+                        pref_q |= Q(user__resumes__desired_locations__contains=[loc])
+                else:
+                    for loc in desired_locations:
+                        pref_q |= Q(user__resumes__desired_locations__icontains=loc)
+            queryset = queryset.filter(pref_q)
         
-        if industry:
-            queryset = queryset.filter(
-                user__resumes__experiences__industry=industry
-            )
-        if industries:
-            queryset = queryset.filter(
-                user__resumes__experiences__industry__in=industries
-            )
+        # 経験業界 or 希望業界
+        if industry or industries or desired_industries:
+            from django.db.models import Q
+            ind_q = Q()
+            if industry:
+                ind_q |= Q(user__resumes__experiences__industry=industry)
+            if industries:
+                ind_q |= Q(user__resumes__experiences__industry__in=industries)
+            if desired_industries:
+                if connection.vendor == 'postgresql':
+                    for ind in desired_industries:
+                        ind_q |= Q(user__resumes__desired_industries__contains=[ind])
+                else:
+                    for ind in desired_industries:
+                        ind_q |= Q(user__resumes__desired_industries__icontains=ind)
+            queryset = queryset.filter(ind_q)
 
         # 職種（希望職種）
         if desired_job:

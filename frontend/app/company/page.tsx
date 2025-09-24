@@ -205,11 +205,19 @@ export default function Search() {
     if (form.prefecture_ids) {
       const ids = form.prefecture_ids.split(',').filter((x: string) => x);
       const names = ids.map((id: string) => getPrefectureName(id)).filter(Boolean);
-      if (names.length > 0) params.prefectures = names.join(',');
+      if (names.length > 0) {
+        params.prefectures = names.join(',');
+        // 希望勤務地でも検索（OR条件でサーバー側が評価）
+        params.desired_locations = names.join(',');
+      }
     }
     if (form.industry_ids) {
       const names = getIndustryNames(form.industry_ids);
-      if (names) params.industries = names;
+      if (names) {
+        params.industries = names;
+        // 希望業界でも検索（OR条件でサーバー側が評価）
+        params.desired_industries = names;
+      }
     }
     if (form.job_type_ids) {
       // 職種は名称で曖昧検索する（API v2はdesired_jobをicontains）

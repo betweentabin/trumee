@@ -321,11 +321,31 @@ export interface RegisterCompanyRequest {
 }
 
 export interface SearchSeekersRequest {
+  // キーワード
   keyword?: string;
+
+  // 居住地（単一）/ 複数
   prefecture?: string;
+  prefectures?: string | string[];
+
+  // 経験業界（単一/複数）
   industry?: string;
+  industries?: string | string[];
+
+  // 希望条件（新規）
+  desired_job?: string;
+  desired_locations?: string | string[];
+  desired_industries?: string | string[];
+
+  // 経験年数
   experience_years_min?: number;
   experience_years_max?: number;
+
+  // 希望年収
+  min_salary?: number;
+  max_salary?: number;
+
+  // ページネーション
   page?: number;
   page_size?: number;
 }
