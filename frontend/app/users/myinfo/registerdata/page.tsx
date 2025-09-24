@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useAppSelector } from '@/app/redux/hooks';
 import useAuthV2 from '@/hooks/useAuthV2';
 import ResumeFileUpload from '@/components/resume/resume-file-upload';
-import Leftpage from '@/components/user/page';
+// Left nav is provided by users/layout; do not render it here
 
 export default function RegisterDataPage() {
   const auth = useAppSelector((s) => s.auth);
@@ -48,12 +48,8 @@ export default function RegisterDataPage() {
     <div className="max-w-7xl mx-auto p-6">
       <h1 className="text-2xl font-bold mb-6">登録情報</h1>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        <aside className="lg:col-span-3">
-          <Leftpage />
-        </aside>
-
-        <div className="lg:col-span-9 myinfo-content">
+      {/* Main content only; left nav is rendered by users/layout */}
+      <div className="myinfo-content">
       <div className="bg-white border rounded-2xl p-6 shadow-sm">
         <h2 className="text-lg font-semibold mb-2">登録情報の管理</h2>
         <p className="text-gray-600 mb-6">
@@ -79,7 +75,6 @@ export default function RegisterDataPage() {
               )}
             </div>
           ))}
-        </div>
       </div>
 
       {/* 履歴書（ファイル）アップロード */}

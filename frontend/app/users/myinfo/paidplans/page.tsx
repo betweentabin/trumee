@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Leftpage from '@/components/user/page';
+// Left nav is provided by users/layout; do not render it here
 import useAuthV2 from '@/hooks/useAuthV2';
 import { getAccessToken, getAuthHeaders } from '@/utils/auth';
 import { plansByRole, PlanTier, PlanDef } from '@/config/plans';
@@ -195,14 +195,8 @@ export default function UserPaidPlansPage() {
           </ol>
         </nav>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* Left navigation */}
-          <aside className="lg:col-span-3">
-            <Leftpage />
-          </aside>
-
-          {/* Main content */}
-          <div className="lg:col-span-9 myinfo-content">
+        {/* Main content only; left nav is rendered by users/layout */}
+        <div className="myinfo-content">
             <div className="mb-6">
               <h1 className="text-3xl font-bold text-gray-900">有料プラン</h1>
               <p className="mt-2 text-gray-600">
@@ -347,7 +341,6 @@ export default function UserPaidPlansPage() {
                 )}
               </button>
             </div>
-          </div>
         </div>
       </div>
       {/* Hide any duplicated inline left menu if rendered inside content by other wrappers */}

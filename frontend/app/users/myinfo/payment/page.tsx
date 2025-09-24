@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import Leftpage from '@/components/user/page';
+// Left nav is provided by users/layout; do not render it here
 import { FaLock } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 import useAuthV2 from '@/hooks/useAuthV2';
@@ -69,12 +69,8 @@ export default function UserPaymentPage() {
           <p className="text-gray-600 mt-2">クレジットカード情報を管理します</p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          <aside className="lg:col-span-3">
-            <Leftpage />
-          </aside>
-
-          <div className="lg:col-span-9 myinfo-content">
+        {/* Main content only; left nav is rendered by users/layout */}
+        <div className="myinfo-content">
         <div className="bg-white rounded-lg shadow-md p-6">
           <h2 className="text-xl font-semibold mb-4">お支払いの管理</h2>
           <p className="text-gray-700 mb-6">クレジットカード情報は当サイトでは保存しません。Stripeの安全なチェックアウトで決済・管理します。</p>
@@ -105,7 +101,6 @@ export default function UserPaymentPage() {
               <span>不正利用防止のため、定期的にセキュリティチェックを実施しています</span>
             </li>
           </ul>
-        </div>
         </div>
       </div>
     </div>

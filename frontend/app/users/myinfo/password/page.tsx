@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import useAuthV2 from '@/hooks/useAuthV2';
 import { getAccessToken } from '@/utils/auth';
-import Leftpage from '@/components/user/page';
+// Left nav is provided by users/layout; do not render it here
 
 export default function UserPasswordPage() {
   const router = useRouter();
@@ -64,14 +64,8 @@ export default function UserPasswordPage() {
           </ol>
         </nav>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* Left navigation */}
-          <aside className="lg:col-span-3">
-            <Leftpage />
-          </aside>
-
-          {/* Main content */}
-          <div className="lg:col-span-9 myinfo-content">
+        {/* Main content only; left nav is rendered by users/layout */}
+        <div className="myinfo-content">
             <div className="mb-6">
               <h1 className="text-3xl font-bold text-gray-900">パスワードの変更</h1>
               <p className="mt-2 text-gray-600">登録したパスワードの変更ができます。</p>
@@ -107,7 +101,6 @@ export default function UserPasswordPage() {
                 >{loading ? '保存中…' : '保存する'}</button>
               </div>
             </form>
-          </div>
         </div>
       </div>
       {/* Hide any duplicated inline left menu if rendered inside content by other wrappers */}
