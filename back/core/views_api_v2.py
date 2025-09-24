@@ -1159,10 +1159,12 @@ def advice_messages(request):
             counterpart = resolve_counterpart(request.user, user_id)
             if counterpart is None:
                 return Response({'error': 'counterpart_not_found'}, status=status.HTTP_404_NOT_FOUND)
-            qs = Message.objects.filter(
-                Q(sender=request.user, receiver=counterpart) |
-                Q(sender=counterpart, receiver=request.user),
-            ).filter(subject=SUBJECT).order_by('created_at')
+            # 管理者は「自分宛てのもの」に限定せず、対象ユーザー×全管理者のやり取りを一覧できるようにする。
+            # これにより、最初の管理者以外が閲覧してもメッセージが見える。
+            qs = Message.objects.filter(subject=SUBJECT).filter(
+                Q(sender=counterpart, receiver__is_staff=True) |
+                Q(sender__is_staff=True, receiver=counterpart)
+            ).order_by('created_at')
             return Response(MessageSerializer(qs, many=True).data)
 
         # 一般ユーザー: どの管理者とのやり取りでも一覧できるよう、相手を限定しない
