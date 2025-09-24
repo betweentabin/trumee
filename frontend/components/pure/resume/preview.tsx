@@ -37,7 +37,6 @@ const ResumePreview: React.FC<PreviewProps> = ({ userName, jobhistoryList, formV
           <h2 className="text-2xl font-semibold">職務経歴書</h2>
           <div className="text-right text-sm leading-6">
             <div>{ymd}</div>
-            {userName && <div>氏名: {userName}</div>}
           </div>
         </div>
 
@@ -49,7 +48,7 @@ const ResumePreview: React.FC<PreviewProps> = ({ userName, jobhistoryList, formV
           </div>
         )}
 
-        <h3 className="text-lg font-semibold mb-4">職務内容</h3>
+        <h3 className="text-lg font-semibold mb-4">会社の経歴・実績</h3>
 
         {jobhistoryList.length === 0 && (
           <div className="text-gray-500">職務経歴が未入力です。</div>
@@ -103,40 +102,7 @@ const ResumePreview: React.FC<PreviewProps> = ({ userName, jobhistoryList, formV
           </div>
         )}
 
-        {/* スキル */}
-        {(() => {
-          const list = Array.isArray(skills)
-            ? skills
-            : typeof skills === 'string'
-              ? skills.split(/\n|,/)?.map(s => s.trim()).filter(Boolean)
-              : [];
-          if (!list || list.length === 0) return null;
-          return (
-            <div className="mb-6">
-              <h3 className="text-lg font-semibold mb-2">スキル</h3>
-              <div className="flex flex-wrap gap-2">
-                {list.map((s, i) => (
-                  <span key={i} className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">{s}</span>
-                ))}
-              </div>
-            </div>
-          );
-        })()}
-
-        {/* 学歴 */}
-        {Array.isArray(education) && education.length > 0 && (
-          <div className="mb-2">
-            <h3 className="text-lg font-semibold mb-2">学歴</h3>
-            {education.map((e, i) => (
-              <div key={i} className="text-sm text-gray-800 mb-1">
-                <span className="font-medium">{e.school || ''}</span>
-                {e.degree ? ` / ${e.degree}` : ''}
-                {e.field ? ` / ${e.field}` : ''}
-                {e.graduationDate ? ` / ${e.graduationDate}` : ''}
-              </div>
-            ))}
-          </div>
-        )}
+        {/* スキル・学歴は職務経歴書の必須構成から外すため非表示 */}
       </div>
     </div>
   );

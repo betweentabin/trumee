@@ -24,7 +24,7 @@ export default function RegisterDataPage() {
       },
       {
         id: 'history',
-        label: '職務経歴書の記載',
+        label: '職務経歴書',
         description: '職歴・学歴・スキルを登録してPRにつなげましょう。',
         href: hasUserContext ? `/users/${userId}/experience` : undefined,
       },
