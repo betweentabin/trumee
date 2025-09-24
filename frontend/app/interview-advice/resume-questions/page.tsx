@@ -4,11 +4,13 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAppSelector } from '@/app/redux/hooks';
 import { FaQuestionCircle, FaClipboardList, FaCheckDouble, FaExclamationCircle } from 'react-icons/fa';
+import { getAuthHeaders } from '@/utils/auth';
 
 export default function ResumeQuestionsPage() {
   const router = useRouter();
   const authState = useAppSelector(state => state.auth);
   const [selectedCategory, setSelectedCategory] = useState('experience');
+  const [derived, setDerived] = useState<string[]>([]);
 
   useEffect(() => {
     const hasStoredToken = typeof window !== 'undefined' && !!localStorage.getItem('drf_token_v2');
@@ -75,6 +77,31 @@ export default function ResumeQuestionsPage() {
     ]
   };
 
+  // 履歴書の内容から想定質問を自動生成
+  useEffect(() => {
+    (async () => {
+      try {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+        const res = await fetch(`${apiUrl}/api/v2/resumes/`, { headers: { ...getAuthHeaders() } });
+        if (!res.ok) return;
+        const data = await res.json();
+        const list = data.results || data || [];
+        const r = list.find((x: any) => x.is_active) || list[0];
+        if (!r) return;
+        const extra = r?.extra_data || {};
+        const experiences = Array.isArray(extra.workExperiences) ? extra.workExperiences : [];
+        const qs: string[] = [];
+        experiences.forEach((e: any) => {
+          if (e?.company) qs.push(`${e.company}での役割と主な成果は？`);
+          if (e?.position) qs.push(`${e.position}として直面した課題と解決方法は？`);
+          if (Array.isArray(e?.achievements) && e.achievements.filter(Boolean).length) qs.push('実績のうち最も誇れるものは？数値で説明できますか？');
+        });
+        if (r?.skills) qs.push('履歴書のスキル欄で強調したいスキルと裏付けとなる事例は？');
+        setDerived(qs.slice(0, 8));
+      } catch { /* ignore */ }
+    })();
+  }, []);
+
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
@@ -85,6 +112,15 @@ export default function ResumeQuestionsPage() {
           </h1>
           <p className="text-gray-600 mt-2">面接でよく聞かれる職務経歴書に関する質問と回答例</p>
         </div>
+
+        {derived.length > 0 && (
+          <div className="mb-8 bg-white rounded-lg shadow-md p-6">
+            <h2 className="text-lg font-semibold mb-3">履歴書からの想定質問</h2>
+            <ul className="list-disc pl-5 space-y-2 text-gray-700">
+              {derived.map((q, i) => (<li key={i}>{q}</li>))}
+            </ul>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           <div className="lg:col-span-1">

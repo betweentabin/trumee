@@ -160,7 +160,22 @@ export default function ResumeReviewPage() {
               <div className="mx-auto max-w-3xl">
                 {(() => {
                   const d = buildPreviewFromResume(selected);
-                  return <ResumePreview userName={d.userName} jobhistoryList={d.jobhistoryList} formValues={d.formValues} />;
+                  const extra = selected?.extra_data || {};
+                  const skillsArray = (selected?.skills || '')
+                    .split('\n')
+                    .map((s: string) => s.trim())
+                    .filter(Boolean);
+                  return (
+                    <ResumePreview
+                      userName={d.userName}
+                      jobhistoryList={d.jobhistoryList}
+                      formValues={d.formValues}
+                      jobSummary={(extra as any)?.jobSummary || ''}
+                      selfPR={selected?.self_pr || ''}
+                      skills={skillsArray}
+                      education={Array.isArray((extra as any)?.education) ? (extra as any).education : []}
+                    />
+                  );
                 })()}
               </div>
             ) : (

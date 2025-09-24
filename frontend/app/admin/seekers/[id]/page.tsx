@@ -328,6 +328,10 @@ export default function AdminSeekerDetailPage() {
                       userName={resumePreview.userName || user?.full_name}
                       jobhistoryList={resumePreview.jobhistoryList}
                       formValues={resumePreview.formValues}
+                      jobSummary={resumePreview.jobSummary}
+                      selfPR={resumePreview.selfPR}
+                      skills={resumePreview.skills}
+                      education={resumePreview.education}
                       className="w-full max-w-3xl mx-auto"
                     />
                   </div>

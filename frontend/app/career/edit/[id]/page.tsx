@@ -159,6 +159,7 @@ export default function EditResumePage() {
           address: resumeData.address,
           birthDate: resumeData.birthDate,
           desiredSalary: resumeData.desiredSalary,
+          jobSummary: resumeData.jobSummary || '',
           workExperiences: resumeData.workExperiences,
           education: resumeData.education,
           certifications: resumeData.certifications,
@@ -212,7 +213,7 @@ export default function EditResumePage() {
   // 左メニュー（マイページ項目）は非表示に変更
 
   const StepIndicator = () => {
-    const steps = ['基本情報', '職歴', '学歴', 'スキル', '自己PR', '完了'];
+  const steps = ['基本情報', '職歴', '学歴', 'スキル', '職務要約', '完了'];
     return (
       <div className="mb-8">
         <div className="flex items-center justify-between">
@@ -429,56 +430,15 @@ export default function EditResumePage() {
       case 5:
         return (
           <div className="space-y-6">
-            <h2 className="text-2xl font-bold mb-6">職務要約（プレビュー）</h2>
-            <div className="bg-gray-50 border rounded-lg p-6 space-y-3">
-              <div><span className="text-xs text-gray-500">タイトル</span><div>{resumeData.title || '（未設定）'}</div></div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div><span className="text-xs text-gray-500">氏名</span><div>{resumeData.fullName || '（未設定）'}</div></div>
-                <div><span className="text-xs text-gray-500">メール</span><div>{resumeData.email || '（未設定）'}</div></div>
-                <div><span className="text-xs text-gray-500">電話</span><div>{resumeData.phone || '（未設定）'}</div></div>
-                <div><span className="text-xs text-gray-500">住所</span><div>{resumeData.address || '（未設定）'}</div></div>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div><span className="text-xs text-gray-500">希望職種</span><div>{resumeData.desiredPosition || '（未設定）'}</div></div>
-                <div><span className="text-xs text-gray-500">希望年収</span><div>{resumeData.desiredSalary || '（未設定）'}</div></div>
-              </div>
-              <div>
-                <span className="text-xs text-gray-500">自己PR</span>
-                <div className="whitespace-pre-wrap">{resumeData.summary || '（未入力）'}</div>
-              </div>
-              <div>
-                <span className="text-xs text-gray-500">職務要約</span>
-                <div className="whitespace-pre-wrap">{resumeData.jobSummary || '（未入力）'}</div>
-              </div>
-              <div>
-                <span className="text-xs text-gray-500">職歴</span>
-                <div className="space-y-2 mt-1">
-                  {(resumeData.workExperiences || []).map((w, i) => (
-                    <div key={i} className="border rounded p-2">
-                      <div className="font-medium">{w.company || '会社名未設定'} / {w.position || '役職未設定'}</div>
-                      <div className="text-xs text-gray-500">{w.startDate || '----/--'} ~ {w.endDate || '----/--'}</div>
-                      {w.description && <div className="mt-1 text-sm whitespace-pre-wrap">{w.description}</div>}
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <span className="text-xs text-gray-500">学歴</span>
-                <div className="space-y-2 mt-1">
-                  {(resumeData.education || []).map((e, i) => (
-                    <div key={i} className="border rounded p-2">
-                      <div className="font-medium">{e.school || '学校名未設定'} / {e.degree || '学位未設定'}</div>
-                      <div className="text-xs text-gray-500">{e.field || '専攻未設定'} / {e.graduationDate || '卒業年月未設定'}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <span className="text-xs text-gray-500">スキル</span>
-                <div className="mt-1 text-sm">{(resumeData.skills || []).filter(Boolean).join(', ') || '（未入力）'}</div>
-              </div>
-            </div>
-            <div className="text-sm text-gray-500">この内容で「保存」を押すと反映されます。</div>
+            <h2 className="text-2xl font-semibold mb-4">職務要約</h2>
+            <textarea
+              className="w-full p-4 border rounded-lg min-h-48 focus:ring-2 focus:ring-primary-600 focus:border-transparent"
+              placeholder="これまでのご経験を要約して記載してください（例：◯年の開発経験／主要実績・得意領域 など）"
+              value={resumeData.jobSummary || ''}
+              onChange={(e) => setResumeData(prev => ({ ...prev, jobSummary: e.target.value }))}
+              rows={8}
+            />
+            <div className="text-sm text-gray-500">プレビューは印刷画面で確認できます（氏名や住所などの個人情報は載りません）。</div>
           </div>
         );
 

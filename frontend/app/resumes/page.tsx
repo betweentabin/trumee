@@ -148,7 +148,7 @@ export default function ResumesPage() {
             </p>
           </div>
           <Link
-            href="/resumes/new"
+            href="/career/create"
             className="inline-flex items-center px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors"
           >
             <FaPlus className="mr-2" />
@@ -167,7 +167,7 @@ export default function ResumesPage() {
               履歴書を作成して、企業へのアピールを始めましょう
             </p>
             <Link
-              href="/resumes/new"
+              href="/career/create"
               className="inline-flex items-center px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors"
             >
               <FaPlus className="mr-2" />
@@ -223,7 +223,7 @@ export default function ResumesPage() {
                       詳細
                     </Link>
                     <Link
-                      href={`/resumes/${resume.id}/edit`}
+                      href={`/career/edit/${resume.id}`}
                       className="flex-1 inline-flex items-center justify-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
                     >
                       <FaEdit className="mr-1" />

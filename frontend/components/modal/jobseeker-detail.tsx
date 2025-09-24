@@ -188,6 +188,10 @@ const JobSeekerDetailModal = ({
                 userName={userName}
                 jobhistoryList={resumeData.jobhistoryList}
                 formValues={resumeData.formValues}
+                jobSummary={(detail?.resume as any)?.extra_data?.jobSummary}
+                selfPR={(detail?.resume as any)?.self_pr}
+                skills={(detail?.resume as any)?.skills}
+                education={Array.isArray((detail?.resume as any)?.extra_data?.education) ? (detail?.resume as any)?.extra_data?.education : []}
                 className="p-2 md:p-4"
               />
             </div>

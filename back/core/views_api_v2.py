@@ -293,6 +293,19 @@ def admin_user_overview(request, user_id):
 
     return Response(data, status=status.HTTP_200_OK)
 
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def admin_user_resumes(request, user_id):
+    """管理者用: 指定ユーザーの履歴書一覧を取得"""
+    if not request.user.is_staff:
+        return Response({'detail': '管理者権限が必要です'}, status=status.HTTP_403_FORBIDDEN)
+
+    target = get_object_or_404(User, id=user_id)
+    resumes_qs = Resume.objects.filter(user=target).order_by('-updated_at')
+    data = ResumeSerializer(resumes_qs, many=True).data
+    return Response(data, status=status.HTTP_200_OK)
+
 # ============================================================================
 # 認証関連エンドポイント
 # ============================================================================

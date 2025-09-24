@@ -14,7 +14,7 @@ export default function Leftpage() {
   })();
 
   const menuItems = [
-    { label: '職務経歴書を作成する', href: userIdFromPath ? `/users/${userIdFromPath}/career/preview` : '/career/preview' },
+    { label: '職務経歴書を作成する', href: userIdFromPath ? `/users/${userIdFromPath}/career/create` : '/career/create' },
     { label: '印刷する', href: userIdFromPath ? `/users/${userIdFromPath}/career/print` : '/career/print' },
   ];
 

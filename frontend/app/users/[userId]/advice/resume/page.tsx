@@ -97,6 +97,10 @@ export default function ResumeAdvicePage() {
               userName={resumePreview.userName}
               jobhistoryList={resumePreview.jobhistoryList}
               formValues={resumePreview.formValues}
+              jobSummary={resumePreview.jobSummary}
+              selfPR={resumePreview.selfPR}
+              skills={resumePreview.skills}
+              education={resumePreview.education}
               className="w-full max-w-3xl mx-auto mb-8"
             />
           </div>

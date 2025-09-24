@@ -379,7 +379,7 @@ export default function SeekerDashboard() {
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Link
-              href="/resumes/new"
+              href="/career/create"
               className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-[#FF733E] hover:bg-[#e9632e] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#FF733E]"
             >
               新しい履歴書を作成

@@ -5,6 +5,10 @@ export type ResumePreviewData = {
   jobhistoryList: string[];
   formValues: Record<string, any>;
   resumeId?: string;
+  jobSummary?: string;
+  selfPR?: string;
+  skills?: string[];
+  education?: Array<{ school?: string; degree?: string; field?: string; graduationDate?: string }>;
 };
 
 export const emptyResumePreview: ResumePreviewData = {
@@ -12,6 +16,10 @@ export const emptyResumePreview: ResumePreviewData = {
   jobhistoryList: [],
   formValues: {},
   resumeId: undefined,
+  jobSummary: undefined,
+  selfPR: undefined,
+  skills: undefined,
+  education: undefined,
 };
 
 type FetchResumePreviewParams = {
@@ -234,6 +242,12 @@ export const fetchResumePreview = async ({ userId, token, forAdmin, forOwner }: 
       jobhistoryList,
       formValues,
       resumeId: resume?.id ? String(resume.id) : undefined,
+      jobSummary: toStringSafe(resume?.extra_data?.jobSummary) || undefined,
+      selfPR: toStringSafe(resume?.self_pr) || undefined,
+      skills: (toStringSafe(resume?.skills) || '')
+        .split(/\n|,/)?.map((s) => s.trim())
+        .filter(Boolean),
+      education: Array.isArray(resume?.extra_data?.education) ? resume.extra_data.education : undefined,
     };
   } catch (err) {
     console.warn('Failed to load resume preview data', err);

@@ -40,6 +40,7 @@ urlpatterns = [
     path('admin/seekers/', views_api_v2.admin_seekers_v2, name='admin-seekers-v2'),
     path('admin/users/', views_api_v2.admin_users_v2, name='admin-users-v2'),
     path('admin/users/<uuid:user_id>/overview/', views_api_v2.admin_user_overview, name='admin-user-overview'),
+    path('admin/users/<uuid:user_id>/resumes/', views_api_v2.admin_user_resumes, name='admin-user-resumes'),
     
     # プロフィール
     path('profile/me/', views_api_v2.user_profile_v2, name='user-profile-v2'),

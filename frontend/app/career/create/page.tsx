@@ -170,6 +170,8 @@ export default function CreateResumePage() {
           address: resumeData.address,
           birthDate: resumeData.birthDate,
           desiredSalary: resumeData.desiredSalary,
+          // 職務要約を保存（プレビュー/印刷で最上部に表示）
+          jobSummary: resumeData.jobSummary || '',
           workExperiences: resumeData.workExperiences,
           education: resumeData.education,
           certifications: resumeData.certifications,

@@ -25,6 +25,11 @@ const ResumeEditingTab = ({
         userName={userName}
         jobhistoryList={jobhistoryList}
         formValues={formValues}
+        // 追加情報（存在すれば描画）
+        jobSummary={seeker?.resume?.extra_data?.jobSummary}
+        selfPR={seeker?.resume?.self_pr}
+        skills={seeker?.resume?.skills}
+        education={Array.isArray(seeker?.resume?.extra_data?.education) ? seeker?.resume?.extra_data?.education : []}
         className="w-full max-w-3xl mx-auto mb-8"
       />
     </div>

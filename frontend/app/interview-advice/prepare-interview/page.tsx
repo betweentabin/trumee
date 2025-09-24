@@ -27,6 +27,8 @@ export default function PrepareInterviewPage() {
   const [thread, setThread] = useState<ThreadMsg[]>([]);
   const [threadInput, setThreadInput] = useState("");
   const endRef = useRef<HTMLDivElement | null>(null);
+  const [derivedQs, setDerivedQs] = useState<string[]>([]);
+  const [answers, setAnswers] = useState<Record<string, string>>({});
 
   const token = useMemo(
     () => (typeof window !== "undefined" ? localStorage.getItem("drf_token_v2") || "" : ""),
@@ -60,7 +62,20 @@ export default function PrepareInterviewPage() {
     const run = async () => {
       try {
         const list = await apiClient.getResumes();
-        setHasResume((list || []).length > 0);
+        const has = (list || []).length > 0;
+        setHasResume(has);
+        if (has) {
+          const r = list.find((x: any) => x.is_active) || list[0];
+          const extra = (r?.extra_data || {}) as any;
+          const experiences = Array.isArray(extra?.workExperiences) ? extra.workExperiences : [];
+          const qs: string[] = [];
+          experiences.forEach((e: any) => {
+            if (e?.company) qs.push(`${e.company}での役割と主な成果は？`);
+            if (e?.position) qs.push(`${e.position}として最も難しかった課題と対応は？`);
+          });
+          if ((r?.skills || '').trim()) qs.push('履歴書のスキルから、強調したい3点は？それぞれ裏付けは？');
+          setDerivedQs(qs.slice(0, 6));
+        }
       } catch {
         setHasResume(false);
       }
@@ -192,6 +207,43 @@ export default function PrepareInterviewPage() {
                 ここでは想定される質問とあなたの職務経歴書をベースに、回答の添削やアドバイスを受けることができます。
               </p>
             </div>
+
+            {/* 一般的な想定質問（自動生成のベース） */}
+            <section className="bg-white rounded-lg shadow-sm border">
+              <div className="px-4 py-3 border-b font-semibold">一般的な想定質問</div>
+              <div className="p-4 space-y-4">
+                {[
+                  { id: 'q1', text: '自己紹介をお願いします（1-2分）' },
+                  { id: 'q2', text: '志望動機を教えてください' },
+                  { id: 'q3', text: 'あなたの強み・弱みは何ですか？' },
+                  { id: 'q4', text: '困難を乗り越えた経験は？' },
+                  { id: 'q5', text: '5年後のキャリアビジョンは？' },
+                ].map((q) => (
+                  <div key={q.id} className="space-y-2">
+                    <div className="text-sm font-medium text-gray-800">• {q.text}</div>
+                    <textarea
+                      className="w-full border rounded-md p-2 text-sm"
+                      placeholder="あなたの回答を入力してください"
+                      value={answers[q.id] || ''}
+                      onChange={(e)=>setAnswers(prev=>({ ...prev, [q.id]: e.target.value }))}
+                      rows={3}
+                    />
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            {/* 履歴書からの想定質問 */}
+            {derivedQs.length > 0 && (
+              <section className="bg-white rounded-lg shadow-sm border">
+                <div className="px-4 py-3 border-b font-semibold">履歴書からの想定質問</div>
+                <div className="p-4">
+                  <ul className="list-disc pl-5 space-y-2 text-gray-700">
+                    {derivedQs.map((q, i) => (<li key={i}>{q}</li>))}
+                  </ul>
+                </div>
+              </section>
+            )}
 
             {hasResume === false && (
               <div className="bg-white border rounded-lg p-6">

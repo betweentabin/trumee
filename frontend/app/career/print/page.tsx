@@ -108,6 +108,20 @@ export default function PrintPage() {
       .map((s) => s.trim())
       .filter(Boolean);
 
+    // Prefer extra_data.workExperiences but fall back to API serializer experiences
+    const mappedExperiences = Array.isArray((extra as any).workExperiences)
+      ? (extra as any).workExperiences
+      : Array.isArray((resume as any).experiences)
+        ? (resume as any).experiences.map((e: any) => ({
+            company: e.company,
+            position: e.position,
+            startDate: e.period_from || e.start_date || e.startDate,
+            endDate: e.period_to || e.end_date || e.endDate,
+            description: e.tasks || e.description || '',
+            achievements: Array.isArray(e.achievements) ? e.achievements : [],
+          }))
+        : [];
+
     return {
       step1: {
         name: extra.fullName || '',
@@ -120,7 +134,7 @@ export default function PrintPage() {
         education: Array.isArray(extra.education) ? extra.education : [],
       },
       step3: {
-        experience: Array.isArray(extra.workExperiences) ? extra.workExperiences : [],
+        experience: mappedExperiences,
       },
       step4: {
         skills: skillsArray,
@@ -359,37 +373,49 @@ export default function PrintPage() {
                     );
                   })()}
 
-                  {selectedResume.extra_data?.workExperiences && selectedResume.extra_data.workExperiences.length > 0 && (
-                    <section className="mb-6">
-                      <h2 className="text-lg font-semibold border-b-2 border-secondary-400 pb-2 mb-3">
-                        職歴
-                      </h2>
-                      {selectedResume.extra_data.workExperiences.map((exp: any, index: number) => (
-                        <div key={index} className="mb-4 pb-4 border-b last:border-b-0">
-                          <div className="flex justify-between mb-2">
-                            <h3 className="font-semibold">{exp.company}</h3>
-                            <span className="text-gray-600 text-sm">
-                              {exp.startDate} 〜 {exp.endDate || '現在'}
-                            </span>
-                          </div>
-                          <p className="font-medium mb-1">{exp.position}</p>
-                          {exp.description && (
-                            <p className="text-gray-700 whitespace-pre-line">{exp.description}</p>
-                          )}
-                          {Array.isArray(exp.achievements) && exp.achievements.filter(Boolean).length > 0 && (
-                            <div className="mt-2">
-                              <div className="font-semibold">実績</div>
-                              <ul className="list-disc pl-5 space-y-1">
-                                {exp.achievements.filter(Boolean).map((a: string, i: number) => (
-                                  <li key={i} className="text-gray-700 whitespace-pre-line">{a}</li>
-                                ))}
-                              </ul>
+                  {(() => {
+                    const extra = selectedResume.extra_data as any;
+                    const experiences = Array.isArray(extra?.workExperiences)
+                      ? extra.workExperiences
+                      : Array.isArray((selectedResume as any).experiences)
+                        ? (selectedResume as any).experiences.map((e: any) => ({
+                            company: e.company,
+                            position: e.position,
+                            startDate: e.period_from || e.start_date || e.startDate,
+                            endDate: e.period_to || e.end_date || e.endDate,
+                            description: e.tasks || e.description || '',
+                            achievements: Array.isArray(e.achievements) ? e.achievements : [],
+                          }))
+                        : [];
+                    if (!experiences.length) return null;
+                    return (
+                      <section className="mb-6">
+                        <h2 className="text-lg font-semibold border-b-2 border-secondary-400 pb-2 mb-3">職歴</h2>
+                        {experiences.map((exp: any, index: number) => (
+                          <div key={index} className="mb-4 pb-4 border-b last:border-b-0">
+                            <div className="flex justify-between mb-2">
+                              <h3 className="font-semibold">{exp.company}</h3>
+                              <span className="text-gray-600 text-sm">{exp.startDate} 〜 {exp.endDate || '現在'}</span>
                             </div>
-                          )}
-                        </div>
-                      ))}
-                    </section>
-                  )}
+                            {exp.position && <p className="font-medium mb-1">{exp.position}</p>}
+                            {exp.description && (
+                              <p className="text-gray-700 whitespace-pre-line">{exp.description}</p>
+                            )}
+                            {Array.isArray(exp.achievements) && exp.achievements.filter(Boolean).length > 0 && (
+                              <div className="mt-2">
+                                <div className="font-semibold">実績</div>
+                                <ul className="list-disc pl-5 space-y-1">
+                                  {exp.achievements.filter(Boolean).map((a: string, i: number) => (
+                                    <li key={i} className="text-gray-700 whitespace-pre-line">{a}</li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </section>
+                    );
+                  })()}
 
                   {/* 自己PR（最後尾） */}
                   {selectedResume.self_pr && (
@@ -398,6 +424,64 @@ export default function PrintPage() {
                       <p className="whitespace-pre-line">{selectedResume.self_pr}</p>
                     </section>
                   )}
+
+                  {/* 追加情報（任意表示） */}
+                  {(() => {
+                    const extra = selectedResume.extra_data || {};
+                    const education = Array.isArray((extra as any).education) ? (extra as any).education : [];
+                    const skills = (selectedResume.skills || '').split('\n').map((s) => s.trim()).filter(Boolean);
+                    const certs = Array.isArray((extra as any).certifications) ? (extra as any).certifications : [];
+                    const langs = Array.isArray((extra as any).languages) ? (extra as any).languages : [];
+
+                    return (
+                      <>
+                        {education.length > 0 && (
+                          <section className="mt-8">
+                            <h2 className="text-lg font-semibold border-b-2 border-secondary-400 pb-2 mb-3">学歴</h2>
+                            {education.map((e: any, i: number) => (
+                              <div key={i} className="mb-2">
+                                <div className="font-medium">{e.school} {e.degree ? ` / ${e.degree}` : ''}</div>
+                                <div className="text-sm text-gray-600">{e.field} {e.graduationDate ? ` / ${e.graduationDate}` : ''}</div>
+                              </div>
+                            ))}
+                          </section>
+                        )}
+
+                        {skills.length > 0 && (
+                          <section className="mt-8">
+                            <h2 className="text-lg font-semibold border-b-2 border-secondary-400 pb-2 mb-3">スキル</h2>
+                            <div className="flex flex-wrap gap-2">
+                              {skills.map((s, i) => (
+                                <span key={i} className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">{s}</span>
+                              ))}
+                            </div>
+                          </section>
+                        )}
+
+                        {certs.length > 0 && (
+                          <section className="mt-8">
+                            <h2 className="text-lg font-semibold border-b-2 border-secondary-400 pb-2 mb-3">資格</h2>
+                            <ul className="list-disc pl-5 space-y-1">
+                              {certs.map((c: any, i: number) => (
+                                <li key={i}>{typeof c === 'string' ? c : c?.name}</li>
+                              ))}
+                            </ul>
+                          </section>
+                        )}
+
+                        {langs.length > 0 && (
+                          <section className="mt-8">
+                            <h2 className="text-lg font-semibold border-b-2 border-secondary-400 pb-2 mb-3">言語</h2>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                              {langs.map((l: any, i: number) => (
+                                <div key={i} className="text-sm text-gray-700">{l.language} {l.level ? `- ${l.level}` : ''}</div>
+                              ))}
+                            </div>
+                          </section>
+                        )}
+                      </>
+                    );
+                  })()}
                 </div>
               </div>
             ) : (

@@ -9,6 +9,11 @@ type PreviewProps = {
   // e.g. { job1: { company, capital, work_content, since, to, people, duty }, ... }
   formValues: Record<string, any>;
   className?: string;
+  // Optional extra sections
+  jobSummary?: string;
+  selfPR?: string;
+  skills?: string[] | string;
+  education?: Array<{ school?: string; degree?: string; field?: string; graduationDate?: string }>;
 };
 
 const PreviewRow: React.FC<{ left: React.ReactNode; right: React.ReactNode }>
@@ -19,7 +24,7 @@ const PreviewRow: React.FC<{ left: React.ReactNode; right: React.ReactNode }>
   </tr>
 );
 
-const ResumePreview: React.FC<PreviewProps> = ({ userName, jobhistoryList, formValues, className }) => {
+const ResumePreview: React.FC<PreviewProps> = ({ userName, jobhistoryList, formValues, className, jobSummary, selfPR, skills, education }) => {
   const today = new Date();
   const ymd = `${today.getFullYear()}年${String(today.getMonth()+1).padStart(2,'0')}月${String(today.getDate()).padStart(2,'0')}日現在`;
 
@@ -35,6 +40,14 @@ const ResumePreview: React.FC<PreviewProps> = ({ userName, jobhistoryList, formV
             {userName && <div>氏名: {userName}</div>}
           </div>
         </div>
+
+        {/* 職務要約 */}
+        {(jobSummary || selfPR) && (
+          <div className="mb-6">
+            <h3 className="text-lg font-semibold mb-2">職務要約</h3>
+            <div className="whitespace-pre-wrap text-sm text-gray-800">{jobSummary || selfPR}</div>
+          </div>
+        )}
 
         <h3 className="text-lg font-semibold mb-4">職務内容</h3>
 
@@ -81,6 +94,49 @@ const ResumePreview: React.FC<PreviewProps> = ({ userName, jobhistoryList, formV
             </div>
           );
         })}
+
+        {/* 自己PR */}
+        {selfPR && (
+          <div className="mb-6">
+            <h3 className="text-lg font-semibold mb-2">自己PR</h3>
+            <div className="whitespace-pre-wrap text-sm text-gray-800">{selfPR}</div>
+          </div>
+        )}
+
+        {/* スキル */}
+        {(() => {
+          const list = Array.isArray(skills)
+            ? skills
+            : typeof skills === 'string'
+              ? skills.split(/\n|,/)?.map(s => s.trim()).filter(Boolean)
+              : [];
+          if (!list || list.length === 0) return null;
+          return (
+            <div className="mb-6">
+              <h3 className="text-lg font-semibold mb-2">スキル</h3>
+              <div className="flex flex-wrap gap-2">
+                {list.map((s, i) => (
+                  <span key={i} className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">{s}</span>
+                ))}
+              </div>
+            </div>
+          );
+        })()}
+
+        {/* 学歴 */}
+        {Array.isArray(education) && education.length > 0 && (
+          <div className="mb-2">
+            <h3 className="text-lg font-semibold mb-2">学歴</h3>
+            {education.map((e, i) => (
+              <div key={i} className="text-sm text-gray-800 mb-1">
+                <span className="font-medium">{e.school || ''}</span>
+                {e.degree ? ` / ${e.degree}` : ''}
+                {e.field ? ` / ${e.field}` : ''}
+                {e.graduationDate ? ` / ${e.graduationDate}` : ''}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
