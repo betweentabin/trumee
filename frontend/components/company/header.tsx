@@ -15,7 +15,8 @@ const Header = () => {
   const router = useRouter();
   const { currentUser } = useAuthV2();
   const mypage = () => {
-    router.push('/companyinfo');
+    const to = currentUser?.id ? `/company/${currentUser.id}/companyinfo` : '/companyinfo';
+    router.push(to);
   }
   const logout = () => {
     clearAuthData(); // Clear all auth data

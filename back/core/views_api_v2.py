@@ -1252,6 +1252,67 @@ def advice_mark_read(request):
     return advice_notifications(request)
 
 
+# ============================================================================
+# 企業 ↔ 求職者 メッセージAPI（既存 Message モデルを利用）
+# ============================================================================
+@api_view(['GET', 'POST'])
+@permission_classes([IsAuthenticated])
+def company_messages(request):
+    from django.db.models import Q
+
+    # 企業ユーザーのみ（is_staffは除外）
+    if getattr(request.user, 'role', None) != 'company':
+        return Response({'error': 'company_only'}, status=status.HTTP_403_FORBIDDEN)
+
+    DEFAULT_SUBJECT = 'company'
+    SUBJECT = (request.GET.get('subject') if request.method == 'GET' else (request.data or {}).get('subject')) or DEFAULT_SUBJECT
+
+    if request.method == 'GET':
+        seeker_id = request.GET.get('user_id')
+        if not seeker_id:
+            return Response({'error': 'user_id_required'}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            seeker = User.objects.get(id=seeker_id)
+        except User.DoesNotExist:
+            return Response({'error': 'user_not_found'}, status=status.HTTP_404_NOT_FOUND)
+
+        qs = Message.objects.filter(subject=SUBJECT).filter(
+            Q(sender=request.user, receiver=seeker) | Q(sender=seeker, receiver=request.user)
+        ).order_by('created_at')
+        return Response(MessageSerializer(qs, many=True).data)
+
+    # POST: { user_id, content, scout_id?, application_id?, subject? }
+    data = request.data or {}
+    seeker_id = data.get('user_id')
+    content = (data.get('content') or '').strip()
+    if not seeker_id or not content:
+        return Response({'error': 'user_id_and_content_required'}, status=status.HTTP_400_BAD_REQUEST)
+    try:
+        seeker = User.objects.get(id=seeker_id)
+    except User.DoesNotExist:
+        return Response({'error': 'user_not_found'}, status=status.HTTP_404_NOT_FOUND)
+
+    msg_kwargs = {
+        'sender': request.user,
+        'receiver': seeker,
+        'subject': SUBJECT,
+        'content': content,
+    }
+    if data.get('scout_id'):
+        try:
+            msg_kwargs['scout'] = Scout.objects.get(id=data['scout_id'])
+        except Scout.DoesNotExist:
+            pass
+    if data.get('application_id'):
+        try:
+            msg_kwargs['application'] = Application.objects.get(id=data['application_id'])
+        except Application.DoesNotExist:
+            pass
+
+    msg = Message.objects.create(**msg_kwargs)
+    return Response(MessageSerializer(msg).data, status=status.HTTP_201_CREATED)
+
+
 # ====================================================================
 # ユーザープロフィール公開API（新規追加）
 # ====================================================================

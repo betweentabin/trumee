@@ -167,9 +167,13 @@ export default function SeekersAppliedPage() {
             setShowDetailModal(false);
             setSelectedSeeker(null);
           }}
-          sendMessage={(message: any) => {
-            console.log('Sending message:', message);
-            // TODO: Implement message sending
+          sendMessage={async (payload: any) => {
+            try {
+              await apiClient.sendCompanyMessage(String(selectedSeeker.id), String(payload?.message || ''));
+              toast.success('メッセージを送信しました');
+            } catch (e) {
+              toast.error('メッセージ送信に失敗しました');
+            }
           }}
           onConfirm={() => {
             console.log('Confirmed');

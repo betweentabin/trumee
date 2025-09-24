@@ -9,7 +9,7 @@ interface MenuItem {
   href: string;
 }
 
-const menuItems: MenuItem[] = [
+const baseMenuItems: MenuItem[] = [
   { label: '登録情報の管理設定', href: '/companyinfo' },
   { label: '支払い・プランの管理設定', href: '/companyinfo/payment' },
   { label: '請求書の送付先', href: '/companyinfo/billing' },
@@ -18,7 +18,15 @@ const menuItems: MenuItem[] = [
 
 export default function Left() {
   const pathname = usePathname();
-
+  // preserve company id prefix when path like /company/:id/companyinfo...
+  const companyIdFromPath = (() => {
+    if (!pathname) return null as string | null;
+    const parts = pathname.split('/').filter(Boolean);
+    if (parts[0] === 'company' && parts[1]) return parts[1];
+    return null;
+  })();
+  const prefix = companyIdFromPath ? `/company/${companyIdFromPath}` : '';
+  const menuItems = baseMenuItems.map(i => ({ ...i, href: `${prefix}${i.href}` }));
   return (
     <div className="bg-white p-[15px] border rounded-xl shadow-sm">
       {menuItems.map((item, index) => {

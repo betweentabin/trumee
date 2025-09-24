@@ -84,6 +84,9 @@ urlpatterns = [
     path('advice/messages/', views_api_v2.advice_messages, name='advice-messages'),
     path('advice/notifications/', views_api_v2.advice_notifications, name='advice-notifications'),
     path('advice/mark_read/', views_api_v2.advice_mark_read, name='advice-mark-read'),
+
+    # 企業↔求職者メッセージ
+    path('company/messages/', views_api_v2.company_messages, name='company-messages'),
     
     # ViewSet URLs
     path('', include(router.urls)),

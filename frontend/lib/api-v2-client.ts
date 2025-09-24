@@ -376,6 +376,18 @@ class ApiV2Client {
     return Array.isArray(data) ? data : (data?.results ?? []);
   }
 
+  // 企業↔求職者メッセージ
+  async getCompanyMessages(userId: string, subject: string = 'company') {
+    const res = await this.client.get('/api/v2/company/messages/', { params: { user_id: userId, subject } });
+    return res.data as any[];
+  }
+
+  async sendCompanyMessage(userId: string, content: string, opts?: { subject?: string; scout_id?: string; application_id?: string }) {
+    const body: any = { user_id: userId, content, ...(opts?.subject ? { subject: opts.subject } : {}), ...(opts?.scout_id ? { scout_id: opts.scout_id } : {}), ...(opts?.application_id ? { application_id: opts.application_id } : {}), };
+    const res = await this.client.post('/api/v2/company/messages/', body);
+    return res.data as any;
+  }
+
   async createScout(scoutData: CreateScoutRequest): Promise<Scout> {
     const response = await this.client.post<Scout>(API_ENDPOINTS.SCOUTS, scoutData);
     return response.data;
