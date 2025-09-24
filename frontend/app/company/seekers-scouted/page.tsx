@@ -89,9 +89,14 @@ export default function SeekersScoutedPage() {
     }
   };
 
-  const handleDetail = (seeker: any) => {
-    setSelectedSeeker(seeker);
-    setShowDetailModal(true);
+  const handleDetail = async (seeker: any) => {
+    try {
+      const list = await apiClient.getPublicUserResumes(String(seeker.id)).catch(() => [] as any[]);
+      const resume = (list || []).find((r: any) => r.is_active) || (list || [])[0] || null;
+      setSelectedSeeker(resume ? { ...seeker, resume } : seeker);
+    } finally {
+      setShowDetailModal(true);
+    }
   };
 
   const handleCancelScout = async (scoutId: string) => {

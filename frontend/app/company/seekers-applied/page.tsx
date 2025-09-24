@@ -94,9 +94,14 @@ export default function SeekersAppliedPage() {
     }
   };
 
-  const handleDetail = (applicant: any) => {
-    setSelectedSeeker(applicant);
-    setShowDetailModal(true);
+  const handleDetail = async (applicant: any) => {
+    try {
+      const list = await apiClient.getPublicUserResumes(String(applicant.id)).catch(() => [] as any[]);
+      const resume = (list || []).find((r: any) => r.is_active) || (list || [])[0] || null;
+      setSelectedSeeker(resume ? { ...applicant, resume } : applicant);
+    } finally {
+      setShowDetailModal(true);
+    }
   };
 
   const handleUpdateStatus = async (applicationId: string, newStatus: string) => {

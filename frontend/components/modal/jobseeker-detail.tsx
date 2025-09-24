@@ -55,17 +55,29 @@ const JobSeekerDetailModal = ({
   const resumeData = useMemo(() => {
     if (!detail?.resume) return { jobhistoryList: [], formValues: {} };
 
-    const resume = detail.resume;
-    const histories = resume.histories || [];
+    const resume = detail.resume as any;
+    let histories = Array.isArray(resume.histories) ? resume.histories : [];
+    // Fallback: build histories from extra_data.workExperiences when histories is absent
+    if ((!histories || histories.length === 0) && Array.isArray(resume.extra_data?.workExperiences)) {
+      histories = (resume.extra_data.workExperiences as any[]).map((w, i) => ({
+        companyName: w.company,
+        workActivity: w.description || w.tasks || '',
+        startDate: w.startDate || w.period_from || w.since,
+        endDate: w.endDate || w.period_to || w.to,
+        memberCount: w.teamSize || w.people,
+        duty: w.position || w.duty,
+        employmentType: w.employmentType || '正社員',
+      }));
+    }
 
     const jobhistoryList = histories.map(
       (_: any, index: number) => `job${index + 1}`
     );
 
     const formValues: any = {
-      summary: resume.summary || "",
-      skills: resume.skillset || "",
-      self_pr: resume.selfPR || "",
+      summary: resume.summary || resume.extra_data?.jobSummary || "",
+      skills: resume.skillset || resume.skills || "",
+      self_pr: resume.selfPR || resume.self_pr || "",
     };
 
     // Add job history data
