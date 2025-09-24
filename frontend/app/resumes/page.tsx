@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import apiClient from '@/lib/api-v2-client';
+import type { ResumeFile } from '@/types/api-v2';
 import useAuthV2 from '@/hooks/useAuthV2';
 import toast from 'react-hot-toast';
 import { 
@@ -29,6 +30,7 @@ interface Resume {
 export default function ResumesPage() {
   const router = useRouter();
   const [resumes, setResumes] = useState<Resume[]>([]);
+  const [resumeFiles, setResumeFiles] = useState<ResumeFile[]>([]);
   const [loading, setLoading] = useState(true);
   const { isAuthenticated, initializeAuth, currentUser } = useAuthV2();
 
@@ -63,9 +65,13 @@ export default function ResumesPage() {
   const fetchResumes = async () => {
     try {
       // DRFトークン認証でAPI v2から履歴書データを取得
-      const data = await apiClient.getResumes();
+      const [data, files] = await Promise.all([
+        apiClient.getResumes(),
+        apiClient.getResumeFiles().catch(() => [])
+      ]);
       console.log('Fetched resumes from API:', data);
       setResumes(data || []);
+      setResumeFiles(files || []);
     } catch (error: any) {
       console.error('Failed to fetch resumes:', error);
       
@@ -78,6 +84,7 @@ export default function ResumesPage() {
       
       toast.error('履歴書の取得に失敗しました');
       setResumes([]); // エラー時は空配列を設定
+      setResumeFiles([]);
     } finally {
       setLoading(false);
     }
@@ -249,6 +256,32 @@ export default function ResumesPage() {
             ))}
           </div>
         )}
+
+        {/* Uploaded Resume Files */}
+        <div className="mt-10">
+          <h2 className="text-xl font-semibold text-gray-800 mb-3">アップロードされた履歴書（ファイル）</h2>
+          {resumeFiles.length === 0 ? (
+            <div className="bg-white rounded-lg shadow p-6 text-gray-600">アップロードされた履歴書はありません</div>
+          ) : (
+            <div className="bg-white rounded-lg shadow divide-y">
+              {resumeFiles.map((f) => (
+                <div key={f.id} className="p-4 flex items-center justify-between">
+                  <div className="min-w-0">
+                    <div className="font-medium text-gray-900 truncate">{f.original_name}</div>
+                    <div className="text-xs text-gray-500">{new Date(f.uploaded_at).toLocaleString('ja-JP')}</div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {f.file_url && (
+                      <a href={f.file_url} target="_blank" rel="noreferrer" className="px-3 py-2 text-sm rounded-md border hover:bg-gray-50">
+                        開く
+                      </a>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

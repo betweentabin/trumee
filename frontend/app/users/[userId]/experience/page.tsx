@@ -20,16 +20,19 @@ export default function UserExperienceByIdPage() {
     const run = async () => {
       try {
         setLoading(true);
-        const data = await apiClient.getPublicUserResumes(userId);
-        setResumes(data || []);
+        // 自分のページなら認証付きの一覧、他人なら公開一覧
+        const isOwner = !!(currentUser?.id && currentUser.id === userId);
+        const data = isOwner ? await apiClient.getResumes() : await apiClient.getPublicUserResumes(userId);
+        setResumes(Array.isArray(data) ? data : (data || []));
       } catch (e: any) {
-        setError(e?.response?.data?.error || "職歴の取得に失敗しました");
+        console.error('Experience load error', e);
+        setError(e?.response?.data?.error || '職歴の取得に失敗しました');
       } finally {
         setLoading(false);
       }
     };
     run();
-  }, [userId]);
+  }, [userId, currentUser?.id]);
 
   const target = useMemo(() => {
     if (!resumes?.length) return null;
@@ -56,7 +59,14 @@ export default function UserExperienceByIdPage() {
     </div>
   );
 
-  const experiences = useMemo(() => normalizeResumeExperiences(target), [target]);
+  const experiences = useMemo(() => {
+    try {
+      return normalizeResumeExperiences(target);
+    } catch (e) {
+      console.error('normalize error', e);
+      return [] as any[];
+    }
+  }, [target]);
 
   return (
     <div className="max-w-3xl mx-auto p-6">

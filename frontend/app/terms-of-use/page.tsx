@@ -9,7 +9,7 @@ export default function TermsOfUsePage() {
         <div className="bg-white rounded-lg shadow-md p-8">
           <div className="mb-8 text-center">
             <h1 className="text-3xl font-bold text-gray-800 flex items-center justify-center gap-3">
-              <FaFileContract className="text-blue-600" />
+              <FaFileContract className="text-[#FF733E]" />
               利用規約
             </h1>
             <p className="text-gray-600 mt-2">最終更新日: 2024年1月1日</p>
@@ -18,10 +18,10 @@ export default function TermsOfUsePage() {
           <div className="prose max-w-none">
             <section className="mb-8">
               <h2 className="text-2xl font-semibold mb-4 flex items-center gap-2">
-                <FaCheckCircle className="text-green-600" />
+                <FaCheckCircle className="text-[#FF733E]" />
                 第1条（適用）
               </h2>
-              <div className="bg-gray-50 rounded-lg p-4 space-y-2">
+              <div className="bg-orange-50 rounded-lg p-4 space-y-2">
                 <p>1. この利用規約（以下「本規約」といいます。）は、TruMeee（以下「当社」といいます。）が提供する転職支援サービス（以下「本サービス」といいます。）の利用条件を定めるものです。</p>
                 <p>2. 登録ユーザーの皆さま（以下「ユーザー」といいます。）には、本規約に従って本サービスをご利用いただきます。</p>
                 <p>3. 本規約は、ユーザーと当社との間の本サービスの利用に関わる一切の関係に適用されるものとします。</p>
@@ -30,10 +30,10 @@ export default function TermsOfUsePage() {
 
             <section className="mb-8">
               <h2 className="text-2xl font-semibold mb-4 flex items-center gap-2">
-                <FaInfoCircle className="text-blue-600" />
+                <FaInfoCircle className="text-[#FF733E]" />
                 第2条（利用登録）
               </h2>
-              <div className="bg-gray-50 rounded-lg p-4 space-y-2">
+              <div className="bg-orange-50 rounded-lg p-4 space-y-2">
                 <p>1. 本サービスの利用を希望する者は、本規約に同意の上、当社の定める方法によって利用登録を申請するものとします。</p>
                 <p>2. 当社は、利用登録の申請者に以下の事由があると判断した場合、利用登録の申請を承認しないことがあります。</p>
                 <ul className="list-disc list-inside ml-4">
@@ -46,7 +46,7 @@ export default function TermsOfUsePage() {
 
             <section className="mb-8">
               <h2 className="text-2xl font-semibold mb-4">第3条（ユーザーIDおよびパスワードの管理）</h2>
-              <div className="bg-gray-50 rounded-lg p-4 space-y-2">
+              <div className="bg-orange-50 rounded-lg p-4 space-y-2">
                 <p>1. ユーザーは、自己の責任において、本サービスのユーザーIDおよびパスワードを適切に管理するものとします。</p>
                 <p>2. ユーザーは、いかなる場合にも、ユーザーIDおよびパスワードを第三者に譲渡または貸与し、もしくは第三者と共用することはできません。</p>
                 <p>3. 当社は、ユーザーIDとパスワードの組み合わせが登録情報と一致してログインされた場合には、そのユーザーIDを登録しているユーザー自身による利用とみなします。</p>
@@ -55,7 +55,7 @@ export default function TermsOfUsePage() {
 
             <section className="mb-8">
               <h2 className="text-2xl font-semibold mb-4">第4条（料金および支払方法）</h2>
-              <div className="bg-gray-50 rounded-lg p-4 space-y-2">
+              <div className="bg-orange-50 rounded-lg p-4 space-y-2">
                 <p>1. ユーザーは、本サービスの有料部分の対価として、当社が別途定め、本サービス内に表示する料金を、当社が指定する方法により支払うものとします。</p>
                 <p>2. ユーザーが料金の支払を遅滞した場合には、ユーザーは年14.6％の割合による遅延損害金を支払うものとします。</p>
               </div>
@@ -63,10 +63,10 @@ export default function TermsOfUsePage() {
 
             <section className="mb-8">
               <h2 className="text-2xl font-semibold mb-4 flex items-center gap-2">
-                <FaExclamationTriangle className="text-yellow-600" />
+                <FaExclamationTriangle className="text-[#FF733E]" />
                 第5条（禁止事項）
               </h2>
-              <div className="bg-yellow-50 rounded-lg p-4">
+              <div className="bg-orange-50 rounded-lg p-4">
                 <p className="mb-2">ユーザーは、本サービスの利用にあたり、以下の行為をしてはなりません。</p>
                 <ul className="list-disc list-inside space-y-1">
                   <li>法令または公序良俗に違反する行為</li>
@@ -127,14 +127,14 @@ export default function TermsOfUsePage() {
 
             <section className="mb-8">
               <h2 className="text-2xl font-semibold mb-4">第11条（準拠法・裁判管轄）</h2>
-              <div className="bg-gray-50 rounded-lg p-4 space-y-2">
+              <div className="bg-orange-50 rounded-lg p-4 space-y-2">
                 <p>1. 本規約の解釈にあたっては、日本法を準拠法とします。</p>
                 <p>2. 本サービスに関して紛争が生じた場合には、当社の本店所在地を管轄する裁判所を専属的合意管轄とします。</p>
               </div>
             </section>
           </div>
 
-          <div className="mt-8 p-4 bg-blue-50 rounded-lg">
+          <div className="mt-8 p-4 bg-orange-50 rounded-lg">
             <p className="text-center text-gray-700">
               本規約は2024年1月1日から施行されます。<br />
               ご不明な点がございましたら、お問い合わせフォームよりご連絡ください。

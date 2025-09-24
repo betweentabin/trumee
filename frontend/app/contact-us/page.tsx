@@ -73,7 +73,7 @@ export default function ContactUsPage() {
                       name="name"
                       value={formData.name}
                       onChange={handleChange}
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF733E]"
                       required
                     />
                   </div>
@@ -87,7 +87,7 @@ export default function ContactUsPage() {
                       name="email"
                       value={formData.email}
                       onChange={handleChange}
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF733E]"
                       required
                     />
                   </div>
@@ -102,7 +102,7 @@ export default function ContactUsPage() {
                       value={formData.phone}
                       onChange={handleChange}
                       placeholder="090-1234-5678"
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF733E]"
                     />
                   </div>
 
@@ -114,7 +114,7 @@ export default function ContactUsPage() {
                       name="category"
                       value={formData.category}
                       onChange={handleChange}
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF733E]"
                       required
                     >
                       <option value="">選択してください</option>
@@ -150,7 +150,7 @@ export default function ContactUsPage() {
                       value={formData.message}
                       onChange={handleChange}
                       rows={6}
-                      className="w-full p-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full p-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-[#FF733E]"
                       required
                     />
                   </div>
@@ -160,7 +160,7 @@ export default function ContactUsPage() {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full md:w-auto px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:bg-gray-400 flex items-center justify-center gap-2"
+                    className="w-full md:w-auto px-8 py-3 bg-[#FF733E] text-white rounded-lg hover:bg-[#FF8659] transition disabled:bg-gray-400 flex items-center justify-center gap-2"
                   >
                     <FaPaperPlane />
                     {loading ? '送信中...' : '送信する'}
@@ -177,7 +177,7 @@ export default function ContactUsPage() {
               <h3 className="text-lg font-semibold mb-4">お問い合わせ先</h3>
               <div className="space-y-4">
                 <div className="flex items-start gap-3">
-                  <FaEnvelope className="text-blue-600 mt-1" />
+                  <FaEnvelope className="text-[#FF733E] mt-1" />
                   <div>
                     <p className="font-medium">メール</p>
                     <p className="text-gray-600 text-sm">support@trumeee.com</p>
@@ -185,7 +185,7 @@ export default function ContactUsPage() {
                 </div>
                 
                 <div className="flex items-start gap-3">
-                  <FaPhone className="text-blue-600 mt-1" />
+                  <FaPhone className="text-[#FF733E] mt-1" />
                   <div>
                     <p className="font-medium">電話</p>
                     <p className="text-gray-600 text-sm">03-1234-5678</p>
@@ -194,7 +194,7 @@ export default function ContactUsPage() {
                 </div>
                 
                 <div className="flex items-start gap-3">
-                  <FaMapMarkerAlt className="text-blue-600 mt-1" />
+                  <FaMapMarkerAlt className="text-[#FF733E] mt-1" />
                   <div>
                     <p className="font-medium">所在地</p>
                     <p className="text-gray-600 text-sm">
@@ -209,7 +209,7 @@ export default function ContactUsPage() {
             {/* よくある質問 */}
             <div className="bg-white rounded-lg shadow-md p-6">
               <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                <FaQuestionCircle className="text-blue-600" />
+                <FaQuestionCircle className="text-[#FF733E]" />
                 よくある質問
               </h3>
               <div className="space-y-3">
@@ -235,7 +235,7 @@ export default function ContactUsPage() {
             </div>
 
             {/* 注意事項 */}
-            <div className="bg-yellow-50 rounded-lg p-6">
+            <div className="bg-orange-50 rounded-lg p-6">
               <h3 className="text-lg font-semibold mb-3">ご注意事項</h3>
               <ul className="text-sm text-gray-700 space-y-2">
                 <li>• 必須項目は必ずご入力ください</li>
