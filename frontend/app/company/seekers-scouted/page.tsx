@@ -77,16 +77,16 @@ export default function SeekersScoutedPage() {
         if (!s) {
           seeker = {
             id: String(scout.seeker_id || ''),
-            email: 'N/A',
-            full_name: 'N/A',
-            username: 'N/A',
+            email: '',
+            full_name: '',
+            username: '',
           };
         } else if (typeof s === 'string' || typeof s === 'number') {
           seeker = {
             id: String(s),
-            email: 'N/A',
-            full_name: 'N/A',
-            username: 'N/A',
+            email: '',
+            full_name: '',
+            username: '',
           };
         } else {
           seeker = { ...s, id: String(s.id || s.user || s.user_id || scout.seeker_id || '') };
@@ -112,9 +112,21 @@ export default function SeekersScoutedPage() {
         setSelectedSeeker(seeker);
         return;
       }
+      // 可能なら公開プロフィールを取得して氏名/メール等を補完
+      let profile: any = null;
+      try {
+        profile = await apiClient.getPublicUserProfile(seekerId);
+      } catch {}
+
       const list = await apiClient.getPublicUserResumes(seekerId).catch(() => [] as any[]);
       const resume = (list || []).find((r: any) => r.is_active) || (list || [])[0] || null;
-      setSelectedSeeker(resume ? { ...seeker, resume } : seeker);
+      const merged = typeof seeker === 'object' && seeker !== null ? { ...seeker } : { id: seekerId };
+      if (profile) {
+        merged.full_name = profile.full_name ?? merged.full_name;
+        merged.username = profile.username ?? merged.username;
+        if (profile.email) merged.email = profile.email;
+      }
+      setSelectedSeeker(resume ? { ...merged, resume } : merged);
     } finally {
       setShowDetailModal(true);
     }

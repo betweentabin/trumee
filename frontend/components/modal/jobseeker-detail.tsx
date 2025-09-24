@@ -117,10 +117,14 @@ const JobSeekerDetailModal = ({
             <div className="w-full flex flex-col gap-2 md:gap-3 p-3 md:p-4 bg-gray-50 rounded-lg">
               <div className="flex flex-row gap-2 items-center">
                 <span className="text-base md:text-lg font-semibold">
-                  {detail.full_name || detail.name || "求職者"}
+                  {(detail.full_name && detail.full_name !== 'N/A')
+                    ? detail.full_name
+                    : (detail.name && detail.name !== 'N/A')
+                      ? detail.name
+                      : '求職者'}
                 </span>
               </div>
-              {detail.email && (
+              {detail.email && detail.email !== 'N/A' && (
                 <div className="text-sm text-gray-600">
                   {detail.email}
                 </div>
