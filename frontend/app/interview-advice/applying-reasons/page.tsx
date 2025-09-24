@@ -74,28 +74,22 @@ export default function ApplyingReasonsPage() {
 
     setLoading(true);
     try {
-      // AI生成のシミュレーション
-      setTimeout(() => {
-        const sample = `${companyName}への志望理由
-
-私は${position}として、貴社の事業に大きな興味を持っております。
-
-【志望理由1: 事業への共感】
-貴社の革新的なサービスと顧客中心のアプローチに深く共感しております。特に、技術革新を通じて社会課題を解決するという理念は、私のキャリア目標と完全に一致しています。
-
-【志望理由2: スキルの活用】
-これまでの経験で培った技術スキルと問題解決能力を、貴社の${position}として最大限に活用できると確信しています。
-
-【志望理由3: 成長機会】
-貴社の成長環境において、自身のスキルをさらに磨き、チームと共に成長していきたいと考えています。`;
-
-        setGeneratedReason(sample);
-        setLoading(false);
-        toast.success('志望理由を生成しました');
-      }, 2000);
+      const res = await fetch('/api/gemini/apply', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ companyName, position, strengths: reasons })
+      });
+      if (!res.ok) {
+        const t = await res.text();
+        throw new Error(t?.slice(0, 200) || 'Gemini API error');
+      }
+      const data = await res.json();
+      setGeneratedReason(String(data?.text || ''));
+      toast.success('志望理由を生成しました');
     } catch (error) {
+      toast.error('生成に失敗しました');
+    } finally {
       setLoading(false);
-      toast.error('エラーが発生しました');
     }
   };
 
