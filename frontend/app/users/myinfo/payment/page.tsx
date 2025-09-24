@@ -74,7 +74,7 @@ export default function UserPaymentPage() {
             <Leftpage />
           </aside>
 
-          <div className="lg:col-span-9">
+          <div className="lg:col-span-9 myinfo-content">
         <div className="bg-white rounded-lg shadow-md p-6">
           <h2 className="text-xl font-semibold mb-4">お支払いの管理</h2>
           <p className="text-gray-700 mb-6">クレジットカード情報は当サイトでは保存しません。Stripeの安全なチェックアウトで決済・管理します。</p>
@@ -106,9 +106,15 @@ export default function UserPaymentPage() {
             </li>
           </ul>
         </div>
-          </div>
         </div>
       </div>
     </div>
+    {/* Hide any duplicated inline left menu if rendered inside content by other wrappers */}
+    <style jsx>{`
+      .myinfo-content :global(.bg-white.p-\[15px\].border.rounded-xl.shadow-sm) {
+        display: none;
+      }
+    `}</style>
+  </div>
   );
 }

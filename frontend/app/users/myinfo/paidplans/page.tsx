@@ -202,7 +202,7 @@ export default function UserPaidPlansPage() {
           </aside>
 
           {/* Main content */}
-          <div className="lg:col-span-9">
+          <div className="lg:col-span-9 myinfo-content">
             <div className="mb-6">
               <h1 className="text-3xl font-bold text-gray-900">有料プラン</h1>
               <p className="mt-2 text-gray-600">
@@ -350,6 +350,12 @@ export default function UserPaidPlansPage() {
           </div>
         </div>
       </div>
+      {/* Hide any duplicated inline left menu if rendered inside content by other wrappers */}
+      <style jsx>{`
+        .myinfo-content :global(.bg-white.p-\[15px\].border.rounded-xl.shadow-sm) {
+          display: none;
+        }
+      `}</style>
     </div>
   );
 }

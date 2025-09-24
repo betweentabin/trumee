@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
+import { usePathname } from 'next/navigation';
 import apiV2Client from '@/lib/api-v2-client';
 import useAuthV2 from '@/hooks/useAuthV2';
 
@@ -9,6 +10,14 @@ type Thread = { id: string; name: string; last: string; time: string };
 
 export default function MessagesListPage() {
   const { initializeAuth, requireAuth } = useAuthV2();
+  const pathname = usePathname();
+  const userIdFromPath = useMemo(() => {
+    if (!pathname) return null as string | null;
+    const parts = pathname.split('/').filter(Boolean);
+    if (parts[0] === 'users' && parts[1]) return parts[1];
+    return null;
+  }, [pathname]);
+  const to = (p: string) => (userIdFromPath ? `/users/${userIdFromPath}${p}` : p);
   const [messages, setMessages] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -57,7 +66,7 @@ export default function MessagesListPage() {
           <div className="p-6 text-gray-500">メッセージはありません</div>
         ) : (
           threads.map(t => (
-            <Link key={t.id} href={`/messages/${t.id}`} className="block p-4 hover:bg-gray-50">
+            <Link key={t.id} href={to(`/messages/${t.id}`)} className="block p-4 hover:bg-gray-50">
               <div className="flex items-center justify-between">
                 <div>
                   <div className="font-medium text-gray-900">{t.name}</div>

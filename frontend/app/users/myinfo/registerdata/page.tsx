@@ -53,7 +53,7 @@ export default function RegisterDataPage() {
           <Leftpage />
         </aside>
 
-        <div className="lg:col-span-9">
+        <div className="lg:col-span-9 myinfo-content">
       <div className="bg-white border rounded-2xl p-6 shadow-sm">
         <h2 className="text-lg font-semibold mb-2">登録情報の管理</h2>
         <p className="text-gray-600 mb-6">
@@ -86,8 +86,14 @@ export default function RegisterDataPage() {
       <div className="mt-8">
         <ResumeFileUpload />
       </div>
-        </div>
       </div>
     </div>
+    {/* Hide any duplicated inline left menu if rendered inside content by other wrappers */}
+    <style jsx>{`
+      .myinfo-content :global(.bg-white.p-\[15px\].border.rounded-xl.shadow-sm) {
+        display: none;
+      }
+    `}</style>
+  </div>
   );
 }
