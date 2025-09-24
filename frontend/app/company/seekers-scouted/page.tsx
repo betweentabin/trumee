@@ -71,15 +71,28 @@ export default function SeekersScoutedPage() {
       const response = await apiClient.getScouts();
       // Transform response to match ScoutWithSeeker interface
       // TODO: Update backend to return seeker details with scout data
-      const transformedScouts = response.map((scout: any) => ({
-        ...scout,
-        seeker: scout.seeker || {
-          id: scout.seeker_id || scout.seeker,
-          email: 'N/A',
-          full_name: 'N/A',
-          username: 'N/A'
+      const transformedScouts = response.map((scout: any) => {
+        const s = scout.seeker;
+        let seeker: any;
+        if (!s) {
+          seeker = {
+            id: String(scout.seeker_id || ''),
+            email: 'N/A',
+            full_name: 'N/A',
+            username: 'N/A',
+          };
+        } else if (typeof s === 'string' || typeof s === 'number') {
+          seeker = {
+            id: String(s),
+            email: 'N/A',
+            full_name: 'N/A',
+            username: 'N/A',
+          };
+        } else {
+          seeker = { ...s, id: String(s.id || s.user || s.user_id || scout.seeker_id || '') };
         }
-      }));
+        return { ...scout, seeker };
+      });
       setScouts(transformedScouts);
     } catch (error) {
       console.error('Failed to fetch scouts:', error);
@@ -91,7 +104,15 @@ export default function SeekersScoutedPage() {
 
   const handleDetail = async (seeker: any) => {
     try {
-      const list = await apiClient.getPublicUserResumes(String(seeker.id)).catch(() => [] as any[]);
+      const seekerId = typeof seeker === 'string' || typeof seeker === 'number'
+        ? String(seeker)
+        : String(seeker?.id || seeker?.user || seeker?.user_id || '');
+      if (!seekerId) {
+        toast.error('求職者IDを特定できません');
+        setSelectedSeeker(seeker);
+        return;
+      }
+      const list = await apiClient.getPublicUserResumes(seekerId).catch(() => [] as any[]);
       const resume = (list || []).find((r: any) => r.is_active) || (list || [])[0] || null;
       setSelectedSeeker(resume ? { ...seeker, resume } : seeker);
     } finally {

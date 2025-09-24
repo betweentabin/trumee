@@ -73,18 +73,34 @@ export default function SeekersAppliedPage() {
       const response = await apiClient.getApplications();
       // Transform response to match ApplicationWithApplicant interface
       // TODO: Update backend to return applicant details with application data
-      const transformedApplications = response.map((app: any) => ({
-        ...app,
-        applicant: app.applicant || {
-          id: app.applicant_id || app.applicant,
-          email: 'N/A',
-          full_name: 'N/A',
-          username: 'N/A'
-        },
-        resume: app.resume || null,
-        applied_at: app.applied_at || app.created_at,
-        reviewed_at: app.reviewed_at || null
-      }));
+      const transformedApplications = response.map((app: any) => {
+        const a = app.applicant;
+        let applicant: any;
+        if (!a) {
+          applicant = {
+            id: String(app.applicant_id || ''),
+            email: 'N/A',
+            full_name: 'N/A',
+            username: 'N/A',
+          };
+        } else if (typeof a === 'string' || typeof a === 'number') {
+          applicant = {
+            id: String(a),
+            email: 'N/A',
+            full_name: 'N/A',
+            username: 'N/A',
+          };
+        } else {
+          applicant = { ...a, id: String(a.id || a.user || a.user_id || app.applicant_id || '') };
+        }
+        return {
+          ...app,
+          applicant,
+          resume: app.resume || null,
+          applied_at: app.applied_at || app.created_at,
+          reviewed_at: app.reviewed_at || null,
+        };
+      });
       setApplications(transformedApplications);
     } catch (error) {
       console.error('Failed to fetch applications:', error);
@@ -96,7 +112,15 @@ export default function SeekersAppliedPage() {
 
   const handleDetail = async (applicant: any) => {
     try {
-      const list = await apiClient.getPublicUserResumes(String(applicant.id)).catch(() => [] as any[]);
+      const applicantId = typeof applicant === 'string' || typeof applicant === 'number'
+        ? String(applicant)
+        : String(applicant?.id || applicant?.user || applicant?.user_id || '');
+      if (!applicantId) {
+        toast.error('求職者IDを特定できません');
+        setSelectedSeeker(applicant);
+        return;
+      }
+      const list = await apiClient.getPublicUserResumes(applicantId).catch(() => [] as any[]);
       const resume = (list || []).find((r: any) => r.is_active) || (list || [])[0] || null;
       setSelectedSeeker(resume ? { ...applicant, resume } : applicant);
     } finally {
