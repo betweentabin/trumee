@@ -32,7 +32,7 @@ export default function ServiceCards() {
         <div className="space-y-3">
           {[
             { text: '職務経歴書に関するアドバイス', href: perUser('career') || '/career' },
-            { text: '面接に関するアドバイス', href: perUser('advice/interview') || '/interview' },
+            { text: '面接対策・質問集', href: perUser('interview') || '/interview' },
             { text: '企業からのスカウト確認', href: perUser('scouts') || '/scouts' },
           ].map(({ text, href }, idx) => (
             <Link 

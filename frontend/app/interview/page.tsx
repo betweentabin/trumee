@@ -34,6 +34,7 @@ export default function InterviewTopPage() {
   const [questions, setQuestions] = useState<QItem[]>([]);
   const [tagInput, setTagInput] = useState('');
 
+  // カテゴリ一覧の取得
   useEffect(() => {
     (async () => {
       try {
@@ -50,6 +51,7 @@ export default function InterviewTopPage() {
     })();
   }, []);
 
+  // 質問一覧の取得
   useEffect(() => {
     (async () => {
       if (!selected) return;
@@ -107,6 +109,32 @@ export default function InterviewTopPage() {
     } catch { /* noop */ } finally { setLoading(false); }
   };
 
+  // 表示用ラベル
+  const difficultyLabel = (d: 'all'|'easy'|'medium'|'hard'|string) => {
+    switch (d) {
+      case 'all': return '全て';
+      case 'easy': return '初級';
+      case 'medium': return '中級';
+      case 'hard': return '上級';
+      default: return String(d || '中級');
+    }
+  };
+
+  const categoryLabel = (cat?: string) => {
+    const map: Record<string, string> = {
+      basic: '基本',
+      motivation: '志望動機',
+      resume: '履歴書',
+      interview: '面接',
+      teamwork: 'チームワーク',
+      future: '将来像',
+      stress: 'ストレス耐性',
+      experience: '経験',
+      generated: '生成',
+    };
+    return map[String(cat || '')] || String(cat || '');
+  };
+
   const badgeColor = (d?: string) => {
     switch (d) {
       case 'easy': return 'bg-green-100 text-green-800';
@@ -137,7 +165,7 @@ export default function InterviewTopPage() {
                 onClick={() => setSelected(cat)}
                 className={`px-4 py-2 rounded-lg border transition-colors ${selected === cat ? 'bg-[#FF733E] text-white border-[#FF733E]' : 'bg-white text-gray-800 hover:bg-gray-50'}`}
               >
-                {cat}
+                {categoryLabel(cat)}
               </button>
             ))}
           </div>
@@ -150,13 +178,13 @@ export default function InterviewTopPage() {
                 key={d}
                 onClick={() => setDifficulty(d)}
                 className={`px-3 py-1 rounded ${difficulty===d ? 'bg-gray-800 text-white' : 'bg-gray-200 text-gray-800 hover:bg-gray-300'}`}
-              >{d === 'all' ? '全て' : d}</button>
+              >{difficultyLabel(d)}</button>
             ))}
             <span className="ml-4 text-gray-600">タグ（カンマ区切り）:</span>
             <input
               value={tagInput}
               onChange={(e) => setTagInput(e.target.value)}
-              placeholder="例: sales, leadership"
+              placeholder="例: 営業, リーダーシップ"
               className="border rounded px-2 py-1 text-sm"
             />
             <button
@@ -187,7 +215,7 @@ export default function InterviewTopPage() {
                   {q.source === 'gemini' && (
                     <span className="px-2 py-1 text-xs rounded bg-blue-100 text-blue-800">AI</span>
                   )}
-                  <span className={`px-2 py-1 text-xs rounded ${badgeColor(q.difficulty)}`}>{q.difficulty || 'medium'}</span>
+                  <span className={`px-2 py-1 text-xs rounded ${badgeColor(q.difficulty)}`}>{difficultyLabel(q.difficulty || 'medium')}</span>
                 </div>
               </li>
             ))}

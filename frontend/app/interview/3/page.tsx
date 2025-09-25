@@ -174,7 +174,18 @@ export default function InterviewPage3() {
     }
   ];
 
-  const categories = [{ key: 'all', label: 'すべて' }, ...apiCategories.map(c => ({ key: c, label: c }))];
+  const categoryLabel = (c: string) => ({
+    basic: '基本',
+    motivation: '志望動機',
+    resume: '履歴書',
+    interview: '面接',
+    teamwork: 'チームワーク',
+    future: '将来像',
+    stress: 'ストレス耐性',
+    experience: '経験',
+    generated: '生成',
+  } as Record<string, string>)[c] || c;
+  const categories = [{ key: 'all', label: 'すべて' }, ...apiCategories.map(c => ({ key: c, label: categoryLabel(c) }))];
 
   useEffect(() => {
     loadCompletedQuestions();
