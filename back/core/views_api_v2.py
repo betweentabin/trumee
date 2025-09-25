@@ -46,6 +46,7 @@ from .serializers import (
     InterviewQuestionSerializer, PromptTemplateSerializer,
 )
 from .ai import gemini as gemini_client
+from .utils_templates import render_prompt_with_resume
 
 # Import PDF generation views (conditional import)
 try:
@@ -211,6 +212,11 @@ def interview_questions_v2(request):
 @permission_classes([IsAuthenticated])
 def interview_personalize_v2(request):
     """履歴書に基づき質問をパーソナライズして返す（+Geminiで追加生成）"""
+    # レート制限（IPベース、1分10回）
+    import logging
+    logger = logging.getLogger(__name__)
+    if not _rate_limit(request, 'interview_personalize', 10, 60):
+        return Response({'detail': 'Too many requests'}, status=status.HTTP_429_TOO_MANY_REQUESTS)
     body = request.data or {}
     qtype = str(body.get('type') or 'interview')
     limit = int(body.get('limit') or 5)
@@ -273,9 +279,12 @@ def interview_personalize_v2(request):
                 added.append({'text': q, 'category': 'generated', 'difficulty': 'medium', 'tips': [], 'source': 'gemini'})
                 if len(added) >= max(0, limit - len(items)):
                     break
-        except Exception:
-            # 生成失敗は無視してルール分のみ返す
-            pass
+        except Exception as e:
+            # 生成失敗は無視してルール分のみ返す（ログに残す）
+            try:
+                logger.warning('Gemini generation failed: %s', e)
+            except Exception:
+                pass
 
     return Response({'items': items + added, 'source': 'gemini+rules' if added else 'rules'}, status=status.HTTP_200_OK)
 
@@ -297,35 +306,8 @@ def template_render_v2(request):
     if not r:
         return Response({'detail': '履歴書が見つかりません'}, status=status.HTTP_404_NOT_FOUND)
 
-    # 簡易レンダリング: format_mapで安全に埋め込み
-    class SafeDict(dict):
-        def __missing__(self, key):
-            return ''
-
-    exps = [
-        {
-            'company': e.company,
-            'position': e.position or '',
-            'achievements': e.achievements or '',
-        }
-        for e in r.experiences.all().order_by('order')
-    ]
-    context = SafeDict(
-        resume_title=r.title,
-        resume_description=r.description,
-        objective=r.objective,
-        skills=r.skills,
-        self_pr=r.self_pr,
-        desired_job=r.desired_job,
-        desired_industries=", ".join(r.desired_industries or []),
-        desired_locations=", ".join(r.desired_locations or []),
-        experiences="\n".join([f"{x['company']} / {x['position']} / {x['achievements'][:100]}" for x in exps])
-    )
-    try:
-        rendered = t.template_text.format_map(context)
-    except Exception:
-        # テンプレート構文エラー時はそのまま返す
-        rendered = t.template_text
+    # レンダリング
+    rendered = render_prompt_with_resume(t, r)
     return Response({'text': rendered, 'template': PromptTemplateSerializer(t).data}, status=status.HTTP_200_OK)
 
 # ============================================================================

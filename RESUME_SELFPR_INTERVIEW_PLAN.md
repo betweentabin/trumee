@@ -51,7 +51,7 @@
 ## 残タスク（洗い出し）
 - [x] Front: 面接対策のカテゴリ選択UI（/interview トップなど）をAPI駆動に刷新
 - [x] Front: 難易度バッジ/タグフィルタの追加（`/interview/questions` クエリ対応）
-- [ ] Admin: PromptTemplateのプレビューUI（任意のResumeで `{}` 埋め込みプレビュー）
+- [x] Admin: PromptTemplateのプレビューUI（任意のResumeで `{}` 埋め込みプレビュー）
 - [ ] 設定: 本番・ステージング環境への `GEMINI_API_KEY` セットと動作確認
 - [ ] 運用: レート制限/ログ監視の設定（Gemini呼び出し、生成回数制限）
 - [ ] QA: 履歴書未作成ユーザー時のパーソナライズ挙動/エラーハンドリング確認

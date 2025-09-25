@@ -1,11 +1,16 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
+from django.urls import path
+from django.shortcuts import get_object_or_404
+from django.http import HttpResponse
 from .models import (
     User, SeekerProfile, Resume, Experience,
     Application, Scout, Message, Payment,
     ActivityLog, MLModel, MLPrediction,
     InterviewQuestion, PromptTemplate,
 )
+from .utils_templates import render_prompt_with_resume
+from .models import Resume
 
 
 @admin.register(User)
@@ -188,3 +193,34 @@ class PromptTemplateAdmin(admin.ModelAdmin):
     list_filter = ['target', 'is_active']
     search_fields = ['name', 'template_text', 'description']
     readonly_fields = ['created_at', 'updated_at']
+
+    def get_urls(self):
+        urls = super().get_urls()
+        custom = [
+            path(
+                '<path:pk>/preview/',
+                self.admin_site.admin_view(self.preview_view),
+                name='core_prompttemplate_preview',
+            ),
+        ]
+        return custom + urls
+
+    def preview_view(self, request, pk=None, *args, **kwargs):
+        """Simple preview: ?resume_id=<uuid> required. Renders plain text."""
+        tmpl = get_object_or_404(PromptTemplate, pk=pk)
+        resume_id = request.GET.get('resume_id')
+        if not resume_id:
+            return HttpResponse(
+                '<h2>テンプレート プレビュー</h2>'
+                '<p>クエリに <code>?resume_id=&lt;UUID&gt;</code> を付けてアクセスしてください。</p>',
+                content_type='text/html; charset=utf-8'
+            )
+        r = get_object_or_404(Resume, pk=resume_id)
+        rendered = render_prompt_with_resume(tmpl, r)
+        html = f"""
+            <h2>テンプレート プレビュー: {tmpl.name}</h2>
+            <p>Resume: {r.user.email} / {r.title}</p>
+            <hr/>
+            <pre style="white-space: pre-wrap; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace;">{rendered}</pre>
+        """
+        return HttpResponse(html, content_type='text/html; charset=utf-8')
