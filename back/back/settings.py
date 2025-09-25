@@ -296,6 +296,11 @@ if (os.getenv('ENABLE_PROD_SECURITY', 'false').lower() == 'true') or (not DEBUG)
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
 
+    # プロキシ(例: Railway/Vercel) 経由のHTTPSを正しく認識するための設定
+    # これがないとSECURE_SSL_REDIRECTとの組み合わせで無限リダイレクトが発生することがあります
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    USE_X_FORWARDED_HOST = True
+
     SESSION_COOKIE_SECURE = True
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SAMESITE = 'Lax'
