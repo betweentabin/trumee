@@ -170,9 +170,7 @@ export default function CompanyPaidPlanPage() {
                     className={`w-full mt-8 py-3 rounded-lg font-medium transition ${
                       isActive
                         ? 'bg-primary-300 text-white cursor-not-allowed'
-                        : plan.highlight
-                          ? 'bg-primary-600 text-white hover:bg-primary-700'
-                          : 'bg-secondary-900 text-white hover:bg-secondary-800'
+                        : 'bg-primary-600 text-white hover:bg-primary-700'
                     }`}
                   >
                     {isLoading && !isActive ? (

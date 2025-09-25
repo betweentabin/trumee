@@ -786,3 +786,74 @@ class CompanyMonthlyPage(models.Model):
     def page_url(self) -> str:
         """フロントエンドで表示するための推奨URL"""
         return f"/company/{self.company_id}/{self.year}/{self.month:02d}"
+
+
+# ============================================================
+# 面接・自己PR・履歴書関連の質問マスタ/テンプレート
+# ============================================================
+
+class InterviewQuestion(models.Model):
+    """面接/自己PR/履歴書関連の質問マスタ"""
+    TYPE_CHOICES = [
+        ('interview', '面接'),
+        ('self_pr', '自己PR'),
+        ('resume', '職務経歴書'),
+        ('motivation', '志望動機'),
+    ]
+
+    DIFFICULTY_CHOICES = [
+        ('easy', '初級'),
+        ('medium', '中級'),
+        ('hard', '上級'),
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    type = models.CharField(max_length=20, choices=TYPE_CHOICES, db_index=True)
+    category = models.CharField(max_length=50, blank=True, db_index=True)
+    subcategory = models.CharField(max_length=50, blank=True)
+    text = models.TextField()
+    answer_guide = models.TextField(blank=True)
+    difficulty = models.CharField(max_length=10, choices=DIFFICULTY_CHOICES, default='medium', db_index=True)
+    tags = models.JSONField(default=list, blank=True)
+    locale = models.CharField(max_length=20, default='ja-JP', db_index=True)
+    source = models.CharField(max_length=20, blank=True, help_text='csv/manual/ai など')
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'interview_questions'
+        indexes = [
+            models.Index(fields=['type', 'category', 'difficulty']),
+            models.Index(fields=['locale', 'is_active']),
+        ]
+
+    def __str__(self):
+        return f"[{self.type}/{self.category}] {self.text[:30]}"
+
+
+class PromptTemplate(models.Model):
+    """履歴書/自己PR/志望理由のテンプレート（プレースホルダ埋め込み用）"""
+    TARGET_CHOICES = [
+        ('self_pr', '自己PR'),
+        ('resume_summary', '職務経歴書サマリ'),
+        ('apply_reason', '志望理由'),
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    name = models.CharField(max_length=100, unique=True)
+    target = models.CharField(max_length=30, choices=TARGET_CHOICES, db_index=True)
+    template_text = models.TextField()
+    description = models.TextField(blank=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'prompt_templates'
+        indexes = [
+            models.Index(fields=['target', 'is_active']),
+        ]
+
+    def __str__(self):
+        return f"{self.name} ({self.get_target_display()})"

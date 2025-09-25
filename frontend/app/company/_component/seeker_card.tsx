@@ -19,12 +19,14 @@ interface SeekerCardProps {
 
 const SeekerCard: React.FC<SeekerCardProps> = ({ detail, onDetail, onScout, isScouting, isScouted }) => {
   const seeker = detail;
+  const anonymize = (id?: string | number) => `匿名ユーザー${id ? ` #${String(id).slice(-4)}` : ''}`;
+
   return (
     <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow">
       <div className="flex justify-between items-start mb-4">
         <div>
-          <h3 className="text-lg font-semibold text-gray-900">{seeker.full_name}</h3>
-          <p className="text-sm text-gray-500">{seeker.email}</p>
+          <h3 className="text-lg font-semibold text-gray-900">{anonymize(seeker.id)}</h3>
+          {/* 企業画面では個人情報（メール等）は非表示 */}
         </div>
       </div>
 

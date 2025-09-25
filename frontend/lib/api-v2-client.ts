@@ -50,9 +50,8 @@ class ApiV2Client {
       const originalRequest = error.config as any;
       
       // 401エラー（認証失敗）でトークンリフレッシュを試行
-      if (error.response?.status === 401 && !originalRequest._retry) {
+      if (error.response?.status === 401 && !originalRequest?._retry) {
         originalRequest._retry = true;
-        
         try {
           // DRFトークンは期限がないが、何らかの理由で無効になった場合
           // ログアウトして再ログインを促す
@@ -69,7 +68,13 @@ class ApiV2Client {
         }
       }
       
-      console.error('API Error:', error.response?.data || error.message);
+      // 追加情報を含めてログ出力（URL/メソッド/ステータス/本文）
+      console.error('API Error:', {
+        url: (error.config as any)?.url,
+        method: (error.config as any)?.method,
+        status: error.response?.status,
+        data: error.response?.data || error.message,
+      });
       return Promise.reject(error);
     }
   );
@@ -214,6 +219,14 @@ class ApiV2Client {
   // 公開履歴書（閲覧用）
   async getPublicUserResumes(userId: string): Promise<Resume[]> {
     const url = `${API_ENDPOINTS.PUBLIC_USER_BASE}${userId}/resumes/`;
+    const res = await this.client.get<Resume[] | { results?: Resume[] }>(url);
+    const data = res.data as any;
+    return Array.isArray(data) ? data : (Array.isArray(data?.results) ? data.results : []);
+  }
+
+  // 企業向け: 求職者の履歴書（公開用、プライバシー配慮済）を取得
+  async getCompanyViewUserResumes(userId: string): Promise<Resume[]> {
+    const url = `/api/v2/company/users/${userId}/resumes/`;
     const res = await this.client.get<Resume[] | { results?: Resume[] }>(url);
     const data = res.data as any;
     return Array.isArray(data) ? data : (Array.isArray(data?.results) ? data.results : []);

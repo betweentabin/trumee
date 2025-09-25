@@ -7,7 +7,7 @@ from reportlab.lib.pagesizes import A4
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import mm
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, ListFlowable, ListItem
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, ListFlowable, ListItem, HRFlowable
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.cidfonts import UnicodeCIDFont
 from io import BytesIO
@@ -27,6 +27,20 @@ def _format_multiline(text: str) -> str:
     if not text:
         return ''
     return escape(text).replace('\n', '<br/>')
+
+
+def _draw_page_frame(canvas, doc):
+    """Draw a light border frame on each page."""
+    canvas.saveState()
+    canvas.setStrokeColor(colors.HexColor('#DDDDDD'))
+    canvas.setLineWidth(0.7)
+    # Rectangle covering the content area
+    x = doc.leftMargin - 6
+    y = doc.bottomMargin - 6
+    w = doc.width + 12
+    h = doc.height + 12
+    canvas.rect(x, y, w, h)
+    canvas.restoreState()
 
 
 def _render_resume_pdf(resume_data: dict) -> bytes:
@@ -88,11 +102,13 @@ def _render_resume_pdf(resume_data: dict) -> bytes:
 
     if summary_text:
         elements.append(Paragraph('職務要約', section_heading_style))
+        elements.append(HRFlowable(width='100%', thickness=0.6, color=colors.HexColor('#E5E5E5')))
         elements.append(Paragraph(_format_multiline(summary_text), body_style))
 
     experiences = (resume_data or {}).get('step3', {}).get('experience') or []
     if experiences:
         elements.append(Paragraph('会社の経歴・実績', section_heading_style))
+        elements.append(HRFlowable(width='100%', thickness=0.6, color=colors.HexColor('#E5E5E5')))
         for index, exp in enumerate(experiences):
             if index > 0:
                 elements.append(Spacer(1, 6))
@@ -149,12 +165,13 @@ def _render_resume_pdf(resume_data: dict) -> bytes:
 
     if self_pr:
         elements.append(Paragraph('自己PR', section_heading_style))
+        elements.append(HRFlowable(width='100%', thickness=0.6, color=colors.HexColor('#E5E5E5')))
         elements.append(Paragraph(_format_multiline(self_pr), body_style))
 
     if not elements:
         elements.append(Paragraph('表示できる内容がありません。', body_style))
 
-    doc.build(elements)
+    doc.build(elements, onFirstPage=_draw_page_frame, onLaterPages=_draw_page_frame)
     pdf_content = buffer.getvalue()
     buffer.close()
     return pdf_content

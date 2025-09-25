@@ -191,9 +191,21 @@ export default function Search() {
     reset();
   }, [reset]);
 
-  const onDetail = useCallback((_seeker: any) => {
-    setSelectedSeeker(_seeker);
-  }, []);
+  const onDetail = useCallback(async (_seeker: any) => {
+    try {
+      const seekerId = getSeekerId(_seeker);
+      let list: any[] = [];
+      try {
+        list = await apiV2Client.getCompanyViewUserResumes(String(seekerId));
+      } catch {
+        list = await apiV2Client.getPublicUserResumes(String(seekerId)).catch(() => [] as any[]);
+      }
+      const resume = (list || []).find((r: any) => r.is_active) || (list || [])[0] || null;
+      setSelectedSeeker(resume ? { ..._seeker, resume } : _seeker);
+    } catch {
+      setSelectedSeeker(_seeker);
+    }
+  }, [getSeekerId]);
 
   const getSeekerId = useCallback((s: any) => (s?.user || s?.seeker?.id || s?.id), []);
 

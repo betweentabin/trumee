@@ -49,22 +49,46 @@ export default function InterviewPage3() {
     (async () => {
       try {
         const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+        // 1) 既存履歴書から簡易導出（後方互換）
         const res = await fetch(`${apiUrl}/api/v2/resumes/`, { headers: { ...getAuthHeaders() } });
-        if (!res.ok) return;
-        const data = await res.json();
-        const list = data.results || data || [];
-        const r = list.find((x: any) => x.is_active) || list[0];
-        const extra = r?.extra_data || {};
-        const experiences = Array.isArray(extra.workExperiences) ? extra.workExperiences : [];
-        const derived: MockInterview[] = experiences.slice(0, 3).map((e: any, idx: number) => ({
-          id: `r${idx}`,
-          question: `${e.company || '前職'}での貢献を具体的に教えてください（役割・施策・成果）`,
-          category: 'experience',
-          difficulty: 'medium',
-          timeLimit: 180,
-          tips: ['STARで簡潔に', '数値・具体例', '学びと再現可能性']
-        }));
-        setExtraQs(derived);
+        if (res.ok) {
+          const data = await res.json();
+          const list = data.results || data || [];
+          const r = list.find((x: any) => x.is_active) || list[0];
+          const extra = r?.extra_data || {};
+          const experiences = Array.isArray(extra.workExperiences) ? extra.workExperiences : [];
+          const derived: MockInterview[] = experiences.slice(0, 2).map((e: any, idx: number) => ({
+            id: `r${idx}`,
+            question: `${e.company || '前職'}での貢献を具体的に教えてください（役割・施策・成果）`,
+            category: 'experience',
+            difficulty: 'medium',
+            timeLimit: 180,
+            tips: ['STARで簡潔に', '数値・具体例', '学びと再現可能性']
+          }));
+          setExtraQs(derived);
+        }
+
+        // 2) API v2: 個別最適化質問（Gemini + ルール）
+        try {
+          const p = await fetch(`${apiUrl}/api/v2/interview/personalize/`, {
+            method: 'POST',
+            headers: { ...getAuthHeaders() },
+            body: JSON.stringify({ type: 'interview', limit: 3 })
+          });
+          if (p.ok) {
+            const j = await p.json();
+            const items = Array.isArray(j.items) ? j.items : [];
+            const gen: MockInterview[] = items.map((it: any, i: number) => ({
+              id: `g${i}`,
+              question: String(it.text || ''),
+              category: String(it.category || 'generated'),
+              difficulty: (it.difficulty || 'medium') as any,
+              timeLimit: 180,
+              tips: Array.isArray(it.tips) ? it.tips : []
+            }));
+            setExtraQs(prev => [...prev, ...gen]);
+          }
+        } catch { /* ignore personalize errors */ }
       } catch { /* ignore */ }
     })();
   }, []);

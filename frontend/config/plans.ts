@@ -46,7 +46,7 @@ const base = {
   premium: {
     id: 'premium',
     name: 'プレミアム',
-    price: 60000,
+    price: 50000,
     description: '面接対策までフルサポートする最上位プラン',
     interval: 'month',
   },

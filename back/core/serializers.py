@@ -3,7 +3,8 @@ from django.contrib.auth import authenticate
 from .models import (
     User, SeekerProfile, CompanyProfile, Resume, Experience, Education, Certification,
     Application, Scout, Message, Payment, JobPosting,
-    ActivityLog, MLModel, MLPrediction, CompanyMonthlyPage, ResumeFile
+    ActivityLog, MLModel, MLPrediction, CompanyMonthlyPage, ResumeFile,
+    InterviewQuestion, PromptTemplate,
 )
 
 
@@ -451,6 +452,24 @@ class CompanyMonthlyPageSerializer(serializers.ModelSerializer):
             'is_published', 'page_url', 'created_at', 'updated_at'
         ]
         read_only_fields = ['company', 'page_url', 'created_at', 'updated_at']
+
+
+class InterviewQuestionSerializer(serializers.ModelSerializer):
+    """質問マスタシリアライザー"""
+    class Meta:
+        model = InterviewQuestion
+        fields = [
+            'id', 'type', 'category', 'subcategory', 'text', 'answer_guide',
+            'difficulty', 'tags', 'locale', 'is_active', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['created_at', 'updated_at']
+
+
+class PromptTemplateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PromptTemplate
+        fields = ['id', 'name', 'target', 'template_text', 'description', 'is_active', 'created_at', 'updated_at']
+        read_only_fields = ['created_at', 'updated_at']
 
 
 # 互換性のための旧シリアライザー（段階的に削除予定）

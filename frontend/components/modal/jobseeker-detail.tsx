@@ -117,18 +117,11 @@ const JobSeekerDetailModal = ({
             <div className="w-full flex flex-col gap-2 md:gap-3 p-3 md:p-4 bg-gray-50 rounded-lg">
               <div className="flex flex-row gap-2 items-center">
                 <span className="text-base md:text-lg font-semibold">
-                  {(detail.full_name && detail.full_name !== 'N/A')
-                    ? detail.full_name
-                    : (detail.name && detail.name !== 'N/A')
-                      ? detail.name
-                      : '求職者'}
+                  {/* 匿名表示（ID終端で識別） */}
+                  {`匿名ユーザー${detail?.id ? ` #${String(detail.id).slice(-4)}` : ''}`}
                 </span>
               </div>
-              {detail.email && detail.email !== 'N/A' && (
-                <div className="text-sm text-gray-600">
-                  {detail.email}
-                </div>
-              )}
+              {/* 企業画面ではメール等の個人情報は非表示 */}
               {detail.desired_job && (
                 <div className="flex flex-col md:flex-row gap-1 md:gap-2">
                   <span className="w-16 md:w-20 font-medium text-sm md:text-base">

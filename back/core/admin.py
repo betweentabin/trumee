@@ -3,7 +3,8 @@ from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from .models import (
     User, SeekerProfile, Resume, Experience,
     Application, Scout, Message, Payment,
-    ActivityLog, MLModel, MLPrediction
+    ActivityLog, MLModel, MLPrediction,
+    InterviewQuestion, PromptTemplate,
 )
 
 
@@ -169,3 +170,21 @@ class MLPredictionAdmin(admin.ModelAdmin):
 admin.site.site_header = "Resume Truemee 管理画面"
 admin.site.site_title = "Resume Truemee Admin"
 admin.site.index_title = "管理メニュー"
+
+
+@admin.register(InterviewQuestion)
+class InterviewQuestionAdmin(admin.ModelAdmin):
+    """質問マスタ管理"""
+    list_display = ['type', 'category', 'difficulty', 'locale', 'is_active', 'updated_at']
+    list_filter = ['type', 'category', 'difficulty', 'locale', 'is_active']
+    search_fields = ['text', 'answer_guide']
+    readonly_fields = ['created_at', 'updated_at']
+
+
+@admin.register(PromptTemplate)
+class PromptTemplateAdmin(admin.ModelAdmin):
+    """テンプレート管理"""
+    list_display = ['name', 'target', 'is_active', 'updated_at']
+    list_filter = ['target', 'is_active']
+    search_fields = ['name', 'template_text', 'description']
+    readonly_fields = ['created_at', 'updated_at']

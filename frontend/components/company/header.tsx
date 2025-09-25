@@ -41,9 +41,10 @@ const Header = () => {
         <div className="flex items-center justify-between h-20 px-6 md:px-12 lg:px-16">
           {/* Left Logo */}
           <div className="flex items-center">
-              <Image src="/logo/logo_top.png" alt="Logo" width={210} height={40} className="h-10 w-[210px] mr-3 cursor-pointer" />
-          
-        </div>
+              <a href="/company" aria-label="Truemee">
+                <Image src="/logo/logo.png" alt="Truemee" width={210} height={40} className="h-10 w-[210px] mr-3 cursor-pointer" />
+              </a>
+          </div>
       
           {/* Right Buttons */}
           <div className="flex items-center gap-4">

@@ -18,27 +18,57 @@ export default function InterviewPage2() {
   const [challenges, setChallenges] = useState('');
   const [skills, setSkills] = useState('');
   const [derived, setDerived] = useState<string[]>([]);
+  const [fromMaster, setFromMaster] = useState<string[]>([]);
 
-  // 履歴書から想定質問を生成
+  // 履歴書から想定質問を生成（既存ロジック + APIマスタ + パーソナライズ）
   useEffect(() => {
     (async () => {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+      // 1) 履歴書 extra_data からの簡易導出（後方互換）
       try {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
         const res = await fetch(`${apiUrl}/api/v2/resumes/`, { headers: { ...getAuthHeaders() } });
-        if (!res.ok) return;
-        const data = await res.json();
-        const list = data.results || data || [];
-        const r = list.find((x: any) => x.is_active) || list[0];
-        const extra = r?.extra_data || {};
-        const experiences = Array.isArray(extra.workExperiences) ? extra.workExperiences : [];
-        const qs: string[] = [];
-        experiences.forEach((e: any) => {
-          if (e?.company) qs.push(`${e.company}での役割と主な成果は？`);
-          if (e?.position) qs.push(`${e.position}として最も難しかった課題と解決方法は？`);
-          if (Array.isArray(e?.achievements) && e.achievements.filter(Boolean).length) qs.push(`実績のうち、最も誇れるものは？数値で説明できますか？`);
+        if (res.ok) {
+          const data = await res.json();
+          const list = data.results || data || [];
+          const r = list.find((x: any) => x.is_active) || list[0];
+          const extra = r?.extra_data || {};
+          const experiences = Array.isArray(extra.workExperiences) ? extra.workExperiences : [];
+          const qs: string[] = [];
+          experiences.forEach((e: any) => {
+            if (e?.company) qs.push(`${e.company}での役割と主な成果は？`);
+            if (e?.position) qs.push(`${e.position}として最も難しかった課題と解決方法は？`);
+            if (Array.isArray(e?.achievements) && e.achievements.filter(Boolean).length) qs.push(`実績のうち、最も誇れるものは？数値で説明できますか？`);
+          });
+          if (r?.skills) qs.push('履歴書のスキル欄で強調したいスキルと裏付けとなる事例は？');
+          setDerived(qs.slice(0, 6));
+        }
+      } catch { /* ignore */ }
+
+      // 2) マスタ質問から補充（type=resume）
+      try {
+        const qres = await fetch(`${apiUrl}/api/v2/interview/questions/?type=resume&limit=6`, { headers: { ...getAuthHeaders() } });
+        if (qres.ok) {
+          const qdata = await qres.json();
+          const arr = Array.isArray(qdata.results) ? qdata.results : [];
+          setFromMaster(arr.map((x: any) => String(x.text || '')).filter(Boolean).slice(0, 6));
+        }
+      } catch { /* ignore */ }
+
+      // 3) パーソナライズ（Gemini + ルール）
+      try {
+        const pres = await fetch(`${apiUrl}/api/v2/interview/personalize/`, {
+          method: 'POST',
+          headers: { ...getAuthHeaders() },
+          body: JSON.stringify({ type: 'resume', limit: 4 })
         });
-        if (r?.skills) qs.push('履歴書のスキル欄で強調したいスキルと裏付けとなる事例は？');
-        setDerived(qs.slice(0, 8));
+        if (pres.ok) {
+          const pdata = await pres.json();
+          const items = Array.isArray(pdata.items) ? pdata.items : [];
+          setDerived(prev => {
+            const added = items.map((it: any) => String(it.text || '')).filter(Boolean);
+            return [...prev, ...added].slice(0, 10);
+          });
+        }
       } catch { /* ignore */ }
     })();
   }, []);
@@ -79,11 +109,11 @@ export default function InterviewPage2() {
             />
           </div>
 
-          {derived.length > 0 && (
+          {(derived.length > 0 || fromMaster.length > 0) && (
             <div className="bg-white rounded-lg shadow-md p-6">
               <h2 className="text-xl font-semibold mb-4">履歴書からの想定質問</h2>
               <ul className="list-disc pl-5 space-y-2 text-gray-700">
-                {derived.map((q, i) => (<li key={i}>{q}</li>))}
+                {[...fromMaster, ...derived].map((q, i) => (<li key={i}>{q}</li>))}
               </ul>
             </div>
           )}

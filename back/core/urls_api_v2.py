@@ -69,6 +69,8 @@ urlpatterns = [
     path('company/monthly/', views_api_v2.company_monthly_list, name='company-monthly-list'),
     path('company/monthly/current/', views_api_v2.company_monthly_current, name='company-monthly-current'),
     path('company/monthly/<int:year>/<int:month>/', views_api_v2.company_monthly_detail, name='company-monthly-detail'),
+    # 企業が求職者の履歴書（公開用サニタイズ）を参照
+    path('company/users/<uuid:user_id>/resumes/', views_api_v2.company_view_user_resumes, name='company-view-user-resumes'),
     
     # 共通エンドポイント
     path('user/settings/', views_api_v2.user_settings, name='user-settings'),
@@ -84,6 +86,12 @@ urlpatterns = [
     path('advice/messages/', views_api_v2.advice_messages, name='advice-messages'),
     path('advice/notifications/', views_api_v2.advice_notifications, name='advice-notifications'),
     path('advice/mark_read/', views_api_v2.advice_mark_read, name='advice-mark-read'),
+
+    # 面接質問・テンプレート
+    path('interview/categories/', views_api_v2.interview_categories_v2, name='interview-categories'),
+    path('interview/questions/', views_api_v2.interview_questions_v2, name='interview-questions'),
+    path('interview/personalize/', views_api_v2.interview_personalize_v2, name='interview-personalize'),
+    path('templates/render/', views_api_v2.template_render_v2, name='template-render'),
 
     # 企業↔求職者メッセージ
     path('company/messages/', views_api_v2.company_messages, name='company-messages'),

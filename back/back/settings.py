@@ -15,6 +15,9 @@ DEBUG = os.getenv("DEBUG", "True").lower() == "true"
 
 STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY", "")
 
+# ====== Gemini (Google Generative Language) ======
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
+
 # ====== Firebase Configuration ======
 FIREBASE_CREDENTIAL_PATH = os.getenv("FIREBASE_CREDENTIAL_PATH", "firebase_key.json")
 

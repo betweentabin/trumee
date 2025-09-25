@@ -117,8 +117,13 @@ export default function SeekersScoutedPage() {
       try {
         profile = await apiClient.getPublicUserProfile(seekerId);
       } catch {}
-
-      const list = await apiClient.getPublicUserResumes(seekerId).catch(() => [] as any[]);
+      // 企業向けのサニタイズ履歴書取得を優先、失敗時は公開一覧へフォールバック
+      let list: any[] = [];
+      try {
+        list = await apiClient.getCompanyViewUserResumes(seekerId);
+      } catch {
+        list = await apiClient.getPublicUserResumes(seekerId).catch(() => [] as any[]);
+      }
       const resume = (list || []).find((r: any) => r.is_active) || (list || [])[0] || null;
       const merged = typeof seeker === 'object' && seeker !== null ? { ...seeker } : { id: seekerId };
       if (profile) {

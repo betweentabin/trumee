@@ -20,8 +20,15 @@ export default function UserExperienceByIdPage() {
     const run = async () => {
       try {
         setLoading(true);
-        // 自分のページなら認証付きの一覧、他人なら公開一覧
-        const isOwner = !!(currentUser?.id && String(currentUser.id) === String(userId));
+        // ローカル保存のユーザーIDでフォールバック判定（認証復元前の瞬間対策）
+        const storedUserId = (() => {
+          if (typeof window === 'undefined') return null as any;
+          try { return JSON.parse(localStorage.getItem('current_user_v2') || 'null')?.id || null; } catch { return null; }
+        })();
+        const isOwner = !!(
+          (currentUser?.id && String(currentUser.id) === String(userId)) ||
+          (storedUserId && String(storedUserId) === String(userId))
+        );
         const data = isOwner ? await apiClient.getResumes() : await apiClient.getPublicUserResumes(userId);
         const list = Array.isArray(data) ? data : [];
         setResumes(list);

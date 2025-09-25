@@ -130,10 +130,8 @@ export default function PaidPlanPage() {
                   disabled={loading || currentPlan === plan.id}
                   className={`w-full mt-6 py-3 rounded-lg font-medium transition ${
                     currentPlan === plan.id
-                      ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
-                      : plan.id === 'standard'
-                      ? 'bg-[#FF733E] text-white hover:bg-[#FF8659]'
-                      : 'bg-gray-600 text-white hover:bg-gray-700'
+                      ? 'bg-primary-300 text-white cursor-not-allowed'
+                      : 'bg-primary-600 text-white hover:bg-primary-700'
                   }`}
                 >
                   {currentPlan === plan.id 

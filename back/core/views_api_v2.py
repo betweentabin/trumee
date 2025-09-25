@@ -9,6 +9,7 @@
 """
 
 from rest_framework import status, viewsets, permissions
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
@@ -33,7 +34,7 @@ from django.core.cache import cache
 from .models import (
     User, SeekerProfile, CompanyProfile, Resume, Experience, 
     Education, Certification, Application, Scout, Message, JobPosting,
-    CompanyMonthlyPage, ResumeFile
+    CompanyMonthlyPage, ResumeFile, InterviewQuestion, PromptTemplate
 )
 from .serializers import (
     UserSerializer, SeekerProfileSerializer, CompanyProfileSerializer,
@@ -41,8 +42,10 @@ from .serializers import (
     ExperienceSerializer, EducationSerializer, CertificationSerializer,
     ApplicationSerializer, ScoutSerializer, MessageSerializer, JobPostingSerializer,
     UserRegisterSerializer, CompanyRegisterSerializer, LoginSerializer,
-    CompanyMonthlyPageSerializer, ResumeFileSerializer
+    CompanyMonthlyPageSerializer, ResumeFileSerializer,
+    InterviewQuestionSerializer, PromptTemplateSerializer,
 )
+from .ai import gemini as gemini_client
 
 # Import PDF generation views (conditional import)
 try:
@@ -154,6 +157,176 @@ def health_check_v2(request):
         'message': 'API v2 is working',
         'timestamp': datetime.now().isoformat(),
     }, status=status.HTTP_200_OK)
+
+# ============================================================================
+# 面接質問・テンプレート関連（新規）
+# ============================================================================
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def interview_categories_v2(request):
+    """質問カテゴリ一覧（typeでフィルタ可能）"""
+    qtype = request.GET.get('type')
+    qs = InterviewQuestion.objects.filter(is_active=True)
+    if qtype:
+        qs = qs.filter(type=qtype)
+    cats = list(qs.values_list('category', flat=True).distinct())
+    # 既定カテゴリ（不足時の補完）
+    defaults = ['basic', 'motivation', 'experience', 'personality', 'teamwork', 'future', 'stress']
+    for d in defaults:
+        if d and d not in cats:
+            cats.append(d)
+    return Response({'categories': cats}, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def interview_questions_v2(request):
+    """質問一覧取得。クエリ: type, category, difficulty, tags, limit"""
+    qtype = request.GET.get('type')
+    category = request.GET.get('category')
+    difficulty = request.GET.get('difficulty')
+    tags_csv = request.GET.get('tags', '')
+    limit = int(request.GET.get('limit', '20'))
+
+    qs = InterviewQuestion.objects.filter(is_active=True)
+    if qtype:
+        qs = qs.filter(type=qtype)
+    if category:
+        qs = qs.filter(category=category)
+    if difficulty:
+        qs = qs.filter(difficulty=difficulty)
+    # JSONFieldのタグ検索はDB依存が強いのでMVPではアプリ側でフィルタ
+    items = list(qs.order_by('category', 'difficulty', '-updated_at')[: max(0, min(limit, 100))])
+    if tags_csv:
+        tags = [t.strip() for t in tags_csv.split(',') if t.strip()]
+        if tags:
+            items = [x for x in items if any((t in (x.tags or [])) for t in tags)]
+
+    data = InterviewQuestionSerializer(items, many=True).data
+    return Response({'results': data, 'count': len(data)}, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def interview_personalize_v2(request):
+    """履歴書に基づき質問をパーソナライズして返す（+Geminiで追加生成）"""
+    body = request.data or {}
+    qtype = str(body.get('type') or 'interview')
+    limit = int(body.get('limit') or 5)
+    resume_id = body.get('resume_id')
+
+    # 対象履歴書を取得
+    if resume_id:
+        resume = get_object_or_404(Resume, id=resume_id, user=request.user)
+    else:
+        resume = Resume.objects.filter(user=request.user).order_by('-is_active', '-updated_at').first()
+    if not resume:
+        return Response({'detail': '履歴書が見つかりません'}, status=status.HTTP_404_NOT_FOUND)
+
+    # ルールベース選定（簡易）：typeと基本カテゴリ優先
+    base_qs = InterviewQuestion.objects.filter(is_active=True, type=qtype)
+    # 経験情報があればexperienceカテゴリを優先
+    prefer = 'experience' if resume.experiences.exists() else None
+    selected = []
+    for q in base_qs.order_by('category', 'difficulty', '-updated_at'):
+        if prefer and q.category == prefer:
+            selected.append(q)
+        elif not prefer:
+            selected.append(q)
+        if len(selected) >= limit:
+            break
+
+    items = [
+        {
+            'text': q.text,
+            'category': q.category,
+            'difficulty': q.difficulty,
+            'tips': [t for t in (q.answer_guide.split('\n') if q.answer_guide else []) if t.strip()],
+            'source': 'rules',
+        }
+        for q in selected
+    ]
+
+    # Geminiで追加質問を生成（ENVが設定されていれば）
+    added = []
+    if getattr(settings, 'GEMINI_API_KEY', ''):
+        try:
+            # 履歴書概要を作成
+            skills = (resume.skills or '').strip()
+            exp_lines = []
+            for e in resume.experiences.all()[:3]:
+                exp_lines.append(f"会社:{e.company} 役割:{(e.position or '')} 実績:{(e.achievements or '')[:40]}")
+            exp_text = "\n".join(exp_lines)
+            prompt = (
+                "以下の履歴書情報と既存質問例を参考に、日本語で面接想定質問を3つ生成してください。\n"
+                "- 箇条書きで1行1問、質問文のみ。\n"
+                "- 誇張や断定を避け、汎用的で実務に即した問いにする。\n\n"
+                f"履歴書要約:\nスキル: {skills or '（未記載）'}\n経験:\n{exp_text or '（未記載）'}\n\n"
+                f"既存質問例:\n" + "\n".join([x['text'] for x in items[:3]])
+            )
+            out = gemini_client.generate_text(prompt)
+            for line in out.splitlines():
+                q = line.strip().lstrip('-').lstrip('・').strip()
+                if not q:
+                    continue
+                added.append({'text': q, 'category': 'generated', 'difficulty': 'medium', 'tips': [], 'source': 'gemini'})
+                if len(added) >= max(0, limit - len(items)):
+                    break
+        except Exception:
+            # 生成失敗は無視してルール分のみ返す
+            pass
+
+    return Response({'items': items + added, 'source': 'gemini+rules' if added else 'rules'}, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def template_render_v2(request):
+    """テンプレートを履歴書でレンダリングして返す"""
+    body = request.data or {}
+    template_id = body.get('template_id')
+    resume_id = body.get('resume_id')
+    if not template_id:
+        return Response({'detail': 'template_id is required'}, status=status.HTTP_400_BAD_REQUEST)
+    t = get_object_or_404(PromptTemplate, id=template_id, is_active=True)
+    if resume_id:
+        r = get_object_or_404(Resume, id=resume_id, user=request.user)
+    else:
+        r = Resume.objects.filter(user=request.user).order_by('-is_active', '-updated_at').first()
+    if not r:
+        return Response({'detail': '履歴書が見つかりません'}, status=status.HTTP_404_NOT_FOUND)
+
+    # 簡易レンダリング: format_mapで安全に埋め込み
+    class SafeDict(dict):
+        def __missing__(self, key):
+            return ''
+
+    exps = [
+        {
+            'company': e.company,
+            'position': e.position or '',
+            'achievements': e.achievements or '',
+        }
+        for e in r.experiences.all().order_by('order')
+    ]
+    context = SafeDict(
+        resume_title=r.title,
+        resume_description=r.description,
+        objective=r.objective,
+        skills=r.skills,
+        self_pr=r.self_pr,
+        desired_job=r.desired_job,
+        desired_industries=", ".join(r.desired_industries or []),
+        desired_locations=", ".join(r.desired_locations or []),
+        experiences="\n".join([f"{x['company']} / {x['position']} / {x['achievements'][:100]}" for x in exps])
+    )
+    try:
+        rendered = t.template_text.format_map(context)
+    except Exception:
+        # テンプレート構文エラー時はそのまま返す
+        rendered = t.template_text
+    return Response({'text': rendered, 'template': PromptTemplateSerializer(t).data}, status=status.HTTP_200_OK)
 
 # ============================================================================
 # 管理者用エンドポイント
@@ -937,9 +1110,8 @@ class ApplicationViewSet(viewsets.ModelViewSet):
         if self.request.user.role == 'user':
             serializer.save(applicant=self.request.user)
         else:
-            return Response({
-                'detail': '求職者のみ応募できます'
-            }, status=status.HTTP_403_FORBIDDEN)
+            # perform_create should not return a Response; raise instead
+            raise PermissionDenied('求職者のみ応募できます')
 
 
 class ScoutViewSet(viewsets.ModelViewSet):
@@ -1634,6 +1806,30 @@ def user_public_resume_detail(request, user_id, resume_id):
     data = ResumeSerializer(resume).data
     if not is_owner:
         data.pop('user_email', None)
+    return Response(data, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def company_view_user_resumes(request, user_id):
+    """
+    企業が求職者の公開用履歴書を参照するためのエンドポイント。
+    - 企業ロールのみアクセス可能
+    - プライバシー設定に関わらず is_active=True の履歴書をサニタイズして返却
+    - 連絡先など識別可能な情報は含めない
+    """
+    if getattr(request.user, 'role', None) != 'company':
+        return Response({'error': 'Company role required'}, status=status.HTTP_403_FORBIDDEN)
+
+    try:
+        user = User.objects.get(id=user_id)
+    except User.DoesNotExist:
+        return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    resumes_qs = Resume.objects.filter(user=user, is_active=True).order_by('-updated_at')
+    data = ResumeSerializer(resumes_qs, many=True).data
+    for r in data:
+        r.pop('user_email', None)
     return Response(data, status=status.HTTP_200_OK)
 
 
