@@ -10,17 +10,28 @@ from .models import (
 
 class UserSerializer(serializers.ModelSerializer):
     """ユーザーシリアライザー"""
+    scout_credits_total = serializers.IntegerField(read_only=True)
+    scout_credits_used = serializers.IntegerField(read_only=True)
+    scout_credits_remaining = serializers.SerializerMethodField()
     class Meta:
         model = User
         fields = [
             'id', 'email', 'username', 'role', 'full_name', 
             'kana', 'gender', 'company_name', 'capital', 
             'company_url', 'phone', 'is_premium', 'premium_expiry', 'plan_tier',
+            'scout_credits_total', 'scout_credits_used',
+            'scout_credits_remaining',
             # 管理者可視のためのフラグを公開（read-only）
             'is_staff', 'is_superuser',
             'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'created_at', 'updated_at', 'is_staff', 'is_superuser']
+
+    def get_scout_credits_remaining(self, obj):
+        try:
+            return obj.scout_credits_remaining
+        except Exception:
+            return 0
 
 
 class UserRegisterSerializer(serializers.ModelSerializer):

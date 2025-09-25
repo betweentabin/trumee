@@ -46,6 +46,10 @@ class User(AbstractUser):
     # 課金プラン（starter / standard / premium）。空は未契約（またはレガシー互換）
     plan_tier = models.CharField(max_length=20, blank=True, db_index=True)
     
+    # スカウトクレジット（企業向け）
+    scout_credits_total = models.IntegerField(default=100)
+    scout_credits_used = models.IntegerField(default=0)
+    
     # メタデータ
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -65,6 +69,13 @@ class User(AbstractUser):
         if self.role == 'company':
             return f"{self.company_name} ({self.email})"
         return f"{self.full_name} ({self.email})"
+
+    @property
+    def scout_credits_remaining(self) -> int:
+        try:
+            return max(0, int(self.scout_credits_total) - int(self.scout_credits_used))
+        except Exception:
+            return 0
 
 
 class SeekerProfile(models.Model):

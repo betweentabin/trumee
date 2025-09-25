@@ -1221,6 +1221,18 @@ class ScoutViewSet(viewsets.ModelViewSet):
                 'detail': '企業のみスカウトを送信できます'
             }, status=status.HTTP_403_FORBIDDEN)
         
+        # クレジット残数チェック
+        try:
+            remaining = request.user.scout_credits_remaining
+        except Exception:
+            remaining = 0
+        if remaining <= 0:
+            return Response({
+                'error': 'insufficient_credits',
+                'detail': 'スカウトの残り送信可能数がありません。追加100通（¥10,000）の購入をご検討ください。',
+                'purchase_url': '/companyinfo/payment'
+            }, status=402)
+        
         # companyフィールドを自動設定
         data = request.data.copy()
         data['company'] = request.user.id
@@ -1228,6 +1240,13 @@ class ScoutViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
+        
+        # 送信成功時に使用数をインクリメント
+        try:
+            request.user.scout_credits_used = int(request.user.scout_credits_used) + 1
+            request.user.save(update_fields=['scout_credits_used'])
+        except Exception:
+            pass
         
         # レスポンスにseekerの詳細情報を含める
         scout_data = serializer.data
@@ -1308,7 +1327,10 @@ def dashboard_stats_v2(request):
             'scouts_sent_count': user.sent_scouts.count(),
             'pending_applications_count': user.received_applications.filter(status='pending').count(),
             'active_scouts_count': user.sent_scouts.filter(status='sent').count(),
-            'recent_activities': []
+            'recent_activities': [],
+            'scout_credits_total': getattr(user, 'scout_credits_total', 0),
+            'scout_credits_used': getattr(user, 'scout_credits_used', 0),
+            'scout_credits_remaining': getattr(user, 'scout_credits_remaining', 0),
         }
         
     else:
