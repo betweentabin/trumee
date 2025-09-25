@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { getAuthHeaders } from '@/utils/auth';
+import { buildApiUrl } from '@/config/api';
 import { 
   FaPlay, 
   FaPause, 
@@ -40,10 +41,14 @@ export default function InterviewPage3() {
   const [timeElapsed, setTimeElapsed] = useState(0);
   const [timer, setTimer] = useState<NodeJS.Timeout | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [difficulty, setDifficulty] = useState<'all'|'easy'|'medium'|'hard'>('all');
   const [completedQuestions, setCompletedQuestions] = useState<string[]>([]);
   const [userAnswer, setUserAnswer] = useState('');
 
   const [extraQs, setExtraQs] = useState<MockInterview[]>([]);
+  const [apiCategories, setApiCategories] = useState<string[]>([]);
+  const [apiQuestions, setApiQuestions] = useState<MockInterview[]>([]);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -70,7 +75,7 @@ export default function InterviewPage3() {
 
         // 2) API v2: 個別最適化質問（Gemini + ルール）
         try {
-          const p = await fetch(`${apiUrl}/api/v2/interview/personalize/`, {
+          const p = await fetch(buildApiUrl('/interview/personalize/'), {
             method: 'POST',
             headers: { ...getAuthHeaders() },
             body: JSON.stringify({ type: 'interview', limit: 3 })
@@ -93,6 +98,7 @@ export default function InterviewPage3() {
     })();
   }, []);
 
+  // 既存の静的質問（APIが空の時のフォールバック）
   const mockQuestions: MockInterview[] = [
     {
       id: '1',
@@ -168,15 +174,7 @@ export default function InterviewPage3() {
     }
   ];
 
-  const categories = [
-    { key: 'all', label: 'すべて' },
-    { key: 'basic', label: '基本質問' },
-    { key: 'motivation', label: '志望動機' },
-    { key: 'personality', label: '性格・能力' },
-    { key: 'teamwork', label: 'チームワーク' },
-    { key: 'future', label: '将来性' },
-    { key: 'stress', label: 'ストレス耐性' }
-  ];
+  const categories = [{ key: 'all', label: 'すべて' }, ...apiCategories.map(c => ({ key: c, label: c }))];
 
   useEffect(() => {
     loadCompletedQuestions();
@@ -198,6 +196,54 @@ export default function InterviewPage3() {
       console.error('Failed to load completed questions:', error);
     }
   };
+
+  // カテゴリ一覧の読み込み（API）
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch(buildApiUrl('/interview/categories/?type=interview'), { headers: { ...getAuthHeaders() } });
+        if (!res.ok) return;
+        const data = await res.json();
+        const cats = Array.isArray(data.categories) ? data.categories : [];
+        setApiCategories(cats);
+        if (selectedCategory === 'all' && cats.length) setSelectedCategory(cats[0]);
+      } catch { /* noop */ }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // 質問一覧の読み込み（API）
+  useEffect(() => {
+    (async () => {
+      if (selectedCategory === 'all') { setApiQuestions([]); return; }
+      setLoading(true);
+      try {
+        const params = new URLSearchParams();
+        params.set('type', 'interview');
+        params.set('category', selectedCategory);
+        params.set('limit', '30');
+        if (difficulty !== 'all') params.set('difficulty', difficulty);
+        const res = await fetch(buildApiUrl(`/interview/questions/?${params.toString()}`), { headers: { ...getAuthHeaders() } });
+        if (!res.ok) { setApiQuestions([]); return; }
+        const data = await res.json();
+        const list = Array.isArray(data.results) ? data.results : [];
+        const mapped: MockInterview[] = list.map((x: any, i: number) => ({
+          id: String(x.id || `api-${i}`),
+          question: String(x.text || ''),
+          category: String(x.category || selectedCategory),
+          difficulty: (x.difficulty || 'medium') as any,
+          timeLimit: 180,
+          tips: String(x.answer_guide || '')
+            .split('\n')
+            .map((t: string) => t.trim())
+            .filter(Boolean),
+        }));
+        setApiQuestions(mapped);
+      } catch {
+        setApiQuestions([]);
+      } finally { setLoading(false); }
+    })();
+  }, [selectedCategory, difficulty]);
 
   const saveCompletedQuestion = (questionId: string) => {
     const updated = [...completedQuestions, questionId];
@@ -276,7 +322,9 @@ export default function InterviewPage3() {
     }
   };
 
-  const allQuestions = [...mockQuestions, ...extraQs];
+  const fallbackQuestions = [...mockQuestions];
+  const combined = apiQuestions.length ? apiQuestions : fallbackQuestions;
+  const allQuestions = [...combined, ...extraQs];
   const filteredQuestions = selectedCategory === 'all' 
     ? allQuestions 
     : allQuestions.filter(q => q.category === selectedCategory);
@@ -310,6 +358,17 @@ export default function InterviewPage3() {
                       {category.label}
                     </button>
                   ))}
+                </div>
+                <div className="mt-4 flex items-center gap-2 text-sm flex-wrap">
+                  <span className="text-gray-600">難易度:</span>
+                  {(['all','easy','medium','hard'] as const).map(d => (
+                    <button
+                      key={d}
+                      onClick={() => setDifficulty(d)}
+                      className={`px-3 py-1 rounded ${difficulty===d ? 'bg-gray-800 text-white' : 'bg-gray-200 text-gray-800 hover:bg-gray-300'}`}
+                    >{d === 'all' ? '全て' : d}</button>
+                  ))}
+                  {loading && <span className="ml-2 text-xs text-gray-500">読み込み中…</span>}
                 </div>
               </div>
 

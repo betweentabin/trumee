@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { getAuthHeaders } from '@/utils/auth';
+import { buildApiUrl } from '@/config/api';
 
 export default function InterviewPage2() {
   const router = useRouter();
@@ -23,10 +24,9 @@ export default function InterviewPage2() {
   // 履歴書から想定質問を生成（既存ロジック + APIマスタ + パーソナライズ）
   useEffect(() => {
     (async () => {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
       // 1) 履歴書 extra_data からの簡易導出（後方互換）
       try {
-        const res = await fetch(`${apiUrl}/api/v2/resumes/`, { headers: { ...getAuthHeaders() } });
+        const res = await fetch(buildApiUrl('/resumes/'), { headers: { ...getAuthHeaders() } });
         if (res.ok) {
           const data = await res.json();
           const list = data.results || data || [];
@@ -46,7 +46,7 @@ export default function InterviewPage2() {
 
       // 2) マスタ質問から補充（type=resume）
       try {
-        const qres = await fetch(`${apiUrl}/api/v2/interview/questions/?type=resume&limit=6`, { headers: { ...getAuthHeaders() } });
+        const qres = await fetch(buildApiUrl('/interview/questions/?type=resume&limit=6'), { headers: { ...getAuthHeaders() } });
         if (qres.ok) {
           const qdata = await qres.json();
           const arr = Array.isArray(qdata.results) ? qdata.results : [];
@@ -56,7 +56,7 @@ export default function InterviewPage2() {
 
       // 3) パーソナライズ（Gemini + ルール）
       try {
-        const pres = await fetch(`${apiUrl}/api/v2/interview/personalize/`, {
+        const pres = await fetch(buildApiUrl('/interview/personalize/'), {
           method: 'POST',
           headers: { ...getAuthHeaders() },
           body: JSON.stringify({ type: 'resume', limit: 4 })

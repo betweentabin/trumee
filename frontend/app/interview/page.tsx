@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { getAuthHeaders } from '@/utils/auth';
+import { buildApiUrl } from '@/config/api';
 
 type QItem = {
   id?: string;
@@ -24,7 +25,7 @@ export default function InterviewTopPage() {
   }, [pathname]);
   const to = (path: string) => (userIdFromPath ? `/users/${userIdFromPath}${path}` : path);
 
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+  // Use centralized URL builder to avoid env mismatch
 
   const [loading, setLoading] = useState(false);
   const [categories, setCategories] = useState<string[]>([]);
@@ -36,7 +37,7 @@ export default function InterviewTopPage() {
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch(`${apiUrl}/api/v2/interview/categories/?type=interview`, { headers: { ...getAuthHeaders() } });
+        const res = await fetch(buildApiUrl('/interview/categories/?type=interview'), { headers: { ...getAuthHeaders() } });
         if (!res.ok) return;
         const data = await res.json();
         const cats = Array.isArray(data.categories) ? data.categories : [];
@@ -65,7 +66,7 @@ export default function InterviewTopPage() {
           .filter(Boolean)
           .join(',');
         if (tagsCsv) params.set('tags', tagsCsv);
-        const res = await fetch(`${apiUrl}/api/v2/interview/questions/?${params.toString()}`, { headers: { ...getAuthHeaders() } });
+        const res = await fetch(buildApiUrl(`/interview/questions/?${params.toString()}`), { headers: { ...getAuthHeaders() } });
         if (!res.ok) { setQuestions([]); return; }
         const data = await res.json();
         const list = Array.isArray(data.results) ? data.results : [];
@@ -87,7 +88,7 @@ export default function InterviewTopPage() {
   const addPersonalized = async () => {
     try {
       setLoading(true);
-      const res = await fetch(`${apiUrl}/api/v2/interview/personalize/`, {
+      const res = await fetch(buildApiUrl('/interview/personalize/'), {
         method: 'POST',
         headers: { ...getAuthHeaders() },
         body: JSON.stringify({ type: 'interview', limit: 3 })
