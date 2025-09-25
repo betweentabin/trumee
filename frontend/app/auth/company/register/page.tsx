@@ -605,11 +605,11 @@ export default function CompanyRegisterPage() {
                 </div>
                 <div className="ml-3 text-sm">
                   <label htmlFor="agreeToTerms" className="font-medium text-gray-700 cursor-pointer">
-                    <Link href="/terms" target="_blank" className="text-[#FF733E] hover:text-[#e9632e] transition">
+                    <Link href="/terms" target="_blank" rel="noopener noreferrer" className="text-[#FF733E] hover:text-[#e9632e] transition">
                       利用規約
                     </Link>
                     および
-                    <Link href="/privacy-policy" target="_blank" className="text-[#FF733E] hover:text-[#e9632e] transition">
+                    <Link href="/privacy-policy" target="_blank" rel="noopener noreferrer" className="text-[#FF733E] hover:text-[#e9632e] transition">
                       プライバシーポリシー
                     </Link>
                     に同意します <span className="text-red-500">*</span>

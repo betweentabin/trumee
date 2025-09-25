@@ -46,7 +46,10 @@ export default function NotificationPanel() {
   };
 
   useEffect(() => {
-    load();
+    // 認証済みでトークンがあるときのみ読み込み
+    if (apiV2Client.isAuthenticated()) {
+      load();
+    }
   }, []);
 
   const markRead = async (subject: AdviceSubject) => {

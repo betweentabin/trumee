@@ -287,7 +287,7 @@ export default function CompanyLoginPage() {
             <div className="text-xs text-gray-600 flex items-start gap-2">
               <input id="agree" type="checkbox" className="mt-0.5" checked={acceptedTerms} onChange={(e)=>setAcceptedTerms(e.target.checked)} />
               <label htmlFor="agree">
-                <span>私は <a className="text-primary-600 underline" href="/terms-of-use" target="_blank" rel="noreferrer">利用規約</a> と <a className="text-primary-600 underline" href="/account/personal-info-license" target="_blank" rel="noreferrer">個人情報利用許諾</a> に同意します。</span>
+                <span>私は <a className="text-primary-600 underline" href="/terms-of-use" target="_blank" rel="noopener noreferrer">利用規約</a> と <a className="text-primary-600 underline" href="/account/personal-info-license" target="_blank" rel="noopener noreferrer">個人情報利用許諾</a> に同意します。</span>
               </label>
             </div>
 

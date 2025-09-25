@@ -294,6 +294,16 @@ class ResumeUpdateSerializer(serializers.ModelSerializer):
 class ResumeFileSerializer(serializers.ModelSerializer):
     """履歴書ファイルシリアライザー"""
     file_url = serializers.SerializerMethodField()
+    
+    # 許可するContent-Typeと最大サイズ（影響を抑えるため広めに許可）
+    ALLOWED_CONTENT_TYPES = {
+        'application/pdf',
+        'image/png',
+        'image/jpeg',
+        'application/msword',  # .doc
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',  # .docx
+    }
+    MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
 
     class Meta:
         model = ResumeFile
@@ -302,6 +312,17 @@ class ResumeFileSerializer(serializers.ModelSerializer):
             'file', 'file_url', 'uploaded_at'
         ]
         read_only_fields = ['user', 'file_url', 'uploaded_at']
+
+    def validate_file(self, f):
+        # Content-Type の検証
+        content_type = getattr(f, 'content_type', '') or ''
+        size = getattr(f, 'size', 0) or 0
+        if content_type and content_type not in self.ALLOWED_CONTENT_TYPES:
+            raise serializers.ValidationError('許可されていないファイル形式です（pdf, png, jpg, doc, docx を許可）')
+        # サイズ検証
+        if size and size > self.MAX_FILE_SIZE:
+            raise serializers.ValidationError('ファイルサイズが大きすぎます（最大10MB）')
+        return f
 
     def get_file_url(self, obj):
         request = self.context.get('request')

@@ -121,7 +121,7 @@ export default function ResumeFileUpload() {
                 </div>
                 <div className="flex items-center gap-2">
                   {f.file_url && (
-                    <a href={f.file_url} target="_blank" className="px-3 py-1 border rounded text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-1" rel="noreferrer">
+                    <a href={f.file_url} target="_blank" className="px-3 py-1 border rounded text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-1" rel="noopener noreferrer">
                       <FaExternalLinkAlt />
                       開く
                     </a>

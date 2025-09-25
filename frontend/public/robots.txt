@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+Sitemap: https://trumeee.vercel.app/sitemap.xml
+

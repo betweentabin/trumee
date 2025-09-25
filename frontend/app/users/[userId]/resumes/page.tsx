@@ -189,7 +189,7 @@ export default function UserResumesByIdPage() {
                   </div>
                   <div className="flex items-center gap-2">
                     {f.file_url && (
-                      <a href={f.file_url} target="_blank" rel="noreferrer" className="px-3 py-2 text-sm rounded-md border hover:bg-gray-50">
+                      <a href={f.file_url} target="_blank" rel="noopener noreferrer" className="px-3 py-2 text-sm rounded-md border hover:bg-gray-50">
                         開く
                       </a>
                     )}

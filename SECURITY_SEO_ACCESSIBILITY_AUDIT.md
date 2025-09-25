@@ -284,3 +284,15 @@ class ResumeFileSerializer(serializers.ModelSerializer):
   - 変更箇所: `back/back/settings.py:44`, `back/back/settings.py:286`, `back/back/settings.py:288`
 
 注: 上記Djangoの強化は本番条件下のみ有効化され、開発環境では挙動に影響しないよう配慮しています。
+
+### 追加（今回）
+- target="_blank" リンクに `rel="noopener noreferrer"` を付与（セキュリティ強化）
+  - 変更箇所: `frontend/app/resumes/page.tsx:275`, `frontend/app/users/[userId]/resumes/page.tsx:192`, `frontend/components/resume/resume-file-upload.tsx:124`
+
+- robots.txt / sitemap.xml を追加（SEO基盤）
+  - 追加: `frontend/public/robots.txt`, `frontend/public/sitemap.xml`
+  - robots にはサイトマップの場所を記載
+
+- アップロードファイルの検証（サイズ/Content-Type）
+  - 許可: pdf, png, jpeg, doc, docx（最大10MB）
+  - 変更箇所: `back/core/serializers.py:1`（ResumeFileSerializerにvalidate_fileを追加）
