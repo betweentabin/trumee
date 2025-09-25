@@ -9,7 +9,6 @@ import { FaBriefcase, FaLightbulb, FaPencilAlt, FaStar, FaPlus, FaMinus } from '
 import { buildApiUrl, getApiHeaders } from '@/config/api';
 import toast from 'react-hot-toast';
 import QuestionBrowser from '@/components/interview/QuestionBrowser';
-import MockInterviewTrainer from '@/components/interview/MockInterviewTrainer';
 
 // Local types
 type ThreadMsg = { id: string; sender: string; text: string; created_at: string; topic?: string };
@@ -255,9 +254,8 @@ export default function ApplyingReasonsPage() {
 
               {selectedTopic === 'interview' ? (
                 <div className="p-4 space-y-6">
-                  {/* 面接対策: カテゴリ別質問と模擬面接をインライン表示 */}
+                  {/* 面接対策: カテゴリ別質問のみをインライン表示 */}
                   <QuestionBrowser type="interview" showPersonalize />
-                  <MockInterviewTrainer />
                 </div>
               ) : (
                 <>
