@@ -9,6 +9,7 @@ from django.shortcuts import get_object_or_404
 from django.db.models import Q
 from datetime import datetime
 from django.http import JsonResponse
+from django.core.cache import cache
 
 from .models import (
     User, SeekerProfile, Resume, Experience,
@@ -79,6 +80,25 @@ class LoginView(APIView):
     permission_classes = [AllowAny]
     
     def post(self, request):
+        # Rate limit login attempts (per IP+email): 10 tries / 10 minutes
+        def _rate_limit(key: str, limit: int, window_seconds: int) -> bool:
+            ip = request.META.get('REMOTE_ADDR') or 'unknown'
+            cache_key = f"rl:{ip}:{key}"
+            added = cache.add(cache_key, 1, timeout=window_seconds)
+            if added:
+                return True
+            try:
+                current = cache.incr(cache_key)
+            except ValueError:
+                cache.set(cache_key, 1, timeout=window_seconds)
+                return True
+            return current <= limit
+
+        email_for_key = request.data.get('email') or 'unknown'
+        key = f"login:{email_for_key}"
+        if not _rate_limit(key, limit=10, window_seconds=600):
+            return Response({'detail': '試行回数が多すぎます。しばらくしてからお試しください。'}, status=429)
+
         serializer = LoginSerializer(data=request.data)
         
         if serializer.is_valid():

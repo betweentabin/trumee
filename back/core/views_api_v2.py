@@ -28,6 +28,7 @@ from django.utils import timezone
 import jwt
 import datetime
 import os
+from django.core.cache import cache
 
 from .models import (
     User, SeekerProfile, CompanyProfile, Resume, Experience, 
@@ -120,6 +121,22 @@ def verify_jwt_token(token):
         return None
     except jwt.InvalidTokenError:
         return None
+
+def _rate_limit(request, key: str, limit: int, window_seconds: int) -> bool:
+    """Simple IP+key-based rate limiter using Django cache.
+    Returns True if within limit, False if over.
+    """
+    ip = request.META.get('REMOTE_ADDR') or 'unknown'
+    cache_key = f"rl:{ip}:{key}"
+    added = cache.add(cache_key, 1, timeout=window_seconds)
+    if added:
+        return True
+    try:
+        current = cache.incr(cache_key)
+    except ValueError:
+        cache.set(cache_key, 1, timeout=window_seconds)
+        return True
+    return current <= limit
 
 
 # ============================================================================
@@ -437,6 +454,12 @@ def register_company_v2(request):
 @permission_classes([AllowAny])
 def login_v2(request):
     """ユーザーログイン API v2"""
+    # Rate limit login attempts per IP+email: 10 tries / 10 minutes
+    email_for_key = (request.data or {}).get('email') if hasattr(request, 'data') else None
+    email_for_key = email_for_key or 'unknown'
+    if not _rate_limit(request, f"login:{email_for_key}", limit=10, window_seconds=600):
+        return Response({'detail': '試行回数が多すぎます。しばらくしてからお試しください。'}, status=429)
+
     serializer = LoginSerializer(data=request.data)
     
     if serializer.is_valid():

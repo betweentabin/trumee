@@ -304,3 +304,7 @@ class ResumeFileSerializer(serializers.ModelSerializer):
   - download: 1分間に最大10回/IP、send: 10分間に最大5回/IP
   - 実装: Django cacheを用いたIP+パス単位のカウント
   - 変更箇所: `back/api_v2/views/resume_views.py:1`（_rate_limit関数追加、各APIに適用）
+
+- ログインAPIのレート制限（ブルートフォース対策）
+  - 10分で10回/IP+メールアドレス
+  - 変更箇所: `back/core/views_api.py:1`（LoginView.postに導入）、`back/core/views_api_v2.py:438`（login_v2に導入）
