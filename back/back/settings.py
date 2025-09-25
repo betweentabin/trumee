@@ -58,7 +58,8 @@ CORS_ALLOWED_ORIGINS = [
 
 CORS_ALLOW_CREDENTIALS = True
 
-CORS_ALLOW_ALL_ORIGINS = True  # 一時的に全てのオリジンを許可（テスト用）
+# 開発時のみ許容。本番(=DEBUG=False)では明示的許可ドメインのみに制限
+CORS_ALLOW_ALL_ORIGINS = True if DEBUG else False
 
 # ====== Application definition ======
 DJANGO_APPS = [
@@ -286,3 +287,34 @@ CACHES = {
 # ====== Session Configuration ======
 SESSION_COOKIE_AGE = 86400  # 24時間
 SESSION_SAVE_EVERY_REQUEST = True
+
+# ====== Security (production) ======
+# 本番では強化。ENABLE_PROD_SECURITY=true でも同様に強制
+if (os.getenv('ENABLE_PROD_SECURITY', 'false').lower() == 'true') or (not DEBUG):
+    SECURE_SSL_REDIRECT = True
+    SECURE_HSTS_SECONDS = 31536000
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+
+    SESSION_COOKIE_SECURE = True
+    SESSION_COOKIE_HTTPONLY = True
+    SESSION_COOKIE_SAMESITE = 'Lax'
+
+    CSRF_COOKIE_SECURE = True
+    CSRF_COOKIE_HTTPONLY = True
+    CSRF_COOKIE_SAMESITE = 'Lax'
+
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    SECURE_REFERRER_POLICY = 'strict-origin-when-cross-origin'
+    X_FRAME_OPTIONS = 'DENY'
+
+    # CORSは明示許可のみに限定
+    CORS_ALLOW_ALL_ORIGINS = False
+
+# CSRFで信頼するオリジン（フォームPOST等のため）
+CSRF_TRUSTED_ORIGINS = [
+    'https://*.vercel.app',
+    'https://*.railway.app',
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
+]

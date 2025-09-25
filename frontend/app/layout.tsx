@@ -35,6 +35,9 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
   },
+  alternates: {
+    canonical: "https://trumeee.vercel.app",
+  },
 };
 
 export default function RootLayout({

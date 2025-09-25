@@ -265,3 +265,22 @@ class ResumeFileSerializer(serializers.ModelSerializer):
 
 必要であれば、上記の具体的な修正（設定追加やコード改修）もこちらで実施できます。どこから着手するかご指定ください。
 
+---
+
+## 実施状況（対応済みの変更）
+
+- Next.js セキュリティヘッダ拡充（影響低）
+  - 追加: HSTS, X-Content-Type-Options, Referrer-Policy, 緩めのCSP、既存のX-Frame-Options維持
+  - 変更箇所: `frontend/next.config.js:15`
+
+- HTML言語/OGP/Twitter/Canonical（影響低）
+  - `<html lang="ja">` に変更、OpenGraph/Twitter Card追加、canonical追加
+  - 変更箇所: `frontend/app/layout.tsx:1`, `frontend/app/layout.tsx:39`
+
+- Django 本番向けセキュリティ設定（DEBUG=False または ENABLE_PROD_SECURITY=true のとき有効）
+  - SECURE_SSL_REDIRECT, HSTS, Cookie属性（Secure/HttpOnly/SameSite=Lax）, NoSniff, Referrer-Policy, X-Frame-Options など
+  - CORS_ALLOW_ALL_ORIGINS を本番でFalseに（CORS_ALLOWED_ORIGINSのみに限定）
+  - CSRF_TRUSTED_ORIGINS を追加
+  - 変更箇所: `back/back/settings.py:44`, `back/back/settings.py:286`, `back/back/settings.py:288`
+
+注: 上記Djangoの強化は本番条件下のみ有効化され、開発環境では挙動に影響しないよう配慮しています。

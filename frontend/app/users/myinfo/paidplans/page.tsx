@@ -337,7 +337,7 @@ export default function UserPaidPlansPage() {
               <button
                 disabled={!!loadingPlan || !selectedPlan || selectedPlan.id === currentPlan}
                 onClick={handleProceed}
-                className="inline-flex items-center justify-center gap-2 rounded-full bg-primary-600 px-8 py-3 text-base font-semibold text-white shadow hover:bg-primary-700 disabled:opacity-70"
+                className="inline-flex items-center justify-center gap-2 rounded-full bg-primary-600 px-8 py-3 text-base font-semibold text-white shadow hover:bg-primary-700 disabled:bg-primary-300 disabled:text-white disabled:cursor-not-allowed"
               >
                 {loadingPlan ? (
                   <>

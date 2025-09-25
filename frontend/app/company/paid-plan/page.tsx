@@ -169,7 +169,7 @@ export default function CompanyPaidPlanPage() {
                     disabled={isLoading || isActive}
                     className={`w-full mt-8 py-3 rounded-lg font-medium transition ${
                       isActive
-                        ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                        ? 'bg-primary-300 text-white cursor-not-allowed'
                         : plan.highlight
                           ? 'bg-primary-600 text-white hover:bg-primary-700'
                           : 'bg-secondary-900 text-white hover:bg-secondary-800'
