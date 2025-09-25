@@ -4,11 +4,20 @@
 - [x] モデル追加（InterviewQuestion / PromptTemplate）
 - [x] Django Admin 登録（質問マスタ/テンプレート）
 - [x] CSV 取込コマンド（import_interview_questions）
+- [x] 質問票CSVの取り込み（プルダウンリスト＿truemee - 質問票.csv → 99件反映）
 - [x] Gemini クライアント（backend, core/ai/gemini.py）
 - [x] API v2: カテゴリ/一覧/パーソナライズ/テンプレ適用
 - [x] Front: /interview/3 にパーソナライズ質問の組込み
 - [x] Front: /interview/2 にマスタ/パーソナライズ質問の組込み
-- [ ] Front: カテゴリ選択UIとAPI駆動への全面刷新
+- [x] Front: カテゴリ選択UIとAPI駆動への全面刷新（/interview に実装）
+
+## 残タスク（洗い出し）
+- [ ] Front: 面接対策のカテゴリ選択UI（/interview トップなど）をAPI駆動に刷新
+- [ ] Front: 難易度バッジ/タグフィルタの追加（`/interview/questions` クエリ対応）
+- [ ] Admin: PromptTemplateのプレビューUI（任意のResumeで `{}` 埋め込みプレビュー）
+- [ ] 設定: 本番・ステージング環境への `GEMINI_API_KEY` セットと動作確認
+- [ ] 運用: レート制限/ログ監視の設定（Gemini呼び出し、生成回数制限）
+- [ ] QA: 履歴書未作成ユーザー時のパーソナライズ挙動/エラーハンドリング確認
 
 ## 目的
 - 管理者ページから「職務経歴書（履歴書）内容を反映した」テンプレートや質問を登録・管理できるようにする。

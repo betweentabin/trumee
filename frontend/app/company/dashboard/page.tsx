@@ -23,15 +23,8 @@ export default function CompanyDashboard() {
   const companyIdFromPath = parts[0] === 'company' && parts[1] && parts[1] !== 'dashboard' ? parts[1] : null;
   const companyPrefix = companyIdFromPath ? `/company/${companyIdFromPath}` : '/company';
   const authState = useAppSelector(state => state.auth);
-  // 🚨 認証チェックを無効化
-  // const { isAuthenticated, currentUser, initializeAuth } = useAuthV2();
-  // const { data: stats, isLoading: statsLoading } = useDashboardStats();
-  // const { data: unreadCount } = useUnreadCount();
-
-  // 🚨 ダミーデータを設定
-  const stats = { applications: 12, scouts: 8, messages: 5, views: 156 };
-  const statsLoading = false;
-  const unreadCount = 3;
+  const { data: stats, isLoading: statsLoading } = useDashboardStats();
+  const { data: unreadCount } = useUnreadCount();
 
   // ページ読み込み時の初期化
   useEffect(() => {
@@ -113,12 +106,20 @@ export default function CompanyDashboard() {
           />
         </div>
 
-        {/* タブナビゲーション */}
         {/* スカウト残数インフォ */}
         <div className="mb-6 bg-yellow-50 border border-yellow-200 text-yellow-800 rounded p-4">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
             <div>
-              現在のスカウト送信数: <span className="font-bold">{(stats as any)?.scouts_sent || 0}</span> / 100
+              {(() => {
+                const used = (stats as any)?.scout_credits_used ?? 0;
+                const total = (stats as any)?.scout_credits_total ?? 100;
+                const remaining = (stats as any)?.scout_credits_remaining ?? Math.max(0, total - used);
+                return (
+                  <>
+                    スカウト残数: <span className="font-bold">{remaining}</span> / {total}（累計送信: {used}）
+                  </>
+                );
+              })()}
             </div>
             <div className="text-sm">
               100通に達した場合、
