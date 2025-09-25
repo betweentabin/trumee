@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 // Left nav is provided by users/layout; do not render it here
 import useAuthV2 from '@/hooks/useAuthV2';
@@ -16,6 +16,12 @@ export default function UserPaidPlansPage() {
   const plans = plansByRole.user;
   const [currentPlan, setCurrentPlan] = useState<PlanTier | ''>('');
   const [loadingPlan, setLoadingPlan] = useState<PlanTier | ''>('');
+  const [selectedPlanId, setSelectedPlanId] = useState<PlanTier | ''>('');
+
+  const selectedPlan: PlanDef | undefined = useMemo(
+    () => plans.find(p => p.id === selectedPlanId) || undefined,
+    [plans, selectedPlanId]
+  );
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -24,7 +30,11 @@ export default function UserPaidPlansPage() {
         const res = await fetch(`${apiUrl}/api/v2/profile/me/`, { headers: getAuthHeaders() });
         if (res.ok) {
           const data = await res.json();
-          setCurrentPlan((data.plan_tier as PlanTier) || '');
+          const fetched = (data.plan_tier as PlanTier) || '';
+          setCurrentPlan(fetched);
+          // 初期選択は現在のプラン、未設定ならおすすめ（highlight）
+          const initial = plans.find(p => p.id === fetched) || plans.find(p => p.highlight) || plans[0];
+          setSelectedPlanId(initial?.id || '');
         }
       } catch (error) {
         console.error('failed to fetch profile plan tier', error);
@@ -86,16 +96,25 @@ export default function UserPaidPlansPage() {
     }
   };
 
-  const handleHighlightCheckout = () => {
-    const recommended = plans.find(plan => plan.highlight) || plans[0];
-    if (!recommended) return;
+  const handleProceed = () => {
     if (loadingPlan) return;
-    if (recommended.stripePriceId) {
-      gotoStripeCheckout(recommended);
+    if (!selectedPlan) return;
+    if (selectedPlan.id === currentPlan) return; // 変更不要
+    if (selectedPlan.stripePriceId) {
+      gotoStripeCheckout(selectedPlan);
+    } else if (selectedPlan.id === 'starter') {
+      changePlan(selectedPlan);
     } else {
-      changePlan(recommended);
+      toast.error('このプランの決済設定が見つかりません');
     }
   };
+
+  const proceedCtaLabel = useMemo(() => {
+    if (!selectedPlan) return 'プランを選択してください';
+    if (selectedPlan.id === currentPlan) return 'ご利用中のプランです';
+    const base = selectedPlan.id === 'starter' ? 'このプランに変更' : `${selectedPlan.name}プランに申し込む`;
+    return base;
+  }, [selectedPlan, currentPlan]);
 
   type FeatureStatus = 'included' | 'excluded' | 'partial';
 
@@ -214,26 +233,16 @@ export default function UserPaidPlansPage() {
               {plans.map((plan) => {
                 const isCurrent = plan.id === currentPlan;
                 const isLoading = loadingPlan === plan.id;
-                const primaryBtnLabel = isCurrent ? 'ご利用中' : plan.highlight ? 'おすすめプランを申し込む' : 'アップグレード';
-                const action = () => {
-                  if (isCurrent || isLoading) return;
-                  if (plan.stripePriceId) {
-                    gotoStripeCheckout(plan);
-                  } else {
-                    changePlan(plan);
-                  }
-                };
-
-                const cardClass = plan.highlight
-                  ? 'relative bg-white border-2 border-primary-500 shadow-xl rounded-2xl p-6'
-                  : 'bg-white border border-gray-200 shadow-sm rounded-2xl p-6';
+                const isSelected = plan.id === selectedPlanId;
+                const cardClass = `rounded-2xl p-6 bg-white shadow-sm transition border ${
+                  plan.highlight ? 'border-primary-300' : 'border-gray-200'
+                } ${isSelected ? 'ring-2 ring-primary-500 border-primary-500' : ''}`;
 
                 return (
                   <div key={plan.id} className={cardClass}>
                     {plan.highlight && (
-                      <div className="absolute -top-4 left-1/2 -translate-x-1/2 flex items-center gap-1 rounded-full bg-primary-500 px-3 py-1 text-xs font-semibold text-white shadow">
-                        <FaStar className="text-yellow-300" />
-                        おすすめ
+                      <div className="mb-2 inline-flex items-center gap-1 rounded-full bg-primary-50 px-2 py-1 text-[10px] font-semibold text-primary-700 border border-primary-200">
+                        <FaStar className="text-amber-500" /> おすすめ
                       </div>
                     )}
                     <div className="mb-4">
@@ -273,24 +282,23 @@ export default function UserPaidPlansPage() {
                       })}
                     </ul>
 
-                    <button
-                      onClick={action}
-                      disabled={isCurrent || isLoading}
-                      className={`w-full flex items-center justify-center gap-2 rounded-full px-4 py-3 text-sm font-semibold transition ${
-                        isCurrent
-                          ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
-                          : 'bg-primary-600 text-white hover:bg-primary-700'
-                      }`}
-                    >
-                      {isLoading ? (
-                        <>
-                          <FaSpinner className="animate-spin" />
-                          決済ページを準備中…
-                        </>
-                      ) : (
-                        primaryBtnLabel
+                    <div className="flex items-center gap-2">
+                      {isCurrent && (
+                        <span className="text-xs font-semibold text-green-600">現在のプラン</span>
                       )}
-                    </button>
+                      <button
+                        onClick={() => setSelectedPlanId(plan.id)}
+                        disabled={isLoading || isSelected}
+                        className={`ml-auto inline-flex items-center justify-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition ${
+                          isSelected
+                            ? 'bg-gray-200 text-gray-600 cursor-default'
+                            : 'bg-primary-600 text-white hover:bg-primary-700'
+                        }`}
+                        aria-pressed={isSelected}
+                      >
+                        {isSelected ? '選択中' : 'このプランを選択'}
+                      </button>
+                    </div>
                   </div>
                 );
               })}
@@ -327,19 +335,22 @@ export default function UserPaidPlansPage() {
 
             <div className="mt-10 text-center">
               <button
-                disabled={!!loadingPlan}
-                onClick={handleHighlightCheckout}
+                disabled={!!loadingPlan || !selectedPlan || selectedPlan.id === currentPlan}
+                onClick={handleProceed}
                 className="inline-flex items-center justify-center gap-2 rounded-full bg-primary-600 px-8 py-3 text-base font-semibold text-white shadow hover:bg-primary-700 disabled:opacity-70"
               >
                 {loadingPlan ? (
                   <>
                     <FaSpinner className="animate-spin" />
-                    おすすめプランを確認中…
+                    決済ページを準備中…
                   </>
                 ) : (
-                  '一番人気のスタンダードプランを見る'
+                  proceedCtaLabel
                 )}
               </button>
+              {!selectedPlan && (
+                <p className="mt-2 text-sm text-gray-500">プランを選択してください</p>
+              )}
             </div>
         </div>
       </div>
