@@ -31,6 +31,13 @@ export default function CareerPage() {
     return null;
   })();
   const to = (path: string) => userIdFromPath ? `/users/${userIdFromPath}${path}` : path;
+  // 直接 添削チャットへリダイレクト
+  useEffect(() => {
+    const target = to('/resume-advice/review');
+    // replace で履歴を汚さない
+    router.replace(target);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   // 🚨 認証チェックを無効化
   // const { isAuthenticated, initializeAuth } = useAuthV2();
   const [resumes, setResumes] = useState<Resume[]>([]);
