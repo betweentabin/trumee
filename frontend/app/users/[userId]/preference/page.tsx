@@ -94,7 +94,7 @@ export default function UserPreferenceByIdPage() {
 
   if (loading) return <div className="p-6">読み込み中...</div>;
   if (error) return <div className="p-6 text-red-600">{error}</div>;
-  const isOwner = !!(currentUser?.id && currentUser.id === userId);
+  const isOwner = !!(currentUser?.id && String(currentUser.id) === String(userId));
   if (!target) {
     const notOwnerView = (
       <div className="p-6">表示できる希望条件がありません</div>

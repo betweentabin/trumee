@@ -17,7 +17,7 @@ export default function ServiceCards() {
     return null;
   })();
 
-  const isOwner = !!(userIdFromPath && currentUser?.id && currentUser.id === userIdFromPath);
+  const isOwner = !!(userIdFromPath && currentUser?.id && String(currentUser.id) === String(userIdFromPath));
   const perUser = (subpath: string) => {
     // Use current user ID if available, otherwise use path ID
     const userId = currentUser?.id || userIdFromPath;

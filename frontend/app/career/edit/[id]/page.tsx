@@ -56,6 +56,7 @@ export default function EditResumePage() {
   const [agreePublish, setAgreePublish] = useState(false);
   const [sending, setSending] = useState(false);
   const [downloading, setDownloading] = useState(false);
+  const [loadedFromDraft, setLoadedFromDraft] = useState(false);
   const [resumeData, setResumeData] = useState<ResumeData>({
     title: '',
     fullName: '',
@@ -86,11 +87,61 @@ export default function EditResumePage() {
     languages: [{ language: '', level: '' }]
   });
 
-  useEffect(() => {
-    fetchResume();
-  }, [params.id]);
+  // ---- Draft autosave/load (per resume id) ----
+  const resumeId = String((params as any)?.id || '');
+  const DRAFT_KEY = `career_edit_draft_v1_${resumeId}`;
 
-  const fetchResume = async () => {
+  useEffect(() => {
+    let hasDraft = false;
+    try {
+      const saved = typeof window !== 'undefined' ? localStorage.getItem(DRAFT_KEY) : null;
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.resumeData) setResumeData(parsed.resumeData);
+        if (parsed.currentStep) setCurrentStep(parsed.currentStep);
+        hasDraft = true;
+        setLoadedFromDraft(true);
+      } else {
+        setLoadedFromDraft(false);
+      }
+    } catch (e) {
+      console.warn('Failed to load edit draft:', e);
+    }
+    fetchResume(!hasDraft);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resumeId]);
+
+  const saveDraft = (message?: string) => {
+    try {
+      if (typeof window === 'undefined') return;
+      localStorage.setItem(
+        DRAFT_KEY,
+        JSON.stringify({ resumeData, currentStep, savedAt: new Date().toISOString() })
+      );
+      if (message) toast.success(message);
+    } catch (e) {
+      console.warn('Failed to save edit draft:', e);
+      if (message) toast.error('下書き保存に失敗しました');
+    }
+  };
+
+  useEffect(() => {
+    const id = setTimeout(() => saveDraft(), 0);
+    return () => clearTimeout(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resumeData, currentStep]);
+
+  const clearDraft = () => {
+    try {
+      if (typeof window === 'undefined') return;
+      localStorage.removeItem(DRAFT_KEY);
+      toast.success('下書きを削除しました');
+      // 再取得して編集前の状態に戻す
+      fetchResume(true);
+    } catch {}
+  };
+
+  const fetchResume = async (apply: boolean = true) => {
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
       const response = await fetch(`${apiUrl}/api/v2/resumes/${params.id}/`, {
@@ -102,37 +153,39 @@ export default function EditResumePage() {
       if (response.ok) {
         const data = await response.json();
         const extra = data?.extra_data || {};
-        setResumeData({
-          title: extra.title || '',
-          fullName: extra.fullName || '',
-          email: extra.email || '',
-          phone: extra.phone || '',
-          address: extra.address || '',
-          birthDate: extra.birthDate || '',
-          summary: data?.self_pr || '',
-          jobSummary: extra.jobSummary || '',
-          desiredPosition: data?.desired_job || '',
-          desiredSalary: extra.desiredSalary || '',
-          // Keep experiences/education only in extra_data for now to avoid nested validation
-          workExperiences: extra.workExperiences || [{
-            company: '',
-            position: '',
-            startDate: '',
-            endDate: '',
-            description: '',
-            achievements: ['']
-          }],
-          education: extra.education || [{
-            school: '',
-            degree: '',
-            field: '',
-            graduationDate: ''
-          }],
-          // API stores skills as comma-separated string; split to array for editing
-          skills: (data?.skills ? String(data.skills).split(',').map((s: string) => s.trim()).filter(Boolean) : ['']),
-          certifications: extra.certifications || [''],
-          languages: extra.languages || [{ language: '', level: '' }]
-        });
+        if (apply) {
+          setResumeData({
+            title: extra.title || '',
+            fullName: extra.fullName || '',
+            email: extra.email || '',
+            phone: extra.phone || '',
+            address: extra.address || '',
+            birthDate: extra.birthDate || '',
+            summary: data?.self_pr || '',
+            jobSummary: extra.jobSummary || '',
+            desiredPosition: data?.desired_job || '',
+            desiredSalary: extra.desiredSalary || '',
+            // Keep experiences/education only in extra_data for now to avoid nested validation
+            workExperiences: extra.workExperiences || [{
+              company: '',
+              position: '',
+              startDate: '',
+              endDate: '',
+              description: '',
+              achievements: ['']
+            }],
+            education: extra.education || [{
+              school: '',
+              degree: '',
+              field: '',
+              graduationDate: ''
+            }],
+            // API stores skills as comma-separated string; split to array for editing
+            skills: (data?.skills ? String(data.skills).split(',').map((s: string) => s.trim()).filter(Boolean) : ['']),
+            certifications: extra.certifications || [''],
+            languages: extra.languages || [{ language: '', level: '' }]
+          });
+        }
       }
       setLoading(false);
     } catch (error) {
@@ -819,6 +872,18 @@ case 4:
           <div className="flex items-center justify-between">
             <h1 className="text-3xl font-bold text-gray-800">職務経歴書編集</h1>
             <div className="flex gap-2">
+              <button
+                onClick={() => saveDraft('下書きを保存しました')}
+                className="px-4 py-2 border rounded-md text-[#FF733E] border-[#FF733E] hover:bg-orange-50"
+              >
+                下書き保存
+              </button>
+              <button
+                onClick={clearDraft}
+                className="px-4 py-2 border rounded-md text-gray-600 hover:bg-gray-100"
+              >
+                下書き削除
+              </button>
               <button
                 onClick={() => router.push(to(`/career/print?id=${params.id}`)) }
                 className="px-4 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-900"

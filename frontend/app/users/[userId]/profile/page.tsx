@@ -74,7 +74,7 @@ export default function UserProfileByIdPage() {
 
   const ext = data.profile_extension || {};
   const seeker = data.seeker_profile || {};
-  const isOwner = !!(currentUser?.id && currentUser.id === userId);
+  const isOwner = !!(currentUser?.id && String(currentUser.id) === String(userId));
 
   const startEditing = () => {
     setIsEditing(true);
