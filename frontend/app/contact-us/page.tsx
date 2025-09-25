@@ -160,7 +160,7 @@ export default function ContactUsPage() {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full md:w-auto px-8 py-3 bg-[#FF733E] text-white rounded-lg hover:bg-[#FF8659] transition disabled:bg-gray-400 flex items-center justify-center gap-2"
+                    className="w-full md:w-auto px-8 py-3 rounded-lg bg-primary-600 text-white font-semibold shadow-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-400 disabled:bg-gray-300 disabled:text-gray-600 flex items-center justify-center gap-2"
                   >
                     <FaPaperPlane />
                     {loading ? '送信中...' : '送信する'}

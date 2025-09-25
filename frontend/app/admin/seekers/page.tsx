@@ -165,13 +165,13 @@ export default function AdminSeekersPage() {
             <div className="text-sm text-gray-600">{data.count} 件</div>
             <div className="flex gap-2">
               <button
-                className="px-3 py-1 rounded border text-sm disabled:opacity-50"
+                className="px-3 py-1 rounded border text-sm bg-white text-gray-800 border-gray-300 hover:bg-gray-50 disabled:opacity-60 disabled:bg-gray-100 disabled:text-gray-400 disabled:border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary-300"
                 disabled={page <= 1}
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
               >前へ</button>
               <div className="px-2 py-1 text-sm text-gray-700">{page} / {totalPages}</div>
               <button
-                className="px-3 py-1 rounded border text-sm disabled:opacity-50"
+                className="px-3 py-1 rounded border text-sm bg-white text-gray-800 border-gray-300 hover:bg-gray-50 disabled:opacity-60 disabled:bg-gray-100 disabled:text-gray-400 disabled:border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary-300"
                 disabled={page >= totalPages}
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               >次へ</button>

@@ -87,18 +87,18 @@ const AdviceScreenTab = ({
             <div key={tab.key} className="mb-2 last:mb-0">
               {tab.isGroup ? (
                 <>
-                  <div className="bg-[#F5F5F5] text-[#3A2F1C] font-bold px-4 py-2 rounded-t-lg border-b border-gray-200 text-base">
+                  <div className="bg-gray-50 text-gray-800 font-semibold px-4 py-2 rounded-t-lg border-b border-gray-200 text-base">
                     {tab.label}
                   </div>
                   <div className="flex flex-col">
                     {tab.subTabs?.map((sub: any, subIdx: number) => (
                       <button
                         key={sub.key}
-                        className={`w-full flex items-center justify-between px-4 py-3 border-b border-gray-100 last:border-b-0 text-base transition-colors duration-150
+                        className={`w-full flex items-center justify-between px-4 py-3 border-b border-gray-100 last:border-b-0 text-base transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-primary-300
                           ${
                             selectedAdviceTab === tab.key && selectedAdviceSubTab === sub.key
-                              ? "bg-[#FFF7E6] text-[#3A2F1C] font-bold"
-                              : "bg-white text-[#3A2F1C] hover:bg-[#FFF7E6]"
+                              ? "bg-primary-50 text-primary-700 font-semibold"
+                              : "bg-white text-gray-800 hover:bg-gray-50"
                           }
                         `}
                         style={{
@@ -126,11 +126,11 @@ const AdviceScreenTab = ({
                 </>
               ) : (
                 <button
-                  className={`w-full flex items-center px-4 py-3 rounded-lg border border-gray-200 text-base transition-colors duration-150
+                  className={`w-full flex items-center px-4 py-3 rounded-lg border text-base transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-primary-300
                     ${
                       selectedAdviceTab === tab.key
-                        ? "bg-[#FFF7E6] text-[#3A2F1C] font-bold"
-                        : "bg-white text-[#3A2F1C] hover:bg-[#FFF7E6]"
+                        ? "bg-primary-50 text-primary-700 font-semibold border-primary-300"
+                        : "bg-white text-gray-800 border-gray-200 hover:bg-gray-50"
                     }
                   `}
                   onClick={() => {

@@ -244,7 +244,7 @@ const JobSeekerDetailModal = ({
         {/* Action Buttons */}
         <div className="mt-4 md:mt-6 grid grid-cols-2 gap-3 md:gap-4">
           <button
-            className="px-4 md:px-8 py-2 md:py-3 border border-border-default bg-gray-100 text-sm md:text-lg text-gray-700 flex items-center justify-center gap-x-2 rounded-lg relative hover:bg-gray-200 transition-colors"
+            className="px-4 md:px-8 py-2 md:py-3 bg-white text-sm md:text-lg text-gray-800 flex items-center justify-center gap-x-2 rounded-lg border border-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-300 transition-colors"
             onClick={onClose}
           >
             {closeLabel}

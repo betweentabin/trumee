@@ -518,14 +518,15 @@ export default function Search() {
         </div>
       </section>
       <section className="w-full grid grid-cols-2 gap-4">
-        <div
-          className="py-3 rounded-xl text-white text-base bg-[#868282] flex flex-row justify-center items-center cursor-pointer hover:bg-orange-70 active:bg-orange-60 hover:text-primary-active"
+        <button
+          type="button"
+          className="py-3 rounded-xl text-base bg-white text-primary-700 border border-primary-500 flex flex-row justify-center items-center cursor-pointer hover:bg-primary-50 focus:outline-none focus:ring-2 focus:ring-primary-300"
           onClick={onClearSearch}
         >
           <span>条件をクリアする</span>
-        </div>
+        </button>
         <button
-          className="py-3 bg-[#FF733E] rounded-xl text-base text-white flex flex-row justify-center items-center cursor-pointer hover:bg-orange-70 active:bg-orange-60 hover:text-primary-active"
+          className="py-3 bg-primary-600 rounded-xl text-base text-white flex flex-row justify-center items-center cursor-pointer hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-300"
           disabled={isSearching}
           onClick={handleSubmit(onSearch)}
         >
@@ -562,7 +563,7 @@ export default function Search() {
       {totalPages > 1 && (
         <div className="flex justify-center items-center gap-2 py-6">
           <button
-            className="px-3 py-1 rounded border disabled:opacity-50"
+            className="px-3 py-1 rounded border bg-white text-gray-800 border-gray-300 hover:bg-gray-50 disabled:opacity-60 disabled:bg-gray-100 disabled:text-gray-400 disabled:border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary-300"
             disabled={currentPage <= 1 || isSearching}
             onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
           >
@@ -573,7 +574,11 @@ export default function Search() {
             return (
               <button
                 key={`page-${page}`}
-                className={`px-3 py-1 rounded border ${currentPage === page ? 'bg-gray-200' : ''}`}
+                className={`px-3 py-1 rounded border focus:outline-none focus:ring-2 focus:ring-primary-300 ${
+                  currentPage === page
+                    ? 'bg-primary-600 text-white border-primary-600'
+                    : 'bg-white text-gray-800 border-gray-300 hover:bg-gray-50'
+                }`}
                 disabled={isSearching}
                 onClick={() => setCurrentPage(page)}
               >
@@ -585,7 +590,7 @@ export default function Search() {
             <span className="px-2">…</span>
           )}
           <button
-            className="px-3 py-1 rounded border disabled:opacity-50"
+            className="px-3 py-1 rounded border bg-white text-gray-800 border-gray-300 hover:bg-gray-50 disabled:opacity-60 disabled:bg-gray-100 disabled:text-gray-400 disabled:border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary-300"
             disabled={currentPage >= totalPages || isSearching}
             onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
           >

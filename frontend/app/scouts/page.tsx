@@ -431,8 +431,14 @@ function ScoutDetailModal({ scout, onClose, onApply }: { scout: any, onClose: ()
           </div>
         </div>
         <div className="p-6 border-t flex justify-end gap-3">
-          <button onClick={onClose} className="px-4 py-2 rounded-md bg-gray-200 text-gray-700 hover:bg-gray-300">閉じる</button>
-          <button onClick={onApply} className="px-4 py-2 rounded-md bg-[#FF733E] text-white hover:bg-orange-70 active:bg-orange-60">応募する</button>
+          <button
+            onClick={onClose}
+            className="px-4 py-2 rounded-md bg-white text-gray-800 border border-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-300"
+          >閉じる</button>
+          <button
+            onClick={onApply}
+            className="px-4 py-2 rounded-md bg-primary-600 text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-300"
+          >応募する</button>
         </div>
       </div>
     </div>

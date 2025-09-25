@@ -35,7 +35,7 @@ export default function LegalComplianceModal({ isOpen, onAcknowledge }: LegalCom
             type="button"
             onClick={onAcknowledge}
             aria-label="確認して閉じる"
-            className="rounded-md border border-gray-200 px-2 py-1 text-sm text-gray-500 hover:bg-gray-100"
+            className="rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-300"
           >
             閉じる
           </button>
