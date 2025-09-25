@@ -191,6 +191,8 @@ export default function Search() {
     reset();
   }, [reset]);
 
+  const getSeekerId = useCallback((s: any) => (s?.user || s?.seeker?.id || s?.id), []);
+
   const onDetail = useCallback(async (_seeker: any) => {
     try {
       const seekerId = getSeekerId(_seeker);
@@ -206,8 +208,6 @@ export default function Search() {
       setSelectedSeeker(_seeker);
     }
   }, [getSeekerId]);
-
-  const getSeekerId = useCallback((s: any) => (s?.user || s?.seeker?.id || s?.id), []);
 
   const { mutate: sendMessage, isPending: sendingMessage } = useMessageToUser();
   // 検索パラメータの構築（API v2 準拠）
