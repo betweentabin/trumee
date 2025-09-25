@@ -1,4 +1,8 @@
-"use client";
-import CareerCreatePage from "@/app/career/create/page";
-export default function UserCareerCreatePage() { return <CareerCreatePage />; }
+'use client';
+
+import CreateResumePage from '@/app/career/create/page';
+
+export default function UsersScopedCreateResumePage() {
+  return <CreateResumePage />;
+}
 

@@ -42,7 +42,12 @@ const Header = () => {
 
         {/* Right Buttons */}
         <div className="flex items-center gap-4">
-          <button onClick={mypage}>マイページ</button>
+          <button
+            onClick={mypage}
+            className="px-4 py-2 text-sm rounded-full bg-primary-600 hover:bg-primary-700 text-white transition"
+          >
+            マイページ
+          </button>
           <button
             onClick={logout}
             className="px-4 py-2 text-sm border border-gray-400 rounded-full text-black hover:bg-gray-100 transition"

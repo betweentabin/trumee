@@ -17,7 +17,14 @@ const nextConfig = {
     return [
       {
         source: '/:path*',
-        headers: [{ key: 'X-Frame-Options', value: 'DENY' }],
+        headers: [
+          { key: 'X-Frame-Options', value: 'DENY' },
+          { key: 'Strict-Transport-Security', value: 'max-age=31536000; includeSubDomains; preload' },
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+          // Loosely-configured CSP to reduce breakage; can be tightened later
+          { key: 'Content-Security-Policy', value: "default-src 'self'; img-src 'self' data: https:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https:; style-src 'self' 'unsafe-inline' https:; connect-src 'self' https:" },
+        ],
       },
     ];
   },

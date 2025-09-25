@@ -47,17 +47,26 @@ const Header = () => {
       
           {/* Right Buttons */}
           <div className="flex items-center gap-4">
-            <button onClick={search}>
-            求職者の検索
+            <button
+              onClick={search}
+              className="px-4 py-2 text-sm rounded-full bg-primary-600 hover:bg-primary-700 text-white transition"
+            >
+              求職者の検索
             </button>
-            <button onClick={openThisMonth}>
-            今月のページ
+            <button
+              onClick={openThisMonth}
+              className="px-4 py-2 text-sm rounded-full bg-primary-600 hover:bg-primary-700 text-white transition"
+            >
+              今月のページ
             </button>
-            <button onClick={mypage}>
-            マイページ
+            <button
+              onClick={mypage}
+              className="px-4 py-2 text-sm rounded-full bg-primary-600 hover:bg-primary-700 text-white transition"
+            >
+              マイページ
             </button>
             <button onClick={logout} className="px-4 py-2 text-sm rounded-full bg-secondary-900 hover:bg-secondary-800 text-white transition">
-            ログアウト
+              ログアウト
             </button>
           </div>
         </div>

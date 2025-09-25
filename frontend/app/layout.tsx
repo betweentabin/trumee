@@ -26,6 +26,15 @@ export const metadata: Metadata = {
     shortcut: "/logo/logo.png",
     apple: "/logo/logo.png",
   },
+  openGraph: {
+    title: "TruMee - 転職支援プラットフォーム",
+    description: "TruMeeは求職者と企業をつなぐ転職支援プラットフォームです",
+    url: "https://trumeee.vercel.app",
+    images: ["/logo/logo.png"],
+  },
+  twitter: {
+    card: "summary_large_image",
+  },
 };
 
 export default function RootLayout({
@@ -34,7 +43,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="ja">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >

@@ -213,27 +213,37 @@ export default function EditResumePage() {
   // 左メニュー（マイページ項目）は非表示に変更
 
   const StepIndicator = () => {
-  const steps = ['基本情報', '職歴', '学歴', 'スキル', '職務要約', '完了'];
+    const steps = ['基本情報', '職歴', 'スキル', '自己PR', '職務要約', '完了'];
     return (
       <div className="mb-8">
-        <div className="flex items-center justify-between">
-          {steps.map((step, index) => (
-            <div key={index} className="flex-1 relative">
-              <div className="flex items-center">
-                <div
-                  className={`h-2 flex-1 ${
-                    index + 1 <= currentStep ? 'bg-[#FF733E]' : 'bg-gray-200'
-                  } ${index === 0 ? 'rounded-l' : ''} ${
-                    index === steps.length - 1 ? 'rounded-r' : ''
-                  }`}
-                />
-              </div>
-              <div className="text-center mt-2">
-                <span className={`text-sm ${index + 1 === currentStep ? 'font-semibold text-gray-900' : 'text-gray-500'}`}>
-                  {step}
-                </span>
-              </div>
-            </div>
+        <div className="flex justify-between items-center">
+          {[1, 2, 3, 4, 5, 6].map((step) => (
+            <button
+              type="button"
+              key={step}
+              onClick={() => setCurrentStep(step)}
+              className="flex-1 mx-1"
+              title={`${step}へ移動`}
+            >
+              <div
+                className={`h-2 w-full rounded ${
+                  step <= currentStep ? 'bg-[#FF733E]' : 'bg-gray-300'
+                }`}
+              />
+            </button>
+          ))}
+        </div>
+        <div className="flex justify-between mt-2 text-sm">
+          {steps.map((label, idx) => (
+            <button
+              key={label}
+              className={`${
+                idx + 1 === currentStep ? 'font-semibold text-gray-900' : 'text-gray-600'
+              } ${idx === 0 ? 'text-left' : idx === steps.length - 1 ? 'text-right' : 'text-center'} flex-1 mx-1`}
+              onClick={() => setCurrentStep(idx + 1)}
+            >
+              {label}
+            </button>
           ))}
         </div>
       </div>
@@ -245,16 +255,16 @@ export default function EditResumePage() {
       case 1:
         return (
           <div className="space-y-6">
-            <h2 className="text-2xl font-bold mb-6">基本情報</h2>
+            <h2 className="text-2xl font-semibold mb-4">基本情報・学歴</h2>
             
-            <div className="grid grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   タイトル
                 </label>
                 <input
                   type="text"
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF733E] focus:border-transparent"
+                  className="w-full p-2 border rounded-lg"
                   placeholder="例: マーケティング職向け職務経歴書"
                   value={resumeData.title}
                   onChange={(e) => setResumeData(prev => ({ ...prev, title: e.target.value }))}
@@ -267,21 +277,21 @@ export default function EditResumePage() {
                 </label>
                 <input
                   type="text"
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF733E] focus:border-transparent"
+                  className="w-full p-2 border rounded-lg"
                   value={resumeData.fullName}
                   onChange={(e) => setResumeData(prev => ({ ...prev, fullName: e.target.value }))}
                 />
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   メールアドレス <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="email"
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF733E] focus:border-transparent"
+                  className="w-full p-2 border rounded-lg"
                   value={resumeData.email}
                   onChange={(e) => setResumeData(prev => ({ ...prev, email: e.target.value }))}
                 />
@@ -293,21 +303,21 @@ export default function EditResumePage() {
                 </label>
                 <input
                   type="tel"
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF733E] focus:border-transparent"
+                  className="w-full p-2 border rounded-lg"
                   value={resumeData.phone}
                   onChange={(e) => setResumeData(prev => ({ ...prev, phone: e.target.value }))}
                 />
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   生年月日
                 </label>
                 <input
                   type="date"
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF733E] focus:border-transparent"
+                  className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-[#FF733E] focus:border-transparent"
                   value={resumeData.birthDate}
                   onChange={(e) => setResumeData(prev => ({ ...prev, birthDate: e.target.value }))}
                 />
@@ -319,7 +329,7 @@ export default function EditResumePage() {
                 </label>
                 <input
                   type="text"
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF733E] focus:border-transparent"
+                  className="w-full p-2 border rounded-lg"
                   value={resumeData.address}
                   onChange={(e) => setResumeData(prev => ({ ...prev, address: e.target.value }))}
                 />
@@ -328,14 +338,14 @@ export default function EditResumePage() {
 
             {/* 自己PRは後続ステップで入力 */}
 
-            <div className="grid grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   希望職種
                 </label>
                 <input
                   type="text"
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF733E] focus:border-transparent"
+                  className="w-full p-2 border rounded-lg"
                   value={resumeData.desiredPosition}
                   onChange={(e) => setResumeData(prev => ({ ...prev, desiredPosition: e.target.value }))}
                 />
@@ -347,7 +357,7 @@ export default function EditResumePage() {
                 </label>
                 <input
                   type="text"
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF733E] focus:border-transparent"
+                  className="w-full p-2 border rounded-lg"
                   placeholder="例: 500万円〜"
                   value={resumeData.desiredSalary}
                   onChange={(e) => setResumeData(prev => ({ ...prev, desiredSalary: e.target.value }))}
@@ -358,13 +368,13 @@ export default function EditResumePage() {
             <div className="space-y-4">
               <h3 className="font-semibold">学歴</h3>
               {(resumeData.education || []).map((edu, index) => (
-                <div key={index} className="border border-gray-200 rounded-lg p-6 space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
+                <div key={index} className="border rounded-lg p-4 space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">学校名</label>
                       <input
                         type="text"
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF733E] focus:border-transparent"
+                        className="w-full p-2 border rounded-lg"
                         value={edu.school}
                         onChange={(e) => {
                           const updated = [...resumeData.education];
@@ -377,7 +387,7 @@ export default function EditResumePage() {
                       <label className="block text-sm font-medium text-gray-700 mb-2">学位</label>
                       <input
                         type="text"
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF733E] focus:border-transparent"
+                        className="w-full p-2 border rounded-lg"
                         value={edu.degree}
                         onChange={(e) => {
                           const updated = [...resumeData.education];
@@ -387,12 +397,12 @@ export default function EditResumePage() {
                       />
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">専攻</label>
                       <input
                         type="text"
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF733E] focus:border-transparent"
+                        className="w-full p-2 border rounded-lg"
                         value={edu.field}
                         onChange={(e) => {
                           const updated = [...resumeData.education];
@@ -405,7 +415,7 @@ export default function EditResumePage() {
                       <label className="block text-sm font-medium text-gray-700 mb-2">卒業年月</label>
                       <input
                         type="date"
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF733E] focus:border-transparent"
+                        className="w-full p-2 border rounded-lg"
                         value={edu.graduationDate}
                         onChange={(e) => {
                           const updated = [...resumeData.education];
@@ -419,7 +429,7 @@ export default function EditResumePage() {
               ))}
               <button
                 onClick={() => setResumeData(prev => ({ ...prev, education: [...prev.education, { school: '', degree: '', field: '', graduationDate: '' }] }))}
-                className="mt-2 text-[#FF733E] hover:text-[#FF8659] font-medium"
+                className="w-full py-2 border-2 border-dashed border-secondary-400 rounded-lg hover:border-secondary-500"
               >
                 + 学歴を追加
               </button>
@@ -485,9 +495,9 @@ export default function EditResumePage() {
       case 2:
         return (
           <div className="space-y-6">
-            <h2 className="text-2xl font-bold mb-6">職歴</h2>
+            <h2 className="text-2xl font-semibold mb-4">職歴</h2>
             {resumeData.workExperiences.map((exp, index) => (
-              <div key={index} className="border border-gray-200 rounded-lg p-6 space-y-4">
+              <div key={index} className="border rounded-lg p-4 space-y-4">
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="font-semibold">職歴 {index + 1}</h3>
                   {resumeData.workExperiences.length > 1 && (
@@ -497,19 +507,19 @@ export default function EditResumePage() {
                         updated.splice(index, 1);
                         setResumeData(prev => ({ ...prev, workExperiences: updated }));
                       }}
-                      className="text-red-500 hover:text-red-700"
+                      className="text-red-600 hover:text-red-800"
                     >
                       削除
                     </button>
                   )}
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">会社名</label>
                     <input
                       type="text"
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF733E] focus:border-transparent"
+                      className="w-full p-2 border rounded-lg"
                       value={exp.company}
                       onChange={(e) => {
                         const updated = [...resumeData.workExperiences];
@@ -522,7 +532,7 @@ export default function EditResumePage() {
                     <label className="block text-sm font-medium text-gray-700 mb-2">役職</label>
                     <input
                       type="text"
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF733E] focus:border-transparent"
+                      className="w-full p-2 border rounded-lg"
                       value={exp.position}
                       onChange={(e) => {
                         const updated = [...resumeData.workExperiences];
@@ -533,12 +543,12 @@ export default function EditResumePage() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">開始日</label>
                     <input
-                      type="date"
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF733E] focus:border-transparent"
+                      type="month"
+                      className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent"
                       value={exp.startDate}
                       onChange={(e) => {
                         const updated = [...resumeData.workExperiences];
@@ -550,8 +560,8 @@ export default function EditResumePage() {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">終了日</label>
                     <input
-                      type="date"
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF733E] focus:border-transparent"
+                      type="month"
+                      className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent"
                       value={exp.endDate}
                       onChange={(e) => {
                         const updated = [...resumeData.workExperiences];
@@ -565,7 +575,7 @@ export default function EditResumePage() {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">職務内容</label>
                   <textarea
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF733E] focus:border-transparent"
+                    className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent"
                     rows={4}
                     value={exp.description}
                     onChange={(e) => {
@@ -575,11 +585,44 @@ export default function EditResumePage() {
                     }}
                   />
                 </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2">実績（箇条書き推奨）</label>
+                  {(exp.achievements || []).map((ach, i) => (
+                    <input
+                      key={i}
+                      type="text"
+                      className="w-full mb-2 p-3 border rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent"
+                      value={ach}
+                      onChange={(e) => {
+                        const updated = [...(resumeData.workExperiences[index].achievements || [])];
+                        updated[i] = e.target.value;
+                        const we = [...resumeData.workExperiences];
+                        we[index] = { ...we[index], achievements: updated };
+                        setResumeData(prev => ({ ...prev, workExperiences: we }));
+                      }}
+                      placeholder="例：新規顧客開拓で前年比120%達成 など"
+                    />
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const updated = [...(resumeData.workExperiences[index].achievements || [])];
+                      updated.push('');
+                      const we = [...resumeData.workExperiences];
+                      we[index] = { ...we[index], achievements: updated };
+                      setResumeData(prev => ({ ...prev, workExperiences: we }));
+                    }}
+                    className="text-primary-600 text-sm"
+                  >
+                    + 実績を追加
+                  </button>
+                </div>
               </div>
             ))}
             <button
               onClick={addWorkExperience}
-              className="mt-4 text-[#FF733E] hover:text-[#FF8659] font-medium"
+              className="w-full py-2 border-2 border-dashed border-secondary-400 rounded-lg hover:border-secondary-500"
             >
               + 職歴を追加
             </button>
@@ -589,14 +632,14 @@ export default function EditResumePage() {
       case 3:
         return (
           <div className="space-y-6">
-            <h2 className="text-2xl font-bold mb-6">スキル・資格</h2>
+            <h2 className="text-2xl font-semibold mb-4">スキル・資格</h2>
             <div>
               <h3 className="font-semibold mb-3">スキル</h3>
               {resumeData.skills.map((skill, index) => (
                 <div key={index} className="flex gap-2 mb-2">
                   <input
                     type="text"
-                    className="flex-1 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF733E] focus:border-transparent"
+                    className="flex-1 p-2 border rounded-lg"
                     value={skill}
                     onChange={(e) => {
                       const updated = [...resumeData.skills];
@@ -621,7 +664,7 @@ export default function EditResumePage() {
               ))}
               <button
                 onClick={() => setResumeData(prev => ({ ...prev, skills: [...prev.skills, ''] }))}
-                className="mt-2 text-[#FF733E] hover:text-[#FF8659] font-medium"
+                className="mt-2 text-primary-600 hover:text-primary-700"
               >
                 + スキルを追加
               </button>
@@ -632,7 +675,7 @@ export default function EditResumePage() {
                 <div key={index} className="flex gap-2 mb-2">
                   <input
                     type="text"
-                    className="flex-1 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF733E] focus:border-transparent"
+                    className="flex-1 p-2 border rounded-lg"
                     value={cert}
                     onChange={(e) => {
                       const updated = [...resumeData.certifications];
@@ -645,7 +688,7 @@ export default function EditResumePage() {
               ))}
               <button
                 onClick={() => setResumeData(prev => ({ ...prev, certifications: [...prev.certifications, ''] }))}
-                className="mt-2 text-[#FF733E] hover:text-[#FF8659] font-medium"
+                className="mt-2 text-primary-600 hover:text-primary-700"
               >
                 + 資格を追加
               </button>
@@ -653,71 +696,19 @@ export default function EditResumePage() {
           </div>
         );
 
-      case 4:
+case 4:
         return (
           <div className="space-y-6">
-            <h2 className="text-2xl font-bold mb-6">スキル・資格</h2>
-            
+            <h2 className="text-2xl font-semibold mb-4">自己PR</h2>
             <div>
-              <h3 className="font-semibold mb-3">スキル</h3>
-              {resumeData.skills.map((skill, index) => (
-                <div key={index} className="flex gap-2 mb-2">
-                  <input
-                    type="text"
-                    className="flex-1 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF733E] focus:border-transparent"
-                    value={skill}
-                    onChange={(e) => {
-                      const updated = [...resumeData.skills];
-                      updated[index] = e.target.value;
-                      setResumeData(prev => ({ ...prev, skills: updated }));
-                    }}
-                    placeholder="例: JavaScript"
-                  />
-                  {resumeData.skills.length > 1 && (
-                    <button
-                      onClick={() => {
-                        const updated = [...resumeData.skills];
-                        updated.splice(index, 1);
-                        setResumeData(prev => ({ ...prev, skills: updated }));
-                      }}
-                      className="px-3 py-1 text-red-500 hover:text-red-700"
-                    >
-                      ×
-                    </button>
-                  )}
-                </div>
-              ))}
-              <button
-                onClick={addSkill}
-                className="mt-2 text-[#FF733E] hover:text-[#FF8659] font-medium"
-              >
-                + スキルを追加
-              </button>
-            </div>
-            
-            <div>
-              <h3 className="font-semibold mb-3">資格</h3>
-              {resumeData.certifications.map((cert, index) => (
-                <div key={index} className="flex gap-2 mb-2">
-                  <input
-                    type="text"
-                    className="flex-1 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF733E] focus:border-transparent"
-                    value={cert}
-                    onChange={(e) => {
-                      const updated = [...resumeData.certifications];
-                      updated[index] = e.target.value;
-                      setResumeData(prev => ({ ...prev, certifications: updated }));
-                    }}
-                    placeholder="例: TOEIC 800点"
-                  />
-                </div>
-              ))}
-              <button
-                onClick={() => setResumeData(prev => ({ ...prev, certifications: [...prev.certifications, ''] }))}
-                className="mt-2 text-[#FF733E] hover:text-[#FF8659] font-medium"
-              >
-                + 資格を追加
-              </button>
+              <label className="block text-sm font-medium mb-2">自己PR</label>
+              <textarea
+                className="w-full p-2 border rounded-lg"
+                rows={8}
+                value={resumeData.summary}
+                onChange={(e) => setResumeData(prev => ({ ...prev, summary: e.target.value }))}
+                placeholder="あなたの強みや経験を簡潔に記載してください"
+              />
             </div>
           </div>
         );
@@ -822,14 +813,11 @@ export default function EditResumePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-5xl mx-auto p-8">
+    <div className="min-h-screen bg-gray-50 p-8">
+      <div className="max-w-4xl mx-auto">
         <div className="mb-8">
-          <div className="text-sm text-gray-600 mb-4">
-            TOP &gt; マイページ
-          </div>
-          <div className="flex items-center justify-between gap-4">
-            <h1 className="text-3xl font-bold text-gray-900">職務経歴書編集</h1>
+          <div className="flex items-center justify-between">
+            <h1 className="text-3xl font-bold text-gray-800">職務経歴書編集</h1>
             <div className="flex gap-2">
               <button
                 onClick={() => router.push(to(`/career/print?id=${params.id}`)) }
@@ -847,42 +835,43 @@ export default function EditResumePage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm p-8">
+        <div className="bg-white rounded-lg shadow-md p-6">
           <StepIndicator />
           
           <div className="mt-8">
             {renderStep()}
           </div>
 
-          <div className="flex justify-between mt-12">
-            <button
-              onClick={() => setCurrentStep(prev => Math.max(1, prev - 1))}
-              className={`px-8 py-3 rounded-lg font-medium ${
-                currentStep === 1
-                  ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-              }`}
-              disabled={currentStep === 1}
-            >
-              前へ
-            </button>
-
-            {currentStep < 6 ? (
+          {currentStep <= 6 && (
+            <div className="flex justify-between mt-8">
               <button
-                onClick={() => setCurrentStep(prev => prev + 1)}
-                className="px-8 py-3 bg-[#FF733E] text-white rounded-lg hover:bg-[#FF8659] font-medium"
+                onClick={() => setCurrentStep(prev => Math.max(1, prev - 1))}
+                className={`px-6 py-2 rounded-lg ${
+                  currentStep === 1
+                    ? 'bg-gray-300 cursor-not-allowed'
+                    : 'bg-gray-600 text-white hover:bg-gray-700'
+                }`}
+                disabled={currentStep === 1}
               >
-                次へ
+                前へ
               </button>
-            ) : (
-              <button
-                onClick={handleSubmit}
-                className="px-8 py-3 bg-[#FF733E] text-white rounded-lg hover:bg-[#FF8659] font-medium"
-              >
-                保存
-              </button>
-            )}
-          </div>
+              {currentStep < 6 ? (
+                <button
+                  onClick={() => setCurrentStep(prev => prev + 1)}
+                  className="px-6 py-2 bg-[#FF733E] text-white rounded-lg hover:bg-[#FF8659]"
+                >
+                  次へ
+                </button>
+              ) : (
+                <button
+                  onClick={handleSubmit}
+                  className="px-8 py-2 bg-[#FF733E] text-white rounded-lg hover:bg-[#FF8659]"
+                >
+                  保存
+                </button>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>
