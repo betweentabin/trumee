@@ -134,6 +134,8 @@ export default function CompanyLoginPage() {
         dispatch(setTokensV2(response.tokens));
         
         toast.success('ログインに成功しました（API v2）');
+        // 企業向けメインページにリダイレクト（API v2時はUserID付きURL）
+        router.push(`/company/${response.user.id}`);
       } else {
         // API v1を使用（既存のロジック）
         const result = await loginMutation.mutateAsync({
@@ -158,14 +160,10 @@ export default function CompanyLoginPage() {
         }));
         
         toast.success('ログインに成功しました（API v1）');
-      }
-
-      // 企業向けメインページにリダイレクト（API v2時はUserID付きURL）
-      if (useV2Api && response?.user?.id) {
-        router.push(`/company/${response.user.id}`);
-      } else {
+        // v1は従来の企業ページへ
         router.push('/company');
       }
+      
     } catch (error: any) {
       console.error('Login error:', error);
       

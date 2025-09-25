@@ -1,9 +1,9 @@
 "use client";
 
-// Wrapper route to provide per-company URL while reusing existing page content
-import CompanyPage from "../page";
+// Per-company URL wrapper reusing existing company search page
+import Page from "@/app/company/page";
 
-export default function CompanyByCompanyIdPage() {
-  return <CompanyPage />;
+export default function CompanySearchByIdPage() {
+  return <Page />;
 }
 
