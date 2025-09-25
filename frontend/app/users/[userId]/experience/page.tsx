@@ -1,22 +1,37 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import apiClient from "@/lib/api-v2-client";
 import useAuthV2 from "@/hooks/useAuthV2";
 import { normalizeResumeExperiences } from "@/app/utils/resume";
 
 export default function UserExperienceByIdPage() {
   const router = useRouter();
-  const params = useParams<{ userId: string }>();
-  const userId = params?.userId as string;
+  const pathname = usePathname();
+  const userId = useMemo(() => {
+    // prefer path param (/users/:id/experience)
+    try {
+      const parts = (pathname || "").split("/").filter(Boolean);
+      if (parts[0] === 'users' && parts[1]) return parts[1];
+    } catch {}
+    // fallback to localStorage (during auth rehydration)
+    try {
+      if (typeof window !== 'undefined') {
+        const raw = localStorage.getItem('current_user_v2');
+        const id = raw ? JSON.parse(raw)?.id : undefined;
+        return id ? String(id) : '';
+      }
+    } catch {}
+    return '';
+  }, [pathname]);
   const { currentUser } = useAuthV2();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [resumes, setResumes] = useState<any[]>([]);
 
   useEffect(() => {
-    if (!userId) return;
+    if (!userId) { setLoading(false); return; }
     const run = async () => {
       try {
         setLoading(true);
