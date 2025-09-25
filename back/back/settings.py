@@ -32,14 +32,17 @@ FIREBASE_CONFIG = {
 
 # ====== Allowed Hosts ======
 ALLOWED_HOSTS = [
-    "85.131.248.214", 
-    "localhost", 
-    "127.0.0.1", 
+    "85.131.248.214",
+    "localhost",
+    "127.0.0.1",
     "0.0.0.0",
     ".railway.app",  # Railway domains
     ".up.railway.app",  # Railway subdomains
-    "*",  # 一時的に全て許可（デプロイ成功後に制限する）
 ]
+
+# 本番ではワイルドカードを許可しない
+if DEBUG:
+    ALLOWED_HOSTS.append("*")
 
 # ====== CORS Settings ======
 CORS_ALLOWED_ORIGINS = [

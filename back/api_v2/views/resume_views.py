@@ -13,6 +13,7 @@ from reportlab.pdfbase.cidfonts import UnicodeCIDFont
 from io import BytesIO
 import json
 from datetime import datetime
+from django.core.cache import cache
 from django.utils.html import escape
 
 # Register Japanese font
@@ -159,6 +160,25 @@ def _render_resume_pdf(resume_data: dict) -> bytes:
     return pdf_content
 
 
+def _rate_limit(request, key: str, limit: int, window_seconds: int) -> bool:
+    """Simple IP+path-based rate limiter using Django cache.
+    Returns True if within limit, False if over.
+    """
+    ip = request.META.get('REMOTE_ADDR') or 'unknown'
+    cache_key = f"rl:{ip}:{key}"
+    # First hit: set with TTL
+    added = cache.add(cache_key, 1, timeout=window_seconds)
+    if added:
+        return True
+    try:
+        current = cache.incr(cache_key)
+    except ValueError:
+        # Key expired between add/incr; reset
+        cache.set(cache_key, 1, timeout=window_seconds)
+        return True
+    return current <= limit
+
+
 @api_view(['POST'])
 @permission_classes([AllowAny])  # Allow both authenticated and anonymous users
 def download_resume_pdf(request):
@@ -166,6 +186,10 @@ def download_resume_pdf(request):
     Generate and download resume as PDF
     """
     try:
+        # Rate limit: up to 10 downloads per minute per IP
+        if not _rate_limit(request, 'download_resume_pdf', limit=10, window_seconds=60):
+            return Response({'error': 'リクエストが多すぎます。しばらくしてからお試しください。'}, status=429)
+
         resume_data = request.data.get('resumeData', {})
         pdf_content = _render_resume_pdf(resume_data)
 
@@ -191,6 +215,10 @@ def send_resume_pdf(request):
         from django.core.mail import EmailMessage
         from django.conf import settings
         
+        # Rate limit: up to 5 emails per 10 minutes per IP
+        if not _rate_limit(request, 'send_resume_pdf', limit=5, window_seconds=600):
+            return Response({'error': 'メール送信の試行回数が多すぎます。しばらくしてからお試しください。'}, status=429)
+
         resume_data = request.data.get('resumeData', {}) or {}
         email = (resume_data.get('step1', {}) or {}).get('email')
         

@@ -281,13 +281,16 @@ class ResumeFileSerializer(serializers.ModelSerializer):
   - SECURE_SSL_REDIRECT, HSTS, Cookie属性（Secure/HttpOnly/SameSite=Lax）, NoSniff, Referrer-Policy, X-Frame-Options など
   - CORS_ALLOW_ALL_ORIGINS を本番でFalseに（CORS_ALLOWED_ORIGINSのみに限定）
   - CSRF_TRUSTED_ORIGINS を追加
-  - 変更箇所: `back/back/settings.py:44`, `back/back/settings.py:286`, `back/back/settings.py:288`
+  - ALLOWED_HOSTS のワイルドカード許可は開発時のみ（本番では無効）
+  - 環境変数サンプルに `ENABLE_PROD_SECURITY=false` を追記
+    - 変更箇所: `environment.example:1`
+  - 変更箇所: `back/back/settings.py:33`, `back/back/settings.py:44`, `back/back/settings.py:286`, `back/back/settings.py:288`
 
 注: 上記Djangoの強化は本番条件下のみ有効化され、開発環境では挙動に影響しないよう配慮しています。
 
 ### 追加（今回）
 - target="_blank" リンクに `rel="noopener noreferrer"` を付与（セキュリティ強化）
-  - 変更箇所: `frontend/app/resumes/page.tsx:275`, `frontend/app/users/[userId]/resumes/page.tsx:192`, `frontend/components/resume/resume-file-upload.tsx:124`
+  - 変更箇所: `frontend/app/resumes/page.tsx:275`, `frontend/app/users/[userId]/resumes/page.tsx:192`, `frontend/components/resume/resume-file-upload.tsx:124`, `frontend/app/auth/company/login/page.tsx:290`, `frontend/app/auth/company/register/page.tsx:608`, `frontend/app/auth/company/register/page.tsx:612`, `frontend/components/company/legal-compliance-modal.tsx:83`, `frontend/components/company/legal-compliance-modal.tsx:91`, `frontend/app/auth/register/page.tsx:484`
 
 - robots.txt / sitemap.xml を追加（SEO基盤）
   - 追加: `frontend/public/robots.txt`, `frontend/public/sitemap.xml`
@@ -296,3 +299,8 @@ class ResumeFileSerializer(serializers.ModelSerializer):
 - アップロードファイルの検証（サイズ/Content-Type）
   - 許可: pdf, png, jpeg, doc, docx（最大10MB）
   - 変更箇所: `back/core/serializers.py:1`（ResumeFileSerializerにvalidate_fileを追加）
+
+- PDF関連APIの簡易レート制限（悪用抑止、機能影響なし）
+  - download: 1分間に最大10回/IP、send: 10分間に最大5回/IP
+  - 実装: Django cacheを用いたIP+パス単位のカウント
+  - 変更箇所: `back/api_v2/views/resume_views.py:1`（_rate_limit関数追加、各APIに適用）

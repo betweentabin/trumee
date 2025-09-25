@@ -481,7 +481,7 @@ export default function RegisterPage() {
                 </div>
                 <div className="ml-3 text-sm">
                   <label htmlFor="agreeToTerms" className="font-medium text-gray-700 cursor-pointer">
-                    <Link href="/privacy-policy" target="_blank" className="text-[#FF733E] hover:text-[#e9632e] transition">
+                    <Link href="/privacy-policy" target="_blank" rel="noopener noreferrer" className="text-[#FF733E] hover:text-[#e9632e] transition">
                       プライバシーポリシー
                     </Link>
                     に同意します <span className="text-red-500">*</span>

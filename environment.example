@@ -2,6 +2,7 @@
 DJANGO_SECRET_KEY=your-secret-key-here
 DEBUG=True
 ALLOWED_HOSTS=localhost,127.0.0.1,0.0.0.0
+ENABLE_PROD_SECURITY=false  # 本番相当のセキュリティ設定を強制する場合はtrue
 
 # ====== データベース設定 ======
 # 使用するデータベースエンジン: sqlite | postgresql
