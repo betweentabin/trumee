@@ -9,6 +9,8 @@ import { buildApiUrl, getApiHeaders } from "@/config/api";
 import toast from "react-hot-toast";
 import { FaHandshake, FaPlus, FaMinus } from "react-icons/fa";
 import ClientPaidPlanModal from "@/components/modal/ClientPaidPlanModal";
+import QuestionBrowser from "@/components/interview/QuestionBrowser";
+import MockInterviewTrainer from "@/components/interview/MockInterviewTrainer";
 
 type ThreadMsg = { id: string; sender: string; text: string; created_at: string };
 
@@ -262,6 +264,14 @@ export default function PrepareInterviewPage() {
               </section>
             )}
 
+            {/* カテゴリ別 質問集（インライン） */}
+            <section className="bg-white rounded-lg shadow-sm border">
+              <div className="px-4 py-3 border-b font-semibold">カテゴリ別 質問集</div>
+              <div className="p-4">
+                <QuestionBrowser type="interview" showPersonalize className="shadow-none p-0" />
+              </div>
+            </section>
+
             {hasResume === false && (
               <div className="bg-white border rounded-lg p-6">
                 <p className="text-gray-700 mb-4">面接対策を開始するには、まず職務経歴書を作成してください。</p>
@@ -338,6 +348,9 @@ export default function PrepareInterviewPage() {
                 <button onClick={sendThread} className="rounded-md bg-[#FF733E] text-white px-4 py-2">送信</button>
               </div>
             </section>
+
+            {/* 模擬面接（タイマー付き） */}
+            <MockInterviewTrainer />
           </main>
         </div>
       </div>

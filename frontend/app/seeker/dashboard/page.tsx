@@ -16,7 +16,8 @@ import {
   FaArrowRight,
   FaClock,
   FaCheckCircle,
-  FaExclamationCircle
+  FaExclamationCircle,
+  FaMicrophone
 } from 'react-icons/fa';
 
 interface DashboardStats {
@@ -220,6 +221,14 @@ export default function SeekerDashboard() {
       count: stats?.messages_count || 0,
       badge: stats?.unread_messages || 0,
       color: 'bg-orange-500'
+    },
+    {
+      title: '面接対策・質問集',
+      description: '想定質問と模擬面接',
+      icon: FaMicrophone,
+      href: perUser('/interview', '/interview'),
+      count: 0,
+      color: 'bg-red-500'
     }
   ];
 
