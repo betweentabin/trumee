@@ -11,6 +11,7 @@ export default function ResumeQuestionsPage() {
   const authState = useAppSelector(state => state.auth);
   const [selectedCategory, setSelectedCategory] = useState('experience');
   const [derived, setDerived] = useState<string[]>([]);
+  const [summary, setSummary] = useState<{ topExperiences: Array<{ company?: string; position?: string }>; topSkills: string[]; selfPr?: string } | null>(null);
 
   useEffect(() => {
     const hasStoredToken = typeof window !== 'undefined' && !!localStorage.getItem('drf_token_v2');
@@ -97,7 +98,13 @@ export default function ResumeQuestionsPage() {
           if (Array.isArray(e?.achievements) && e.achievements.filter(Boolean).length) qs.push('実績のうち最も誇れるものは？数値で説明できますか？');
         });
         if (r?.skills) qs.push('履歴書のスキル欄で強調したいスキルと裏付けとなる事例は？');
+        if (r?.self_pr) qs.push('自己PRで述べた強みの根拠となるエピソードは？');
         setDerived(qs.slice(0, 8));
+
+        // サマリ: 上位経験とスキルを抽出
+        const topExperiences = experiences.slice(0, 3).map((e: any) => ({ company: e?.company, position: e?.position }));
+        const topSkills = String(r?.skills || '').split(',').map((s) => s.trim()).filter(Boolean).slice(0, 5);
+        setSummary({ topExperiences, topSkills, selfPr: r?.self_pr });
       } catch { /* ignore */ }
     })();
   }, []);
@@ -112,6 +119,36 @@ export default function ResumeQuestionsPage() {
           </h1>
           <p className="text-gray-600 mt-2">面接でよく聞かれる職務経歴書に関する質問と回答例</p>
         </div>
+
+        {summary && (
+          <div className="mb-8 bg-white rounded-lg shadow-md p-6">
+            <h2 className="text-lg font-semibold mb-3">履歴書の要点（自動抽出）</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-700">
+              <div>
+                <div className="font-medium mb-1">経験（上位）</div>
+                <ul className="list-disc pl-5 space-y-1">
+                  {summary.topExperiences.map((e, i) => (
+                    <li key={i}>{[e.company, e.position].filter(Boolean).join(' / ') || '—'}</li>
+                  ))}
+                </ul>
+              </div>
+              <div>
+                <div className="font-medium mb-1">スキル</div>
+                <div className="flex flex-wrap gap-1">
+                  {summary.topSkills.length === 0 ? (
+                    <span className="text-gray-400">—</span>
+                  ) : summary.topSkills.map((s, i) => (
+                    <span key={i} className="px-2 py-0.5 bg-blue-50 text-blue-700 rounded text-xs">{s}</span>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <div className="font-medium mb-1">自己PR</div>
+                <p className="text-gray-600 line-clamp-3">{summary.selfPr || '未入力'}</p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {derived.length > 0 && (
           <div className="mb-8 bg-white rounded-lg shadow-md p-6">

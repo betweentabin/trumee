@@ -83,6 +83,23 @@ export default function PrepareInterviewPage() {
     run();
   }, []);
 
+  // 回答のローカル保存（簡易）
+  useEffect(() => {
+    try {
+      if (typeof window !== 'undefined') {
+        const saved = localStorage.getItem('interview_prepare_answers');
+        if (saved) setAnswers(JSON.parse(saved));
+      }
+    } catch {}
+  }, []);
+  useEffect(() => {
+    try {
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('interview_prepare_answers', JSON.stringify(answers));
+      }
+    } catch {}
+  }, [answers]);
+
   const isPremium = !!currentUser?.is_premium;
   const requirePremium = () => {
     if (!isPremium) {

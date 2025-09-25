@@ -340,8 +340,15 @@ export default function Search() {
       setAppliedCompanies((prev) => [...new Set([...prev, seekerId])]);
     } catch (e: any) {
       console.error('Failed to send scout:', e?.response?.data || e);
-      const msg = e?.response?.data?.detail || e?.response?.data?.error || 'スカウト送信に失敗しました';
-      toast.error(msg);
+      const status = e?.response?.status;
+      const data = e?.response?.data || {};
+      if (status === 402 && (data?.error === 'insufficient_credits')) {
+        toast.error('スカウトの送信上限に達しました。追加100通（¥10,000）をご購入ください。');
+        try { router.push('/companyinfo/payment'); } catch {}
+      } else {
+        const msg = data?.detail || data?.error || 'スカウト送信に失敗しました';
+        toast.error(msg);
+      }
     }
   }, [selectedSeeker, getSeekerId, appliedCompanies]);
 

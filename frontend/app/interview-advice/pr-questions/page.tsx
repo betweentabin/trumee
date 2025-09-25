@@ -11,6 +11,7 @@ export default function PRQuestionsPage() {
   const authState = useAppSelector(state => state.auth);
   const [selectedQuestion, setSelectedQuestion] = useState(0);
   const [resumeContext, setResumeContext] = useState<{ self_pr?: string; skills?: string } | null>(null);
+  const [dynamicQs, setDynamicQs] = useState<string[]>([]);
 
   // Prevent premature redirect before persisted auth is ready
   useEffect(() => {
@@ -30,7 +31,19 @@ export default function PRQuestionsPage() {
         const list = data.results || data || [];
         const r = list.find((x: any) => x.is_active) || list[0];
         if (r) {
-          setResumeContext({ self_pr: r.self_pr, skills: r.skills });
+          const ctx = { self_pr: r.self_pr as string, skills: r.skills as string };
+          setResumeContext(ctx);
+          const qs: string[] = [];
+          if ((ctx.self_pr || '').trim()) {
+            qs.push('自己PRで挙げた強みを裏付ける具体的事例は？');
+            qs.push('自己PRの中で最もアピールしたい成果は？（数値で）');
+            qs.push('その強みが発揮された状況・役割・行動・結果（STAR）を説明できますか？');
+          }
+          const skills = (ctx.skills || '').split(/[\n,]/).map(s=>s.trim()).filter(Boolean);
+          if (skills.length) {
+            qs.push(`スキル「${skills[0]}」を用いた成果は？役割と貢献は？`);
+          }
+          setDynamicQs(qs.slice(0, 6));
         }
       } catch { /* ignore */ }
     })();
@@ -115,6 +128,14 @@ export default function PRQuestionsPage() {
               <div className="font-semibold mb-1">履歴書の文脈</div>
               {resumeContext.self_pr && (<div className="mb-1"><span className="font-medium">自己PR:</span> {resumeContext.self_pr.slice(0, 120)}{resumeContext.self_pr.length > 120 ? '…' : ''}</div>)}
               {resumeContext.skills && (<div><span className="font-medium">スキル:</span> {resumeContext.skills.split('\n').filter(Boolean).slice(0,5).join(', ')}</div>)}
+            </div>
+          )}
+          {dynamicQs.length > 0 && (
+            <div className="mt-4 bg-white rounded-lg shadow p-6">
+              <div className="text-base font-semibold mb-2">自己PRからの想定質問</div>
+              <ul className="list-disc pl-5 space-y-1 text-gray-700">
+                {dynamicQs.map((q, i) => (<li key={i}>{q}</li>))}
+              </ul>
             </div>
           )}
         </div>
