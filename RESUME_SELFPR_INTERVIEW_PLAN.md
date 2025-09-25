@@ -11,9 +11,46 @@
 - [x] Front: /interview/2 にマスタ/パーソナライズ質問の組込み
 - [x] Front: カテゴリ選択UIとAPI駆動への全面刷新（/interview に実装）
 
+---
+
+## 実装まとめ（2025-09-25）
+
+本日実装したユーザー向け面接アドバイス強化と企業向けスカウト上限機能の概要です。
+
+1) 面接アドバイス（履歴書内容の反映）
+- 職務経歴書に関する質問: 履歴書の workExperiences / skills / self_pr から「要点サマリ（上位経験・スキル・自己PR抜粋）」と「想定質問」を自動生成して表示。
+  - 変更: `frontend/app/interview-advice/resume-questions/page.tsx`
+- 自己PR: 履歴書の自己PRとスキルを読み込み、自己PRに紐づく想定質問を動的生成して提示。
+  - 変更: `frontend/app/interview-advice/pr-questions/page.tsx`
+- 面接対策: 一般的な想定質問＋履歴書由来の質問に対する回答のローカル保存（再訪時に自動復元）。
+  - 変更: `frontend/app/interview-advice/prepare-interview/page.tsx`
+
+2) 企業アカウント（スカウト送信上限/追加購入導線）
+- DB: User にスカウトクレジットを追加（初期100）。
+  - 変更: `back/core/models.py`、マイグレーション `back/core/migrations/0008_add_scout_credits_to_user.py`
+- API: スカウト作成時に残数チェック→0ならHTTP 402 + 購入URLを返却。送信成功時に使用数をインクリメント。ダッシュボード統計に残数情報を追加。
+  - 変更: `back/core/views_api_v2.py`（`ScoutViewSet.create` / `dashboard_stats_v2`）
+  - 変更: `back/core/serializers.py`（User に残数フィールド追加）
+- Front: スカウト送信で402受信時にトースト＋`/companyinfo/payment` へ誘導。ダッシュボードに残数/累計送信を表示。
+  - 変更: `frontend/app/company/page.tsx`、`frontend/app/company/dashboard/page.tsx`
+
+3) 併せて反映済みの改善（別件）
+- PDF 出力に枠線とセクション罫線を追加: `back/api_v2/views/resume_views.py`
+- 企業向け求職者表示の匿名化（氏名/メール非表示）: `frontend/app/company/_component/seeker_card.tsx`、`.../seekers-scouted/usercard.tsx`、`components/modal/jobseeker-detail.tsx`
+- 企業が求職者履歴書を参照する新API（公開/サニタイズ済）: `back/core/urls_api_v2.py`、`back/core/views_api_v2.py`、`frontend/lib/api-v2-client.ts`
+- 企業ヘッダーのロゴ差し替え: `frontend/components/company/header.tsx`
+- プレミアムプラン価格 60,000 → 50,000: `frontend/config/plans.ts`
+
+4) デプロイ/運用メモ
+- DBマイグレーション必須（`0008_add_scout_credits_to_user.py`）。
+- 追加100通（¥10,000）の購入完了でクレジット加算する処理は要実装（Stripe完了Webhook→ユーザの `scout_credits_total += 100`）。
+- 履歴書未作成ユーザーのときは面接アドバイスページが空になるケースがあるため、UIで誘導済（作成導線）。
+
+---
+
 ## 残タスク（洗い出し）
-- [ ] Front: 面接対策のカテゴリ選択UI（/interview トップなど）をAPI駆動に刷新
-- [ ] Front: 難易度バッジ/タグフィルタの追加（`/interview/questions` クエリ対応）
+- [x] Front: 面接対策のカテゴリ選択UI（/interview トップなど）をAPI駆動に刷新
+- [x] Front: 難易度バッジ/タグフィルタの追加（`/interview/questions` クエリ対応）
 - [ ] Admin: PromptTemplateのプレビューUI（任意のResumeで `{}` 埋め込みプレビュー）
 - [ ] 設定: 本番・ステージング環境への `GEMINI_API_KEY` セットと動作確認
 - [ ] 運用: レート制限/ログ監視の設定（Gemini呼び出し、生成回数制限）

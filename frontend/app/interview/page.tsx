@@ -31,6 +31,7 @@ export default function InterviewTopPage() {
   const [selected, setSelected] = useState<string | null>(null);
   const [difficulty, setDifficulty] = useState<'all'|'easy'|'medium'|'hard'>('all');
   const [questions, setQuestions] = useState<QItem[]>([]);
+  const [tagInput, setTagInput] = useState('');
 
   useEffect(() => {
     (async () => {
@@ -58,6 +59,12 @@ export default function InterviewTopPage() {
         params.set('category', selected);
         params.set('limit', '30');
         if (difficulty !== 'all') params.set('difficulty', difficulty);
+        const tagsCsv = tagInput
+          .split(',')
+          .map(s => s.trim())
+          .filter(Boolean)
+          .join(',');
+        if (tagsCsv) params.set('tags', tagsCsv);
         const res = await fetch(`${apiUrl}/api/v2/interview/questions/?${params.toString()}`, { headers: { ...getAuthHeaders() } });
         if (!res.ok) { setQuestions([]); return; }
         const data = await res.json();
@@ -135,7 +142,7 @@ export default function InterviewTopPage() {
           </div>
 
           {/* Difficulty filter */}
-          <div className="mt-4 flex items-center gap-2 text-sm">
+          <div className="mt-4 flex items-center gap-2 text-sm flex-wrap">
             <span className="text-gray-600">難易度:</span>
             {(['all','easy','medium','hard'] as const).map(d => (
               <button
@@ -144,6 +151,20 @@ export default function InterviewTopPage() {
                 className={`px-3 py-1 rounded ${difficulty===d ? 'bg-gray-800 text-white' : 'bg-gray-200 text-gray-800 hover:bg-gray-300'}`}
               >{d === 'all' ? '全て' : d}</button>
             ))}
+            <span className="ml-4 text-gray-600">タグ（カンマ区切り）:</span>
+            <input
+              value={tagInput}
+              onChange={(e) => setTagInput(e.target.value)}
+              placeholder="例: sales, leadership"
+              className="border rounded px-2 py-1 text-sm"
+            />
+            <button
+              onClick={() => {
+                // re-trigger fetch by changing selected (same value) or difficulty
+                setSelected(prev => (prev ? prev : (categories[0] || null)));
+              }}
+              className="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300 text-gray-800"
+            >絞り込み</button>
             <div className="flex-1" />
             <button onClick={addPersonalized} className="px-4 py-2 rounded bg-[#FF733E] text-white hover:opacity-90 disabled:opacity-60" disabled={loading}>
               {loading ? '読み込み中…' : '質問を生成（Gemini）'}
@@ -175,4 +196,3 @@ export default function InterviewTopPage() {
     </div>
   );
 }
-
