@@ -28,6 +28,8 @@ class ApiV2Client {
       headers: {
         'Content-Type': 'application/json',
       },
+      // クロスサイトでCookieを送らない（セッション認証を使わずDRF Tokenのみ）
+      withCredentials: false,
       timeout: 10000,
     });
 

@@ -291,7 +291,8 @@ SESSION_SAVE_EVERY_REQUEST = True
 # ====== Security (production) ======
 # 本番では強化。ENABLE_PROD_SECURITY=true でも同様に強制
 if (os.getenv('ENABLE_PROD_SECURITY', 'false').lower() == 'true') or (not DEBUG):
-    SECURE_SSL_REDIRECT = True
+    # 環境変数でSSLリダイレクトを一時的に無効化できるようにする（デバッグ/暫定回避用）
+    SECURE_SSL_REDIRECT = os.getenv('SECURE_SSL_REDIRECT', 'true').lower() == 'true'
     SECURE_HSTS_SECONDS = 31536000
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True

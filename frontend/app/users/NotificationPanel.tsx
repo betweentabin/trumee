@@ -32,10 +32,14 @@ export default function NotificationPanel() {
   };
 
   const load = async () => {
+    setLoading(true);
     try {
-      setLoading(true);
       const data = await apiV2Client.getAdviceNotifications();
       setSummary(data);
+    } catch (e) {
+      // 失敗してもUIが崩れないようにし、デバッグログを残す
+      console.error('Failed to load advice notifications', e);
+      setSummary(null);
     } finally {
       setLoading(false);
     }
