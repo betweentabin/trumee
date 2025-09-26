@@ -39,12 +39,12 @@ export default function CompanyMonthlyPageView({ params }: { params: Promise<Par
   useEffect(() => {
     const hasStored = typeof window !== 'undefined' && !!localStorage.getItem('drf_token_v2');
     if (isAuthenticated === false && !hasStored) {
-      router.push('/auth/company/login');
+      router.push('/auth/login');
       return;
     }
     if (isAuthenticated && currentUser && currentUser.role !== 'company') {
       toast.error('企業アカウントでログインしてください');
-      router.push('/auth/company/login');
+      router.push('/auth/login');
       return;
     }
   }, [isAuthenticated, currentUser, router]);

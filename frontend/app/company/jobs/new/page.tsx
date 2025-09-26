@@ -23,7 +23,7 @@ export default function CompanyNewJobPage() {
   // init auth & role
   useEffect(() => {
     initializeAuth();
-    requireRole('company', '/auth/company/login');
+    requireRole('company', '/auth/login');
   }, [initializeAuth, requireRole]);
 
   const handleSubmit = async () => {

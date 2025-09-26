@@ -52,14 +52,14 @@ export default function SeekersAppliedPage() {
     const hasStored = typeof window !== 'undefined' && !!localStorage.getItem('drf_token_v2');
     if (isAuthenticated === false && !hasStored) {
       toast.error('企業ログインが必要です');
-      router.push('/auth/company/login');
+      router.push('/auth/login');
       return;
     }
     
     if (isAuthenticated && currentUser) {
       if (currentUser.role !== 'company') {
         toast.error('企業アカウントでログインしてください');
-        router.push('/auth/company/login');
+        router.push('/auth/login');
         return;
       }
       

@@ -64,6 +64,17 @@ const nextConfig = {
   },
   // No custom rewrites; serve public assets and app routes directly
   async rewrites() { return []; },
+
+  // Redirect old routes
+  async redirects() {
+    return [
+      {
+        source: '/auth/company/login',
+        destination: '/auth/login',
+        permanent: true,
+      },
+    ];
+  },
 };
 
 module.exports = nextConfig;

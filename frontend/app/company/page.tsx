@@ -60,8 +60,8 @@ export default function Search() {
     const hasStored = typeof window !== 'undefined' && !!localStorage.getItem('drf_token_v2');
     if (isAuthenticated === false && !hasStored) {
       // 認証されていない場合は企業ログインページにリダイレクト
-      toast.error('企業ログインが必要です');
-      router.push('/auth/company/login');
+      toast.error('ログインが必要です');
+      router.push('/auth/login');
       return;
     }
     
@@ -69,7 +69,7 @@ export default function Search() {
       // 企業ロールチェック
       if (currentUser.role !== 'company') {
         toast.error('企業アカウントでログインしてください');
-        router.push('/auth/company/login');
+        router.push('/auth/login');
         return;
       }
       

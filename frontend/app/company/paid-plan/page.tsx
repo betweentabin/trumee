@@ -24,7 +24,7 @@ export default function CompanyPaidPlanPage() {
           const data = await res.json();
           setCurrentPlan((data.plan_tier as PlanTier) || '');
         } else if (res.status === 401) {
-          router.push('/auth/company/login');
+          router.push('/auth/login');
         }
       } catch {}
     };
