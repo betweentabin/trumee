@@ -56,10 +56,39 @@ const JobSeekerDetailModal = ({
     if (!detail?.resume) return { jobhistoryList: [], formValues: {} };
 
     const resume = detail.resume as any;
-    let histories = Array.isArray(resume.histories) ? resume.histories : [];
-    // Fallback: build histories from extra_data.workExperiences when histories is absent
-    if ((!histories || histories.length === 0) && Array.isArray(resume.extra_data?.workExperiences)) {
-      histories = (resume.extra_data.workExperiences as any[]).map((w, i) => ({
+
+    // Build histories from multiple possible sources in priority order
+    // 1) v2: resume.experiences
+    // 2) legacy: resume.histories
+    // 3) legacy: resume.extra_data.workExperiences
+    let histories: any[] = [];
+
+    if (Array.isArray(resume.experiences) && resume.experiences.length > 0) {
+      histories = (resume.experiences as any[]).map((e: any) => ({
+        companyName: e.company,
+        workActivity: e.tasks || e.work_content || '',
+        startDate: e.period_from,
+        endDate: e.period_to,
+        memberCount: e.team_size || e.people,
+        duty: e.position,
+        employmentType: e.employment_type || '正社員',
+        business: e.business,
+        capital: e.capital,
+      }));
+    } else if (Array.isArray(resume.histories) && resume.histories.length > 0) {
+      histories = (resume.histories as any[]).map((w: any) => ({
+        companyName: w.company || w.companyName,
+        workActivity: w.description || w.tasks || w.workActivity || '',
+        startDate: w.startDate || w.period_from || w.since,
+        endDate: w.endDate || w.period_to || w.to,
+        memberCount: w.teamSize || w.people,
+        duty: w.position || w.duty,
+        employmentType: w.employmentType || '正社員',
+        business: w.business,
+        capital: w.capital,
+      }));
+    } else if (Array.isArray(resume.extra_data?.workExperiences)) {
+      histories = (resume.extra_data.workExperiences as any[]).map((w: any) => ({
         companyName: w.company,
         workActivity: w.description || w.tasks || '',
         startDate: w.startDate || w.period_from || w.since,
@@ -67,33 +96,31 @@ const JobSeekerDetailModal = ({
         memberCount: w.teamSize || w.people,
         duty: w.position || w.duty,
         employmentType: w.employmentType || '正社員',
+        business: w.business,
+        capital: w.capital,
       }));
     }
 
-    const jobhistoryList = histories.map(
-      (_: any, index: number) => `job${index + 1}`
-    );
+    const jobhistoryList = histories.map((_: any, index: number) => `job${index + 1}`);
 
     const formValues: any = {
-      summary: resume.summary || resume.extra_data?.jobSummary || "",
-      skills: resume.skillset || resume.skills || "",
-      self_pr: resume.selfPR || resume.self_pr || "",
+      summary: resume.summary || resume.description || resume.extra_data?.jobSummary || '',
+      skills: resume.skillset || resume.skills || '',
+      self_pr: resume.selfPR || resume.self_pr || '',
     };
 
     // Add job history data
     histories.forEach((history: any, index: number) => {
       const prefix = `job${index + 1}`;
       formValues[prefix] = {
-        company: history.companyName || "",
+        company: history.companyName || '',
         capital: history.capital || 0,
-        work_content: history.workActivity || "",
-        since: history.startDate
-          ? dayjs(history.startDate).format("YYYY/MM")
-          : "",
-        to: history.endDate ? dayjs(history.endDate).format("YYYY/MM") : "現在",
+        work_content: history.workActivity || '',
+        since: history.startDate ? dayjs(history.startDate).format('YYYY/MM') : '',
+        to: history.endDate ? dayjs(history.endDate).format('YYYY/MM') : '現在',
         people: history.memberCount || 0,
-        duty: history.duty || "",
-        employment_type: history.employmentType || "正社員",
+        duty: history.duty || '',
+        employment_type: history.employmentType || '正社員',
       };
     });
 
@@ -206,14 +233,14 @@ const JobSeekerDetailModal = ({
             <div className="py-2 px-3 md:px-4 bg-primary-default text-white text-center text-base md:text-lg font-medium">
               職務経歴書
             </div>
-            <div className="max-h-[300px] md:max-h-[400px] overflow-y-auto">
+            <div className="max-h-[70vh] md:max-h-[70vh] overflow-y-auto">
               <ResumePreview
                 userName={userName}
                 jobhistoryList={resumeData.jobhistoryList}
                 formValues={resumeData.formValues}
-                jobSummary={(detail?.resume as any)?.extra_data?.jobSummary}
-                selfPR={(detail?.resume as any)?.self_pr}
-                skills={(detail?.resume as any)?.skills}
+                jobSummary={resumeData.formValues?.summary}
+                selfPR={resumeData.formValues?.self_pr}
+                skills={resumeData.formValues?.skills}
                 education={Array.isArray((detail?.resume as any)?.extra_data?.education) ? (detail?.resume as any)?.extra_data?.education : []}
                 className="p-2 md:p-4"
               />
