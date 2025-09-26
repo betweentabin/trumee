@@ -105,6 +105,25 @@ const JobSeekerDetailModal = ({
       ? `${detail.user.firstName} ${detail.user.lastName}`
       : "";
 
+  const anonymize = (id?: string | number) => `匿名ユーザー${id ? ` #${String(id).slice(-4)}` : ''}`;
+  const displayName = (detail?.full_name && String(detail.full_name).trim())
+    || (detail?.username && String(detail.username).trim())
+    || anonymize(detail?.id);
+
+  const formatSalary = (value?: number | string) => {
+    if (value === undefined || value === null || value === ('' as any)) return undefined;
+    let n: number | null = null;
+    if (typeof value === 'number') {
+      n = value;
+    } else if (typeof value === 'string') {
+      const digits = (value.match(/\d+/g) || []).join('');
+      if (digits) n = parseInt(digits, 10);
+    }
+    if (n === null || Number.isNaN(n)) return undefined;
+    const man = n >= 10000 ? Math.round(n / 10000) : n;
+    return `${man}万円`;
+  };
+
   return (
     <DefaultModal isOpen={isOpen} onClose={onClose}>
       <div className="py-4 md:py-6 px-3 md:px-4 w-full max-w-4xl max-h-[90vh] md:max-h-[85vh] flex flex-col">
@@ -116,10 +135,7 @@ const JobSeekerDetailModal = ({
           {detail && (
             <div className="w-full flex flex-col gap-2 md:gap-3 p-3 md:p-4 bg-gray-50 rounded-lg">
               <div className="flex flex-row gap-2 items-center">
-                <span className="text-base md:text-lg font-semibold">
-                  {/* 匿名表示（ID終端で識別） */}
-                  {`匿名ユーザー${detail?.id ? ` #${String(detail.id).slice(-4)}` : ''}`}
-                </span>
+                <span className="text-base md:text-lg font-semibold">{displayName}</span>
               </div>
               {/* 企業画面ではメール等の個人情報は非表示 */}
               {detail.desired_job && (
@@ -144,15 +160,13 @@ const JobSeekerDetailModal = ({
                   </span>
                 </div>
               )}
-              {detail.desired_salary && (
+              {formatSalary(detail.desired_salary) && (
                 <div className="flex flex-col md:flex-row gap-1 md:gap-2">
                   <span className="w-16 md:w-20 font-medium text-sm md:text-base">
                     希望年収
                   </span>
                   :
-                  <span className="text-sm md:text-base">
-                    {(detail.desired_salary / 10000).toFixed(0)}万円
-                  </span>
+                  <span className="text-sm md:text-base">{formatSalary(detail.desired_salary)}</span>
                 </div>
               )}
               {detail.skills && (

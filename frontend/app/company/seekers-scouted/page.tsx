@@ -69,27 +69,30 @@ export default function SeekersScoutedPage() {
   const fetchScouts = async () => {
     try {
       const response = await apiClient.getScouts();
-      // Transform response to match ScoutWithSeeker interface
-      // TODO: Update backend to return seeker details with scout data
+      // Use backend-provided seeker_details when available to show names
       const transformedScouts = response.map((scout: any) => {
+        const details = scout.seeker_details || {};
         const s = scout.seeker;
         let seeker: any;
         if (!s) {
           seeker = {
-            id: String(scout.seeker_id || ''),
-            email: '',
-            full_name: '',
-            username: '',
+            id: String(scout.seeker_id || details.id || ''),
+            email: details.email || '',
+            full_name: details.full_name || '',
+            username: details.username || '',
           };
         } else if (typeof s === 'string' || typeof s === 'number') {
           seeker = {
             id: String(s),
-            email: '',
-            full_name: '',
-            username: '',
+            email: details.email || '',
+            full_name: details.full_name || '',
+            username: details.username || '',
           };
         } else {
-          seeker = { ...s, id: String(s.id || s.user || s.user_id || scout.seeker_id || '') };
+          seeker = { ...s, id: String(s.id || s.user || s.user_id || scout.seeker_id || details.id || '') };
+        }
+        if (details && (details.full_name || details.username || details.email)) {
+          seeker = { ...seeker, ...details, id: String(details.id || seeker.id) };
         }
         return { ...scout, seeker };
       });

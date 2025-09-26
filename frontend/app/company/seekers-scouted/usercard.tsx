@@ -25,6 +25,7 @@ export default function UserCard({
   onCancel,
 }: UserCardProps) {
   const anonymize = (id?: string | number) => `匿名ユーザー${id ? ` #${String(id).slice(-4)}` : ''}`;
+  const displayName = (user?.full_name && user.full_name.trim()) || user?.username || anonymize(user?.id);
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'sent':
@@ -53,7 +54,7 @@ export default function UserCard({
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-2">
             <FaUser className="text-gray-400" />
-            <h3 className="font-semibold text-lg">{anonymize(user.id)}</h3>
+            <h3 className="font-semibold text-lg">{displayName}</h3>
             {getStatusBadge(status)}
           </div>
           
