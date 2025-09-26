@@ -23,7 +23,7 @@ export default function VerifyEmailPage() {
 
             <div className="space-y-3">
               <Link href="/auth/verification/resend" className="block w-full py-3 px-4 rounded-full border text-gray-700 bg-white hover:bg-gray-50">確認メールを再送信</Link>
-              <Link href="/auth/login" className="block w-full py-3 px-4 rounded-full text-white bg-[#FF733E] hover:bg-[#e9632e]">ログイン画面に戻る</Link>
+              <Link href="/auth/login" className="block w-full py-3 px-4 rounded-full border border-black text-black bg-white hover:bg-gray-50">ログイン画面に戻る</Link>
             </div>
           </div>
         </div>
@@ -31,4 +31,3 @@ export default function VerifyEmailPage() {
     </Layout>
   );
 }
-

@@ -40,7 +40,7 @@ export default function PaidPlanModal({
           <button className="w-80 h-20 rounded-xl border-2 border-[#FF7A2F] text-[#FF7A2F] text-2xl font-medium bg-white">
             詳しく見る
           </button>
-          <button className="w-80 h-20 rounded-xl bg-[#FF7A2F] text-white text-2xl font-medium">
+          <button className="w-80 h-20 rounded-xl border border-black text-black text-2xl font-medium bg-white hover:bg-gray-50">
             有料プランに加入する
           </button>
         </div>

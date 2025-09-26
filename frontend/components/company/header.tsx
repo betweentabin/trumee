@@ -50,23 +50,23 @@ const Header = () => {
           <div className="flex items-center gap-4">
             <button
               onClick={search}
-              className="px-4 py-2 text-sm rounded-full bg-primary-600 hover:bg-primary-700 text-white transition"
+              className="px-4 py-2 text-sm rounded-full border border-black text-black bg-white hover:bg-gray-50 transition"
             >
               求職者の検索
             </button>
             <button
               onClick={openThisMonth}
-              className="px-4 py-2 text-sm rounded-full bg-primary-600 hover:bg-primary-700 text-white transition"
+              className="px-4 py-2 text-sm rounded-full border border-black text-black bg-white hover:bg-gray-50 transition"
             >
               今月のページ
             </button>
             <button
               onClick={mypage}
-              className="px-4 py-2 text-sm rounded-full bg-primary-600 hover:bg-primary-700 text-white transition"
+              className="px-4 py-2 text-sm rounded-full border border-black text-black bg-white hover:bg-gray-50 transition"
             >
               マイページ
             </button>
-            <button onClick={logout} className="px-4 py-2 text-sm rounded-full bg-secondary-900 hover:bg-secondary-800 text-white transition">
+            <button onClick={logout} className="px-4 py-2 text-sm rounded-full border border-black text-black bg-white hover:bg-gray-50 transition">
               ログアウト
             </button>
           </div>

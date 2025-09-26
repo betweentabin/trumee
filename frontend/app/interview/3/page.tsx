@@ -174,17 +174,55 @@ export default function InterviewPage3() {
     }
   ];
 
-  const categoryLabel = (c: string) => ({
-    basic: '基本',
-    motivation: '志望動機',
-    resume: '履歴書',
-    interview: '面接',
-    teamwork: 'チームワーク',
-    future: '将来像',
-    stress: 'ストレス耐性',
-    experience: '経験',
-    generated: '生成',
-  } as Record<string, string>)[c] || c;
+  const categoryLabel = (raw: string) => {
+    const c = (raw || '').toString().trim();
+    const MAP: Record<string, string> = {
+      // 英語スラッグ → 日本語表示
+      basic: '基本',
+      experience: '経験',
+      motivation: '志望動機',
+      personality: '人柄・価値観',
+      teamwork: 'チームワーク',
+      workstyle: '働き方',
+      future: '将来像',
+      stress: 'ストレス耐性',
+      stress_tolerance: 'ストレス耐性',
+      closing: 'クロージング',
+      reverse: '逆質問',
+      reverse_question: '逆質問',
+      case: 'ケース面接',
+      case_interview: 'ケース面接',
+      conditions: '条件確認',
+      resume: '履歴書',
+      interview: '面接',
+      generated: '生成',
+
+      // 日本語キー → 日本語表示（そのまま）
+      '基本': '基本',
+      '経験': '経験',
+      '志望動機': '志望動機',
+      '人柄': '人柄・価値観',
+      '価値観': '人柄・価値観',
+      '人柄・価値観': '人柄・価値観',
+      'チームワーク': 'チームワーク',
+      '働き方': '働き方',
+      '将来像': '将来像',
+      'ストレス耐性': 'ストレス耐性',
+      'クロージング': 'クロージング',
+      '逆質問': '逆質問',
+      'ケース': 'ケース面接',
+      'ケース面接': 'ケース面接',
+      '条件': '条件確認',
+      '条件確認': '条件確認',
+      '履歴書': '履歴書',
+      '面接': '面接',
+    };
+    // まずダイレクト一致
+    if (MAP[c]) return MAP[c];
+    // 小文字化・特殊記号除去して再マップ
+    const k = c.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
+    return MAP[k] || c;
+  };
   const categories = [{ key: 'all', label: 'すべて' }, ...apiCategories.map(c => ({ key: c, label: categoryLabel(c) }))];
 
   useEffect(() => {
