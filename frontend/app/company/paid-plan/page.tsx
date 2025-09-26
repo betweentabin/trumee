@@ -169,8 +169,8 @@ export default function CompanyPaidPlanPage() {
                     disabled={isLoading || isActive}
                     className={`w-full mt-8 py-3 rounded-lg font-medium transition ${
                       isActive || isLoading
-                        ? 'border border-gray-300 text-gray-400 bg-gray-100 cursor-not-allowed'
-                        : 'border border-black text-black bg-white hover:bg-gray-50'
+                        ? 'bg-primary-300 text-white cursor-not-allowed'
+                        : 'bg-primary-600 text-white hover:bg-primary-700'
                     }`}
                   >
                     {isLoading && !isActive ? (
