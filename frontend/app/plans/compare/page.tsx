@@ -17,11 +17,10 @@ export default function PlansComparePage() {
             <ul className="mt-4 text-sm text-gray-700 list-disc pl-5 space-y-1">
               {p.features.map((f) => (<li key={f}>{f}</li>))}
             </ul>
-            <button className="mt-6 w-full py-2 rounded-full text-white bg-[#FF733E] hover:bg-[#e9632e]">選択</button>
+            <button className="mt-6 w-full py-2 rounded-full border border-black text-black bg-white hover:bg-gray-50">選択</button>
           </div>
         ))}
       </div>
     </div>
   );
 }
-
