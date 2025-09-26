@@ -32,9 +32,9 @@ const ResumePreview: React.FC<PreviewProps> = ({ userName, jobhistoryList, formV
     <div className={`bg-white border border-black ${className || ''}`}>
       {/* Header */}
       <div className="bg-[#4B3A2F] text-white px-4 py-3 text-lg font-bold">プレビュー</div>
-      <div className="p-4">
+      <div className="p-4 text-gray-900">
         <div className="flex justify-between mb-6">
-          <h2 className="text-2xl font-semibold">職務経歴書</h2>
+          <h2 className="text-2xl font-semibold text-gray-900">職務経歴書</h2>
           <div className="text-right text-sm leading-6">
             <div>{ymd}</div>
           </div>

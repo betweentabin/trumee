@@ -109,6 +109,18 @@ const JobSeekerDetailModal = ({
       self_pr: resume.selfPR || resume.self_pr || '',
     };
 
+    // Helper: format YYYY/MM without failing on non-ISO
+    const fmtYm = (d: any) => {
+      if (!d) return '';
+      try {
+        const dd = dayjs(d);
+        if ((dd as any)?.isValid?.()) return dd.format('YYYY/MM');
+      } catch {}
+      const s = String(d);
+      const ym = s.length >= 7 ? s.slice(0, 7) : s;
+      return ym.replace(/[-.]/g, '/');
+    };
+
     // Add job history data
     histories.forEach((history: any, index: number) => {
       const prefix = `job${index + 1}`;
@@ -116,8 +128,8 @@ const JobSeekerDetailModal = ({
         company: history.companyName || '',
         capital: history.capital || 0,
         work_content: history.workActivity || '',
-        since: history.startDate ? dayjs(history.startDate).format('YYYY/MM') : '',
-        to: history.endDate ? dayjs(history.endDate).format('YYYY/MM') : '現在',
+        since: fmtYm(history.startDate),
+        to: history.endDate ? fmtYm(history.endDate) : '現在',
         people: history.memberCount || 0,
         duty: history.duty || '',
         employment_type: history.employmentType || '正社員',
@@ -128,9 +140,9 @@ const JobSeekerDetailModal = ({
   }, [detail]);
 
   const userName =
-    detail?.user?.firstName && detail?.user?.lastName
+    (detail?.user?.firstName && detail?.user?.lastName
       ? `${detail.user.firstName} ${detail.user.lastName}`
-      : "";
+      : undefined) || (detail?.full_name as string) || '';
 
   const anonymize = (id?: string | number) => `匿名ユーザー${id ? ` #${String(id).slice(-4)}` : ''}`;
   const displayName = (detail?.full_name && String(detail.full_name).trim())
@@ -229,11 +241,11 @@ const JobSeekerDetailModal = ({
 
         {/* Resume Preview */}
         {detail?.resume ? (
-          <div className="flex-1 w-full border border-border-default rounded-lg overflow-hidden">
-            <div className="py-2 px-3 md:px-4 bg-primary-default text-white text-center text-base md:text-lg font-medium">
+          <div className="w-full border border-border-default rounded-lg overflow-hidden">
+            <div className="py-2 px-3 md:px-4 bg-[#4B3A2F] text-white text-center text-base md:text-lg font-medium">
               職務経歴書
             </div>
-            <div className="max-h-[70vh] md:max-h-[70vh] overflow-y-auto">
+            <div className="max-h-[70vh] md:max-h-[70vh] min-h-[360px] overflow-y-auto">
               <ResumePreview
                 userName={userName}
                 jobhistoryList={resumeData.jobhistoryList}
