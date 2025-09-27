@@ -7,8 +7,9 @@ import django.db.models.deletion
 
 class Migration(migrations.Migration):
 
+    # 既存のマージ済み最新に依存させ、葉ノード競合を回避
     dependencies = [
-        ('core', '0007_add_experience_missing_fields'),
+        ('core', '0013_merge_0012_billing_0008_scout_credits'),
     ]
 
     operations = [
@@ -48,4 +49,3 @@ class Migration(migrations.Migration):
             field=models.ForeignKey(on_delete=django.db.models.deletion.SET_NULL, related_name='messages', to='core.annotation', null=True, blank=True),
         ),
     ]
-

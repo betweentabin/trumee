@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+from corsheaders.defaults import default_headers, default_methods
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -62,10 +63,32 @@ CORS_ALLOWED_ORIGINS = [
     "https://trumeee.vercel.app",  # カスタムドメイン
 ]
 
+# ワイルドカード的に許可（ドメイン移行に強くする）
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    r"^https://.*\.vercel\.app$",
+    r"^https://.*\.railway\.app$",
+    r"^https://.*\.up\.railway\.app$",
+]
+
 CORS_ALLOW_CREDENTIALS = True
 
 # 開発時のみ許容。本番(=DEBUG=False)では明示的許可ドメインのみに制限
 CORS_ALLOW_ALL_ORIGINS = True if DEBUG else False
+
+# プリフライト/ヘッダー明示（安全側）
+CORS_ALLOW_HEADERS = list(default_headers) + [
+    'authorization',
+    'content-type',
+]
+
+CORS_ALLOW_METHODS = list(default_methods)
+
+# CSRF 信頼オリジン（フォーム運用や管理画面投稿のため）
+CSRF_TRUSTED_ORIGINS = [
+    'https://*.vercel.app',
+    'https://*.railway.app',
+    'https://*.up.railway.app',
+]
 
 # ====== Application definition ======
 DJANGO_APPS = [
