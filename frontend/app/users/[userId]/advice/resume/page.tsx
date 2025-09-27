@@ -150,6 +150,7 @@ export default function ResumeAdvicePage() {
       const userId = params?.userId ? String(params.userId) : "";
       // 1) create annotation then 2) link message
       let annotationId: string | null = null;
+      let createdAnn: any = null;
       if (pendingAnchor.resumeId) {
         const annRes = await fetch(buildApiUrl("/advice/annotations/"), {
           method: "POST",
@@ -163,7 +164,7 @@ export default function ResumeAdvicePage() {
             quote: pendingAnchor.quote || "",
           }),
         });
-        if (annRes.ok) { const ann = await annRes.json(); annotationId = String(ann.id); }
+        if (annRes.ok) { const ann = await annRes.json(); createdAnn = ann; annotationId = String(ann.id); }
       }
       const res = await fetch(buildApiUrl("/advice/messages/"), {
         method: "POST",
@@ -174,6 +175,7 @@ export default function ResumeAdvicePage() {
       setComposerOpen(false);
       setComposerText('');
       setPendingAnchor(null);
+      if (createdAnn) setAnnotations((prev) => [...prev, createdAnn]);
       await loadMessages();
     } finally {
       setSending(false);

@@ -222,6 +222,7 @@ export default function AdminSeekerDetailPage() {
       setSendError(null);
       // 1) create annotation
       let annotationId: string | null = null;
+      let createdAnn: any = null;
       if (pendingAnchor.resumeId) {
         const annRes = await fetch(buildApiUrl('/advice/annotations/'), {
           method: 'POST',
@@ -235,7 +236,7 @@ export default function AdminSeekerDetailPage() {
             quote: pendingAnchor.quote || '',
           }),
         });
-        if (annRes.ok) { const ann = await annRes.json(); annotationId = String(ann.id); }
+        if (annRes.ok) { const ann = await annRes.json(); createdAnn = ann; annotationId = String(ann.id); }
       }
 
       const res = await fetch(buildApiUrl('/advice/messages/'), {
@@ -252,6 +253,7 @@ export default function AdminSeekerDetailPage() {
       setComposerOpen(false);
       setComposerText('');
       setPendingAnchor(null);
+      if (createdAnn) setAnnotations((prev) => [...prev, createdAnn]);
       await loadReviewMessages();
     } catch (e) {
       setSendError('送信に失敗しました');

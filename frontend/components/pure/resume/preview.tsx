@@ -67,14 +67,16 @@ const ResumePreview: React.FC<PreviewProps> = ({ userName, jobhistoryList, formV
 
         {/* 職務要約 */}
         {(jobSummary || selfPR) && (
-          <div className="mb-6" data-annot-id="job_summary">
+          <div className="mb-6">
             <h3 className="text-lg font-semibold mb-2">職務要約</h3>
-            <HighlightableText
-              text={(jobSummary || selfPR) as string}
-              ranges={rangesFor('job_summary')}
-              colorMap={colorMap}
-              className="text-sm text-gray-800"
-            />
+            <div data-annot-id="job_summary">
+              <HighlightableText
+                text={(jobSummary || selfPR) as string}
+                ranges={rangesFor('job_summary')}
+                colorMap={colorMap}
+                className="text-sm text-gray-800"
+              />
+            </div>
           </div>
         )}
 
@@ -135,14 +137,16 @@ const ResumePreview: React.FC<PreviewProps> = ({ userName, jobhistoryList, formV
 
         {/* 自己PR */}
         {selfPR && (
-          <div className="mb-6" data-annot-id="self_pr">
+          <div className="mb-6">
             <h3 className="text-lg font-semibold mb-2">自己PR</h3>
-            <HighlightableText
-              text={selfPR}
-              ranges={rangesFor('self_pr')}
-              colorMap={colorMap}
-              className="text-sm text-gray-800"
-            />
+            <div data-annot-id="self_pr">
+              <HighlightableText
+                text={selfPR}
+                ranges={rangesFor('self_pr')}
+                colorMap={colorMap}
+                className="text-sm text-gray-800"
+              />
+            </div>
           </div>
         )}
 

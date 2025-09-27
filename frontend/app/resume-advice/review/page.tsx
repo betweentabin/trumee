@@ -257,6 +257,7 @@ export default function ResumeReviewPage() {
     try {
       // 1) Create annotation first
       let annotationId: string | null = null;
+      let createdAnn: any = null;
       if (pendingAnchor.resumeId) {
         const annRes = await fetch(`${apiUrl}/api/v2/advice/annotations/`, {
           method: 'POST',
@@ -270,7 +271,7 @@ export default function ResumeReviewPage() {
             quote: pendingAnchor.quote || '',
           }),
         });
-        if (annRes.ok) { const ann = await annRes.json(); annotationId = String(ann.id); }
+        if (annRes.ok) { createdAnn = await annRes.json(); annotationId = String(createdAnn.id); }
       }
 
       // 2) Post message that links to annotation
@@ -288,6 +289,8 @@ export default function ResumeReviewPage() {
       setComposerText('');
       setComposerOpen(false);
       setPendingAnchor(null);
+      // optimistic update annotations
+      if (createdAnn) setAnnotations((prev) => [...prev, createdAnn]);
       await fetchMessages();
     } catch (e) {
       setError('コメントの送信に失敗しました');

@@ -532,7 +532,6 @@ class Scout(models.Model):
     
     class Meta:
         db_table = 'scouts'
-        unique_together = ['company', 'seeker']
         indexes = [
             models.Index(fields=['status', '-scouted_at']),
             models.Index(fields=['seeker', 'status']),
