@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { buildApiUrl, getApiHeaders, API_CONFIG } from '@/config/api';
 import AdviceScreenTab from '@/components/admin/AdviceScreenTab';
@@ -24,7 +24,9 @@ export default function AdminSeekerDetailPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'review' | 'interview' | 'advice' | 'member'>('review');
-  const [reviewMessages, setReviewMessages] = useState<Array<{id:string; sender:string; content:string; created_at:string;}>>([]);
+  type AnchorMeta = { anchorId: string; top: number; quote?: string };
+  type ReviewMsg = { id:string; sender:string; content:string; created_at:string; body?: string; isAnnotation?: boolean; anchor?: AnchorMeta };
+  const [reviewMessages, setReviewMessages] = useState<ReviewMsg[]>([]);
   const [reviewInput, setReviewInput] = useState('');
   const [adviceMessages, setAdviceMessages] = useState<any[]>([]);
   const [interviewMessages, setInterviewMessages] = useState<any[]>([]);
@@ -79,7 +81,20 @@ export default function AdminSeekerDetailPage() {
       const res = await fetch(url, { headers: getApiHeaders(token) });
       if (!res.ok) return;
       const list = await res.json();
-      const mapped = (list || []).map((m: any) => ({ id: String(m.id), sender: String(m.sender), content: m.content, created_at: m.created_at }));
+      const parseAnnotation = (text: string): { meta?: AnchorMeta; rest: string } => {
+        const m = (text || '').match(/^@@ANNOTATION:(\{[\s\S]*?\})@@\s*/);
+        if (m) {
+          try {
+            return { meta: JSON.parse(m[1]) as AnchorMeta, rest: text.slice(m[0].length) };
+          } catch {}
+        }
+        return { rest: text };
+      };
+      const mapped = (list || []).map((m: any) => {
+        const raw = String(m.content || '');
+        const { meta, rest } = parseAnnotation(raw);
+        return { id: String(m.id), sender: String(m.sender), content: raw, body: rest, isAnnotation: Boolean(meta), anchor: meta, created_at: m.created_at } as ReviewMsg;
+      });
       setReviewMessages(mapped);
     } catch {}
   }, [id, token]);
@@ -118,6 +133,13 @@ export default function AdminSeekerDetailPage() {
     };
   }, [id, token]);
 
+  // Selection/annotation state for inline comments
+  const previewWrapRef = useRef<HTMLDivElement | null>(null);
+  const [pendingAnchor, setPendingAnchor] = useState<AnchorMeta | null>(null);
+  const [composerOpen, setComposerOpen] = useState(false);
+  const [composerText, setComposerText] = useState('');
+  const [composerPos, setComposerPos] = useState<{ top: number; left: number } | null>(null);
+
   const sendReviewMessage = useCallback(async () => {
     if (!reviewInput.trim()) return;
     try {
@@ -136,7 +158,7 @@ export default function AdminSeekerDetailPage() {
         return;
       }
       const m = await res.json();
-      setReviewMessages((prev) => [...prev, { id: String(m.id), sender: String(m.sender), content: m.content, created_at: m.created_at }]);
+      setReviewMessages((prev) => [...prev, { id: String(m.id), sender: String(m.sender), content: m.content, body: m.content, created_at: m.created_at }]);
       setReviewInput('');
     } catch (e: any) {
       console.error(e);
@@ -145,6 +167,66 @@ export default function AdminSeekerDetailPage() {
       setSendingReview(false);
     }
   }, [reviewInput, token, id]);
+
+  const sendAnnotation = useCallback(async () => {
+    if (!pendingAnchor) return;
+    const msg = composerText.trim();
+    if (!msg) return;
+    try {
+      setSendingReview(true);
+      setSendError(null);
+      const payload = `@@ANNOTATION:${JSON.stringify(pendingAnchor)}@@ ${msg}`;
+      const res = await fetch(buildApiUrl('/advice/messages/'), {
+        method: 'POST',
+        headers: getApiHeaders(token),
+        body: JSON.stringify({ content: payload, user_id: id, subject: 'resume_advice' }),
+      });
+      if (!res.ok) {
+        const text = await res.text();
+        console.error('review annotation send failed', res.status, text);
+        setSendError(`送信に失敗しました (${res.status})`);
+        return;
+      }
+      setComposerOpen(false);
+      setComposerText('');
+      setPendingAnchor(null);
+      await loadReviewMessages();
+    } catch (e) {
+      setSendError('送信に失敗しました');
+    } finally {
+      setSendingReview(false);
+    }
+  }, [pendingAnchor, composerText, token, id, loadReviewMessages]);
+
+  const handlePreviewMouseUp = () => {
+    const container = previewWrapRef.current;
+    if (!container) return;
+    const sel = window.getSelection();
+    if (!sel || sel.isCollapsed || sel.rangeCount === 0) {
+      setComposerOpen(false);
+      setPendingAnchor(null);
+      return;
+    }
+    const range = sel.getRangeAt(0);
+    let node: Node | null = range.commonAncestorContainer;
+    let anchorEl: HTMLElement | null = null;
+    while (node) {
+      if ((node as HTMLElement).nodeType === 1) {
+        const el = node as HTMLElement;
+        if (el.dataset && el.dataset.annotId) { anchorEl = el; break; }
+      }
+      node = (node as Node).parentNode;
+    }
+    if (!anchorEl) return;
+    const rect = range.getBoundingClientRect();
+    const contRect = container.getBoundingClientRect();
+    const top = rect.top - contRect.top + container.scrollTop;
+    const left = rect.right - contRect.left + container.scrollLeft;
+    const meta: AnchorMeta = { anchorId: anchorEl.dataset.annotId!, top: Math.max(0, top), quote: sel.toString().slice(0, 200) };
+    setPendingAnchor(meta);
+    setComposerPos({ top: Math.max(0, top), left: Math.min(left + 8, container.clientWidth - 40) });
+    setComposerOpen(true);
+  };
 
   // Advice (タブ付き) 取得/送信
   const parseContent = (c: any) => {
@@ -324,16 +406,55 @@ export default function AdminSeekerDetailPage() {
                   </div>
                 ) : (
                   <div className="max-h-[600px] overflow-y-auto">
-                    <ResumePreview
-                      userName={resumePreview.userName || user?.full_name}
-                      jobhistoryList={resumePreview.jobhistoryList}
-                      formValues={resumePreview.formValues}
-                      jobSummary={resumePreview.jobSummary}
-                      selfPR={resumePreview.selfPR}
-                      skills={resumePreview.skills}
-                      education={resumePreview.education}
-                      className="w-full max-w-3xl mx-auto"
-                    />
+                    <div className="relative pr-[260px] mx-auto w-full max-w-3xl" ref={previewWrapRef} onMouseUp={handlePreviewMouseUp}>
+                      <ResumePreview
+                        userName={resumePreview.userName || user?.full_name}
+                        jobhistoryList={resumePreview.jobhistoryList}
+                        formValues={resumePreview.formValues}
+                        jobSummary={resumePreview.jobSummary}
+                        selfPR={resumePreview.selfPR}
+                        skills={resumePreview.skills}
+                        education={resumePreview.education}
+                        className="w-full"
+                      />
+                      <div className="absolute inset-0 pointer-events-none">
+                        {reviewMessages.filter(m => m.isAnnotation && m.anchor).map((m) => (
+                          <div key={m.id} className="absolute right-[-240px] w-[220px] pointer-events-auto" style={{ top: (m.anchor!.top || 0) - 8 }}>
+                            <div className="border border-[#E5A6A6] bg-white rounded-md shadow-sm">
+                              <div className="flex items-center gap-2 px-3 py-2 border-b text-sm">
+                                <div className="h-6 w-6 rounded-full bg-gray-800 text-white flex items-center justify-center text-xs">A</div>
+                                <div className="text-secondary-800 truncate">advisor</div>
+                                <div className="ml-auto text-xs text-secondary-500">{new Date(m.created_at).toLocaleString('ja-JP')}</div>
+                              </div>
+                              {m.anchor?.quote && (
+                                <div className="px-3 pt-2 text-xs text-secondary-600"><span className="bg-yellow-100 px-1 py-[2px] rounded">{m.anchor.quote}</span></div>
+                              )}
+                              <div className="px-3 py-2 text-sm text-secondary-800 whitespace-pre-wrap">{m.body || m.content}</div>
+                              <div className="px-3 pb-2 text-xs text-primary-700 flex gap-3">
+                                <button className="hover:underline">返信</button>
+                                <button className="hover:underline">解決</button>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      {composerOpen && pendingAnchor && composerPos && (
+                        <div className="absolute z-10 w-[260px]" style={{ top: composerPos.top, left: Math.max(composerPos.left, 16) }}>
+                          <div className="border border-gray-400 bg-white rounded-md shadow-lg p-2">
+                            <div className="text-xs text-secondary-600 mb-1">コメント対象: <span className="font-mono">{pendingAnchor.anchorId}</span></div>
+                            {pendingAnchor.quote && (
+                              <div className="text-xs text-secondary-700 mb-2"><span className="bg-yellow-100 px-1 py-[2px] rounded">{pendingAnchor.quote}</span></div>
+                            )}
+                            <textarea className="w-full h-20 border rounded px-2 py-1 text-sm" value={composerText} onChange={(e) => setComposerText(e.target.value)} placeholder="コメント内容を入力" />
+                            <div className="mt-2 flex justify-end gap-2">
+                              <button className="text-sm px-2 py-1 border rounded hover:bg-secondary-50" onClick={() => { setComposerOpen(false); setPendingAnchor(null); setComposerText(''); }}>キャンセル</button>
+                              <button className="text-sm px-3 py-1 bg-gray-800 text-white rounded hover:bg-gray-700" onClick={() => sendAnnotation()} disabled={sendingReview}>コメント追加</button>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>
@@ -349,7 +470,7 @@ export default function AdminSeekerDetailPage() {
                     return (
                       <div key={m.id} className={`flex ${isAdmin ? 'justify-start' : 'justify-end'}`}>
                         <div className={`max-w-[85%] rounded-md p-3 text-sm ${isAdmin ? 'bg-gray-200 text-gray-900' : 'bg-gray-800 text-white'}`}>
-                          <div>{m.content}</div>
+                          <div>{m.body || m.content}</div>
                           <div className="text-[11px] opacity-70 mt-1">{new Date(m.created_at).toLocaleString()}</div>
                         </div>
                       </div>

@@ -13,16 +13,36 @@ interface Message {
   timestamp: string;
 }
 
+// Annotation metadata embedded into message text for Word-like comments
+type AnchorMeta = {
+  anchorId: string; // e.g. work_content-job1
+  top: number; // relative to preview scroll container
+  quote?: string; // selected text (for context)
+};
+
+type AnnMessage = Message & {
+  isAnnotation?: boolean;
+  anchor?: AnchorMeta;
+  body?: string; // message text without meta
+};
+
 export default function ResumeReviewPage() {
   const router = useRouter();
   const [sectionTitle] = useState('職務内容について');
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<AnnMessage[]>([]);
   const [input, setInput] = useState('');
   const endRef = useRef<HTMLDivElement | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [resumes, setResumes] = useState<any[]>([]);
   const [selected, setSelected] = useState<any | null>(null);
+  // Preview wrapper ref (scroll container)
+  const previewWrapRef = useRef<HTMLDivElement | null>(null);
+  // Pending selection → comment composer state
+  const [pendingAnchor, setPendingAnchor] = useState<AnchorMeta | null>(null);
+  const [composerOpen, setComposerOpen] = useState(false);
+  const [composerText, setComposerText] = useState('');
+  const [composerPos, setComposerPos] = useState<{ top: number; left: number } | null>(null);
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -72,6 +92,20 @@ export default function ResumeReviewPage() {
     };
   }, []);
 
+  const parseAnnotation = (text: string): { meta?: AnchorMeta; rest: string } => {
+    // Expect prefix: @@ANNOTATION:{...}@@ message
+    const m = text.match(/^@@ANNOTATION:(\{[\s\S]*?\})@@\s*/);
+    if (m) {
+      try {
+        const meta = JSON.parse(m[1]) as AnchorMeta;
+        return { meta, rest: text.slice(m[0].length) };
+      } catch (_) {
+        // fallthrough
+      }
+    }
+    return { rest: text };
+  };
+
   const fetchMessages = async () => {
     try {
       setError(null);
@@ -84,12 +118,20 @@ export default function ResumeReviewPage() {
       const data = await res.json();
       const uid = getUserInfo()?.uid;
       // Map to local structure
-      const mapped: Message[] = data.map((m: any) => ({
-        id: String(m.id),
-        role: uid && String(m.sender) === String(uid) ? 'seeker' : 'advisor',
-        text: m.content,
-        timestamp: new Date(m.created_at).toLocaleString('ja-JP'),
-      }));
+      const mapped: AnnMessage[] = data.map((m: any) => {
+        const role = uid && String(m.sender) === String(uid) ? 'seeker' : 'advisor';
+        const raw = m.content as string;
+        const { meta, rest } = parseAnnotation(raw);
+        return {
+          id: String(m.id),
+          role,
+          text: raw,
+          body: rest,
+          isAnnotation: Boolean(meta),
+          anchor: meta,
+          timestamp: new Date(m.created_at).toLocaleString('ja-JP'),
+        } as AnnMessage;
+      });
       // Post-process to mark own messages. We cannot easily know user id here without an extra call; assume last message echo will render on send.
       setMessages(mapped);
       // mark read for resume advice
@@ -133,6 +175,71 @@ export default function ResumeReviewPage() {
     }
   };
 
+  // Send annotation with embedded meta
+  const sendAnnotation = async () => {
+    if (!pendingAnchor) return;
+    const msg = composerText.trim();
+    if (!msg) return;
+    setLoading(true);
+    try {
+      const payload = `@@ANNOTATION:${JSON.stringify(pendingAnchor)}@@ ${msg}`;
+      const res = await fetch(`${apiUrl}/api/v2/advice/messages/`, {
+        method: 'POST',
+        headers: {
+          ...getAuthHeaders(),
+        },
+        body: JSON.stringify({ content: payload }),
+      });
+      if (!res.ok) throw new Error('failed');
+      setComposerText('');
+      setComposerOpen(false);
+      setPendingAnchor(null);
+      await fetchMessages();
+    } catch (e) {
+      setError('コメントの送信に失敗しました');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Selection handler on preview: capture selection inside an annotatable block
+  const handlePreviewMouseUp = () => {
+    const container = previewWrapRef.current;
+    if (!container) return;
+    const sel = window.getSelection();
+    if (!sel || sel.isCollapsed) {
+      setPendingAnchor(null);
+      setComposerOpen(false);
+      return;
+    }
+    if (sel.rangeCount === 0) return;
+    const range = sel.getRangeAt(0);
+    // Find nearest ancestor with data-annot-id
+    let node: Node | null = range.commonAncestorContainer;
+    let anchorEl: HTMLElement | null = null;
+    while (node) {
+      if ((node as HTMLElement).nodeType === 1) {
+        const el = node as HTMLElement;
+        if (el.dataset && el.dataset.annotId) { anchorEl = el; break; }
+      }
+      node = (node as Node).parentNode;
+    }
+    if (!anchorEl) return;
+
+    const rect = range.getBoundingClientRect();
+    const contRect = container.getBoundingClientRect();
+    const top = rect.top - contRect.top + container.scrollTop;
+    const left = rect.right - contRect.left + container.scrollLeft;
+    const meta: AnchorMeta = {
+      anchorId: anchorEl.dataset.annotId!,
+      top: Math.max(0, top),
+      quote: sel.toString().slice(0, 200),
+    };
+    setPendingAnchor(meta);
+    setComposerPos({ top: Math.max(0, top), left: Math.min(left + 8, container.clientWidth - 40) });
+    setComposerOpen(true);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Top bar */}
@@ -157,7 +264,11 @@ export default function ResumeReviewPage() {
           {/* Left: Resume preview (actual data) */}
           <section className="lg:col-span-8 bg-white border rounded-lg shadow-sm p-4 overflow-auto max-h-[75vh]">
             {selected ? (
-              <div className="mx-auto max-w-3xl">
+              <div
+                className="mx-auto max-w-3xl relative pr-[260px]"
+                ref={previewWrapRef}
+                onMouseUp={handlePreviewMouseUp}
+              >
                 {(() => {
                   const d = buildPreviewFromResume(selected);
                   const extra = selected?.extra_data || {};
@@ -177,6 +288,77 @@ export default function ResumeReviewPage() {
                     />
                   );
                 })()}
+
+                {/* Word-like comment overlays */}
+                <div className="absolute inset-0 pointer-events-none">
+                  {messages.filter(m => m.isAnnotation && m.anchor).map((m) => (
+                    <div
+                      key={m.id}
+                      className="absolute right-[-240px] w-[220px] pointer-events-auto"
+                      style={{ top: (m.anchor!.top || 0) - 8 }}
+                    >
+                      <div className="border border-[#E5A6A6] bg-white rounded-md shadow-sm">
+                        <div className="flex items-center gap-2 px-3 py-2 border-b text-sm">
+                          <div className="h-6 w-6 rounded-full bg-primary-600 text-white flex items-center justify-center text-xs">
+                            {m.role === 'advisor' ? 'A' : 'S'}
+                          </div>
+                          <div className="text-secondary-800 truncate">{m.role === 'advisor' ? 'advisor' : 'you'}</div>
+                          <div className="ml-auto text-xs text-secondary-500">{m.timestamp}</div>
+                        </div>
+                        {m.anchor?.quote && (
+                          <div className="px-3 pt-2 text-xs text-secondary-600">
+                            <span className="bg-yellow-100 px-1 py-[2px] rounded">{m.anchor.quote}</span>
+                          </div>
+                        )}
+                        <div className="px-3 py-2 text-sm text-secondary-800 whitespace-pre-wrap">{m.body || m.text}</div>
+                        <div className="px-3 pb-2 text-xs text-primary-700 flex gap-3">
+                          <button className="hover:underline">返信</button>
+                          <button className="hover:underline">解決</button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Inline composer for new comment */}
+                {composerOpen && pendingAnchor && composerPos && (
+                  <div
+                    className="absolute z-10 w-[260px]"
+                    style={{ top: composerPos.top, left: Math.max(composerPos.left, 16) }}
+                  >
+                    <div className="border border-primary-400 bg-white rounded-md shadow-lg p-2">
+                      <div className="text-xs text-secondary-600 mb-1">
+                        コメント対象: <span className="font-mono">{pendingAnchor.anchorId}</span>
+                      </div>
+                      {pendingAnchor.quote && (
+                        <div className="text-xs text-secondary-700 mb-2">
+                          <span className="bg-yellow-100 px-1 py-[2px] rounded">{pendingAnchor.quote}</span>
+                        </div>
+                      )}
+                      <textarea
+                        value={composerText}
+                        onChange={(e) => setComposerText(e.target.value)}
+                        placeholder="コメント内容を入力"
+                        className="w-full h-20 border rounded px-2 py-1 text-sm"
+                      />
+                      <div className="mt-2 flex justify-end gap-2">
+                        <button
+                          className="text-sm px-2 py-1 border rounded hover:bg-secondary-50"
+                          onClick={() => { setComposerOpen(false); setPendingAnchor(null); setComposerText(''); }}
+                        >
+                          キャンセル
+                        </button>
+                        <button
+                          className="text-sm px-3 py-1 bg-primary-600 text-white rounded hover:bg-primary-500"
+                          onClick={sendAnnotation}
+                          disabled={loading}
+                        >
+                          コメント追加
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="h-[60vh] flex items-center justify-center text-secondary-500">
@@ -206,7 +388,7 @@ export default function ResumeReviewPage() {
                         : 'bg-white text-secondary-800 border'
                     }`}
                   >
-                    {m.text}
+                    {m.body || m.text}
                   </div>
                 </div>
               ))}

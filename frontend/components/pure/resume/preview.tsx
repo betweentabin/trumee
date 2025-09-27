@@ -14,6 +14,9 @@ type PreviewProps = {
   selfPR?: string;
   skills?: string[] | string;
   education?: Array<{ school?: string; degree?: string; field?: string; graduationDate?: string }>;
+  // UI options
+  showHeader?: boolean; // default true
+  showFrame?: boolean;  // border/frame (default true)
 };
 
 const PreviewRow: React.FC<{ left: React.ReactNode; right: React.ReactNode }>
@@ -24,14 +27,16 @@ const PreviewRow: React.FC<{ left: React.ReactNode; right: React.ReactNode }>
   </tr>
 );
 
-const ResumePreview: React.FC<PreviewProps> = ({ userName, jobhistoryList, formValues, className, jobSummary, selfPR, skills, education }) => {
+const ResumePreview: React.FC<PreviewProps> = ({ userName, jobhistoryList, formValues, className, jobSummary, selfPR, skills, education, showHeader = true, showFrame = true }) => {
   const today = new Date();
   const ymd = `${today.getFullYear()}年${String(today.getMonth()+1).padStart(2,'0')}月${String(today.getDate()).padStart(2,'0')}日現在`;
 
   return (
-    <div className={`bg-white border border-black ${className || ''}`}>
+    <div className={`bg-white ${showFrame ? 'border border-black' : ''} ${className || ''}`} data-annot-scope="resume-preview">
       {/* Header */}
-      <div className="bg-[#4B3A2F] text-white px-4 py-3 text-lg font-bold">プレビュー</div>
+      {showHeader && (
+        <div className="bg-[#4B3A2F] text-white px-4 py-3 text-lg font-bold">プレビュー</div>
+      )}
       <div className="p-4 text-gray-900">
         <div className="flex justify-between mb-6">
           <h2 className="text-2xl font-semibold text-gray-900">職務経歴書</h2>
@@ -70,7 +75,7 @@ const ResumePreview: React.FC<PreviewProps> = ({ userName, jobhistoryList, formV
           );
 
           const table = (
-            <table className="w-full border mt-3 text-sm">
+            <table className="w-full border mt-3 text-sm" data-annot-section={`job-${key}`}>
               <thead>
                 <tr className="bg-gray-100">
                   <th className="border p-2 w-1/2">期間</th>
@@ -80,7 +85,14 @@ const ResumePreview: React.FC<PreviewProps> = ({ userName, jobhistoryList, formV
               <tbody>
                 <PreviewRow
                   left={<span>{j.since || '—'} ～ {j.to || '—'}</span>}
-                  right={<pre className="whitespace-pre-wrap font-sans">{j.work_content || '入力した職務内容が記載されます。'}</pre>}
+                  right={
+                    <div
+                      className="relative"
+                      data-annot-id={`work_content-${key}`}
+                    >
+                      <pre className="whitespace-pre-wrap font-sans">{j.work_content || '入力した職務内容が記載されます。'}</pre>
+                    </div>
+                  }
                 />
               </tbody>
             </table>

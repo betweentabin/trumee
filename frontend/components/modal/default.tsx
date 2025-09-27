@@ -15,7 +15,7 @@ export default function CustomModal({ isOpen, onClose, children }: ModalProps) {
       onClick={onClose} // Optional: close when clicking outside modal content
     >
       <div
-        className="bg-white p-[30px] pr-[0] rounded-xl max-w-5xl w-full mx-4 shadow-xl"
+        className="bg-white p-[30px] rounded-xl max-w-5xl w-full mx-4 shadow-xl max-h-[92vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside modal
       >
         {children}
