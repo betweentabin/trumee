@@ -438,7 +438,10 @@ export default function ResumeReviewPage() {
                 <div className="absolute inset-0 pointer-events-none">
                   {messages.filter(m => m.isAnnotation).map((m) => {
                     const topGuess = m.annotationId && markTops[m.annotationId] !== undefined ? markTops[m.annotationId] : (m.anchor?.top || 0);
-                    const markSelector = m.annotationId ? `[data-annot-ref="ann-${m.annotationId}"]` : '';
+                    const markSelector = m.annotationId ? `[data-annot-ref=\"ann-${m.annotationId}\"]` : '';
+                    const colorOf = (id: string) => { const palette = ['#E56B6F','#6C9BD2','#7FB069','#E6B31E','#A77BD1','#E58F6B']; let h=0; for (let i=0;i<id.length;i++) h=(h*31+id.charCodeAt(i))>>>0; return palette[h%palette.length]; };
+                    const color = m.annotationId ? colorOf(m.annotationId) : '#E5A6A6';
+                    const lineWidth = Math.max(16, (previewWrapRef.current?.clientWidth || 0) - 240 - 32);
                     return (
                     <div
                       key={m.id}
@@ -446,7 +449,7 @@ export default function ResumeReviewPage() {
                       style={{ top: Math.max(0, topGuess - 8) }}
                       onClick={() => {
                         if (m.annotationId) {
-                          const sel = previewWrapRef.current?.querySelector(`[data-annot-ref="ann-${m.annotationId}"]`) as HTMLElement | null;
+                          const sel = previewWrapRef.current?.querySelector(`[data-annot-ref=\"ann-${m.annotationId}\"]`) as HTMLElement | null;
                           if (sel && previewWrapRef.current) {
                             previewWrapRef.current.scrollTo({ top: (markTops[m.annotationId] || 0) - 40, behavior: 'smooth' });
                             sel.classList.add('ring-2','ring-[#E5A6A6]');
@@ -456,9 +459,10 @@ export default function ResumeReviewPage() {
                       }}
                     >
                       {/* connector line from content to bubble */}
-                      <div className="absolute right-[220px] h-[2px] bg-[#E5A6A6] opacity-80" style={{ width: '20px', top: '18px' }} />
+                      <div className="absolute right-[220px] h-[2px] opacity-80" style={{ background: color, width: `${lineWidth}px`, top: '18px' }} />
                       <div
-                        className="border border-[#E5A6A6] bg-white rounded-md shadow-sm"
+                        className="border bg-white rounded-md shadow-sm"
+                        style={{ borderColor: color }}
                         onMouseEnter={() => { try { if (markSelector) (previewWrapRef.current?.querySelector(markSelector) as HTMLElement)?.classList.add('ring-2','ring-[#E5A6A6]'); } catch {} }}
                         onMouseLeave={() => { try { if (markSelector) (previewWrapRef.current?.querySelector(markSelector) as HTMLElement)?.classList.remove('ring-2','ring-[#E5A6A6]'); } catch {} }}
                       >

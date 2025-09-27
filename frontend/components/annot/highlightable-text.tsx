@@ -8,10 +8,22 @@ type Props = {
   text: string;
   ranges: Range[];
   className?: string;
+  colorMap?: Record<string, string>; // annotationId -> color (hex or rgba)
 };
 
 // Render text with <mark> around the specified ranges. Assumes ranges are within bounds.
-const HighlightableText: React.FC<Props> = ({ text, ranges, className }) => {
+const toRGBA = (c?: string, alpha = 1) => {
+  if (!c) return `rgba(229,166,166,${alpha})`;
+  if (c.startsWith('rgba') || c.startsWith('rgb')) return c;
+  // hex #RRGGBB
+  const m = c.replace('#','');
+  const r = parseInt(m.substring(0,2),16);
+  const g = parseInt(m.substring(2,4),16);
+  const b = parseInt(m.substring(4,6),16);
+  return `rgba(${r},${g},${b},${alpha})`;
+};
+
+const HighlightableText: React.FC<Props> = ({ text, ranges, className, colorMap = {} }) => {
   const len = text?.length ?? 0;
   const safeRanges = Array.isArray(ranges)
     ? [...ranges]
@@ -27,11 +39,14 @@ const HighlightableText: React.FC<Props> = ({ text, ranges, className }) => {
       pieces.push(<Fragment key={`t-${idx}-pre`}>{text.slice(cursor, r.start)}</Fragment>);
     }
     const marked = text.slice(r.start, r.end);
+    const baseColor = colorMap[r.id];
+    const underline = r.resolved ? toRGBA(baseColor, 0.35) : toRGBA(baseColor, 0.85);
     pieces.push(
       <mark
         key={`m-${r.id}`}
         data-annot-ref={`ann-${r.id}`}
-        className={`rounded-sm px-[2px] ${r.resolved ? "bg-green-100" : "bg-yellow-100"}`}
+        className={`px-[1px]`}
+        style={{ backgroundColor: 'transparent', boxShadow: `inset 0 -2px 0 ${underline}` }}
       >
         {marked}
       </mark>
@@ -50,4 +65,3 @@ const HighlightableText: React.FC<Props> = ({ text, ranges, className }) => {
 };
 
 export default HighlightableText;
-

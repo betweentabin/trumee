@@ -41,8 +41,13 @@ const ResumePreview: React.FC<PreviewProps> = ({ userName, jobhistoryList, formV
   const today = new Date();
   const ymd = `${today.getFullYear()}年${String(today.getMonth()+1).padStart(2,'0')}月${String(today.getDate()).padStart(2,'0')}日現在`;
 
-  const rangesFor = (anchorId: string) =>
-    annotations
+  const palette = ['#E56B6F','#6C9BD2','#7FB069','#E6B31E','#A77BD1','#E58F6B'];
+  const colorOf = (id: string) => {
+    let h = 0; for (let i=0;i<id.length;i++) h = (h*31 + id.charCodeAt(i)) >>> 0;
+    return palette[h % palette.length];
+  };
+  const colorMap: Record<string,string> = Object.fromEntries((annotations||[]).map(a => [a.id, colorOf(a.id)]));
+  const rangesFor = (anchorId: string) => (annotations||[])
       .filter((a) => a.anchor_id === anchorId)
       .map((a) => ({ id: a.id, start: a.start_offset || 0, end: a.end_offset || 0, resolved: a.is_resolved }));
 
@@ -67,6 +72,7 @@ const ResumePreview: React.FC<PreviewProps> = ({ userName, jobhistoryList, formV
             <HighlightableText
               text={(jobSummary || selfPR) as string}
               ranges={rangesFor('job_summary')}
+              colorMap={colorMap}
               className="text-sm text-gray-800"
             />
           </div>
@@ -109,6 +115,7 @@ const ResumePreview: React.FC<PreviewProps> = ({ userName, jobhistoryList, formV
                       <HighlightableText
                         text={j.work_content || '入力した職務内容が記載されます。'}
                         ranges={rangesFor(`work_content-${key}`)}
+                        colorMap={colorMap}
                         className="font-sans text-[0.95rem]"
                       />
                     </div>
@@ -133,6 +140,7 @@ const ResumePreview: React.FC<PreviewProps> = ({ userName, jobhistoryList, formV
             <HighlightableText
               text={selfPR}
               ranges={rangesFor('self_pr')}
+              colorMap={colorMap}
               className="text-sm text-gray-800"
             />
           </div>
