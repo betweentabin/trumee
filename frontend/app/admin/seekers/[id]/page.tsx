@@ -505,7 +505,7 @@ export default function AdminSeekerDetailPage() {
                       <div className="absolute inset-0 pointer-events-none">
                         {reviewMessages.filter(m => m.isAnnotation).map((m) => {
                           const topGuess = m.annotationId && markTops[m.annotationId] !== undefined ? markTops[m.annotationId] : (m.anchor?.top || 0);
-                          const markSelector = m.annotationId ? `[data-annot-ref=\\"ann-${m.annotationId}\\"]` : '';
+                          const markSelector = m.annotationId ? `[data-annot-ref="ann-${m.annotationId}"]` : '';
                           return (
                           <div key={m.id} className="absolute right-[-240px] w-[220px] pointer-events-auto" style={{ top: Math.max(0, topGuess - 8) }} onClick={() => {
                             if (m.annotationId) {
