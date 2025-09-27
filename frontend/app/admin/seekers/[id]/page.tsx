@@ -440,7 +440,14 @@ export default function AdminSeekerDetailPage() {
                       </div>
 
                       {composerOpen && pendingAnchor && composerPos && (
-                        <div className="absolute z-10 w-[260px]" style={{ top: composerPos.top, left: Math.max(composerPos.left, 16) }}>
+                        <div
+                          className="absolute z-10 w-[260px]"
+                          style={{ top: composerPos.top, left: Math.max(composerPos.left, 16) }}
+                          data-annot-ui="composer"
+                          onMouseDown={(e) => e.stopPropagation()}
+                          onMouseUp={(e) => e.stopPropagation()}
+                          onClick={(e) => e.stopPropagation()}
+                        >
                           <div className="border border-gray-400 bg-white rounded-md shadow-lg p-2">
                             <div className="text-xs text-secondary-600 mb-1">コメント対象: <span className="font-mono">{pendingAnchor.anchorId}</span></div>
                             {pendingAnchor.quote && (
