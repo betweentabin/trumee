@@ -120,8 +120,22 @@ export default function ResumeAdvicePage() {
     }
   };
 
+  const resolveAnnotation = async (annotationId?: string) => {
+    if (!annotationId) return;
+    try {
+      await fetch(buildApiUrl(`/advice/annotations/${annotationId}/`), { method: 'PATCH', headers: getApiHeaders(token), body: JSON.stringify({ is_resolved: true }) });
+      // refresh annotations list
+      try {
+        if (resumePreview?.resumeId) {
+          const a = await fetch(buildApiUrl(`/advice/annotations/?resume_id=${encodeURIComponent(String(resumePreview.resumeId))}&subject=resume_advice`), { headers: getApiHeaders(token) });
+          if (a.ok) setAnnotations(await a.json());
+        }
+      } catch {}
+      await loadMessages();
+    } catch {}
+  };
+
   // Inline annotation state/handlers
-  const previewWrapRef = useRef<HTMLDivElement | null>(null);
   const [pendingAnchor, setPendingAnchor] = useState<AnchorMeta | null>(null);
   const [composerOpen, setComposerOpen] = useState(false);
   const [composerText, setComposerText] = useState('');
@@ -227,8 +241,18 @@ export default function ResumeAdvicePage() {
               <div className="absolute inset-0 pointer-events-none">
                 {messages.filter(m => m.isAnnotation).map((m) => {
                   const topGuess = (m as any).annotationId && markTops[(m as any).annotationId] !== undefined ? markTops[(m as any).annotationId] : (m.anchor?.top || 0);
+                  const annotationId = (m as any).annotationId as string | undefined;
                   return (
-                  <div key={m.id} className="absolute right-[-240px] w-[220px] pointer-events-auto" style={{ top: Math.max(0, topGuess - 8) }}>
+                  <div key={m.id} className="absolute right-[-240px] w-[220px] pointer-events-auto" style={{ top: Math.max(0, topGuess - 8) }} onClick={() => {
+                    if (annotationId) {
+                      const el = previewWrapRef.current?.querySelector(`[data-annot-ref="ann-${annotationId}"]`) as HTMLElement | null;
+                      if (el && previewWrapRef.current) {
+                        previewWrapRef.current.scrollTo({ top: (markTops[annotationId] || 0) - 40, behavior: 'smooth' });
+                        el.classList.add('ring-2','ring-[#E5A6A6]');
+                        setTimeout(() => el.classList.remove('ring-2','ring-[#E5A6A6]'), 1200);
+                      }
+                    }
+                  }}>
                     <div className="border border-[#E5A6A6] bg-white rounded-md shadow-sm">
                       <div className="flex items-center gap-2 px-3 py-2 border-b text-sm">
                         <div className="h-6 w-6 rounded-full bg-secondary-800 text-white flex items-center justify-center text-xs">S</div>
@@ -241,7 +265,7 @@ export default function ResumeAdvicePage() {
                       <div className="px-3 py-2 text-sm text-secondary-800 whitespace-pre-wrap">{m.body || m.content}</div>
                       <div className="px-3 pb-2 text-xs text-primary-700 flex gap-3">
                         <button className="hover:underline">返信</button>
-                        <button className="hover:underline">解決</button>
+                        <button className={`hover:underline ${!annotationId ? 'opacity-40 cursor-not-allowed' : ''}`} onClick={(e) => { e.stopPropagation(); resolveAnnotation(annotationId); }} disabled={!annotationId}>解決</button>
                       </div>
                     </div>
                   </div>

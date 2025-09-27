@@ -296,6 +296,30 @@ export default function ResumeReviewPage() {
     }
   };
 
+  const resolveAnnotation = async (annotationId?: string) => {
+    if (!annotationId) return;
+    try {
+      await fetch(`${apiUrl}/api/v2/advice/annotations/${annotationId}/`, {
+        method: 'PATCH',
+        headers: { ...getAuthHeaders() },
+        body: JSON.stringify({ is_resolved: true }),
+      });
+      // refresh annotations and messages
+      if (overridePreview?.resumeId) {
+        try {
+          const a = await fetch(`${apiUrl}/api/v2/advice/annotations/?resume_id=${encodeURIComponent(String(overridePreview.resumeId))}&subject=resume_advice`, { headers: { ...getAuthHeaders() } });
+          if (a.ok) setAnnotations(await a.json());
+        } catch {}
+      } else if (selected?.id) {
+        try {
+          const a = await fetch(`${apiUrl}/api/v2/advice/annotations/?resume_id=${encodeURIComponent(String(selected.id))}&subject=resume_advice`, { headers: { ...getAuthHeaders() } });
+          if (a.ok) setAnnotations(await a.json());
+        } catch {}
+      }
+      await fetchMessages();
+    } catch {}
+  };
+
   // Selection handler on preview: capture selection inside an annotatable block
   const handlePreviewMouseUp = () => {
     const container = previewWrapRef.current;
@@ -420,6 +444,16 @@ export default function ResumeReviewPage() {
                       key={m.id}
                       className="absolute right-[-240px] w-[220px] pointer-events-auto"
                       style={{ top: Math.max(0, topGuess - 8) }}
+                      onClick={() => {
+                        if (m.annotationId) {
+                          const sel = previewWrapRef.current?.querySelector(`[data-annot-ref="ann-${m.annotationId}"]`) as HTMLElement | null;
+                          if (sel && previewWrapRef.current) {
+                            previewWrapRef.current.scrollTo({ top: (markTops[m.annotationId] || 0) - 40, behavior: 'smooth' });
+                            sel.classList.add('ring-2','ring-[#E5A6A6]');
+                            setTimeout(() => sel.classList.remove('ring-2','ring-[#E5A6A6]'), 1200);
+                          }
+                        }
+                      }}
                     >
                       {/* connector line from content to bubble */}
                       <div className="absolute right-[220px] h-[2px] bg-[#E5A6A6] opacity-80" style={{ width: '20px', top: '18px' }} />
@@ -443,7 +477,7 @@ export default function ResumeReviewPage() {
                         <div className="px-3 py-2 text-sm text-secondary-800 whitespace-pre-wrap">{m.body || m.text}</div>
                         <div className="px-3 pb-2 text-xs text-primary-700 flex gap-3">
                           <button className="hover:underline">返信</button>
-                          <button className="hover:underline">解決</button>
+                          <button className={`hover:underline ${!m.annotationId ? 'opacity-40 cursor-not-allowed' : ''}`} onClick={(e) => { e.stopPropagation(); resolveAnnotation(m.annotationId); }} disabled={!m.annotationId}>解決</button>
                         </div>
                       </div>
                     </div>
