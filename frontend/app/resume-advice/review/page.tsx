@@ -1,10 +1,11 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import { FaArrowLeft, FaSearch, FaPaperPlane } from 'react-icons/fa';
 import { getAuthHeaders, getUserInfo } from '@/utils/auth';
 import ResumePreview from '@/components/pure/resume/preview';
+import { emptyResumePreview, fetchResumePreview, ResumePreviewData } from '@/utils/resume-preview';
 
 interface Message {
   id: string;
@@ -36,6 +37,7 @@ export default function ResumeReviewPage() {
   const [error, setError] = useState<string | null>(null);
   const [resumes, setResumes] = useState<any[]>([]);
   const [selected, setSelected] = useState<any | null>(null);
+  const [overridePreview, setOverridePreview] = useState<ResumePreviewData | null>(null);
   // Preview wrapper ref (scroll container)
   const previewWrapRef = useRef<HTMLDivElement | null>(null);
   // Pending selection → comment composer state
@@ -48,25 +50,54 @@ export default function ResumeReviewPage() {
     endRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages.length]);
 
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'production' ? 'https://trumee-production.up.railway.app' : 'http://localhost:8000');
+  const params = useParams<{ userId?: string }>();
+  const userIdFromRoute = (params as any)?.userId ? String((params as any).userId) : '';
 
-  // Load user's resumes to show on the left
+  // Load preview target
   useEffect(() => {
     const load = async () => {
+      // If URL includes /users/[userId]/..., try to load that user's resume for viewing
+      if (userIdFromRoute) {
+        const token = typeof window !== 'undefined' ? (localStorage.getItem('drf_token_v2') || '') : '';
+        // try admin → owner → public fallback
+        const tryAdmin = await fetchResumePreview({ userId: userIdFromRoute, token, forAdmin: true }).catch(() => emptyResumePreview);
+        if ((tryAdmin.jobhistoryList || []).length > 0 || tryAdmin.selfPR || tryAdmin.jobSummary) {
+          setOverridePreview(tryAdmin);
+          setSelected(null);
+          setResumes([]);
+          return;
+        }
+        const uid = getUserInfo()?.uid;
+        const isOwner = uid && String(uid) === String(userIdFromRoute);
+        const tryOwner = await fetchResumePreview({ userId: userIdFromRoute, token, forOwner: Boolean(isOwner) }).catch(() => emptyResumePreview);
+        if ((tryOwner.jobhistoryList || []).length > 0 || tryOwner.selfPR || tryOwner.jobSummary) {
+          setOverridePreview(tryOwner);
+          setSelected(null);
+          setResumes([]);
+          return;
+        }
+        const tryPublic = await fetchResumePreview({ userId: userIdFromRoute, token }).catch(() => emptyResumePreview);
+        setOverridePreview(tryPublic);
+        setSelected(null);
+        setResumes([]);
+        return;
+      }
+
+      // Default: current user's resumes
       try {
-        const res = await fetch(`${apiUrl}/api/v2/resumes/`, {
-          headers: { ...getAuthHeaders() },
-        });
+        const res = await fetch(`${apiUrl}/api/v2/resumes/`, { headers: { ...getAuthHeaders() } });
         if (!res.ok) return;
         const data = await res.json();
         const list = data.results || data || [];
         setResumes(list);
         const active = list.find((r: any) => r.is_active) || list[0] || null;
         setSelected(active);
+        setOverridePreview(null);
       } catch {}
     };
     load();
-  }, []);
+  }, [userIdFromRoute]);
 
   const buildPreviewFromResume = useMemo(() => {
     return (resume: any) => {
@@ -109,7 +140,10 @@ export default function ResumeReviewPage() {
   const fetchMessages = async () => {
     try {
       setError(null);
-      const res = await fetch(`${apiUrl}/api/v2/advice/messages/`, {
+      const qs = new URLSearchParams();
+      qs.set('subject', 'resume_advice');
+      if (userIdFromRoute) qs.set('user_id', userIdFromRoute);
+      const res = await fetch(`${apiUrl}/api/v2/advice/messages/?${qs.toString()}`, {
         headers: {
           ...getAuthHeaders(),
         },
@@ -158,12 +192,14 @@ export default function ResumeReviewPage() {
     if (!text) return;
     setLoading(true);
     try {
+      const body: any = { content: text, subject: 'resume_advice' };
+      if (userIdFromRoute) body.user_id = userIdFromRoute;
       const res = await fetch(`${apiUrl}/api/v2/advice/messages/`, {
         method: 'POST',
         headers: {
           ...getAuthHeaders(),
         },
-        body: JSON.stringify({ content: text }),
+        body: JSON.stringify(body),
       });
       if (!res.ok) throw new Error('failed');
       setInput('');
@@ -183,12 +219,14 @@ export default function ResumeReviewPage() {
     setLoading(true);
     try {
       const payload = `@@ANNOTATION:${JSON.stringify(pendingAnchor)}@@ ${msg}`;
+      const body: any = { content: payload, subject: 'resume_advice' };
+      if (userIdFromRoute) body.user_id = userIdFromRoute;
       const res = await fetch(`${apiUrl}/api/v2/advice/messages/`, {
         method: 'POST',
         headers: {
           ...getAuthHeaders(),
         },
-        body: JSON.stringify({ content: payload }),
+        body: JSON.stringify(body),
       });
       if (!res.ok) throw new Error('failed');
       setComposerText('');
@@ -263,31 +301,43 @@ export default function ResumeReviewPage() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Left: Resume preview (actual data) */}
           <section className="lg:col-span-8 bg-white border rounded-lg shadow-sm p-4 overflow-auto max-h-[75vh]">
-            {selected ? (
+            {(overridePreview || selected) ? (
               <div
                 className="mx-auto max-w-3xl relative pr-[260px]"
                 ref={previewWrapRef}
                 onMouseUp={handlePreviewMouseUp}
               >
-                {(() => {
-                  const d = buildPreviewFromResume(selected);
-                  const extra = selected?.extra_data || {};
-                  const skillsArray = (selected?.skills || '')
-                    .split('\n')
-                    .map((s: string) => s.trim())
-                    .filter(Boolean);
-                  return (
-                    <ResumePreview
-                      userName={d.userName}
-                      jobhistoryList={d.jobhistoryList}
-                      formValues={d.formValues}
-                      jobSummary={(extra as any)?.jobSummary || ''}
-                      selfPR={selected?.self_pr || ''}
-                      skills={skillsArray}
-                      education={Array.isArray((extra as any)?.education) ? (extra as any).education : []}
-                    />
-                  );
-                })()}
+                {overridePreview ? (
+                  <ResumePreview
+                    userName={overridePreview.userName}
+                    jobhistoryList={overridePreview.jobhistoryList}
+                    formValues={overridePreview.formValues}
+                    jobSummary={overridePreview.jobSummary}
+                    selfPR={overridePreview.selfPR}
+                    skills={overridePreview.skills}
+                    education={overridePreview.education}
+                  />
+                ) : (
+                  (() => {
+                    const d = buildPreviewFromResume(selected);
+                    const extra = selected?.extra_data || {};
+                    const skillsArray = (selected?.skills || '')
+                      .split('\n')
+                      .map((s: string) => s.trim())
+                      .filter(Boolean);
+                    return (
+                      <ResumePreview
+                        userName={d.userName}
+                        jobhistoryList={d.jobhistoryList}
+                        formValues={d.formValues}
+                        jobSummary={(extra as any)?.jobSummary || ''}
+                        selfPR={selected?.self_pr || ''}
+                        skills={skillsArray}
+                        education={Array.isArray((extra as any)?.education) ? (extra as any).education : []}
+                      />
+                    );
+                  })()
+                )}
 
                 {/* Word-like comment overlays */}
                 <div className="absolute inset-0 pointer-events-none">
