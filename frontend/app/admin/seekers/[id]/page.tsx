@@ -40,6 +40,9 @@ export default function AdminSeekerDetailPage() {
   const [resumePreview, setResumePreview] = useState<ResumePreviewData>(emptyResumePreview);
   const [resumeLoading, setResumeLoading] = useState(false);
   const [resumeError, setResumeError] = useState<string | null>(null);
+  // Annotations + positions
+  const [annotations, setAnnotations] = useState<any[]>([]);
+  const [markTops, setMarkTops] = useState<Record<string, number>>({});
 
   const token = useMemo(() => {
     if (typeof window === 'undefined') return '';
