@@ -102,7 +102,16 @@ export default function AdminSeekerDetailPage() {
       const mapped = (list || []).map((m: any) => {
         const raw = String(m.content || '');
         const { meta, rest } = parseAnnotation(raw);
-        return { id: String(m.id), sender: String(m.sender), content: raw, body: rest, isAnnotation: Boolean(meta), anchor: meta, created_at: m.created_at } as ReviewMsg;
+        return {
+          id: String(m.id),
+          sender: String(m.sender),
+          content: raw,
+          body: rest,
+          isAnnotation: Boolean(meta) || Boolean(m.annotation),
+          anchor: meta,
+          annotationId: m.annotation ? String(m.annotation) : undefined,
+          created_at: m.created_at,
+        } as ReviewMsg;
       });
       setReviewMessages(mapped);
     } catch {}
@@ -122,6 +131,13 @@ export default function AdminSeekerDetailPage() {
         const data = await fetchResumePreview({ userId: String(id), token, forAdmin: true });
         if (!canceled) {
           setResumePreview(data);
+          // load annotations for this resume
+          try {
+            if (data?.resumeId) {
+              const a = await fetch(buildApiUrl(`/advice/annotations/?resume_id=${encodeURIComponent(String(data.resumeId))}&subject=resume_advice`), { headers: getApiHeaders(token) });
+              if (a.ok) setAnnotations(await a.json());
+            }
+          } catch {}
         }
       } catch (err) {
         console.error('resume preview load failed', err);
@@ -141,6 +157,23 @@ export default function AdminSeekerDetailPage() {
       canceled = true;
     };
   }, [id, token]);
+
+  useEffect(() => {
+    const container = previewWrapRef.current;
+    if (!container) return;
+    const map: Record<string, number> = {};
+    const marks = container.querySelectorAll('[data-annot-ref]');
+    marks.forEach((el) => {
+      const idAttr = el.getAttribute('data-annot-ref') || '';
+      if (!idAttr.startsWith('ann-')) return;
+      const id = idAttr.replace('ann-', '');
+      const rect = (el as HTMLElement).getBoundingClientRect();
+      const contRect = container.getBoundingClientRect();
+      const top = rect.top - contRect.top + container.scrollTop;
+      map[id] = Math.max(0, top);
+    });
+    setMarkTops(map);
+  }, [annotations, resumePreview]);
 
   // Selection/annotation state for inline comments
   const previewWrapRef = useRef<HTMLDivElement | null>(null);
@@ -450,12 +483,17 @@ export default function AdminSeekerDetailPage() {
                         selfPR={resumePreview.selfPR}
                         skills={resumePreview.skills}
                         education={resumePreview.education}
+                        annotations={annotations}
                         className="w-full"
                       />
                       <div className="absolute inset-0 pointer-events-none">
-                        {reviewMessages.filter(m => m.isAnnotation && m.anchor).map((m) => (
-                          <div key={m.id} className="absolute right-[-240px] w-[220px] pointer-events-auto" style={{ top: (m.anchor!.top || 0) - 8 }}>
-                            <div className="border border-[#E5A6A6] bg-white rounded-md shadow-sm">
+                        {reviewMessages.filter(m => m.isAnnotation).map((m) => {
+                          const topGuess = m.annotationId && markTops[m.annotationId] !== undefined ? markTops[m.annotationId] : (m.anchor?.top || 0);
+                          const markSelector = m.annotationId ? `[data-annot-ref=\\"ann-${m.annotationId}\\"]` : '';
+                          return (
+                          <div key={m.id} className="absolute right-[-240px] w-[220px] pointer-events-auto" style={{ top: Math.max(0, topGuess - 8) }}>
+                            <div className="absolute right-[220px] h-[2px] bg-[#E5A6A6] opacity-80" style={{ width: '20px', top: '18px' }} />
+                            <div className="border border-[#E5A6A6] bg-white rounded-md shadow-sm" onMouseEnter={() => { try { if (markSelector) (previewWrapRef.current?.querySelector(markSelector) as HTMLElement)?.classList.add('ring-2','ring-[#E5A6A6]'); } catch {} }} onMouseLeave={() => { try { if (markSelector) (previewWrapRef.current?.querySelector(markSelector) as HTMLElement)?.classList.remove('ring-2','ring-[#E5A6A6]'); } catch {} }}>
                               <div className="flex items-center gap-2 px-3 py-2 border-b text-sm">
                                 <div className="h-6 w-6 rounded-full bg-gray-800 text-white flex items-center justify-center text-xs">A</div>
                                 <div className="text-secondary-800 truncate">advisor</div>
@@ -471,7 +509,8 @@ export default function AdminSeekerDetailPage() {
                               </div>
                             </div>
                           </div>
-                        ))}
+                          );
+                        })}
                       </div>
 
                       {composerOpen && pendingAnchor && composerPos && (

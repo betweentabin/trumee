@@ -1,6 +1,7 @@
 "use client";
 
 import React from 'react';
+import HighlightableText from '@/components/annot/highlightable-text';
 
 type PreviewProps = {
   userName?: string;
@@ -17,6 +18,15 @@ type PreviewProps = {
   // UI options
   showHeader?: boolean; // default true
   showFrame?: boolean;  // border/frame (default true)
+  // annotations for highlighting
+  annotations?: Array<{
+    id: string;
+    subject?: string;
+    anchor_id: string;
+    start_offset: number;
+    end_offset: number;
+    is_resolved?: boolean;
+  }>;
 };
 
 const PreviewRow: React.FC<{ left: React.ReactNode; right: React.ReactNode }>
@@ -27,9 +37,14 @@ const PreviewRow: React.FC<{ left: React.ReactNode; right: React.ReactNode }>
   </tr>
 );
 
-const ResumePreview: React.FC<PreviewProps> = ({ userName, jobhistoryList, formValues, className, jobSummary, selfPR, skills, education, showHeader = true, showFrame = true }) => {
+const ResumePreview: React.FC<PreviewProps> = ({ userName, jobhistoryList, formValues, className, jobSummary, selfPR, skills, education, showHeader = true, showFrame = true, annotations = [] }) => {
   const today = new Date();
   const ymd = `${today.getFullYear()}年${String(today.getMonth()+1).padStart(2,'0')}月${String(today.getDate()).padStart(2,'0')}日現在`;
+
+  const rangesFor = (anchorId: string) =>
+    annotations
+      .filter((a) => a.anchor_id === anchorId)
+      .map((a) => ({ id: a.id, start: a.start_offset || 0, end: a.end_offset || 0, resolved: a.is_resolved }));
 
   return (
     <div className={`bg-white ${showFrame ? 'border border-black' : ''} ${className || ''}`} data-annot-scope="resume-preview">
@@ -49,7 +64,11 @@ const ResumePreview: React.FC<PreviewProps> = ({ userName, jobhistoryList, formV
         {(jobSummary || selfPR) && (
           <div className="mb-6" data-annot-id="job_summary">
             <h3 className="text-lg font-semibold mb-2">職務要約</h3>
-            <div className="whitespace-pre-wrap text-sm text-gray-800">{jobSummary || selfPR}</div>
+            <HighlightableText
+              text={(jobSummary || selfPR) as string}
+              ranges={rangesFor('job_summary')}
+              className="text-sm text-gray-800"
+            />
           </div>
         )}
 
@@ -86,11 +105,12 @@ const ResumePreview: React.FC<PreviewProps> = ({ userName, jobhistoryList, formV
                 <PreviewRow
                   left={<span>{j.since || '—'} ～ {j.to || '—'}</span>}
                   right={
-                    <div
-                      className="relative"
-                      data-annot-id={`work_content-${key}`}
-                    >
-                      <pre className="whitespace-pre-wrap font-sans">{j.work_content || '入力した職務内容が記載されます。'}</pre>
+                    <div className="relative" data-annot-id={`work_content-${key}`}>
+                      <HighlightableText
+                        text={j.work_content || '入力した職務内容が記載されます。'}
+                        ranges={rangesFor(`work_content-${key}`)}
+                        className="font-sans text-[0.95rem]"
+                      />
                     </div>
                   }
                 />
@@ -110,7 +130,11 @@ const ResumePreview: React.FC<PreviewProps> = ({ userName, jobhistoryList, formV
         {selfPR && (
           <div className="mb-6" data-annot-id="self_pr">
             <h3 className="text-lg font-semibold mb-2">自己PR</h3>
-            <div className="whitespace-pre-wrap text-sm text-gray-800">{selfPR}</div>
+            <HighlightableText
+              text={selfPR}
+              ranges={rangesFor('self_pr')}
+              className="text-sm text-gray-800"
+            />
           </div>
         )}
 

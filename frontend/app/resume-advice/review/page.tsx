@@ -28,6 +28,7 @@ type AnnMessage = Message & {
   isAnnotation?: boolean;
   anchor?: AnchorMeta;
   body?: string; // message text without meta
+  annotationId?: string;
 };
 
 export default function ResumeReviewPage() {
@@ -41,6 +42,7 @@ export default function ResumeReviewPage() {
   const [resumes, setResumes] = useState<any[]>([]);
   const [selected, setSelected] = useState<any | null>(null);
   const [overridePreview, setOverridePreview] = useState<ResumePreviewData | null>(null);
+  const [annotations, setAnnotations] = useState<any[]>([]);
   // Preview wrapper ref (scroll container)
   const previewWrapRef = useRef<HTMLDivElement | null>(null);
   // Pending selection → comment composer state
@@ -48,6 +50,7 @@ export default function ResumeReviewPage() {
   const [composerOpen, setComposerOpen] = useState(false);
   const [composerText, setComposerText] = useState('');
   const [composerPos, setComposerPos] = useState<{ top: number; left: number } | null>(null);
+  const [markTops, setMarkTops] = useState<Record<string, number>>({});
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -69,6 +72,8 @@ export default function ResumeReviewPage() {
           setOverridePreview(tryAdmin);
           setSelected(null);
           setResumes([]);
+          // load annotations
+          try { const a = await fetch(`${apiUrl}/api/v2/advice/annotations/?resume_id=${encodeURIComponent(String(tryAdmin.resumeId || ''))}&subject=resume_advice`, { headers: { ...getAuthHeaders() } }); if (a.ok) setAnnotations(await a.json()); } catch {}
           return;
         }
         const uid = getUserInfo()?.uid;
@@ -78,12 +83,14 @@ export default function ResumeReviewPage() {
           setOverridePreview(tryOwner);
           setSelected(null);
           setResumes([]);
+          try { const a = await fetch(`${apiUrl}/api/v2/advice/annotations/?resume_id=${encodeURIComponent(String(tryOwner.resumeId || ''))}&subject=resume_advice`, { headers: { ...getAuthHeaders() } }); if (a.ok) setAnnotations(await a.json()); } catch {}
           return;
         }
         const tryPublic = await fetchResumePreview({ userId: userIdFromRoute, token }).catch(() => emptyResumePreview);
         setOverridePreview(tryPublic);
         setSelected(null);
         setResumes([]);
+        try { const a = await fetch(`${apiUrl}/api/v2/advice/annotations/?resume_id=${encodeURIComponent(String(tryPublic.resumeId || ''))}&subject=resume_advice`, { headers: { ...getAuthHeaders() } }); if (a.ok) setAnnotations(await a.json()); } catch {}
         return;
       }
 
@@ -96,11 +103,36 @@ export default function ResumeReviewPage() {
         setResumes(list);
         const active = list.find((r: any) => r.is_active) || list[0] || null;
         setSelected(active);
+        // load annotations for active resume
+        try {
+          if (active?.id) {
+            const a = await fetch(`${apiUrl}/api/v2/advice/annotations/?resume_id=${encodeURIComponent(String(active.id))}&subject=resume_advice`, { headers: { ...getAuthHeaders() } });
+            if (a.ok) setAnnotations(await a.json());
+          }
+        } catch {}
         setOverridePreview(null);
       } catch {}
     };
     load();
   }, [userIdFromRoute]);
+
+  // Recalculate mark positions when annotations or preview change
+  useEffect(() => {
+    const container = previewWrapRef.current;
+    if (!container) return;
+    const map: Record<string, number> = {};
+    const marks = container.querySelectorAll('[data-annot-ref]');
+    marks.forEach((el) => {
+      const idAttr = el.getAttribute('data-annot-ref') || '';
+      if (!idAttr.startsWith('ann-')) return;
+      const id = idAttr.replace('ann-', '');
+      const rect = (el as HTMLElement).getBoundingClientRect();
+      const contRect = container.getBoundingClientRect();
+      const top = rect.top - contRect.top + container.scrollTop;
+      map[id] = Math.max(0, top);
+    });
+    setMarkTops(map);
+  }, [annotations, overridePreview, selected]);
 
   const buildPreviewFromResume = useMemo(() => {
     return (resume: any) => {
@@ -164,8 +196,10 @@ export default function ResumeReviewPage() {
           role,
           text: raw,
           body: rest,
-          isAnnotation: Boolean(meta),
-          anchor: meta,
+          isAnnotation: Boolean(meta) || Boolean(m.annotation),
+          anchor: meta || (m.annotation ? { anchorId: 'from-annotation', top: 0 } as any : undefined),
+          // carry annotation id for positioning by DOM later
+          ...(m.annotation ? { annotationId: String(m.annotation) } as any : {}),
           timestamp: new Date(m.created_at).toLocaleString('ja-JP'),
         } as AnnMessage;
       });
@@ -351,6 +385,7 @@ export default function ResumeReviewPage() {
                     selfPR={overridePreview.selfPR}
                     skills={overridePreview.skills}
                     education={overridePreview.education}
+                    annotations={annotations}
                   />
                 ) : (
                   (() => {
@@ -369,6 +404,7 @@ export default function ResumeReviewPage() {
                         selfPR={selected?.self_pr || ''}
                         skills={skillsArray}
                         education={Array.isArray((extra as any)?.education) ? (extra as any).education : []}
+                        annotations={annotations}
                       />
                     );
                   })()
@@ -376,13 +412,22 @@ export default function ResumeReviewPage() {
 
                 {/* Word-like comment overlays */}
                 <div className="absolute inset-0 pointer-events-none">
-                  {messages.filter(m => m.isAnnotation && m.anchor).map((m) => (
+                  {messages.filter(m => m.isAnnotation).map((m) => {
+                    const topGuess = m.annotationId && markTops[m.annotationId] !== undefined ? markTops[m.annotationId] : (m.anchor?.top || 0);
+                    const markSelector = m.annotationId ? `[data-annot-ref="ann-${m.annotationId}"]` : '';
+                    return (
                     <div
                       key={m.id}
                       className="absolute right-[-240px] w-[220px] pointer-events-auto"
-                      style={{ top: (m.anchor!.top || 0) - 8 }}
+                      style={{ top: Math.max(0, topGuess - 8) }}
                     >
-                      <div className="border border-[#E5A6A6] bg-white rounded-md shadow-sm">
+                      {/* connector line from content to bubble */}
+                      <div className="absolute right-[220px] h-[2px] bg-[#E5A6A6] opacity-80" style={{ width: '20px', top: '18px' }} />
+                      <div
+                        className="border border-[#E5A6A6] bg-white rounded-md shadow-sm"
+                        onMouseEnter={() => { try { if (markSelector) (previewWrapRef.current?.querySelector(markSelector) as HTMLElement)?.classList.add('ring-2','ring-[#E5A6A6]'); } catch {} }}
+                        onMouseLeave={() => { try { if (markSelector) (previewWrapRef.current?.querySelector(markSelector) as HTMLElement)?.classList.remove('ring-2','ring-[#E5A6A6]'); } catch {} }}
+                      >
                         <div className="flex items-center gap-2 px-3 py-2 border-b text-sm">
                           <div className="h-6 w-6 rounded-full bg-primary-600 text-white flex items-center justify-center text-xs">
                             {m.role === 'advisor' ? 'A' : 'S'}
@@ -402,7 +447,7 @@ export default function ResumeReviewPage() {
                         </div>
                       </div>
                     </div>
-                  ))}
+                  )})}
                 </div>
 
                 {/* Inline composer for new comment */}

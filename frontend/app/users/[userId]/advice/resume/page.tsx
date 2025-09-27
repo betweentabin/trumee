@@ -18,6 +18,9 @@ export default function ResumeAdvicePage() {
 
   // Resume preview states
   const [resumePreview, setResumePreview] = useState<ResumePreviewData>(emptyResumePreview);
+  const [annotations, setAnnotations] = useState<any[]>([]);
+  const previewWrapRef = useRef<HTMLDivElement | null>(null);
+  const [markTops, setMarkTops] = useState<Record<string, number>>({});
 
   const params = useParams<{ userId: string }>();
 
@@ -44,7 +47,7 @@ export default function ResumeAdvicePage() {
       const mapped = (list || []).map((m: any) => {
         const raw = String(m.content || '');
         const { meta, rest } = parseAnnotation(raw);
-        return { id: String(m.id), sender: String(m.sender), content: raw, body: rest, isAnnotation: Boolean(meta), anchor: meta, created_at: m.created_at } as Msg;
+        return { id: String(m.id), sender: String(m.sender), content: raw, body: rest, isAnnotation: Boolean(meta) || Boolean(m.annotation), anchor: meta, created_at: m.created_at, ...(m.annotation ? { annotationId: String(m.annotation) } : {}) } as Msg;
       });
       setMessages(mapped);
       // mark as read
@@ -65,6 +68,12 @@ export default function ResumeAdvicePage() {
         ? me?.full_name || me?.fullName || me?.username || me?.email
         : data.userName;
       setResumePreview({ ...data, userName: fallbackName });
+      try {
+        if (data?.resumeId) {
+          const a = await fetch(buildApiUrl(`/advice/annotations/?resume_id=${encodeURIComponent(String(data.resumeId))}&subject=resume_advice`), { headers: getApiHeaders(token) });
+          if (a.ok) setAnnotations(await a.json());
+        }
+      } catch {}
     } catch {
       setResumePreview(emptyResumePreview);
     }
@@ -72,6 +81,21 @@ export default function ResumeAdvicePage() {
 
   useEffect(() => { loadMessages(); }, [loadMessages]);
   useEffect(() => { loadResume(); }, [loadResume]);
+  useEffect(() => {
+    const container = previewWrapRef.current; if (!container) return;
+    const map: Record<string, number> = {};
+    const marks = container.querySelectorAll('[data-annot-ref]');
+    marks.forEach((el) => {
+      const idAttr = el.getAttribute('data-annot-ref') || '';
+      if (!idAttr.startsWith('ann-')) return;
+      const id = idAttr.replace('ann-', '');
+      const rect = (el as HTMLElement).getBoundingClientRect();
+      const contRect = container.getBoundingClientRect();
+      const top = rect.top - contRect.top + container.scrollTop;
+      map[id] = Math.max(0, top);
+    });
+    setMarkTops(map);
+  }, [annotations, resumePreview]);
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
 
   // Form for sending message
@@ -196,12 +220,15 @@ export default function ResumeAdvicePage() {
                 selfPR={resumePreview.selfPR}
                 skills={resumePreview.skills}
                 education={resumePreview.education}
+                annotations={annotations}
                 className="w-full mb-8"
               />
               {/* overlays */}
               <div className="absolute inset-0 pointer-events-none">
-                {messages.filter(m => m.isAnnotation && m.anchor).map((m) => (
-                  <div key={m.id} className="absolute right-[-240px] w-[220px] pointer-events-auto" style={{ top: (m.anchor!.top || 0) - 8 }}>
+                {messages.filter(m => m.isAnnotation).map((m) => {
+                  const topGuess = (m as any).annotationId && markTops[(m as any).annotationId] !== undefined ? markTops[(m as any).annotationId] : (m.anchor?.top || 0);
+                  return (
+                  <div key={m.id} className="absolute right-[-240px] w-[220px] pointer-events-auto" style={{ top: Math.max(0, topGuess - 8) }}>
                     <div className="border border-[#E5A6A6] bg-white rounded-md shadow-sm">
                       <div className="flex items-center gap-2 px-3 py-2 border-b text-sm">
                         <div className="h-6 w-6 rounded-full bg-secondary-800 text-white flex items-center justify-center text-xs">S</div>
@@ -218,7 +245,8 @@ export default function ResumeAdvicePage() {
                       </div>
                     </div>
                   </div>
-                ))}
+                  );
+                })}
               </div>
 
               {/* composer */}
