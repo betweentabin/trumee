@@ -23,6 +23,7 @@ class ApiV2Client {
   private token: string | null = null;
 
   constructor(baseURL: string = process.env.NEXT_PUBLIC_API_URL || 'https://trumee-production.up.railway.app') {
+    const timeoutMs = Number.parseInt(process.env.NEXT_PUBLIC_API_TIMEOUT || '30000', 10);
     this.client = axios.create({
       baseURL,
       headers: {
@@ -30,7 +31,7 @@ class ApiV2Client {
       },
       // クロスサイトでCookieを送らない（セッション認証を使わずDRF Tokenのみ）
       withCredentials: false,
-      timeout: 10000,
+      timeout: Number.isFinite(timeoutMs) ? timeoutMs : 30000,
     });
 
       // リクエストインターセプター：認証トークンを自動付与
@@ -43,7 +44,7 @@ class ApiV2Client {
     return config;
   });
 
-      // レスポンスインターセプター：エラーハンドリングとトークンリフレッシュ
+      // レスポンスインターセプター：エラーハンドリングと簡易リトライ
   this.client.interceptors.response.use(
     (response) => response,
     async (error: AxiosError) => {
@@ -66,6 +67,14 @@ class ApiV2Client {
             window.location.href = '/auth/login';
           }
         }
+      }
+      
+      // タイムアウト・ネットワークダウン時のワンリトライ（合計2回）
+      if ((error.code === 'ECONNABORTED' || !error.response) && !originalRequest?._retriedOnce) {
+        originalRequest._retriedOnce = true;
+        // 待機して再試行（Railwayのコールドスタート対策）
+        await new Promise((r) => setTimeout(r, 800));
+        return this.client.request(originalRequest);
       }
       
       // 追加情報を含めてログ出力（URL/メソッド/ステータス/本文）
