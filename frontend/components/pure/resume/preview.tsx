@@ -47,7 +47,7 @@ const ResumePreview: React.FC<PreviewProps> = ({ userName, jobhistoryList, formV
 
         {/* 職務要約 */}
         {(jobSummary || selfPR) && (
-          <div className="mb-6">
+          <div className="mb-6" data-annot-id="job_summary">
             <h3 className="text-lg font-semibold mb-2">職務要約</h3>
             <div className="whitespace-pre-wrap text-sm text-gray-800">{jobSummary || selfPR}</div>
           </div>
@@ -108,7 +108,7 @@ const ResumePreview: React.FC<PreviewProps> = ({ userName, jobhistoryList, formV
 
         {/* 自己PR */}
         {selfPR && (
-          <div className="mb-6">
+          <div className="mb-6" data-annot-id="self_pr">
             <h3 className="text-lg font-semibold mb-2">自己PR</h3>
             <div className="whitespace-pre-wrap text-sm text-gray-800">{selfPR}</div>
           </div>
