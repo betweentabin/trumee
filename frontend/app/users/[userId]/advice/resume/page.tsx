@@ -110,11 +110,27 @@ export default function ResumeAdvicePage() {
     try {
       setSending(true);
       const userId = params?.userId ? String(params.userId) : "";
-      const payload = `@@ANNOTATION:${JSON.stringify(pendingAnchor)}@@ ${msg}`;
+      // 1) create annotation then 2) link message
+      let annotationId: string | null = null;
+      if (pendingAnchor.resumeId) {
+        const annRes = await fetch(buildApiUrl("/advice/annotations/"), {
+          method: "POST",
+          headers: getApiHeaders(token),
+          body: JSON.stringify({
+            resume: pendingAnchor.resumeId,
+            subject: "resume_advice",
+            anchor_id: pendingAnchor.anchorId,
+            start_offset: pendingAnchor.startOffset ?? 0,
+            end_offset: pendingAnchor.endOffset ?? 0,
+            quote: pendingAnchor.quote || "",
+          }),
+        });
+        if (annRes.ok) { const ann = await annRes.json(); annotationId = String(ann.id); }
+      }
       const res = await fetch(buildApiUrl("/advice/messages/"), {
         method: "POST",
         headers: getApiHeaders(token),
-        body: JSON.stringify({ subject: "resume_advice", content: payload, ...(userId ? { user_id: userId } : {}) }),
+        body: JSON.stringify({ subject: "resume_advice", content: msg, ...(userId ? { user_id: userId } : {}), annotation_id: annotationId || undefined }),
       });
       if (!res.ok) return;
       setComposerOpen(false);
@@ -150,7 +166,15 @@ export default function ResumeAdvicePage() {
     const contRect = container.getBoundingClientRect();
     const top = rect.top - contRect.top + container.scrollTop;
     const left = rect.right - contRect.left + container.scrollLeft;
-    const meta: AnchorMeta = { anchorId: anchorEl.dataset.annotId!, top: Math.max(0, top), quote: sel.toString().slice(0, 200) };
+    let startOffset = 0; let endOffset = 0;
+    try {
+      const pre = document.createRange();
+      pre.setStart(anchorEl, 0);
+      pre.setEnd(range.startContainer, range.startOffset);
+      startOffset = pre.toString().length;
+      endOffset = startOffset + sel.toString().length;
+    } catch {}
+    const meta: AnchorMeta = { anchorId: anchorEl.dataset.annotId!, top: Math.max(0, top), quote: sel.toString().slice(0, 200), startOffset, endOffset, resumeId: (resumePreview as any)?.resumeId };
     setPendingAnchor(meta);
     setComposerPos({ top: Math.max(0, top), left: Math.min(left + 8, container.clientWidth - 40) });
     setComposerOpen(true);

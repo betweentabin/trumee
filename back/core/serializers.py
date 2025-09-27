@@ -4,7 +4,7 @@ from .models import (
     User, SeekerProfile, CompanyProfile, Resume, Experience, Education, Certification,
     Application, Scout, Message, Payment, JobPosting,
     ActivityLog, MLModel, MLPrediction, CompanyMonthlyPage, ResumeFile,
-    InterviewQuestion, PromptTemplate,
+    InterviewQuestion, PromptTemplate, Annotation,
 )
 
 
@@ -397,15 +397,32 @@ class MessageSerializer(serializers.ModelSerializer):
     """メッセージシリアライザー"""
     sender_name = serializers.CharField(source='sender.full_name', read_only=True)
     receiver_name = serializers.CharField(source='receiver.full_name', read_only=True)
+    annotation = serializers.PrimaryKeyRelatedField(read_only=True)
     
     class Meta:
         model = Message
         fields = [
             'id', 'sender', 'sender_name', 'receiver', 'receiver_name',
             'subject', 'content', 'is_read', 'read_at',
-            'application', 'scout', 'created_at'
+            'application', 'scout', 'annotation', 'created_at'
         ]
         read_only_fields = ['created_at', 'read_at']
+
+
+class AnnotationSerializer(serializers.ModelSerializer):
+    created_by_name = serializers.CharField(source='created_by.full_name', read_only=True)
+    resolved_by_name = serializers.CharField(source='resolved_by.full_name', read_only=True)
+
+    class Meta:
+        model = Annotation
+        fields = [
+            'id', 'resume', 'subject', 'anchor_id',
+            'start_offset', 'end_offset', 'quote', 'selector_meta',
+            'created_by', 'created_by_name', 'is_resolved',
+            'resolved_at', 'resolved_by', 'resolved_by_name',
+            'created_at', 'updated_at'
+        ]
+        read_only_fields = ['created_at', 'updated_at', 'resolved_at', 'resolved_by']
 
 
 class PaymentSerializer(serializers.ModelSerializer):

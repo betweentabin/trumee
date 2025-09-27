@@ -86,6 +86,9 @@ urlpatterns = [
     path('advice/messages/', views_api_v2.advice_messages, name='advice-messages'),
     path('advice/notifications/', views_api_v2.advice_notifications, name='advice-notifications'),
     path('advice/mark_read/', views_api_v2.advice_mark_read, name='advice-mark-read'),
+    # 注釈API
+    path('advice/annotations/', views_api_v2.advice_annotations, name='advice-annotations'),
+    path('advice/annotations/<uuid:annotation_id>/', views_api_v2.advice_annotation_detail, name='advice-annotation-detail'),
 
     # 面接質問・テンプレート
     path('interview/categories/', views_api_v2.interview_categories_v2, name='interview-categories'),

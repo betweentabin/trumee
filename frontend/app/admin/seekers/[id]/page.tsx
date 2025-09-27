@@ -21,6 +21,7 @@ type AdminSeeker = {
 export default function AdminSeekerDetailPage() {
   const { id } = useParams<{ id: string }>();
   const [user, setUser] = useState<AdminSeeker | null>(null);
+  const [overview, setOverview] = useState<any | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'review' | 'interview' | 'advice' | 'member'>('review');
@@ -60,6 +61,14 @@ export default function AdminSeekerDetailPage() {
         const json = await res.json();
         const found = (json?.results || []).find((u: any) => u.id === id) || null;
         setUser(found);
+        // 概要情報（年齢・最終ログイン・課金日・最終添削者）も取得
+        try {
+          const resOv = await fetch(buildApiUrl(`/admin/users/${id}/overview/`), { headers: getApiHeaders(token) });
+          if (resOv.ok) {
+            const ov = await resOv.json();
+            setOverview(ov);
+          }
+        } catch {}
       } catch (e: any) {
         setError(e.message || 'failed');
       } finally {
@@ -175,11 +184,28 @@ export default function AdminSeekerDetailPage() {
     try {
       setSendingReview(true);
       setSendError(null);
-      const payload = `@@ANNOTATION:${JSON.stringify(pendingAnchor)}@@ ${msg}`;
+      // 1) create annotation
+      let annotationId: string | null = null;
+      if (pendingAnchor.resumeId) {
+        const annRes = await fetch(buildApiUrl('/advice/annotations/'), {
+          method: 'POST',
+          headers: getApiHeaders(token),
+          body: JSON.stringify({
+            resume: pendingAnchor.resumeId,
+            subject: 'resume_advice',
+            anchor_id: pendingAnchor.anchorId,
+            start_offset: pendingAnchor.startOffset ?? 0,
+            end_offset: pendingAnchor.endOffset ?? 0,
+            quote: pendingAnchor.quote || '',
+          }),
+        });
+        if (annRes.ok) { const ann = await annRes.json(); annotationId = String(ann.id); }
+      }
+
       const res = await fetch(buildApiUrl('/advice/messages/'), {
         method: 'POST',
         headers: getApiHeaders(token),
-        body: JSON.stringify({ content: payload, user_id: id, subject: 'resume_advice' }),
+        body: JSON.stringify({ content: msg, user_id: id, subject: 'resume_advice', annotation_id: annotationId || undefined }),
       });
       if (!res.ok) {
         const text = await res.text();
@@ -222,7 +248,16 @@ export default function AdminSeekerDetailPage() {
     const contRect = container.getBoundingClientRect();
     const top = rect.top - contRect.top + container.scrollTop;
     const left = rect.right - contRect.left + container.scrollLeft;
-    const meta: AnchorMeta = { anchorId: anchorEl.dataset.annotId!, top: Math.max(0, top), quote: sel.toString().slice(0, 200) };
+    // compute offsets inside anchor
+    let startOffset = 0; let endOffset = 0;
+    try {
+      const pre = document.createRange();
+      pre.setStart(anchorEl, 0);
+      pre.setEnd(range.startContainer, range.startOffset);
+      startOffset = pre.toString().length;
+      endOffset = startOffset + sel.toString().length;
+    } catch {}
+    const meta: AnchorMeta = { anchorId: anchorEl.dataset.annotId!, top: Math.max(0, top), quote: sel.toString().slice(0, 200), startOffset, endOffset, resumeId: (resumePreview as any)?.resumeId };
     setPendingAnchor(meta);
     setComposerPos({ top: Math.max(0, top), left: Math.min(left + 8, container.clientWidth - 40) });
     setComposerOpen(true);
@@ -543,9 +578,34 @@ export default function AdminSeekerDetailPage() {
               <div className="rounded-xl border p-6">
                 <div className="text-lg font-semibold mb-4">会員概要</div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                  <div><span className="text-gray-500">氏名</span><div className="font-medium">{user?.full_name || user?.username}</div></div>
-                  <div><span className="text-gray-500">メール</span><div className="font-medium">{user?.email}</div></div>
-                  <div><span className="text-gray-500">登録日</span><div className="font-medium">{user?.created_at ? new Date(user.created_at).toLocaleDateString() : '—'}</div></div>
+                  <div>
+                    <span className="text-gray-500">氏名</span>
+                    <div className="font-medium">{user?.full_name || user?.username}</div>
+                  </div>
+                  <div>
+                    <span className="text-gray-500">メール</span>
+                    <div className="font-medium">{user?.email}</div>
+                  </div>
+                  <div>
+                    <span className="text-gray-500">登録日</span>
+                    <div className="font-medium">{user?.created_at ? new Date(user.created_at).toLocaleDateString() : '—'}</div>
+                  </div>
+                  <div>
+                    <span className="text-gray-500">年齢</span>
+                    <div className="font-medium">{overview?.attributes?.age ?? '—'}</div>
+                  </div>
+                  <div>
+                    <span className="text-gray-500">最終ログイン</span>
+                    <div className="font-medium">{overview?.attributes?.last_login_at ? new Date(overview.attributes.last_login_at).toLocaleString() : '—'}</div>
+                  </div>
+                  <div>
+                    <span className="text-gray-500">最終課金日</span>
+                    <div className="font-medium">{overview?.attributes?.last_payment_at ? new Date(overview.attributes.last_payment_at).toLocaleString() : '—'}</div>
+                  </div>
+                  <div>
+                    <span className="text-gray-500">最終添削者</span>
+                    <div className="font-medium">{overview?.review?.last_reviewed_by_name || '—'}</div>
+                  </div>
                 </div>
               </div>
               <div className="rounded-xl border p-6">

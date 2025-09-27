@@ -42,7 +42,7 @@ const Header = () => {
           {/* Left Logo */}
           <div className="flex items-center">
               <a href="/company" aria-label="Truemee">
-                <Image src="/logo/logo_mix.png" alt="Truemee" width={210} height={40} className="h-10 w-[210px] mr-3 cursor-pointer" />
+                <Image src="/logo/logo.png" alt="Truemee" width={210} height={40} className="h-10 w-[210px] mr-3 cursor-pointer" />
               </a>
           </div>
       

@@ -19,6 +19,9 @@ type AnchorMeta = {
   anchorId: string; // e.g. work_content-job1
   top: number; // relative to preview scroll container
   quote?: string; // selected text (for context)
+  startOffset?: number;
+  endOffset?: number;
+  resumeId?: string;
 };
 
 type AnnMessage = Message & {
@@ -211,16 +214,35 @@ export default function ResumeReviewPage() {
     }
   };
 
-  // Send annotation with embedded meta
+  // Send annotation via API (create annotation, then message linking it)
   const sendAnnotation = async () => {
     if (!pendingAnchor) return;
     const msg = composerText.trim();
     if (!msg) return;
     setLoading(true);
     try {
-      const payload = `@@ANNOTATION:${JSON.stringify(pendingAnchor)}@@ ${msg}`;
-      const body: any = { content: payload, subject: 'resume_advice' };
+      // 1) Create annotation first
+      let annotationId: string | null = null;
+      if (pendingAnchor.resumeId) {
+        const annRes = await fetch(`${apiUrl}/api/v2/advice/annotations/`, {
+          method: 'POST',
+          headers: { ...getAuthHeaders() },
+          body: JSON.stringify({
+            resume: pendingAnchor.resumeId,
+            subject: 'resume_advice',
+            anchor_id: pendingAnchor.anchorId,
+            start_offset: pendingAnchor.startOffset ?? 0,
+            end_offset: pendingAnchor.endOffset ?? 0,
+            quote: pendingAnchor.quote || '',
+          }),
+        });
+        if (annRes.ok) { const ann = await annRes.json(); annotationId = String(ann.id); }
+      }
+
+      // 2) Post message that links to annotation
+      const body: any = { content: msg, subject: 'resume_advice' };
       if (userIdFromRoute) body.user_id = userIdFromRoute;
+      if (annotationId) body.annotation_id = annotationId;
       const res = await fetch(`${apiUrl}/api/v2/advice/messages/`, {
         method: 'POST',
         headers: {
@@ -268,10 +290,23 @@ export default function ResumeReviewPage() {
     const contRect = container.getBoundingClientRect();
     const top = rect.top - contRect.top + container.scrollTop;
     const left = rect.right - contRect.left + container.scrollLeft;
+    // compute offsets within anchor element text
+    let startOffset = 0; let endOffset = 0;
+    try {
+      const pre = document.createRange();
+      pre.setStart(anchorEl, 0);
+      pre.setEnd(range.startContainer, range.startOffset);
+      startOffset = pre.toString().length;
+      endOffset = startOffset + sel.toString().length;
+    } catch {}
+
     const meta: AnchorMeta = {
       anchorId: anchorEl.dataset.annotId!,
       top: Math.max(0, top),
       quote: sel.toString().slice(0, 200),
+      startOffset,
+      endOffset,
+      resumeId: (overridePreview?.resumeId || (selected?.id ? String(selected.id) : undefined)) as any,
     };
     setPendingAnchor(meta);
     setComposerPos({ top: Math.max(0, top), left: Math.min(left + 8, container.clientWidth - 40) });

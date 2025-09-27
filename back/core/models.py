@@ -557,6 +557,8 @@ class Message(models.Model):
     # 関連付け
     application = models.ForeignKey(Application, on_delete=models.CASCADE, null=True, blank=True)
     scout = models.ForeignKey(Scout, on_delete=models.CASCADE, null=True, blank=True)
+    # 履歴書注釈への関連（任意）
+    annotation = models.ForeignKey('Annotation', on_delete=models.SET_NULL, null=True, blank=True, related_name='messages')
     
     created_at = models.DateTimeField(auto_now_add=True)
     
@@ -569,6 +571,38 @@ class Message(models.Model):
     
     def __str__(self):
         return f"{self.sender.email} → {self.receiver.email}: {self.subject[:30]}"
+
+
+# =============================
+# Annotation for resume comments
+# =============================
+class Annotation(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    resume = models.ForeignKey('Resume', on_delete=models.CASCADE, related_name='annotations')
+    subject = models.CharField(max_length=200, default='resume_advice', db_index=True)
+    anchor_id = models.CharField(max_length=100, db_index=True)
+    start_offset = models.IntegerField(default=0)
+    end_offset = models.IntegerField(default=0)
+    quote = models.TextField(blank=True)
+    selector_meta = models.JSONField(default=dict, blank=True)
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_annotations')
+    is_resolved = models.BooleanField(default=False)
+    resolved_at = models.DateTimeField(null=True, blank=True)
+    resolved_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='resolved_annotations')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'annotations'
+        indexes = [
+            models.Index(fields=['resume', 'subject']),
+            models.Index(fields=['resume', 'anchor_id', 'start_offset']),
+        ]
+
+    def __str__(self):
+        return f"Annot {self.anchor_id} [{self.start_offset},{self.end_offset})"
+
+
 
 
 class Payment(models.Model):

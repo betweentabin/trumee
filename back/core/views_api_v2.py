@@ -34,7 +34,7 @@ from django.core.cache import cache
 from .models import (
     User, SeekerProfile, CompanyProfile, Resume, Experience, 
     Education, Certification, Application, Scout, Message, JobPosting,
-    CompanyMonthlyPage, ResumeFile, InterviewQuestion, PromptTemplate
+    CompanyMonthlyPage, ResumeFile, InterviewQuestion, PromptTemplate, Annotation, Payment
 )
 from .serializers import (
     UserSerializer, SeekerProfileSerializer, CompanyProfileSerializer,
@@ -44,6 +44,7 @@ from .serializers import (
     UserRegisterSerializer, CompanyRegisterSerializer, LoginSerializer,
     CompanyMonthlyPageSerializer, ResumeFileSerializer,
     InterviewQuestionSerializer, PromptTemplateSerializer,
+    AnnotationSerializer,
 )
 from .ai import gemini as gemini_client
 from .utils_templates import render_prompt_with_resume
@@ -439,6 +440,65 @@ def admin_user_overview(request, user_id):
     except Exception:
         latest_activity = None
 
+    # 追加属性
+    # 年齢
+    age = None
+    try:
+        if getattr(target, 'seeker_profile', None) and getattr(target.seeker_profile, 'birthday', None):
+            from datetime import date
+            b = target.seeker_profile.birthday
+            today = date.today()
+            age = today.year - b.year - ((today.month, today.day) < (b.month, b.day))
+    except Exception:
+        age = None
+
+    # 最終ログイン
+    last_login = getattr(target, 'last_login', None)
+
+    # 最終課金日
+    last_payment_at = None
+    try:
+        last_pay = Payment.objects.filter(user=target).order_by('-created_at').first()
+        last_payment_at = getattr(last_pay, 'created_at', None)
+    except Exception:
+        last_payment_at = None
+
+    # 最終添削者（Annotation or resume_advice Message）
+    last_reviewed_by = None
+    last_reviewed_by_name = None
+    last_reviewed_at = None
+    try:
+        ann = Annotation.objects.filter(resume__user=target).order_by('-created_at').first()
+        ann_time = getattr(ann, 'created_at', None)
+        ann_user = getattr(ann, 'created_by', None)
+    except Exception:
+        ann_time = None
+        ann_user = None
+    try:
+        msg = Message.objects.filter(subject='resume_advice', receiver=target, sender__is_staff=True).order_by('-created_at').first()
+        msg_time = getattr(msg, 'created_at', None)
+        msg_user = getattr(msg, 'sender', None)
+    except Exception:
+        msg_time = None
+        msg_user = None
+
+    pick_msg = False
+    if ann_time and msg_time:
+        pick_msg = msg_time >= ann_time
+    elif msg_time and not ann_time:
+        pick_msg = True
+    else:
+        pick_msg = False
+
+    if pick_msg and msg_user:
+        last_reviewed_by = str(getattr(msg_user, 'id', ''))
+        last_reviewed_by_name = getattr(msg_user, 'full_name', '') or getattr(msg_user, 'email', '')
+        last_reviewed_at = msg_time
+    elif ann_user:
+        last_reviewed_by = str(getattr(ann_user, 'id', ''))
+        last_reviewed_by_name = getattr(ann_user, 'full_name', '') or getattr(ann_user, 'email', '')
+        last_reviewed_at = ann_time
+
     data = {
         'user': {
             'id': str(target.id),
@@ -451,6 +511,8 @@ def admin_user_overview(request, user_id):
             'is_premium': target.is_premium,
             'plan_tier': target.plan_tier,
             'created_at': target.created_at,
+            'date_joined': getattr(target, 'date_joined', None),
+            'last_login': last_login,
         },
         'counts': {
             'resumes': resumes_count,
@@ -462,6 +524,17 @@ def admin_user_overview(request, user_id):
             'messages_total': messages_total,
         },
         'latest_activity_at': latest_activity,
+        'attributes': {
+            'age': age,
+            'registered_at': target.created_at,
+            'last_login_at': last_login,
+            'last_payment_at': last_payment_at,
+        },
+        'review': {
+            'last_reviewed_by': last_reviewed_by,
+            'last_reviewed_by_name': last_reviewed_by_name,
+            'last_reviewed_at': last_reviewed_at,
+        },
     }
 
     return Response(data, status=status.HTTP_200_OK)
@@ -1410,11 +1483,39 @@ def advice_messages(request):
     if counterpart is None:
         return Response({'error': 'counterpart_not_found'}, status=status.HTTP_404_NOT_FOUND)
 
+    # Optional: link to Annotation
+    annotation = None
+    data = request.data or {}
+    ann_id = data.get('annotation_id')
+    if ann_id:
+        try:
+            annotation = Annotation.objects.get(id=ann_id)
+        except Annotation.DoesNotExist:
+            annotation = None
+    elif isinstance(data.get('annotation'), dict):
+        ann_payload = data.get('annotation')
+        try:
+            resume = Resume.objects.get(id=ann_payload.get('resume'))
+            if request.user.is_staff or str(resume.user_id) == str(request.user.id):
+                annotation = Annotation.objects.create(
+                    resume=resume,
+                    subject=ann_payload.get('subject') or SUBJECT,
+                    anchor_id=ann_payload.get('anchor_id') or '',
+                    start_offset=int(ann_payload.get('start_offset') or 0),
+                    end_offset=int(ann_payload.get('end_offset') or 0),
+                    quote=ann_payload.get('quote') or '',
+                    selector_meta=ann_payload.get('selector_meta') or {},
+                    created_by=request.user,
+                )
+        except Resume.DoesNotExist:
+            pass
+
     msg = Message.objects.create(
         sender=request.user,
         receiver=counterpart,
         subject=SUBJECT,
         content=content,
+        annotation=annotation,
     )
     return Response(MessageSerializer(msg).data, status=status.HTTP_201_CREATED)
 
@@ -1474,6 +1575,78 @@ def advice_mark_read(request):
     qs.update(is_read=True, read_at=timezone.now())
     # 最新のサマリを返す
     return advice_notifications(request)
+
+
+@api_view(['GET', 'POST'])
+@permission_classes([IsAuthenticated])
+def advice_annotations(request):
+    """注釈一覧/作成。
+    GET: /api/v2/advice/annotations/?resume_id=...&subject=...
+    POST: { resume, subject, anchor_id, start_offset, end_offset, quote?, selector_meta? }
+    権限: 注釈対象の履歴書の所有者 or is_staff
+    """
+    def can_access(user, resume: Resume) -> bool:
+        return user.is_staff or str(resume.user_id) == str(user.id)
+
+    if request.method == 'GET':
+        resume_id = request.GET.get('resume_id')
+        subject = request.GET.get('subject') or 'resume_advice'
+        if not resume_id:
+            return Response({'error': 'resume_id_required'}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            resume = Resume.objects.get(id=resume_id)
+        except Resume.DoesNotExist:
+            return Response({'error': 'resume_not_found'}, status=status.HTTP_404_NOT_FOUND)
+        if not can_access(request.user, resume):
+            return Response({'error': 'forbidden'}, status=status.HTTP_403_FORBIDDEN)
+        qs = Annotation.objects.filter(resume=resume, subject=subject).order_by('created_at')
+        return Response(AnnotationSerializer(qs, many=True).data, status=status.HTTP_200_OK)
+
+    # POST
+    data = request.data or {}
+    try:
+        resume = Resume.objects.get(id=data.get('resume'))
+    except Resume.DoesNotExist:
+        return Response({'error': 'resume_not_found'}, status=status.HTTP_404_NOT_FOUND)
+    if not can_access(request.user, resume):
+        return Response({'error': 'forbidden'}, status=status.HTTP_403_FORBIDDEN)
+
+    ann = Annotation.objects.create(
+        resume=resume,
+        subject=data.get('subject') or 'resume_advice',
+        anchor_id=data.get('anchor_id') or '',
+        start_offset=int(data.get('start_offset') or 0),
+        end_offset=int(data.get('end_offset') or 0),
+        quote=data.get('quote') or '',
+        selector_meta=data.get('selector_meta') or {},
+        created_by=request.user,
+    )
+    return Response(AnnotationSerializer(ann).data, status=status.HTTP_201_CREATED)
+
+
+@api_view(['PATCH'])
+@permission_classes([IsAuthenticated])
+def advice_annotation_detail(request, annotation_id):
+    """注釈の更新（主に解決/再オープン）"""
+    try:
+        ann = Annotation.objects.select_related('resume', 'resume__user').get(id=annotation_id)
+    except Annotation.DoesNotExist:
+        return Response({'error': 'not_found'}, status=status.HTTP_404_NOT_FOUND)
+    if not (request.user.is_staff or str(ann.resume.user_id) == str(request.user.id)):
+        return Response({'error': 'forbidden'}, status=status.HTTP_403_FORBIDDEN)
+
+    data = request.data or {}
+    if 'is_resolved' in data:
+        value = bool(data['is_resolved'])
+        ann.is_resolved = value
+        ann.resolved_at = timezone.now() if value else None
+        ann.resolved_by = request.user if value else None
+    # 位置の微調整（任意）
+    for key in ['start_offset', 'end_offset', 'anchor_id', 'selector_meta', 'quote', 'subject']:
+        if key in data:
+            setattr(ann, key, data[key])
+    ann.save()
+    return Response(AnnotationSerializer(ann).data, status=status.HTTP_200_OK)
 
 
 # ============================================================================
