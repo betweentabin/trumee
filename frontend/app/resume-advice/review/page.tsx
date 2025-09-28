@@ -444,6 +444,7 @@ export default function ResumeReviewPage() {
                     const markSelector = m.annotationId ? `[data-annot-ref=\"ann-${m.annotationId}\"]` : '';
                     const colorOf = (id: string) => { const palette = ['#E56B6F','#6C9BD2','#7FB069','#E6B31E','#A77BD1','#E58F6B']; let h=0; for (let i=0;i<id.length;i++) h=(h*31+id.charCodeAt(i))>>>0; return palette[h%palette.length]; };
                     const color = m.annotationId ? colorOf(m.annotationId) : '#E5A6A6';
+                    const idx = m.annotationId ? (annotations.findIndex(a => String(a.id) === String(m.annotationId)) + 1) : undefined;
                     const lineWidth = Math.max(16, (previewWrapRef.current?.clientWidth || 0) - 240 - 32);
                     return (
                     <div
@@ -469,6 +470,11 @@ export default function ResumeReviewPage() {
                         onMouseEnter={() => { try { if (markSelector) (previewWrapRef.current?.querySelector(markSelector) as HTMLElement)?.classList.add('ring-2','ring-[#E5A6A6]'); } catch {} }}
                         onMouseLeave={() => { try { if (markSelector) (previewWrapRef.current?.querySelector(markSelector) as HTMLElement)?.classList.remove('ring-2','ring-[#E5A6A6]'); } catch {} }}
                       >
+                        <div className="px-2 pt-1">
+                          {typeof idx === 'number' && (
+                            <span className="inline-flex items-center justify-center text-[10px] leading-[10px] rounded-sm px-[4px] py-[1px] mr-2" style={{ background: color + '22', color, border: `1px solid ${color}` }}>{idx}</span>
+                          )}
+                        </div>
                         <div className="flex items-center gap-2 px-3 py-2 border-b text-sm">
                           <div className="h-6 w-6 rounded-full bg-primary-600 text-white flex items-center justify-center text-xs">
                             {m.role === 'advisor' ? 'A' : 'S'}

@@ -47,6 +47,12 @@ const ResumePreview: React.FC<PreviewProps> = ({ userName, jobhistoryList, formV
     return palette[h % palette.length];
   };
   const colorMap: Record<string,string> = Object.fromEntries((annotations||[]).map(a => [a.id, colorOf(a.id)]));
+  const indexMap: Record<string, number> = (() => {
+    const arr = (annotations || []);
+    const map: Record<string, number> = {};
+    arr.forEach((a, i) => { map[a.id] = i + 1; });
+    return map;
+  })();
   const rangesFor = (anchorId: string) => (annotations||[])
       .filter((a) => a.anchor_id === anchorId)
       .map((a) => ({ id: a.id, start: a.start_offset || 0, end: a.end_offset || 0, resolved: a.is_resolved }));
@@ -74,6 +80,7 @@ const ResumePreview: React.FC<PreviewProps> = ({ userName, jobhistoryList, formV
                 text={(jobSummary || selfPR) as string}
                 ranges={rangesFor('job_summary')}
                 colorMap={colorMap}
+                indexMap={indexMap}
                 className="text-sm text-gray-800"
               />
             </div>
@@ -118,6 +125,7 @@ const ResumePreview: React.FC<PreviewProps> = ({ userName, jobhistoryList, formV
                         text={j.work_content || '入力した職務内容が記載されます。'}
                         ranges={rangesFor(`work_content-${key}`)}
                         colorMap={colorMap}
+                        indexMap={indexMap}
                         className="font-sans text-[0.95rem]"
                       />
                     </div>
@@ -140,12 +148,13 @@ const ResumePreview: React.FC<PreviewProps> = ({ userName, jobhistoryList, formV
           <div className="mb-6">
             <h3 className="text-lg font-semibold mb-2">自己PR</h3>
             <div data-annot-id="self_pr">
-              <HighlightableText
-                text={selfPR}
-                ranges={rangesFor('self_pr')}
-                colorMap={colorMap}
-                className="text-sm text-gray-800"
-              />
+            <HighlightableText
+              text={selfPR}
+              ranges={rangesFor('self_pr')}
+              colorMap={colorMap}
+              indexMap={indexMap}
+              className="text-sm text-gray-800"
+            />
             </div>
           </div>
         )}

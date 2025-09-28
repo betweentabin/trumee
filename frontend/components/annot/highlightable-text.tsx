@@ -9,6 +9,7 @@ type Props = {
   ranges: Range[];
   className?: string;
   colorMap?: Record<string, string>; // annotationId -> color (hex or rgba)
+  indexMap?: Record<string, number>; // annotationId -> 1-based index
 };
 
 // Render text with <mark> around the specified ranges. Assumes ranges are within bounds.
@@ -23,7 +24,7 @@ const toRGBA = (c?: string, alpha = 1) => {
   return `rgba(${r},${g},${b},${alpha})`;
 };
 
-const HighlightableText: React.FC<Props> = ({ text, ranges, className, colorMap = {} }) => {
+const HighlightableText: React.FC<Props> = ({ text, ranges, className, colorMap = {}, indexMap = {} }) => {
   const len = text?.length ?? 0;
   const safeRanges = Array.isArray(ranges)
     ? [...ranges]
@@ -41,6 +42,7 @@ const HighlightableText: React.FC<Props> = ({ text, ranges, className, colorMap 
     const marked = text.slice(r.start, r.end);
     const baseColor = colorMap[r.id];
     const underline = r.resolved ? toRGBA(baseColor, 0.35) : toRGBA(baseColor, 0.85);
+    const idx = indexMap[r.id];
     pieces.push(
       <mark
         key={`m-${r.id}`}
@@ -49,6 +51,14 @@ const HighlightableText: React.FC<Props> = ({ text, ranges, className, colorMap 
         style={{ backgroundColor: 'transparent', boxShadow: `inset 0 -2px 0 ${underline}` }}
       >
         {marked}
+        {typeof idx === 'number' && (
+          <sup
+            className="ml-1 inline-flex items-center justify-center align-super text-[10px] leading-[10px] rounded-sm px-[4px] py-[1px]"
+            style={{ background: toRGBA(baseColor, 0.15), color: baseColor, border: `1px solid ${toRGBA(baseColor, 0.7)}` }}
+          >
+            {idx}
+          </sup>
+        )}
       </mark>
     );
     cursor = r.end;
