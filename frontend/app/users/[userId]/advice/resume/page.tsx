@@ -324,14 +324,26 @@ export default function ResumeAdvicePage() {
               )}
               {messages.map((m) => {
                 const isMine = me && String(m.sender) === String(me.id);
+                const colorOf = (id: string) => { const palette = ['#E56B6F','#6C9BD2','#7FB069','#E6B31E','#A77BD1','#E58F6B']; let h=0; for (let i=0;i<id.length;i++) h=(h*31+id.charCodeAt(i))>>>0; return palette[h%palette.length]; };
+                const id = (m as any).annotationId as string | undefined;
+                const color = id ? colorOf(id) : undefined;
+                const idx = id ? (annotations.findIndex(a => String(a.id) === String(id)) + 1) : undefined;
                 return (
                   <div
                     key={m.id}
-                    className={`rounded-lg px-3 md:px-4 py-2 md:py-3 text-sm md:text-base max-w-[85%] break-words shadow-sm ${
-                      isMine ? "bg-[#4B3A2F] text-white self-end" : "bg-[#F5F5F5] text-gray-900 self-start border border-gray-200"
+                    className={`rounded-lg px-3 md:px-4 py-2 md:py-3 text-sm md:text-base max-w-[85%] break-words shadow-sm cursor-pointer ${
+                      isMine ? "bg-[#4B3A2F] text-white self-end" : "bg-[#F5F5F5] text-gray-900 self-start border"
                     }`}
-                    style={{ alignSelf: isMine ? "flex-end" : "flex-start" }}
+                    style={{ alignSelf: isMine ? "flex-end" : "flex-start", ...(color && !isMine ? { borderColor: color, boxShadow: `inset 4px 0 0 ${color}` } : {}) }}
+                    onClick={() => {
+                      if (!id) return; const el = previewWrapRef.current?.querySelector(`[data-annot-ref=\\"ann-${id}\\"]`) as HTMLElement | null; if (el && previewWrapRef.current) {
+                        const top = markTops[id] ?? 0; previewWrapRef.current.scrollTo({ top: Math.max(0, top - 40), behavior: 'smooth' }); el.classList.add('ring-2','ring-[#E5A6A6]'); setTimeout(() => el.classList.remove('ring-2','ring-[#E5A6A6]'), 1200);
+                      }
+                    }}
                   >
+                    {idx && (
+                      <span className="inline-flex items-center justify-center text-[10px] leading-[10px] rounded-sm px-[4px] py-[1px] mr-2" style={ color ? { background: color + '22', color, border: `1px solid ${color}` } : undefined }>{idx}</span>
+                    )}
                     <div>{m.body || m.content}</div>
                     <div className="text-[11px] opacity-70 mt-1">{new Date(m.created_at).toLocaleString()}</div>
                   </div>

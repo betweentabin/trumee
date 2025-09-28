@@ -560,19 +560,43 @@ export default function ResumeReviewPage() {
 
             {/* Messages */}
             <div className="flex-1 overflow-auto p-3 space-y-3 bg-secondary-50">
-              {messages.map((m) => (
-                <div key={m.id} className={`max-w-[90%] w-fit ${m.role === 'seeker' ? 'ml-auto' : ''}`}>
-                  <div
-                    className={`px-3 py-2 rounded-md text-sm shadow-sm ${
-                      m.role === 'seeker'
-                        ? 'bg-secondary-800 text-white'
-                        : 'bg-white text-secondary-800 border'
-                    }`}
-                  >
-                    {m.body || m.text}
+              {messages.map((m) => {
+                const colorOf = (id: string) => { const palette = ['#E56B6F','#6C9BD2','#7FB069','#E6B31E','#A77BD1','#E58F6B']; let h=0; for (let i=0;i<id.length;i++) h=(h*31+id.charCodeAt(i))>>>0; return palette[h%palette.length]; };
+                const color = (m as any).annotationId ? colorOf((m as any).annotationId) : undefined;
+                const idx = (m as any).annotationId ? (annotations.findIndex(a => String(a.id) === String((m as any).annotationId)) + 1) : undefined;
+                const onJump = () => {
+                  const id = (m as any).annotationId as string | undefined;
+                  if (!id) return;
+                  const sel = previewWrapRef.current?.querySelector(`[data-annot-ref=\\"ann-${id}\\"]`) as HTMLElement | null;
+                  if (sel && previewWrapRef.current) {
+                    const top = markTops[id] ?? 0;
+                    previewWrapRef.current.scrollTo({ top: Math.max(0, top - 40), behavior: 'smooth' });
+                    sel.classList.add('ring-2','ring-[#E5A6A6]');
+                    setTimeout(() => sel.classList.remove('ring-2','ring-[#E5A6A6]'), 1200);
+                  }
+                };
+                return (
+                  <div key={m.id} className={`max-w-[90%] w-fit ${m.role === 'seeker' ? 'ml-auto' : ''}`}>
+                    <div
+                      onClick={onJump}
+                      className={`px-3 py-2 rounded-md text-sm shadow-sm cursor-pointer ${
+                        m.role === 'seeker'
+                          ? 'bg-secondary-800 text-white'
+                          : 'bg-white text-secondary-800 border'
+                      }`}
+                      style={color ? { borderColor: color, boxShadow: `inset 4px 0 0 ${color}` } : undefined}
+                      title={idx ? `注釈 #${idx}` : undefined}
+                    >
+                      {idx && (
+                        <span className="inline-flex items-center justify-center text-[10px] leading-[10px] rounded-sm px-[4px] py-[1px] mr-2" style={ color ? { background: color + '22', color, border: `1px solid ${color}` } : undefined }>
+                          {idx}
+                        </span>
+                      )}
+                      {m.body || m.text}
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
               <div ref={endRef} />
             </div>
 
