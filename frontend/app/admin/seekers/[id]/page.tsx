@@ -495,7 +495,7 @@ export default function AdminSeekerDetailPage() {
                   </div>
                 ) : (
                   <div className="max-h-[600px] overflow-y-auto">
-                    <div className="relative pr-[260px] mx-auto w-full max-w-3xl" ref={previewWrapRef} onMouseUp={handlePreviewMouseUp}>
+                    <div className="relative pr-[260px] w-full" ref={previewWrapRef} onMouseUp={handlePreviewMouseUp}>
                       <ResumePreview
                         userName={resumePreview.userName || user?.full_name}
                         jobhistoryList={resumePreview.jobhistoryList}
@@ -514,7 +514,7 @@ export default function AdminSeekerDetailPage() {
                           const colorOf = (id: string) => { const palette = ['#E56B6F','#6C9BD2','#7FB069','#E6B31E','#A77BD1','#E58F6B']; let h=0; for (let i=0;i<id.length;i++) h=(h*31+id.charCodeAt(i))>>>0; return palette[h%palette.length]; };
                           const color = m.annotationId ? colorOf(m.annotationId) : '#E5A6A6';
                           const idx = m.annotationId ? (annotations.findIndex(a => String(a.id) === String(m.annotationId)) + 1) : undefined;
-                          const lineWidth = Math.max(16, (previewWrapRef.current?.clientWidth || 0) - 240 - 32);
+                          // connector line removed
                           return (
                           <div key={m.id} className="absolute right-[-240px] w-[220px] pointer-events-auto" style={{ top: Math.max(0, topGuess - 8) }} onClick={() => {
                             if (m.annotationId) {
@@ -526,7 +526,7 @@ export default function AdminSeekerDetailPage() {
                               }
                             }
                           }}>
-                            <div className="absolute right-[220px] h-[2px] opacity-80" style={{ background: color, width: `${lineWidth}px`, top: '18px' }} />
+                            {/* connector line removed */}
                             <div className="border bg-white rounded-md shadow-sm" style={{ borderColor: color }} onMouseEnter={() => { try { if (markSelector) (previewWrapRef.current?.querySelector(markSelector) as HTMLElement)?.classList.add('ring-2','ring-[#E5A6A6]'); } catch {} }} onMouseLeave={() => { try { if (markSelector) (previewWrapRef.current?.querySelector(markSelector) as HTMLElement)?.classList.remove('ring-2','ring-[#E5A6A6]'); } catch {} }}>
                               <div className="px-2 pt-1">
                                 {typeof idx === 'number' && (

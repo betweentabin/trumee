@@ -399,7 +399,7 @@ export default function ResumeReviewPage() {
           <section className="lg:col-span-8 bg-white border rounded-lg shadow-sm p-4 overflow-auto max-h-[75vh]">
             {(overridePreview || selected) ? (
               <div
-                className="mx-auto max-w-3xl relative pr-[260px]"
+                className="relative pr-[260px] w-full"
                 ref={previewWrapRef}
                 onMouseUp={handlePreviewMouseUp}
               >
@@ -413,6 +413,7 @@ export default function ResumeReviewPage() {
                     skills={overridePreview.skills}
                     education={overridePreview.education}
                     annotations={annotations}
+                    className="w-full"
                   />
                 ) : (
                   (() => {
@@ -432,6 +433,7 @@ export default function ResumeReviewPage() {
                         skills={skillsArray}
                         education={Array.isArray((extra as any)?.education) ? (extra as any).education : []}
                         annotations={annotations}
+                        className="w-full"
                       />
                     );
                   })()
@@ -445,7 +447,7 @@ export default function ResumeReviewPage() {
                     const colorOf = (id: string) => { const palette = ['#E56B6F','#6C9BD2','#7FB069','#E6B31E','#A77BD1','#E58F6B']; let h=0; for (let i=0;i<id.length;i++) h=(h*31+id.charCodeAt(i))>>>0; return palette[h%palette.length]; };
                     const color = m.annotationId ? colorOf(m.annotationId) : '#E5A6A6';
                     const idx = m.annotationId ? (annotations.findIndex(a => String(a.id) === String(m.annotationId)) + 1) : undefined;
-                    const lineWidth = Math.max(16, (previewWrapRef.current?.clientWidth || 0) - 240 - 32);
+                    // connector line removed (numbers are sufficient)
                     return (
                     <div
                       key={m.id}
@@ -462,8 +464,7 @@ export default function ResumeReviewPage() {
                         }
                       }}
                     >
-                      {/* connector line from content to bubble */}
-                      <div className="absolute right-[220px] h-[2px] opacity-80" style={{ background: color, width: `${lineWidth}px`, top: '18px' }} />
+                      {/* connector line removed */}
                       <div
                         className="border bg-white rounded-md shadow-sm"
                         style={{ borderColor: color }}

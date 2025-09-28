@@ -227,7 +227,7 @@ export default function ResumeAdvicePage() {
         <div className="flex flex-col md:flex-row h-full w-full">
           {/* Left: Resume preview */}
           <div className="flex-1 flex flex-col items-start justify-start bg-white p-4 md:p-8 border-b md:border-b-0 md:border-r border-black min-h-[500px] md:min-h-[900px] overflow-y-auto">
-            <div className="relative pr-[260px] w-full max-w-3xl mx-auto" ref={previewWrapRef} onMouseUp={handlePreviewMouseUp}>
+            <div className="relative pr-[260px] w-full" ref={previewWrapRef} onMouseUp={handlePreviewMouseUp}>
               <ResumePreview
                 userName={resumePreview.userName}
                 jobhistoryList={resumePreview.jobhistoryList}
@@ -247,7 +247,7 @@ export default function ResumeAdvicePage() {
                   const colorOf = (id: string) => { const palette = ['#E56B6F','#6C9BD2','#7FB069','#E6B31E','#A77BD1','#E58F6B']; let h=0; for (let i=0;i<id.length;i++) h=(h*31+id.charCodeAt(i))>>>0; return palette[h%palette.length]; };
                   const color = annotationId ? colorOf(annotationId) : '#E5A6A6';
                   const idx = annotationId ? (annotations.findIndex(a => String(a.id) === String(annotationId)) + 1) : undefined;
-                  const lineWidth = Math.max(16, (previewWrapRef.current?.clientWidth || 0) - 240 - 32);
+                  // connector line removed
                   return (
                   <div key={m.id} className="absolute right-[-240px] w-[220px] pointer-events-auto" style={{ top: Math.max(0, topGuess - 8) }} onClick={() => {
                     if (annotationId) {
@@ -259,7 +259,7 @@ export default function ResumeAdvicePage() {
                       }
                     }
                   }}>
-                    <div className="absolute right-[220px] h-[2px] opacity-80" style={{ background: color, width: `${lineWidth}px`, top: '18px' }} />
+                    {/* connector line removed */}
                     <div className="border bg-white rounded-md shadow-sm" style={{ borderColor: color }}>
                       <div className="px-2 pt-1">
                         {typeof idx === 'number' && (
