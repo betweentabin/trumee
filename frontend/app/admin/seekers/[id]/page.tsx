@@ -254,7 +254,17 @@ export default function AdminSeekerDetailPage() {
         qs.set('user_id', String(id));
         if (annotationFilter) qs.set('annotation_id', annotationFilter);
         const res = await fetch(buildApiUrl(`/advice/threads/?${qs.toString()}`), { headers: getApiHeaders(token) });
-        if (res.ok) setThreads(await res.json());
+        if (res.ok) {
+          const data = await res.json();
+          setThreads(data);
+          if (Array.isArray(data) && data.length > 0) {
+            const tid = data[0]?.thread_id ? String(data[0].thread_id) : null;
+            if (tid) {
+              setActiveThread(tid);
+              setDidAutoSelectThread(true);
+            }
+          }
+        }
       } catch {}
     };
     run();
@@ -676,7 +686,22 @@ export default function AdminSeekerDetailPage() {
                               )}
                               <div className="px-3 py-2 text-sm text-secondary-800 whitespace-pre-wrap">{m.body || m.content}</div>
                               <div className="px-3 pb-2 text-xs text-primary-700 flex gap-3">
-                                <button className="hover:underline">返信</button>
+                                <button
+                                  className="hover:underline"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    if ((m as any).annotationId) {
+                                      setAnnotationFilter(String((m as any).annotationId));
+                                      setActiveThread(null);
+                                      setDidAutoSelectThread(false);
+                                      // スレッドツールバーへ軽くスクロール
+                                      try {
+                                        const panel = document.querySelector('#admin-thread-toolbar');
+                                        panel && (panel as HTMLElement).scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                                      } catch {}
+                                    }
+                                  }}
+                                >返信</button>
                                 <button className={`hover:underline ${!m.annotationId ? 'opacity-40 cursor-not-allowed' : ''}`} onClick={(e) => { e.stopPropagation(); resolveAnnotation(m.annotationId); }} disabled={!m.annotationId}>解決</button>
                               </div>
                             </div>
@@ -715,17 +740,17 @@ export default function AdminSeekerDetailPage() {
               <div className="w-full md:w-[360px] p-6">
                 <div className="text-lg font-semibold mb-3">職務内容について</div>
                 {/* Threads toolbar */}
-                <div className="sticky top-0 z-[1] bg-white/80 border rounded-md p-2 mb-2 flex items-center gap-2">
+                <div id="admin-thread-toolbar" className="sticky top-0 z-[1] bg-white/80 rounded-md p-2 mb-2 flex items-center gap-2 overflow-x-auto">
                   <select value={annotationFilter} onChange={(e) => { setAnnotationFilter(e.target.value); setActiveThread(null); setDidAutoSelectThread(false); }} className="rounded border px-2 py-1 text-xs">
                     <option value="">注釈: すべて</option>
                     {annotations.map((a: any, i: number) => (<option key={String(a.id)} value={String(a.id)}>#{i+1} - {a.anchor_id}</option>))}
                   </select>
-                  <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as any)} className="rounded border px-2 py-1 text-xs">
+                  <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as any)} className="rounded border px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-gray-700 ring-inset">
                     <option value="all">全件</option>
                     <option value="unresolved">未解決のみ</option>
                     <option value="resolved">解決済みのみ</option>
                   </select>
-                  <input value={threadSearch} onChange={(e) => setThreadSearch(e.target.value)} placeholder="検索..." className="ml-auto rounded border px-2 py-1 text-xs w-[150px]" />
+                  <input value={threadSearch} onChange={(e) => setThreadSearch(e.target.value)} placeholder="検索..." className="ml-auto rounded border px-2 py-1 text-xs w-[150px] focus:outline-none focus:ring-2 focus:ring-gray-700 ring-inset" />
                 </div>
 
                 <div className="h-[460px] overflow-y-auto border rounded-md p-3 space-y-2 bg-gray-50">

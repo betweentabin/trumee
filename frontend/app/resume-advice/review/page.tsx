@@ -560,6 +560,14 @@ export default function ResumeReviewPage() {
         if (res.ok) {
           const data = await res.json();
           setThreads(data);
+          // Auto pick first thread when filtering by annotation
+          if (Array.isArray(data) && data.length > 0) {
+            const tid = data[0]?.thread_id ? String(data[0].thread_id) : null;
+            if (tid) {
+              setActiveThread(tid);
+              setDidAutoSelectThread(true);
+            }
+          }
         }
       } catch {}
     };
@@ -1053,7 +1061,7 @@ export default function ResumeReviewPage() {
               <select
                 value={annotationFilter}
                 onChange={(e) => { setAnnotationFilter(e.target.value); setActiveThread(null); setDidAutoSelectThread(false); }}
-                className="ml-auto rounded border px-2 py-1 text-xs"
+                className="ml-auto rounded border px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-primary-600 ring-inset"
                 title="注釈番号で絞り込み"
               >
                 <option value="">注釈: すべて</option>
@@ -1068,7 +1076,7 @@ export default function ResumeReviewPage() {
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value as any)}
-                className="rounded border px-2 py-1 text-xs"
+                className="rounded border px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-primary-600 ring-inset"
                 title="ステータスで絞り込み"
               >
                 <option value="all">全件</option>
@@ -1096,7 +1104,7 @@ export default function ResumeReviewPage() {
                   }
                 }}
                 placeholder="検索..."
-                className="rounded border px-2 py-1 text-xs w-[160px]"
+                className="rounded border px-2 py-1 text-xs w-[160px] focus:outline-none focus:ring-2 focus:ring-primary-600 ring-inset"
               />
             </div>
             ) : (
