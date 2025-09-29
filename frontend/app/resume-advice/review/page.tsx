@@ -415,11 +415,14 @@ export default function ResumeReviewPage() {
       const res = await fetch(`${apiUrl}/api/v2/resumes/${encodeURIComponent(String(selected.id))}/`, {
         method: 'PATCH',
         headers: { ...getAuthHeaders() },
-        body: JSON.stringify({ extra_data: { ...(extra || {}), baseline } }),
+        body: JSON.stringify({
+          self_pr: editSelfPr,
+          extra_data: { ...(extra || {}), workExperiences, jobSummary: editJobSummary, baseline },
+        }),
       });
       if (res.ok) {
         const updated = await res.json();
-        setSelected((prev: any) => ({ ...(prev || {}), extra_data: updated.extra_data }));
+        setSelected((prev: any) => ({ ...(prev || {}), ...updated }));
         setFormError(null);
       }
     } catch {
