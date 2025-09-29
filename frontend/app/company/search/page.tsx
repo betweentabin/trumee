@@ -7,6 +7,7 @@ import { useCreateScout, useCreateApplication } from '@/hooks/useApi';
 import apiClient from '@/lib/api-v2-client';
 import type { SeekerProfile } from '@/types/api-v2';
 import { Search, Filter, MapPin, Briefcase, Calendar, Send, UserPlus, X } from 'lucide-react';
+import { anonymizeUserLabel, anonymizeInitial } from '@/utils/anonymize';
 import toast from 'react-hot-toast';
 
 // v2 API の SeekerProfile を利用
@@ -71,7 +72,7 @@ export default function CompanySearchPage() {
   const handleScoutClick = (seeker: SeekerProfile) => {
     setSelectedSeeker(seeker);
     setShowScoutModal(true);
-    setScoutMessage(`${seeker.full_name || '候補者'} 様
+    setScoutMessage(`候補者様
 
 この度は、貴方のプロフィールを拝見し、ぜひ弊社の求人にご興味を持っていただければと思い、ご連絡させていただきました。
 
@@ -242,7 +243,7 @@ ${authState.user?.company_name || '弊社'}では、現在新しいメンバー�
 
               <div className="mb-4 p-3 bg-gray-50 rounded-lg">
                 <p className="text-sm text-gray-600">送信先:</p>
-                <p className="font-semibold text-gray-900">{selectedSeeker.full_name}</p>
+                <p className="font-semibold text-gray-900">{anonymizeUserLabel(selectedSeeker)}</p>
               </div>
 
               <div className="mb-4">
@@ -298,11 +299,11 @@ function SeekerCard({
           <div className="flex items-start gap-4">
             <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center">
               <span className="text-2xl font-semibold text-gray-600">
-                {seeker.full_name?.charAt(0) || '?'}
+                {anonymizeInitial()}
               </span>
             </div>
             <div className="flex-1">
-              <h3 className="text-lg font-semibold text-gray-900">{seeker.full_name || '名前未設定'}</h3>
+              <h3 className="text-lg font-semibold text-gray-900">{anonymizeUserLabel(seeker)}</h3>
               <div className="flex flex-wrap gap-4 mt-2 text-sm text-gray-600">
                 {seeker.prefecture && (
                   <div className="flex items-center gap-1">

@@ -1,6 +1,7 @@
 'use client';
 
 import { FaUser, FaEnvelope, FaClock, FaEye, FaFileAlt, FaCheck, FaTimes } from 'react-icons/fa';
+import { anonymizeUserLabel } from '@/utils/anonymize';
 
 interface AppliedCardProps {
   applicant: {
@@ -55,20 +56,19 @@ export default function AppliedCard({
     });
   };
 
+  const displayName = anonymizeUserLabel(applicant);
+
   return (
     <div className="border rounded-lg p-4 hover:shadow-md transition-shadow">
       <div className="flex items-start justify-between">
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-2">
             <FaUser className="text-gray-400" />
-            <h3 className="font-semibold text-lg">{applicant.full_name || applicant.username}</h3>
+            <h3 className="font-semibold text-lg">{displayName}</h3>
             {getStatusBadge(status)}
           </div>
           
-          <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
-            <FaEnvelope className="text-gray-400" />
-            <span>{applicant.email}</span>
-          </div>
+          {/* メール等の個人情報は企業一覧では非表示 */}
 
           {resume && (
             <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">

@@ -150,6 +150,88 @@
 
 ---
 
-## 次の一手（合意後に着手）
-- バックエンドのAnnotationモデル + APIを実装し、フロントを新APIに切替。
-- ハイライトとコネクタ線（SVG or CSS）を実装して、スクショ同等の外観にする。
+## 追加計画: スレッド化 + 左右分割編集 + パフォーマンス
+
+### ① コメントのスレッド化（返信可能）
+- 目的: 注釈ごとに会話をまとめ、返信（ネスト）可能にする。
+
+#### モデル/マイグレーション
+- [ ] `Message.parent` を追加（nullable, FK=Message, related_name='replies'）
+- 既存 `Message.annotation` はそのまま利用（親子ともに同じ `annotation_id` を持つ）
+
+#### API 拡張
+- [ ] GET `/api/v2/advice/messages/?annotation_id=...` で対象注釈の全メッセージを返却（parent→子の順）
+- [ ] POST `/api/v2/advice/messages/` に `parent_id` を受け付け、返信を作成
+- [ ] GET `/api/v2/advice/threads/?resume_id=...&subject=...` で注釈ごとのサマリ（最新1件＋件数・未解決）
+
+#### フロントUI
+- [ ] 右パネルに「スレッド一覧（色＋番号＋最新一言＋未解決バッジ）」
+- [ ] スレッドクリックで展開→親子メッセージのネスト表示＋返信入力フォーム
+- [ ] 「未解決のみ」フィルタ＋検索（任意）
+
+### ② 左右分割編集（左：基準／右：編集）
+- 目的: 左に公開中（または固定スナップショット）のプレビュー、右に編集フォーム（ドラフト）。
+
+#### データ方針
+- 最小構成（推奨・短期）
+  - [ ] 入室時に `Resume.extra_data.baseline` に基準を保存（未作成の場合のみ）
+  - [ ] 右ペインは現在のレコードをフォーム編集（PATCH）。
+  - [ ] 「取消」で baseline→フォームへ復元、「公開反映」で baseline を上書き
+- 正攻法（長期）
+  - [ ] `ResumeSnapshot`（FK=Resume, payload(JSON), created_at）を新設し、履歴を保持
+  - [ ] 左ペインは snapshot を選択表示、右は編集中ドラフト→公開反映で新スナップショット作成
+
+#### フロントUI
+- [ ] 2カラム：左プレビュー（基準）、右フォーム（項目編集、自己PR/職歴(tasks) など）
+- [ ] 保存/取消/公開反映ボタンを上部に配置
+- [ ] 差分強調（任意）：左と右の文面差を淡色下線等でハイライト
+
+### ③ パフォーマンス対策（通信/計測/描画）
+- 取得・通信
+  - [ ] threads APIで概要だけ取得→展開時に詳細フェッチ
+  - [ ] react-query の staleTime/GC を調整して重複GETを削減
+  - [ ] メッセージはページネーション/「もっと見る」で段階表示
+- 計測の抑制
+  - [ ] マーク位置計測は注釈変化＋Resize時のみ、debounce（例: 150ms）
+  - [ ] IntersectionObserver/ResizeObserver で可視領域外は計測スキップ
+- 再レンダリング低減
+  - [ ] プレビューをセクション単位で分割し React.memo 化（職務要約/自己PR/各職歴）
+  - [ ] 色/番号・マッピングは useMemo 化
+- 将来
+  - [ ] SSE/WebSocket（new_message, annotation_resolved）でポーリング削減
+  - [ ] DB index 再確認: `Message(annotation, created_at)`, `Annotation(resume, subject)`
+
+---
+
+## フェーズ別チェックリスト
+
+### フェーズ1：スレッド基盤（小工数/大効果）
+- [ ] BE: `Message.parent` 追加 + API（annotation_id/parent_id）
+- [ ] FE: スレッド一覧 + 展開時フェッチ + 返信UI
+- [ ] FE: 未解決のみフィルタ + 検索（任意）
+
+### フェーズ2：左右分割（初版）
+- [ ] FE: 左=基準、右=編集フォームの2ペイン
+- [ ] FE: 保存/取消/公開反映ボタン
+- [ ] BE: baseline（extra_data） 保存/復元の補助関数
+
+### フェーズ3：差分/履歴（任意）
+- [ ] BE: `ResumeSnapshot` 実装 + API
+- [ ] FE: スナップショット切替 + 差分ハイライト
+
+### フェーズ4：パフォーマンス仕上げ
+- [ ] threads 概要化 + on-demand 詳細取得
+- [ ] 計測debounce + Observer + メモ化
+- [ ] SSE/WS 置換（必要に応じて）
+
+---
+
+## 受け入れ条件（Acceptance Criteria）
+- スレッド化
+  - 注釈ごとにスレッドがまとまり、返信が可能。展開/折りたたみできる
+  - スレッド/メッセージクリックでプレビュー箇所へジャンプし、リング強調
+- 左右分割
+  - 左が基準、右が編集。保存/取消/公開反映が機能
+  - 少なくとも `self_pr` と `Experience.tasks` の編集・保存が安定
+- パフォーマンス
+  - 一覧負荷が増えても、初回描画と操作体感に劣化がない（threads概要化＋計測debounceで担保）

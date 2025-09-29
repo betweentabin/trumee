@@ -1,5 +1,6 @@
 import React from 'react';
 import DefaultButton from '@/components/pure/button/default';
+import { anonymizeUserLabel } from '@/utils/anonymize';
 
 interface SeekerCardProps {
   detail: {
@@ -19,8 +20,7 @@ interface SeekerCardProps {
 
 const SeekerCard: React.FC<SeekerCardProps> = ({ detail, onDetail, onScout, isScouting, isScouted }) => {
   const seeker = detail;
-  const anonymize = (id?: string | number) => `匿名ユーザー${id ? ` #${String(id).slice(-4)}` : ''}`;
-  const displayName = seeker.full_name && seeker.full_name.trim() ? seeker.full_name : anonymize(seeker.id);
+  const displayName = anonymizeUserLabel(seeker);
 
   const formatSalary = (value?: number | string) => {
     if (value === undefined || value === null || value === ('' as any)) return undefined;

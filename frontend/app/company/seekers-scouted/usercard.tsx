@@ -1,6 +1,7 @@
 'use client';
 
 import { FaUser, FaEnvelope, FaClock, FaEye } from 'react-icons/fa';
+import { anonymizeUserLabel } from '@/utils/anonymize';
 
 interface UserCardProps {
   user: {
@@ -24,8 +25,7 @@ export default function UserCard({
   onDetail,
   onCancel,
 }: UserCardProps) {
-  const anonymize = (id?: string | number) => `匿名ユーザー${id ? ` #${String(id).slice(-4)}` : ''}`;
-  const displayName = (user?.full_name && user.full_name.trim()) || user?.username || anonymize(user?.id);
+  const displayName = anonymizeUserLabel(user);
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'sent':

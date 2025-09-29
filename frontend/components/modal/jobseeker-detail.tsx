@@ -12,6 +12,7 @@ import ResumePreview from "../pure/resume/preview";
 import { prefecturesJa } from "@/app/content/prefectures";
 import { sex_options } from "../content/common/sex";
 import { getJobTypeNames } from "../helpers/jobTypeHelper";
+import { anonymizeUserLabel } from '@/utils/anonymize';
 
 interface Props {
   detail: any;
@@ -144,10 +145,7 @@ const JobSeekerDetailModal = ({
       ? `${detail.user.firstName} ${detail.user.lastName}`
       : undefined) || (detail?.full_name as string) || '';
 
-  const anonymize = (id?: string | number) => `匿名ユーザー${id ? ` #${String(id).slice(-4)}` : ''}`;
-  const displayName = (detail?.full_name && String(detail.full_name).trim())
-    || (detail?.username && String(detail.username).trim())
-    || anonymize(detail?.id);
+  const displayName = anonymizeUserLabel(detail);
 
   const formatSalary = (value?: number | string) => {
     if (value === undefined || value === null || value === ('' as any)) return undefined;
