@@ -1619,26 +1619,13 @@ def advice_threads(request):
         return Response(result, status=status.HTTP_200_OK)
 
 
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def advice_notifications(request):
-    """管理者→ユーザー向けアドバイス系メッセージの未読サマリを返す。
-
-    subjects = ['resume_advice', 'advice', 'interview']
-    返却例:
-    {
-      'resume_advice': { 'unread': 2, 'latest_at': '2025-09-13T12:34:56Z' },
-      'advice': { 'unread': 0, 'latest_at': null },
-      'interview': { 'unread': 1, 'latest_at': '...' },
-      'total_unread': 3
-    }
-    """
+def _advice_notifications_summary(user):
     subjects = ['resume_advice', 'advice', 'interview']
     data = {}
     total = 0
     for sub in subjects:
         qs = Message.objects.filter(
-            receiver=request.user,
+            receiver=user,
             subject=sub,
             is_read=False,
             sender__is_staff=True,
@@ -1651,7 +1638,13 @@ def advice_notifications(request):
         }
         total += count
     data['total_unread'] = total
-    return Response(data, status=status.HTTP_200_OK)
+    return data
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def advice_notifications(request):
+    """管理者→ユーザー向けアドバイス系メッセージの未読サマリを返す。"""
+    return Response(_advice_notifications_summary(request.user), status=status.HTTP_200_OK)
 
 
 @api_view(['POST'])
@@ -1672,8 +1665,8 @@ def advice_mark_read(request):
         qs = qs.filter(subject=subject)
     # 既読更新
     qs.update(is_read=True, read_at=timezone.now())
-    # 最新のサマリを返す
-    return advice_notifications(request)
+    # 最新のサマリを返す（内部ヘルパーを直接使用）
+    return Response(_advice_notifications_summary(request.user), status=status.HTTP_200_OK)
 
 
 @api_view(['GET', 'POST'])

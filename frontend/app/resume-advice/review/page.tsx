@@ -239,10 +239,18 @@ export default function ResumeReviewPage() {
 
   const isOwner = useMemo(() => {
     const uid = getUserInfo()?.uid;
+    // /users/[userId] ルートではURLのユーザーと一致で判定
+    if (userIdFromRoute) return !!(uid && String(uid) === String(userIdFromRoute));
+    // selected があれば所有者IDで判定
     if (selected?.user) return String(selected.user) === String(uid);
-    // overridePreview path: treat as not owner by default
-    return false;
-  }, [selected]);
+    // デフォルト（自分の画面想定）
+    return true;
+  }, [selected, userIdFromRoute]);
+
+  // 非所有者は編集モードを強制的にコメントに戻す
+  useEffect(() => {
+    if (!isOwner && mode === 'edit') setMode('comments');
+  }, [isOwner, mode]);
 
   const currentWorkExperiences = useMemo(() => {
     const extra = selected?.extra_data || {};
@@ -335,7 +343,7 @@ export default function ResumeReviewPage() {
   }, [mode, selected]);
 
   const saveDraft = async () => {
-    if (!selected?.id || !isOwner) return;
+    if (!selected?.id || !isOwner) { setError('編集は本人のみ可能です'); return; }
     const v = validateEdit();
     if (v) { setFormError(v); return; }
     setLoading(true);
@@ -370,7 +378,7 @@ export default function ResumeReviewPage() {
   };
 
   const cancelToBaseline = async () => {
-    if (!selected?.id || !isOwner) return;
+    if (!selected?.id || !isOwner) { setError('編集は本人のみ可能です'); return; }
     const extra = selected.extra_data || {};
     const baseline = (extra as any).baseline;
     if (!baseline) return;
@@ -400,7 +408,7 @@ export default function ResumeReviewPage() {
   };
 
   const publishBaseline = async () => {
-    if (!selected?.id || !isOwner) return;
+    if (!selected?.id || !isOwner) { setError('編集は本人のみ可能です'); return; }
     const v = validateEdit();
     if (v) { setFormError(v); return; }
     setLoading(true);
@@ -1029,18 +1037,15 @@ export default function ResumeReviewPage() {
             <div className="bg-primary-600 text-white px-4 py-3 flex items-center justify-between">
               <div className="font-semibold">{mode === 'edit' ? '編集' : sectionTitle}</div>
               <div className="flex items-center gap-2">
-                {isOwner && (
-                  <>
-                    <button
-                      className={`text-xs px-2 py-1 rounded ${mode === 'comments' ? 'bg-white text-primary-700' : 'bg-primary-500 text-white'}`}
-                      onClick={() => setMode('comments')}
-                    >コメント</button>
-                    <button
-                      className={`text-xs px-2 py-1 rounded ${mode === 'edit' ? 'bg-white text-primary-700' : 'bg-primary-500 text-white'}`}
-                      onClick={() => setMode('edit')}
-                    >編集</button>
-                  </>
-                )}
+                <button
+                  className={`text-xs px-2 py-1 rounded ${mode === 'comments' ? 'bg-white text-primary-700' : 'bg-primary-500 text-white'}`}
+                  onClick={() => setMode('comments')}
+                >コメント</button>
+                <button
+                  className={`text-xs px-2 py-1 rounded ${mode === 'edit' ? 'bg-white text-primary-700' : 'bg-primary-500 text-white'} ${!isOwner ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  onClick={() => { if (isOwner) setMode('edit'); }}
+                  title={isOwner ? '編集' : '編集は本人のみ可能です'}
+                >編集</button>
                 {mode === 'comments' && (
                   <button className="opacity-90 hover:opacity-100" onClick={() => searchRef.current?.focus()}>
                     <FaSearch />
@@ -1124,9 +1129,10 @@ export default function ResumeReviewPage() {
             </div>
             ) : (
             <div className="border-b px-3 py-2 bg-white/80 sticky top-0 z-[1] flex items-center gap-2">
-              <button onClick={saveDraft} disabled={loading} className="text-xs px-2 py-1 rounded bg-primary-600 text-white hover:bg-primary-500">保存</button>
-              <button onClick={cancelToBaseline} disabled={loading} className="text-xs px-2 py-1 rounded border">取消（基準へ復元）</button>
-              <button onClick={publishBaseline} disabled={loading} className="text-xs px-2 py-1 rounded border">公開反映（基準更新）</button>
+              <button onClick={saveDraft} disabled={loading || !isOwner} className="text-xs px-2 py-1 rounded bg-primary-600 text-white hover:bg-primary-500 disabled:opacity-50">保存</button>
+              <button onClick={cancelToBaseline} disabled={loading || !isOwner} className="text-xs px-2 py-1 rounded border disabled:opacity-50">取消（基準へ復元）</button>
+              <button onClick={publishBaseline} disabled={loading || !isOwner} className="text-xs px-2 py-1 rounded border disabled:opacity-50">公開反映（基準更新）</button>
+              {!isOwner && <span className="ml-2 text-xs text-secondary-600">編集は本人のみ</span>}
             </div>
             )}
 
