@@ -240,10 +240,7 @@ export default function ResumeReviewPage() {
   // ログインしていれば編集可（「ログイン=本人」ポリシー）
   const isOwner = useMemo(() => !!getUserInfo()?.uid, []);
 
-  // 非所有者は編集モードを強制的にコメントに戻す
-  useEffect(() => {
-    if (!isOwner && mode === 'edit') setMode('comments');
-  }, [isOwner, mode]);
+  // モードはユーザー操作を優先（自動で戻さない）
 
   const currentWorkExperiences = useMemo(() => {
     const extra = selected?.extra_data || {};
