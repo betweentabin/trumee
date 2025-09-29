@@ -58,7 +58,9 @@ export default function ResumeReviewPage() {
   const [mode, setMode] = useState<'comments' | 'edit'>('comments');
   const [editSelfPr, setEditSelfPr] = useState('');
   const [editWorkDesc, setEditWorkDesc] = useState<string[]>([]); // mirrors extra_data.workExperiences[].description
+  const [editJobSummary, setEditJobSummary] = useState('');
   const [initialBaselineEnsured, setInitialBaselineEnsured] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
   // Preview wrapper ref (scroll container)
   const previewWrapRef = useRef<HTMLDivElement | null>(null);
   // Pending selection → comment composer state
@@ -67,10 +69,16 @@ export default function ResumeReviewPage() {
   const [composerText, setComposerText] = useState('');
   const [composerPos, setComposerPos] = useState<{ top: number; left: number } | null>(null);
   const [markTops, setMarkTops] = useState<Record<string, number>>({});
+  const recalcTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messagesAll.length]);
+  // When thread messages update or thread selection changes, keep view scrolled
+  useEffect(() => {
+    if (!activeThread) return;
+    endRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [activeThread, threadMessages]);
 
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'production' ? 'https://trumee-production.up.railway.app' : 'http://localhost:8000');
   const params = useParams<{ userId?: string }>();
@@ -152,20 +160,38 @@ export default function ResumeReviewPage() {
 
   // Recalculate mark positions when annotations or preview change
   useEffect(() => {
+    const recalc = () => {
+      const container = previewWrapRef.current;
+      if (!container) return;
+      const map: Record<string, number> = {};
+      const marks = container.querySelectorAll('[data-annot-ref]');
+      marks.forEach((el) => {
+        const idAttr = el.getAttribute('data-annot-ref') || '';
+        if (!idAttr.startsWith('ann-')) return;
+        const id = idAttr.replace('ann-', '');
+        const rect = (el as HTMLElement).getBoundingClientRect();
+        const contRect = container.getBoundingClientRect();
+        const top = rect.top - contRect.top + container.scrollTop;
+        map[id] = Math.max(0, top);
+      });
+      setMarkTops(map);
+    };
+    const schedule = () => {
+      if (recalcTimerRef.current) cancelAnimationFrame(recalcTimerRef.current);
+      recalcTimerRef.current = requestAnimationFrame(recalc);
+    };
+    // initial
+    schedule();
+    const onResize = () => schedule();
     const container = previewWrapRef.current;
-    if (!container) return;
-    const map: Record<string, number> = {};
-    const marks = container.querySelectorAll('[data-annot-ref]');
-    marks.forEach((el) => {
-      const idAttr = el.getAttribute('data-annot-ref') || '';
-      if (!idAttr.startsWith('ann-')) return;
-      const id = idAttr.replace('ann-', '');
-      const rect = (el as HTMLElement).getBoundingClientRect();
-      const contRect = container.getBoundingClientRect();
-      const top = rect.top - contRect.top + container.scrollTop;
-      map[id] = Math.max(0, top);
-    });
-    setMarkTops(map);
+    const onScroll = () => schedule();
+    window.addEventListener('resize', onResize);
+    container?.addEventListener('scroll', onScroll, { passive: true });
+    return () => {
+      window.removeEventListener('resize', onResize);
+      container?.removeEventListener('scroll', onScroll as any);
+      if (recalcTimerRef.current) cancelAnimationFrame(recalcTimerRef.current);
+    };
   }, [annotations, overridePreview, selected]);
 
   const buildPreviewFromResume = useMemo(() => {
@@ -228,6 +254,7 @@ export default function ResumeReviewPage() {
       const baseline = {
         self_pr: selected?.self_pr || '',
         workExperiences: currentWorkExperiences || [],
+        jobSummary: (extra as any)?.jobSummary || '',
       };
       try {
         const res = await fetch(`${apiUrl}/api/v2/resumes/${encodeURIComponent(String(selected.id))}/`, {
@@ -249,11 +276,24 @@ export default function ResumeReviewPage() {
   useEffect(() => {
     if (mode !== 'edit' || !selected) return;
     const extra = selected.extra_data || {};
-    const baseline = (extra as any).baseline || { self_pr: selected.self_pr || '', workExperiences: currentWorkExperiences };
+    const baseline = (extra as any).baseline || { self_pr: selected.self_pr || '', workExperiences: currentWorkExperiences, jobSummary: (extra as any)?.jobSummary || '' };
     setEditSelfPr(selected.self_pr || '');
     const desc = (Array.isArray(currentWorkExperiences) ? currentWorkExperiences : []).map((w: any) => String(w?.description || ''));
     setEditWorkDesc(desc);
+    setEditJobSummary(String((extra as any)?.jobSummary || ''));
+    setFormError(null);
   }, [mode, selected, currentWorkExperiences]);
+
+  // Lightweight validation for edit fields
+  const limits = { selfPr: 4000, jobSummary: 1200, workDesc: 4000 } as const;
+  const validateEdit = (): string | null => {
+    if (editSelfPr.length > limits.selfPr) return `自己PRは${limits.selfPr}文字以内にしてください`;
+    if (editJobSummary.length > limits.jobSummary) return `職務要約は${limits.jobSummary}文字以内にしてください`;
+    for (let i = 0; i < editWorkDesc.length; i++) {
+      if ((editWorkDesc[i] || '').length > limits.workDesc) return `職務内容(${i + 1})は${limits.workDesc}文字以内にしてください`;
+    }
+    return null;
+  };
 
   // Build preview data for left pane when in edit mode: use baseline snapshot
   const leftPreviewData = useMemo(() => {
@@ -282,7 +322,7 @@ export default function ResumeReviewPage() {
       userName: (extra as any).fullName || '',
       jobhistoryList,
       formValues,
-      jobSummary: (extra as any)?.jobSummary || '',
+      jobSummary: typeof (baseline as any)?.jobSummary === 'string' ? (baseline as any).jobSummary : ((extra as any)?.jobSummary || ''),
       selfPR: baseline.self_pr || '',
       skills: Array.isArray((extra as any)?.skills) ? (extra as any).skills : [],
       education: Array.isArray((extra as any)?.education) ? (extra as any).education : [],
@@ -291,13 +331,15 @@ export default function ResumeReviewPage() {
 
   const saveDraft = async () => {
     if (!selected?.id || !isOwner) return;
+    const v = validateEdit();
+    if (v) { setFormError(v); return; }
     setLoading(true);
     try {
       const extra = selected.extra_data || {};
       const workExperiences = (Array.isArray(currentWorkExperiences) ? currentWorkExperiences : []).map((w: any, i: number) => ({ ...w, description: editWorkDesc[i] ?? w.description }));
       const payload: any = {
         self_pr: editSelfPr,
-        extra_data: { ...(extra || {}), workExperiences },
+        extra_data: { ...(extra || {}), workExperiences, jobSummary: editJobSummary },
       };
       const res = await fetch(`${apiUrl}/api/v2/resumes/${encodeURIComponent(String(selected.id))}/`, {
         method: 'PATCH',
@@ -307,6 +349,7 @@ export default function ResumeReviewPage() {
       if (res.ok) {
         const updated = await res.json();
         setSelected((prev: any) => ({ ...(prev || {}), ...updated }));
+        setFormError(null);
         // refresh left preview marks
         try {
           const rid = String(updated.id);
@@ -333,7 +376,7 @@ export default function ResumeReviewPage() {
         headers: { ...getAuthHeaders() },
         body: JSON.stringify({
           self_pr: baseline.self_pr || '',
-          extra_data: { ...(extra || {}), workExperiences: baseline.workExperiences || [] },
+          extra_data: { ...(extra || {}), workExperiences: baseline.workExperiences || [], jobSummary: baseline.jobSummary || '' },
         }),
       });
       if (res.ok) {
@@ -342,6 +385,7 @@ export default function ResumeReviewPage() {
         setEditSelfPr(baseline.self_pr || '');
         const desc = (Array.isArray(baseline.workExperiences) ? baseline.workExperiences : []).map((w: any) => String(w?.description || ''));
         setEditWorkDesc(desc);
+        setEditJobSummary(String(baseline.jobSummary || ''));
       }
     } catch {
       setError('取消の適用に失敗しました');
@@ -352,6 +396,8 @@ export default function ResumeReviewPage() {
 
   const publishBaseline = async () => {
     if (!selected?.id || !isOwner) return;
+    const v = validateEdit();
+    if (v) { setFormError(v); return; }
     setLoading(true);
     try {
       const extra = selected.extra_data || {};
@@ -359,6 +405,7 @@ export default function ResumeReviewPage() {
       const baseline = {
         self_pr: editSelfPr,
         workExperiences,
+        jobSummary: editJobSummary,
       };
       const res = await fetch(`${apiUrl}/api/v2/resumes/${encodeURIComponent(String(selected.id))}/`, {
         method: 'PATCH',
@@ -368,6 +415,7 @@ export default function ResumeReviewPage() {
       if (res.ok) {
         const updated = await res.json();
         setSelected((prev: any) => ({ ...(prev || {}), extra_data: updated.extra_data }));
+        setFormError(null);
       }
     } catch {
       setError('公開反映に失敗しました');
@@ -461,6 +509,8 @@ export default function ResumeReviewPage() {
     if (activeThread && !threadMessages[activeThread]) {
       loadThread(activeThread);
     }
+    // clear reply box when switching
+    setReplyInput('');
   }, [activeThread]);
 
   const visibleMessages = useMemo(() => {
@@ -607,6 +657,11 @@ export default function ResumeReviewPage() {
       // optimistic update annotations
       if (createdAnn) setAnnotations((prev) => [...prev, createdAnn]);
       await fetchMessages();
+      // refresh threads summary (overlay + tabs)
+      try {
+        const t = await fetch(`${apiUrl}/api/v2/advice/threads/?${userIdFromRoute ? `user_id=${encodeURIComponent(String(userIdFromRoute))}&` : ''}subject=resume_advice`, { headers: { ...getAuthHeaders() } });
+        if (t.ok) setThreads(await t.json());
+      } catch {}
     } catch (e) {
       setError('コメントの送信に失敗しました');
     } finally {
@@ -635,11 +690,17 @@ export default function ResumeReviewPage() {
         } catch {}
       }
       await fetchMessages();
+      // refresh threads summary
+      try {
+        const t = await fetch(`${apiUrl}/api/v2/advice/threads/?${userIdFromRoute ? `user_id=${encodeURIComponent(String(userIdFromRoute))}&` : ''}subject=resume_advice`, { headers: { ...getAuthHeaders() } });
+        if (t.ok) setThreads(await t.json());
+      } catch {}
     } catch {}
   };
 
   // Selection handler on preview: capture selection inside an annotatable block
   const handlePreviewMouseUp = () => {
+    if (mode !== 'comments') return; // disable annot composer in edit mode
     const container = previewWrapRef.current;
     if (!container) return;
     const sel = window.getSelection();
@@ -787,7 +848,7 @@ export default function ResumeReviewPage() {
                       <div
                         key={annId}
                         className="absolute right-[-240px] w-[220px] pointer-events-auto"
-                        style={{ top: Math.max(0, topGuess - 8) }}
+                        style={{ top: Math.max(0, topGuess - 8), opacity: t.unresolved ? 1 : 0.6 }}
                         onClick={() => {
                           const sel = previewWrapRef.current?.querySelector(`[data-annot-ref=\"ann-${annId}\"]`) as HTMLElement | null;
                           if (sel && previewWrapRef.current) {
@@ -913,15 +974,19 @@ export default function ResumeReviewPage() {
               >
                 全て
               </button>
-              {threadsFiltered.map((t: any, i: number) => (
-                <button key={String(t.annotation?.id || i)}
-                  onClick={() => setActiveThread(String(t.annotation?.id))}
-                  className={`text-xs px-2 py-1 rounded border whitespace-nowrap ${String(activeThread) === String(t.annotation?.id) ? 'bg-primary-50 border-primary-400 text-primary-700' : 'bg-white border-secondary-300'}`}
-                  title={(t.annotation?.anchor_id || '')}
-                >
-                  #{i+1} ({t.messages_count}){t.unresolved ? '•' : ''}
-                </button>
-              ))}
+              {threadsFiltered.map((t: any, i: number) => {
+                const annId = String(t.annotation?.id || '');
+                const stableIdx = annId ? (annotations.findIndex(a => String(a.id) === annId) + 1) : (i + 1);
+                return (
+                  <button key={annId || i}
+                    onClick={() => setActiveThread(annId)}
+                    className={`text-xs px-2 py-1 rounded border whitespace-nowrap ${String(activeThread) === annId ? 'bg-primary-50 border-primary-400 text-primary-700' : 'bg-white border-secondary-300'}`}
+                    title={(t.annotation?.anchor_id || '')}
+                  >
+                    #{stableIdx} ({t.messages_count}){t.unresolved ? '•' : ''}
+                  </button>
+                );
+              })}
               <input
                 ref={searchRef}
                 value={threadSearch}
@@ -1044,6 +1109,9 @@ export default function ResumeReviewPage() {
             </div>
             ) : (
             <div className="flex-1 overflow-auto p-3 space-y-4 bg-secondary-50">
+              {formError && (
+                <div className="text-sm text-error-600">{formError}</div>
+              )}
               <div>
                 <label className="block text-sm font-semibold text-secondary-800 mb-1">自己PR</label>
                 <textarea
@@ -1051,6 +1119,17 @@ export default function ResumeReviewPage() {
                   onChange={(e) => setEditSelfPr(e.target.value)}
                   className="w-full min-h-28 rounded border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-600 bg-white"
                 />
+                <div className="text-[11px] text-secondary-500 text-right">{editSelfPr.length} / {limits.selfPr}</div>
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-secondary-800 mb-1">職務要約</label>
+                <textarea
+                  value={editJobSummary}
+                  onChange={(e) => setEditJobSummary(e.target.value)}
+                  className="w-full min-h-24 rounded border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-600 bg-white"
+                  placeholder="職務要約（短いサマリ）を入力"
+                />
+                <div className="text-[11px] text-secondary-500 text-right">{editJobSummary.length} / {limits.jobSummary}</div>
               </div>
               {currentWorkExperiences.map((w: any, i: number) => (
                 <div key={i} className="border rounded bg-white p-2">
@@ -1061,6 +1140,7 @@ export default function ResumeReviewPage() {
                     className="w-full min-h-24 rounded border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-600"
                     placeholder="職務内容を入力"
                   />
+                  <div className="text-[11px] text-secondary-500 text-right">{(editWorkDesc[i] || '').length} / {limits.workDesc}</div>
                 </div>
               ))}
             </div>

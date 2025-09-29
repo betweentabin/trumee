@@ -214,9 +214,9 @@
 - [x] FE: 未解決のみフィルタ + 検索（任意）
 
 ### フェーズ2：左右分割（初版）
-- [ ] FE: 左=基準、右=編集フォームの2ペイン
-- [ ] FE: 保存/取消/公開反映ボタン
-- [ ] BE: baseline（extra_data） 保存/復元の補助関数
+- [x] FE: 左=基準、右=編集フォームの2ペイン（self_pr + jobSummary + workExperiences.description）
+- [x] FE: 保存/取消/公開反映ボタン
+- [ ] BE: baseline（extra_data） 保存/復元の補助関数（既存PATCH活用で暫定対応）
 
 ### フェーズ3：差分/履歴（任意）
 - [ ] BE: `ResumeSnapshot` 実装 + API
