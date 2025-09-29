@@ -153,21 +153,25 @@
 ## 追加計画: スレッド化 + 左右分割編集 + パフォーマンス
 
 ### ① コメントのスレッド化（返信可能）
-- 目的: 注釈ごとに会話をまとめ、返信（ネスト）可能にする。
+- 目的: コメント（親メッセージ）ごとに会話をまとめ、返信（ネスト）可能にする。
 
 #### モデル/マイグレーション
 - [x] `Message.parent` を追加（nullable, FK=Message, related_name='replies'）
 - 既存 `Message.annotation` はそのまま利用（親子ともに同じ `annotation_id` を持つ）
+ - [x] マイグレーション競合（0015が2本）を 0016_merge で解消
 
 #### API 拡張
-- [x] GET `/api/v2/advice/messages/?annotation_id=...` で対象注釈の全メッセージを返却（parent→子の順）
+- [x] GET `/api/v2/advice/messages/?parent_id=...` 親コメント＋その返信のみ返却
+- [x] GET `/api/v2/advice/messages/?annotation_id=...` も維持（注釈単位の一覧）
 - [x] POST `/api/v2/advice/messages/` に `parent_id` を受け付け、返信を作成
-- [x] GET `/api/v2/advice/threads/?resume_id=...&subject=...` で注釈ごとのサマリ（最新1件＋件数・未解決）
+- [x] GET `/api/v2/advice/threads/?subject=...&mode=comment` 親コメント単位のサマリ（`thread_id`=親コメントid, 最新1件＋件数・未解決）
 
 #### フロントUI
 - [x] 右パネルに「スレッド一覧（色＋番号＋最新一言＋未解決バッジ）」
 - [x] スレッドクリックで展開→親子メッセージのネスト表示（まずは1段）＋返信入力フォーム
-- [ ] 「未解決のみ」フィルタ＋検索（任意）
+- [x] 初回表示で先頭スレッドを自動選択（会話UIが即見える）
+- [x] 吹き出しの「返信」クリックで該当スレッド選択＋返信フォームへスクロール
+- [x] 「未解決のみ」フィルタ＋検索
 
 ### ② 左右分割編集（左：基準／右：編集）
 - 目的: 左に公開中（または固定スナップショット）のプレビュー、右に編集フォーム（ドラフト）。
@@ -188,11 +192,11 @@
 
 ### ③ パフォーマンス対策（通信/計測/描画）
 - 取得・通信
-  - [ ] threads APIで概要だけ取得→展開時に詳細フェッチ
+  - [x] threads APIで概要だけ取得→展開時に詳細フェッチ（mode=comment）
   - [ ] react-query の staleTime/GC を調整して重複GETを削減
   - [ ] メッセージはページネーション/「もっと見る」で段階表示
 - 計測の抑制
-  - [ ] マーク位置計測は注釈変化＋Resize時のみ、debounce（例: 150ms）
+  - [x] マーク位置計測は注釈変化＋スクロール/Resizeで rAF デバウンス
   - [ ] IntersectionObserver/ResizeObserver で可視領域外は計測スキップ
 - 再レンダリング低減
   - [ ] プレビューをセクション単位で分割し React.memo 化（職務要約/自己PR/各職歴）
