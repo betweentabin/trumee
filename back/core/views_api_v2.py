@@ -26,6 +26,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
 from django.conf import settings
 from django.utils import timezone
+import uuid
 import jwt
 import datetime
 import os
@@ -1443,7 +1444,7 @@ def advice_messages(request):
             try:
                 # 管理者→指定ユーザー
                 return User.objects.get(id=specified_user_id)
-            except User.DoesNotExist:
+            except (User.DoesNotExist, ValueError):
                 return None
         else:
             # 一般ユーザー→最初の管理者（存在しない場合は None）
@@ -1464,10 +1465,19 @@ def advice_messages(request):
                 Q(sender=counterpart, receiver__is_staff=True) |
                 Q(sender__is_staff=True, receiver=counterpart)
             ).order_by('created_at')
+            # 片方でも不正なUUIDが来た場合に500を避ける
             if parent_id:
-                qs = qs.filter(Q(id=parent_id) | Q(parent_id=parent_id))
+                try:
+                    uuid.UUID(str(parent_id))
+                    qs = qs.filter(Q(id=parent_id) | Q(parent_id=parent_id))
+                except Exception:
+                    return Response({'error': 'invalid_parent_id'}, status=status.HTTP_400_BAD_REQUEST)
             if annotation_id:
-                qs = qs.filter(annotation_id=annotation_id)
+                try:
+                    uuid.UUID(str(annotation_id))
+                    qs = qs.filter(annotation_id=annotation_id)
+                except Exception:
+                    return Response({'error': 'invalid_annotation_id'}, status=status.HTTP_400_BAD_REQUEST)
             return Response(MessageSerializer(qs, many=True).data)
 
         # 一般ユーザー: どの管理者とのやり取りでも一覧できるよう、相手を限定しない
@@ -1477,10 +1487,18 @@ def advice_messages(request):
             Q(sender__is_staff=True) | Q(receiver__is_staff=True)
         ).filter(subject=SUBJECT).order_by('created_at')
         if parent_id:
-            qs = qs.filter(Q(id=parent_id) | Q(parent_id=parent_id))
+            try:
+                uuid.UUID(str(parent_id))
+                qs = qs.filter(Q(id=parent_id) | Q(parent_id=parent_id))
+            except Exception:
+                return Response({'error': 'invalid_parent_id'}, status=status.HTTP_400_BAD_REQUEST)
         if annotation_id:
-            qs = qs.filter(annotation_id=annotation_id)
-
+            try:
+                uuid.UUID(str(annotation_id))
+                qs = qs.filter(annotation_id=annotation_id)
+            except Exception:
+                return Response({'error': 'invalid_annotation_id'}, status=status.HTTP_400_BAD_REQUEST)
+        
         return Response(MessageSerializer(qs, many=True).data)
 
     # POST
@@ -1530,9 +1548,11 @@ def advice_messages(request):
     parent_id = data.get('parent_id')
     if parent_id:
         try:
+            # Validate UUID to avoid 500 on invalid input
+            uuid.UUID(str(parent_id))
             parent_msg = Message.objects.get(id=parent_id)
             msg_kwargs['parent'] = parent_msg
-        except Message.DoesNotExist:
+        except (Message.DoesNotExist, ValueError):
             pass
     msg = Message.objects.create(**msg_kwargs)
     return Response(MessageSerializer(msg).data, status=status.HTTP_201_CREATED)
@@ -1562,7 +1582,7 @@ def advice_threads(request):
                 return None
             try:
                 return User.objects.get(id=specified_user_id)
-            except User.DoesNotExist:
+            except (User.DoesNotExist, ValueError):
                 return None
         else:
             return User.objects.filter(is_staff=True).order_by('date_joined').first()
@@ -1586,7 +1606,11 @@ def advice_threads(request):
 
     qs = qs.filter(annotation__isnull=False).select_related('annotation').order_by('created_at')
     if annotation_id:
-        qs = qs.filter(annotation_id=annotation_id)
+        try:
+            uuid.UUID(str(annotation_id))
+            qs = qs.filter(annotation_id=annotation_id)
+        except Exception:
+            return Response({'error': 'invalid_annotation_id'}, status=status.HTTP_400_BAD_REQUEST)
 
     if mode == 'comment':
         threads = {}

@@ -10,6 +10,8 @@ type Props = {
   className?: string;
   colorMap?: Record<string, string>; // annotationId -> color (hex or rgba)
   indexMap?: Record<string, number>; // annotationId -> 1-based index
+  // When true, render ranges with a marker-like background instead of underline
+  marker?: boolean;
 };
 
 // Render text with <mark> around the specified ranges. Assumes ranges are within bounds.
@@ -24,7 +26,7 @@ const toRGBA = (c?: string, alpha = 1) => {
   return `rgba(${r},${g},${b},${alpha})`;
 };
 
-const HighlightableText: React.FC<Props> = ({ text, ranges, className, colorMap = {}, indexMap = {} }) => {
+const HighlightableText: React.FC<Props> = ({ text, ranges, className, colorMap = {}, indexMap = {}, marker = false }) => {
   const len = text?.length ?? 0;
   const safeRanges = Array.isArray(ranges)
     ? [...ranges]
@@ -42,13 +44,17 @@ const HighlightableText: React.FC<Props> = ({ text, ranges, className, colorMap 
     const marked = text.slice(r.start, r.end);
     const baseColor = colorMap[r.id];
     const underline = r.resolved ? toRGBA(baseColor, 0.35) : toRGBA(baseColor, 0.85);
+    const highlightBg = r.resolved ? toRGBA(baseColor, 0.14) : toRGBA(baseColor, 0.24);
     const badgeIdx = indexMap[r.id];
     pieces.push(
       <mark
         key={`m-${r.id}`}
         data-annot-ref={`ann-${r.id}`}
         className={`px-[1px]`}
-        style={{ backgroundColor: 'transparent', boxShadow: `inset 0 -2px 0 ${underline}` }}
+        style={marker
+          ? { backgroundColor: highlightBg }
+          : { backgroundColor: 'transparent', boxShadow: `inset 0 -2px 0 ${underline}` }
+        }
       >
         {marked}
         {typeof badgeIdx === 'number' && (

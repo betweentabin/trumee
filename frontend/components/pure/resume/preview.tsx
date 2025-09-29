@@ -27,6 +27,8 @@ type PreviewProps = {
     end_offset: number;
     is_resolved?: boolean;
   }>;
+  // Anchors whose ranges should render with a marker-style background (instead of underline)
+  changedAnchors?: Array<string> | Set<string>;
 };
 
 const PreviewRow: React.FC<{ left: React.ReactNode; right: React.ReactNode }>
@@ -37,9 +39,14 @@ const PreviewRow: React.FC<{ left: React.ReactNode; right: React.ReactNode }>
   </tr>
 );
 
-const ResumePreview: React.FC<PreviewProps> = ({ userName, jobhistoryList, formValues, className, jobSummary, selfPR, skills, education, showHeader = true, showFrame = true, annotations = [] }) => {
+const ResumePreview: React.FC<PreviewProps> = ({ userName, jobhistoryList, formValues, className, jobSummary, selfPR, skills, education, showHeader = true, showFrame = true, annotations = [], changedAnchors }) => {
   const today = new Date();
   const ymd = `${today.getFullYear()}年${String(today.getMonth()+1).padStart(2,'0')}月${String(today.getDate()).padStart(2,'0')}日現在`;
+
+  const changedSet: Set<string> = (() => {
+    if (!changedAnchors) return new Set();
+    return changedAnchors instanceof Set ? changedAnchors : new Set(changedAnchors);
+  })();
 
   const palette = ['#E56B6F','#6C9BD2','#7FB069','#E6B31E','#A77BD1','#E58F6B'];
   const colorOf = (id: string) => {
@@ -82,6 +89,7 @@ const ResumePreview: React.FC<PreviewProps> = ({ userName, jobhistoryList, formV
                 colorMap={colorMap}
                 indexMap={indexMap}
                 className="text-sm text-gray-800"
+                marker={changedSet.has('job_summary')}
               />
             </div>
           </div>
@@ -127,6 +135,7 @@ const ResumePreview: React.FC<PreviewProps> = ({ userName, jobhistoryList, formV
                         colorMap={colorMap}
                         indexMap={indexMap}
                         className="font-sans text-[0.95rem]"
+                        marker={changedSet.has(`work_content-${key}`)}
                       />
                     </div>
                   }
@@ -154,6 +163,7 @@ const ResumePreview: React.FC<PreviewProps> = ({ userName, jobhistoryList, formV
               colorMap={colorMap}
               indexMap={indexMap}
               className="text-sm text-gray-800"
+              marker={changedSet.has('self_pr')}
             />
             </div>
           </div>

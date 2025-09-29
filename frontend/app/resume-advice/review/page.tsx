@@ -946,10 +946,10 @@ export default function ResumeReviewPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Left: Resume preview (actual data or baseline when editing) */}
-          <section className={`${split === 'leftWide' ? 'lg:col-span-8' : split === 'balanced' ? 'lg:col-span-7' : 'lg:col-span-6'} bg-white border rounded-lg shadow-sm p-4 overflow-auto max-h-[75vh]`}>
+          <section className={`${split === 'leftWide' ? 'lg:col-span-8' : split === 'balanced' ? 'lg:col-span-7' : 'lg:col-span-6'} bg-white border rounded-lg shadow-sm p-4 overflow-y-auto overflow-x-visible max-h-[75vh]`}>
             {(overridePreview || selected) ? (
               <div
-                className="relative pr-[260px] w-full"
+                className="relative w-full"
                 ref={previewWrapRef}
                 onMouseUp={handlePreviewMouseUp}
                 onClick={(e) => {
@@ -982,6 +982,29 @@ export default function ResumeReviewPage() {
                     skills={leftPreviewData.skills as any}
                     education={leftPreviewData.education as any}
                     annotations={annotations}
+                    changedAnchors={(() => {
+                      try {
+                        const changed = new Set<string>();
+                        // Compare job summary
+                        const baseJobSummary = String(leftPreviewData.jobSummary || '');
+                        const curJobSummary = String(editJobSummary || '');
+                        if (baseJobSummary !== curJobSummary) changed.add('job_summary');
+                        // Compare self PR
+                        const baseSelfPr = String(leftPreviewData.selfPR || '');
+                        const curSelfPr = String(editSelfPr || '');
+                        if (baseSelfPr !== curSelfPr) changed.add('self_pr');
+                        // Compare each work content by index (job1, job2, ...)
+                        const keys = leftPreviewData.jobhistoryList || [];
+                        keys.forEach((key, i) => {
+                          const baseWork = String((leftPreviewData.formValues as any)?.[key]?.work_content || '');
+                          const curWork = String((editWorkDesc[i] ?? (Array.isArray(currentWorkExperiences) ? currentWorkExperiences[i]?.description : '')) || '');
+                          if (baseWork !== curWork) changed.add(`work_content-${key}`);
+                        });
+                        return changed;
+                      } catch {
+                        return [] as string[];
+                      }
+                    })()}
                     className="w-full"
                   />
                 ) : overridePreview ? (

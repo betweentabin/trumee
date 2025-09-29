@@ -56,7 +56,7 @@ export default function ServiceCards() {
             href: perUser('profile') || `/users/${currentUser?.id}/profile`,
           }, {
             label: '職務経歴書',
-            href: perUser('experience') || `/users/${currentUser?.id}/experience`,
+            href: perUser('career') || `/users/${currentUser?.id}/career`,
           }, {
             label: '希望条件',
             href: perUser('preference') || `/users/${currentUser?.id}/preference`,
