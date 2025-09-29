@@ -1549,6 +1549,7 @@ def advice_threads(request):
     返却例 (mode=comment): [{ thread_id: <parent_or_self_id>, annotation: {...}, latest_message: {...}, messages_count: n, unresolved: bool }]
     """
     from .models import Annotation
+    from django.db.models import Q
     SUBJECT = request.GET.get('subject') or 'resume_advice'
     user_id = request.GET.get('user_id')
     mode = request.GET.get('mode') or 'annotation'
