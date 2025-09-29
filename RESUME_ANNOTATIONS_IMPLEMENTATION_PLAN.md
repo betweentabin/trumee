@@ -18,8 +18,8 @@
 - [x] 選択→ポップオーバー→送信（既存APIにメタ付与で暫定保存）: 参照: `frontend/app/resume-advice/review/page.tsx` 他
 - [x] 入力欄クリックで閉じないようイベント遮断を追加
 - [x] `/users/[userId]/resume-advice/review` で対象ユーザーのレジュメを表示（admin/owner/public の順にフォールバック）
-- [ ] ハイライトとコネクタ線（Word風）
-- [ ] サーバー永続化を Annotation モデルに正式化（下記）
+- [x] ハイライト（下線）実装、コネクタ線は撤去（色＋番号で統一）
+- [x] サーバー永続化を Annotation モデルに正式化（下記）
 
 ---
 
@@ -156,17 +156,17 @@
 - 目的: 注釈ごとに会話をまとめ、返信（ネスト）可能にする。
 
 #### モデル/マイグレーション
-- [ ] `Message.parent` を追加（nullable, FK=Message, related_name='replies'）
+- [x] `Message.parent` を追加（nullable, FK=Message, related_name='replies'）
 - 既存 `Message.annotation` はそのまま利用（親子ともに同じ `annotation_id` を持つ）
 
 #### API 拡張
-- [ ] GET `/api/v2/advice/messages/?annotation_id=...` で対象注釈の全メッセージを返却（parent→子の順）
-- [ ] POST `/api/v2/advice/messages/` に `parent_id` を受け付け、返信を作成
-- [ ] GET `/api/v2/advice/threads/?resume_id=...&subject=...` で注釈ごとのサマリ（最新1件＋件数・未解決）
+- [x] GET `/api/v2/advice/messages/?annotation_id=...` で対象注釈の全メッセージを返却（parent→子の順）
+- [x] POST `/api/v2/advice/messages/` に `parent_id` を受け付け、返信を作成
+- [x] GET `/api/v2/advice/threads/?resume_id=...&subject=...` で注釈ごとのサマリ（最新1件＋件数・未解決）
 
 #### フロントUI
-- [ ] 右パネルに「スレッド一覧（色＋番号＋最新一言＋未解決バッジ）」
-- [ ] スレッドクリックで展開→親子メッセージのネスト表示＋返信入力フォーム
+- [x] 右パネルに「スレッド一覧（色＋番号＋最新一言＋未解決バッジ）」
+- [x] スレッドクリックで展開→親子メッセージのネスト表示（まずは1段）＋返信入力フォーム
 - [ ] 「未解決のみ」フィルタ＋検索（任意）
 
 ### ② 左右分割編集（左：基準／右：編集）
@@ -206,9 +206,12 @@
 ## フェーズ別チェックリスト
 
 ### フェーズ1：スレッド基盤（小工数/大効果）
-- [ ] BE: `Message.parent` 追加 + API（annotation_id/parent_id）
-- [ ] FE: スレッド一覧 + 展開時フェッチ + 返信UI
-- [ ] FE: 未解決のみフィルタ + 検索（任意）
+- [x] BE: `Message.parent` 追加 + API（annotation_id/parent_id）
+- [x] FE: スレッド一覧 + 展開時フェッチ + 返信UI
+  - [x] スレッド一覧（右パネル上部の#タブ）/ 切替（レビュー画面）
+  - [x] スレッド展開時の詳細フェッチ（annotation_id指定GET・オンデマンド）
+  - [x] 返信UI（annotation_id + parent_id付きPOST）/ 親→子のネスト表示（1段）
+- [x] FE: 未解決のみフィルタ + 検索（任意）
 
 ### フェーズ2：左右分割（初版）
 - [ ] FE: 左=基準、右=編集フォームの2ペイン
@@ -220,7 +223,7 @@
 - [ ] FE: スナップショット切替 + 差分ハイライト
 
 ### フェーズ4：パフォーマンス仕上げ
-- [ ] threads 概要化 + on-demand 詳細取得
+- [ ] threads 概要化 + on-demand 詳細取得（threads APIは導入済／UI適用は一部）
 - [ ] 計測debounce + Observer + メモ化
 - [ ] SSE/WS 置換（必要に応じて）
 

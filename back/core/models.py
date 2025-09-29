@@ -558,6 +558,8 @@ class Message(models.Model):
     scout = models.ForeignKey(Scout, on_delete=models.CASCADE, null=True, blank=True)
     # 履歴書注釈への関連（任意）
     annotation = models.ForeignKey('Annotation', on_delete=models.SET_NULL, null=True, blank=True, related_name='messages')
+    # スレッド返信（任意）
+    parent = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='replies')
     
     created_at = models.DateTimeField(auto_now_add=True)
     

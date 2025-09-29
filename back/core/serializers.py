@@ -398,13 +398,14 @@ class MessageSerializer(serializers.ModelSerializer):
     sender_name = serializers.CharField(source='sender.full_name', read_only=True)
     receiver_name = serializers.CharField(source='receiver.full_name', read_only=True)
     annotation = serializers.PrimaryKeyRelatedField(read_only=True)
+    parent = serializers.PrimaryKeyRelatedField(read_only=True)
     
     class Meta:
         model = Message
         fields = [
             'id', 'sender', 'sender_name', 'receiver', 'receiver_name',
             'subject', 'content', 'is_read', 'read_at',
-            'application', 'scout', 'annotation', 'created_at'
+            'application', 'scout', 'annotation', 'parent', 'created_at'
         ]
         read_only_fields = ['created_at', 'read_at']
 

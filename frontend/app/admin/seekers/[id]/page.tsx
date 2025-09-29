@@ -8,6 +8,7 @@ import InterviewPreparationTab from '@/components/admin/InterviewPreparationTab'
 import { useForm } from 'react-hook-form';
 import ResumePreview from '@/components/pure/resume/preview';
 import { emptyResumePreview, fetchResumePreview, ResumePreviewData } from '@/utils/resume-preview';
+import toast from 'react-hot-toast';
 
 type AdminSeeker = {
   id: string;
@@ -48,6 +49,26 @@ export default function AdminSeekerDetailPage() {
     if (typeof window === 'undefined') return '';
     return localStorage.getItem('drf_token_v2') || '';
   }, []);
+
+  const sendNudgeMessage = useCallback(async (type: 'login' | 'billing') => {
+    if (!id) return;
+    try {
+      const content =
+        type === 'login'
+          ? '【ログインのご案内】\nしばらくログインが確認できません。職務経歴書の更新や求人提案を受け取るため、再度のログインをご検討ください。'
+          : '【プレミアムプランのご案内】\n応募管理やスカウト受信強化などが可能なプレミアム機能をご案内します。詳細はマイページのプラン設定をご確認ください。';
+      const body = { user_id: id, subject: 'advice', content } as any;
+      const res = await fetch(buildApiUrl('/advice/messages/'), {
+        method: 'POST',
+        headers: getApiHeaders(token),
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) throw new Error(`Failed to send (${res.status})`);
+      toast.success('メッセージを送信しました');
+    } catch (e: any) {
+      toast.error(e?.message || 'メッセージ送信に失敗しました');
+    }
+  }, [id, token]);
 
   useEffect(() => {
     const fetchOne = async () => {
@@ -701,8 +722,59 @@ export default function AdminSeekerDetailPage() {
                     <span className="text-gray-500">最終添削者</span>
                     <div className="font-medium">{overview?.review?.last_reviewed_by_name || '—'}</div>
                   </div>
+                  <div>
+                    <span className="text-gray-500">プラン</span>
+                    <div className="font-medium">{overview?.user?.plan_tier || (overview?.user?.is_premium ? 'premium' : 'free')}</div>
+                  </div>
+                  <div>
+                    <span className="text-gray-500">最新アクティビティ</span>
+                    <div className="font-medium">{overview?.latest_activity_at ? new Date(overview.latest_activity_at).toLocaleString() : '—'}</div>
+                  </div>
+                  <div>
+                    <span className="text-gray-500">date_joined</span>
+                    <div className="font-medium">{overview?.user?.date_joined ? new Date(overview.user.date_joined).toLocaleDateString() : '—'}</div>
+                  </div>
                 </div>
               </div>
+
+              <div className="rounded-xl border p-6">
+                <div className="text-lg font-semibold mb-4">リソース状況</div>
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
+                  <div>
+                    <span className="text-gray-500">履歴書</span>
+                    <div className="font-medium">{overview?.counts?.resumes ?? 0}</div>
+                  </div>
+                  <div>
+                    <span className="text-gray-500">職歴エントリ</span>
+                    <div className="font-medium">{overview?.counts?.experiences ?? 0}</div>
+                  </div>
+                  <div>
+                    <span className="text-gray-500">応募（求職者として）</span>
+                    <div className="font-medium">{overview?.counts?.applications_as_applicant ?? 0}</div>
+                  </div>
+                  <div>
+                    <span className="text-gray-500">スカウト受信</span>
+                    <div className="font-medium">{overview?.counts?.scouts_received ?? 0}</div>
+                  </div>
+                  <div>
+                    <span className="text-gray-500">スカウト送信（企業）</span>
+                    <div className="font-medium">{overview?.counts?.scouts_sent ?? 0}</div>
+                  </div>
+                  <div>
+                    <span className="text-gray-500">メッセージ総数</span>
+                    <div className="font-medium">{overview?.counts?.messages_total ?? 0}</div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="rounded-xl border p-6">
+                <div className="text-lg font-semibold mb-4">アクション</div>
+                <div className="flex flex-wrap gap-3">
+                  <button onClick={() => sendNudgeMessage('login')} className="px-4 py-2 rounded-md border bg-white hover:bg-gray-50">ログイン催促メッセージを送る</button>
+                  <button onClick={() => sendNudgeMessage('billing')} className="px-4 py-2 rounded-md border bg-white hover:bg-gray-50">課金案内メッセージを送る</button>
+                </div>
+              </div>
+
               <div className="rounded-xl border p-6">
                 <div className="text-lg font-semibold mb-4">アプローチされた会社</div>
                 <div className="text-gray-500 text-sm">データ準備中</div>

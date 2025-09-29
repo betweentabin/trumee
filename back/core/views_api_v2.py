@@ -1451,6 +1451,7 @@ def advice_messages(request):
 
     if request.method == 'GET':
         user_id = request.GET.get('user_id')
+        annotation_id = request.GET.get('annotation_id')
         # 管理者は対象ユーザーを必須にして相互のメッセージのみ返す
         if request.user.is_staff:
             counterpart = resolve_counterpart(request.user, user_id)
@@ -1462,6 +1463,8 @@ def advice_messages(request):
                 Q(sender=counterpart, receiver__is_staff=True) |
                 Q(sender__is_staff=True, receiver=counterpart)
             ).order_by('created_at')
+            if annotation_id:
+                qs = qs.filter(annotation_id=annotation_id)
             return Response(MessageSerializer(qs, many=True).data)
 
         # 一般ユーザー: どの管理者とのやり取りでも一覧できるよう、相手を限定しない
@@ -1470,6 +1473,8 @@ def advice_messages(request):
         ).filter(
             Q(sender__is_staff=True) | Q(receiver__is_staff=True)
         ).filter(subject=SUBJECT).order_by('created_at')
+        if annotation_id:
+            qs = qs.filter(annotation_id=annotation_id)
 
         return Response(MessageSerializer(qs, many=True).data)
 
@@ -1510,14 +1515,79 @@ def advice_messages(request):
         except Resume.DoesNotExist:
             pass
 
-    msg = Message.objects.create(
+    msg_kwargs = dict(
         sender=request.user,
         receiver=counterpart,
         subject=SUBJECT,
         content=content,
         annotation=annotation,
     )
+    parent_id = data.get('parent_id')
+    if parent_id:
+        try:
+            parent_msg = Message.objects.get(id=parent_id)
+            msg_kwargs['parent'] = parent_msg
+        except Message.DoesNotExist:
+            pass
+    msg = Message.objects.create(**msg_kwargs)
     return Response(MessageSerializer(msg).data, status=status.HTTP_201_CREATED)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def advice_threads(request):
+    """注釈（annotation）ごとのスレッド概要を返す。
+    GET /api/v2/advice/threads/?user_id=&subject=resume_advice
+    返却: [{ annotation: {...}, latest_message: {...}, messages_count: n, unresolved: bool }]
+    """
+    from .models import Annotation
+    SUBJECT = request.GET.get('subject') or 'resume_advice'
+    user_id = request.GET.get('user_id')
+
+    # 対向ユーザーの決定（advice_messages と同等）
+    def resolve_counterpart(for_user, specified_user_id=None):
+        if for_user.is_staff:
+            if not specified_user_id:
+                return None
+            try:
+                return User.objects.get(id=specified_user_id)
+            except User.DoesNotExist:
+                return None
+        else:
+            return User.objects.filter(is_staff=True).order_by('date_joined').first()
+
+    counterpart = resolve_counterpart(request.user, user_id)
+    if request.user.is_staff and counterpart is None:
+        return Response({'error': 'counterpart_not_found'}, status=status.HTTP_404_NOT_FOUND)
+
+    # 対象メッセージ抽出
+    if request.user.is_staff:
+        qs = Message.objects.filter(subject=SUBJECT).filter(
+            Q(sender=counterpart, receiver__is_staff=True) |
+            Q(sender__is_staff=True, receiver=counterpart)
+        )
+    else:
+        qs = Message.objects.filter(
+            Q(sender=request.user) | Q(receiver=request.user)
+        ).filter(
+            Q(sender__is_staff=True) | Q(receiver__is_staff=True)
+        ).filter(subject=SUBJECT)
+
+    qs = qs.filter(annotation__isnull=False).select_related('annotation').order_by('created_at')
+
+    threads = {}
+    for m in qs:
+        aid = str(m.annotation_id)
+        t = threads.get(aid) or {'annotation': AnnotationSerializer(m.annotation).data, 'latest_message': None, 'messages_count': 0, 'unresolved': not bool(m.annotation.is_resolved)}
+        t['messages_count'] += 1
+        t['latest_message'] = MessageSerializer(m).data
+        t['unresolved'] = t['unresolved'] or (not bool(m.annotation.is_resolved))
+        threads[aid] = t
+
+    # 配列に変換（最新メッセージの昇順）
+    result = list(threads.values())
+    result.sort(key=lambda x: x['latest_message']['created_at'])
+    return Response(result, status=status.HTTP_200_OK)
 
 
 @api_view(['GET'])

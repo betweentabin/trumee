@@ -7,7 +7,16 @@ from reportlab.lib.pagesizes import A4
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import mm
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, ListFlowable, ListItem, HRFlowable
+from reportlab.platypus import (
+    SimpleDocTemplate,
+    Paragraph,
+    Spacer,
+    ListFlowable,
+    ListItem,
+    HRFlowable,
+    Table,
+    TableStyle,
+)
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.cidfonts import UnicodeCIDFont
 from io import BytesIO
@@ -103,7 +112,20 @@ def _render_resume_pdf(resume_data: dict) -> bytes:
     if summary_text:
         elements.append(Paragraph('職務要約', section_heading_style))
         elements.append(HRFlowable(width='100%', thickness=0.6, color=colors.HexColor('#E5E5E5')))
-        elements.append(Paragraph(_format_multiline(summary_text), body_style))
+        # Wrap summary in a bordered table to add ruled lines
+        summary_tbl = Table(
+            [[Paragraph(_format_multiline(summary_text), body_style)]],
+            colWidths=[doc.width],
+        )
+        summary_tbl.setStyle(TableStyle([
+            ('BOX', (0, 0), (-1, -1), 0.7, colors.HexColor('#CCCCCC')),
+            ('INNERGRID', (0, 0), (-1, -1), 0.35, colors.HexColor('#E5E5E5')),
+            ('LEFTPADDING', (0, 0), (-1, -1), 8),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 8),
+            ('TOPPADDING', (0, 0), (-1, -1), 6),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+        ]))
+        elements.append(summary_tbl)
 
     experiences = (resume_data or {}).get('step3', {}).get('experience') or []
     if experiences:
@@ -128,6 +150,11 @@ def _render_resume_pdf(resume_data: dict) -> bytes:
             if header_parts:
                 elements.append(Paragraph(' / '.join(header_parts), body_style))
 
+            # Build a 2-column table with ruled lines: 期間 | 職務内容
+            headers = [
+                Paragraph('<b>期間</b>', body_style),
+                Paragraph('<b>職務内容</b>', body_style),
+            ]
             if start or end:
                 if start and end:
                     period_text = f'{start}〜{end}'
@@ -137,11 +164,26 @@ def _render_resume_pdf(resume_data: dict) -> bytes:
                     period_text = f'〜{end}'
                 else:
                     period_text = ''
-                if period_text:
-                    elements.append(Paragraph(escape(period_text), meta_style))
+            else:
+                period_text = ''
 
-            if description:
-                elements.append(Paragraph(_format_multiline(description), body_style))
+            period_para = Paragraph(escape(period_text) if period_text else '—', body_style)
+            description_para = Paragraph(_format_multiline(description or ''), body_style)
+
+            exp_tbl = Table(
+                [headers, [period_para, description_para]],
+                colWidths=[doc.width * 0.35, doc.width * 0.65],
+            )
+            exp_tbl.setStyle(TableStyle([
+                ('GRID', (0, 0), (-1, -1), 0.6, colors.HexColor('#CCCCCC')),
+                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#F5F5F5')),
+                ('LEFTPADDING', (0, 0), (-1, -1), 6),
+                ('RIGHTPADDING', (0, 0), (-1, -1), 6),
+                ('TOPPADDING', (0, 0), (-1, -1), 6),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ]))
+            elements.append(exp_tbl)
 
             if achievements:
                 elements.append(Paragraph('実績', subheading_style))
@@ -166,7 +208,19 @@ def _render_resume_pdf(resume_data: dict) -> bytes:
     if self_pr:
         elements.append(Paragraph('自己PR', section_heading_style))
         elements.append(HRFlowable(width='100%', thickness=0.6, color=colors.HexColor('#E5E5E5')))
-        elements.append(Paragraph(_format_multiline(self_pr), body_style))
+        pr_tbl = Table(
+            [[Paragraph(_format_multiline(self_pr), body_style)]],
+            colWidths=[doc.width],
+        )
+        pr_tbl.setStyle(TableStyle([
+            ('BOX', (0, 0), (-1, -1), 0.7, colors.HexColor('#CCCCCC')),
+            ('INNERGRID', (0, 0), (-1, -1), 0.35, colors.HexColor('#E5E5E5')),
+            ('LEFTPADDING', (0, 0), (-1, -1), 8),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 8),
+            ('TOPPADDING', (0, 0), (-1, -1), 6),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+        ]))
+        elements.append(pr_tbl)
 
     if not elements:
         elements.append(Paragraph('表示できる内容がありません。', body_style))

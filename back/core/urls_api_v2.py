@@ -84,6 +84,7 @@ urlpatterns = [
     
     # 添削メッセージ（管理者↔ユーザー）
     path('advice/messages/', views_api_v2.advice_messages, name='advice-messages'),
+    path('advice/threads/', views_api_v2.advice_threads, name='advice-threads'),
     path('advice/notifications/', views_api_v2.advice_notifications, name='advice-notifications'),
     path('advice/mark_read/', views_api_v2.advice_mark_read, name='advice-mark-read'),
     # 注釈API
