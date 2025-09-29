@@ -102,7 +102,7 @@ export default function ResumeReviewPage() {
             const rid = String(tryAdmin.resumeId || '');
             const a = await fetch(`${apiUrl}/api/v2/advice/annotations/?resume_id=${encodeURIComponent(rid)}&subject=resume_advice`, { headers: { ...getAuthHeaders() } });
             if (a.ok) setAnnotations(await a.json());
-            const t = await fetch(`${apiUrl}/api/v2/advice/threads/?user_id=${encodeURIComponent(String(userIdFromRoute))}&subject=resume_advice`, { headers: { ...getAuthHeaders() } });
+            const t = await fetch(`${apiUrl}/api/v2/advice/threads/?user_id=${encodeURIComponent(String(userIdFromRoute))}&subject=resume_advice&mode=comment`, { headers: { ...getAuthHeaders() } });
             if (t.ok) setThreads(await t.json());
           } catch {}
           return;
@@ -117,7 +117,7 @@ export default function ResumeReviewPage() {
           try {
             const rid = String(tryOwner.resumeId || '');
             const a = await fetch(`${apiUrl}/api/v2/advice/annotations/?resume_id=${encodeURIComponent(rid)}&subject=resume_advice`, { headers: { ...getAuthHeaders() } }); if (a.ok) setAnnotations(await a.json());
-            const t = await fetch(`${apiUrl}/api/v2/advice/threads/?subject=resume_advice`, { headers: { ...getAuthHeaders() } });
+            const t = await fetch(`${apiUrl}/api/v2/advice/threads/?subject=resume_advice&mode=comment`, { headers: { ...getAuthHeaders() } });
             if (t.ok) setThreads(await t.json());
           } catch {}
           return;
@@ -129,7 +129,7 @@ export default function ResumeReviewPage() {
         try {
           const rid = String(tryPublic.resumeId || '');
           const a = await fetch(`${apiUrl}/api/v2/advice/annotations/?resume_id=${encodeURIComponent(rid)}&subject=resume_advice`, { headers: { ...getAuthHeaders() } }); if (a.ok) setAnnotations(await a.json());
-          const t = await fetch(`${apiUrl}/api/v2/advice/threads/?subject=resume_advice`, { headers: { ...getAuthHeaders() } });
+          const t = await fetch(`${apiUrl}/api/v2/advice/threads/?subject=resume_advice&mode=comment`, { headers: { ...getAuthHeaders() } });
           if (t.ok) setThreads(await t.json());
         } catch {}
         return;
@@ -149,7 +149,7 @@ export default function ResumeReviewPage() {
           if (active?.id) {
             const rid = String(active.id);
             const a = await fetch(`${apiUrl}/api/v2/advice/annotations/?resume_id=${encodeURIComponent(rid)}&subject=resume_advice`, { headers: { ...getAuthHeaders() } }); if (a.ok) setAnnotations(await a.json());
-            const t = await fetch(`${apiUrl}/api/v2/advice/threads/?subject=resume_advice`, { headers: { ...getAuthHeaders() } });
+            const t = await fetch(`${apiUrl}/api/v2/advice/threads/?subject=resume_advice&mode=comment`, { headers: { ...getAuthHeaders() } });
             if (t.ok) setThreads(await t.json());
           }
         } catch {}
@@ -479,11 +479,11 @@ export default function ResumeReviewPage() {
 
   // On-demand fetch for active thread
   useEffect(() => {
-    const loadThread = async (annId: string) => {
+    const loadThread = async (parentId: string) => {
       const qs = new URLSearchParams();
       qs.set('subject', 'resume_advice');
       if (userIdFromRoute) qs.set('user_id', userIdFromRoute);
-      qs.set('annotation_id', annId);
+      qs.set('parent_id', parentId);
       const res = await fetch(`${apiUrl}/api/v2/advice/messages/?${qs.toString()}`, { headers: { ...getAuthHeaders() } });
       if (!res.ok) return;
       const data = await res.json();
@@ -505,7 +505,7 @@ export default function ResumeReviewPage() {
           timestamp: new Date(m.created_at).toLocaleString('ja-JP'),
         } as AnnMessage;
       });
-      setThreadMessages((prev) => ({ ...prev, [annId]: mapped }));
+      setThreadMessages((prev) => ({ ...prev, [parentId]: mapped }));
     };
     if (activeThread && !threadMessages[activeThread]) {
       loadThread(activeThread);
@@ -518,9 +518,9 @@ export default function ResumeReviewPage() {
   useEffect(() => {
     if (didAutoSelectThread) return;
     const first = (threadsFiltered && threadsFiltered[0]) || null;
-    const annId = first?.annotation?.id ? String(first.annotation.id) : null;
-    if (annId) {
-      setActiveThread(annId);
+    const tid = first?.thread_id ? String(first.thread_id) : null;
+    if (tid) {
+      setActiveThread(tid);
       setDidAutoSelectThread(true);
     }
   }, [threadsFiltered, didAutoSelectThread]);
@@ -671,7 +671,7 @@ export default function ResumeReviewPage() {
       await fetchMessages();
       // refresh threads summary (overlay + tabs)
       try {
-        const t = await fetch(`${apiUrl}/api/v2/advice/threads/?${userIdFromRoute ? `user_id=${encodeURIComponent(String(userIdFromRoute))}&` : ''}subject=resume_advice`, { headers: { ...getAuthHeaders() } });
+        const t = await fetch(`${apiUrl}/api/v2/advice/threads/?${userIdFromRoute ? `user_id=${encodeURIComponent(String(userIdFromRoute))}&` : ''}subject=resume_advice&mode=comment`, { headers: { ...getAuthHeaders() } });
         if (t.ok) setThreads(await t.json());
       } catch {}
     } catch (e) {
@@ -704,7 +704,7 @@ export default function ResumeReviewPage() {
       await fetchMessages();
       // refresh threads summary
       try {
-        const t = await fetch(`${apiUrl}/api/v2/advice/threads/?${userIdFromRoute ? `user_id=${encodeURIComponent(String(userIdFromRoute))}&` : ''}subject=resume_advice`, { headers: { ...getAuthHeaders() } });
+        const t = await fetch(`${apiUrl}/api/v2/advice/threads/?${userIdFromRoute ? `user_id=${encodeURIComponent(String(userIdFromRoute))}&` : ''}subject=resume_advice&mode=comment`, { headers: { ...getAuthHeaders() } });
         if (t.ok) setThreads(await t.json());
       } catch {}
     } catch {}
@@ -858,7 +858,7 @@ export default function ResumeReviewPage() {
                     const timestamp = latest.created_at ? new Date(latest.created_at).toLocaleString('ja-JP') : '';
                     return (
                       <div
-                        key={annId}
+                        key={String(t.thread_id || annId)}
                         className="absolute right-[-240px] w-[220px] pointer-events-auto"
                         style={{ top: Math.max(0, topGuess - 8), opacity: t.unresolved ? 1 : 0.6 }}
                         onClick={() => {
@@ -868,6 +868,8 @@ export default function ResumeReviewPage() {
                             sel.classList.add('ring-2','ring-[#E5A6A6]');
                             setTimeout(() => sel.classList.remove('ring-2','ring-[#E5A6A6]'), 1200);
                           }
+                          // select this thread for reply context
+                          if (t.thread_id) setActiveThread(String(t.thread_id));
                         }}
                       >
                         <div
@@ -891,7 +893,7 @@ export default function ResumeReviewPage() {
                           {/* quote chip omitted here (available on creation time) */}
                           <div className="px-3 py-2 text-sm text-secondary-800 whitespace-pre-wrap">{rest || raw}</div>
                           <div className="px-3 pb-2 text-xs text-primary-700 flex gap-3">
-                            <button className="hover:underline" onClick={(e) => { e.stopPropagation(); setActiveThread(annId); setTimeout(() => { const el = document.getElementById('thread-reply-box'); el?.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 0); }}>返信</button>
+                            <button className="hover:underline" onClick={(e) => { e.stopPropagation(); setActiveThread(String(t.thread_id || '')); setTimeout(() => { const el = document.getElementById('thread-reply-box'); el?.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 0); }}>返信</button>
                             <button className="hover:underline" onClick={(e) => { e.stopPropagation(); resolveAnnotation(annId); }}>解決</button>
                           </div>
                         </div>
@@ -989,10 +991,11 @@ export default function ResumeReviewPage() {
               {threadsFiltered.map((t: any, i: number) => {
                 const annId = String(t.annotation?.id || '');
                 const stableIdx = annId ? (annotations.findIndex(a => String(a.id) === annId) + 1) : (i + 1);
+                const tid = String(t.thread_id || '');
                 return (
-                  <button key={annId || i}
-                    onClick={() => setActiveThread(annId)}
-                    className={`text-xs px-2 py-1 rounded border whitespace-nowrap ${String(activeThread) === annId ? 'bg-primary-50 border-primary-400 text-primary-700' : 'bg-white border-secondary-300'}`}
+                  <button key={tid || i}
+                    onClick={() => setActiveThread(tid)}
+                    className={`text-xs px-2 py-1 rounded border whitespace-nowrap ${String(activeThread) === tid ? 'bg-primary-50 border-primary-400 text-primary-700' : 'bg-white border-secondary-300'}`}
                     title={(t.annotation?.anchor_id || '')}
                   >
                     #{stableIdx} ({t.messages_count}){t.unresolved ? '•' : ''}

@@ -1452,6 +1452,7 @@ def advice_messages(request):
     if request.method == 'GET':
         user_id = request.GET.get('user_id')
         annotation_id = request.GET.get('annotation_id')
+        parent_id = request.GET.get('parent_id')
         # 管理者は対象ユーザーを必須にして相互のメッセージのみ返す
         if request.user.is_staff:
             counterpart = resolve_counterpart(request.user, user_id)
@@ -1463,6 +1464,8 @@ def advice_messages(request):
                 Q(sender=counterpart, receiver__is_staff=True) |
                 Q(sender__is_staff=True, receiver=counterpart)
             ).order_by('created_at')
+            if parent_id:
+                qs = qs.filter(Q(id=parent_id) | Q(parent_id=parent_id))
             if annotation_id:
                 qs = qs.filter(annotation_id=annotation_id)
             return Response(MessageSerializer(qs, many=True).data)
@@ -1473,6 +1476,8 @@ def advice_messages(request):
         ).filter(
             Q(sender__is_staff=True) | Q(receiver__is_staff=True)
         ).filter(subject=SUBJECT).order_by('created_at')
+        if parent_id:
+            qs = qs.filter(Q(id=parent_id) | Q(parent_id=parent_id))
         if annotation_id:
             qs = qs.filter(annotation_id=annotation_id)
 
@@ -1536,13 +1541,17 @@ def advice_messages(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def advice_threads(request):
-    """注釈（annotation）ごとのスレッド概要を返す。
-    GET /api/v2/advice/threads/?user_id=&subject=resume_advice
-    返却: [{ annotation: {...}, latest_message: {...}, messages_count: n, unresolved: bool }]
+    """スレッド概要を返す。
+    GET /api/v2/advice/threads/?user_id=&subject=resume_advice[&mode=comment]
+    mode:
+      - (default) annotation: 注釈ごと
+      - comment: 親メッセージ（parent=null）ごと
+    返却例 (mode=comment): [{ thread_id: <parent_or_self_id>, annotation: {...}, latest_message: {...}, messages_count: n, unresolved: bool }]
     """
     from .models import Annotation
     SUBJECT = request.GET.get('subject') or 'resume_advice'
     user_id = request.GET.get('user_id')
+    mode = request.GET.get('mode') or 'annotation'
 
     # 対向ユーザーの決定（advice_messages と同等）
     def resolve_counterpart(for_user, specified_user_id=None):
@@ -1575,19 +1584,36 @@ def advice_threads(request):
 
     qs = qs.filter(annotation__isnull=False).select_related('annotation').order_by('created_at')
 
-    threads = {}
-    for m in qs:
-        aid = str(m.annotation_id)
-        t = threads.get(aid) or {'annotation': AnnotationSerializer(m.annotation).data, 'latest_message': None, 'messages_count': 0, 'unresolved': not bool(m.annotation.is_resolved)}
-        t['messages_count'] += 1
-        t['latest_message'] = MessageSerializer(m).data
-        t['unresolved'] = t['unresolved'] or (not bool(m.annotation.is_resolved))
-        threads[aid] = t
-
-    # 配列に変換（最新メッセージの昇順）
-    result = list(threads.values())
-    result.sort(key=lambda x: x['latest_message']['created_at'])
-    return Response(result, status=status.HTTP_200_OK)
+    if mode == 'comment':
+        threads = {}
+        for m in qs:
+            tid = str(m.parent_id or m.id)
+            t = threads.get(tid) or {
+                'thread_id': tid,
+                'annotation': AnnotationSerializer(m.annotation).data,
+                'latest_message': None,
+                'messages_count': 0,
+                'unresolved': not bool(m.annotation.is_resolved),
+            }
+            t['messages_count'] += 1
+            t['latest_message'] = MessageSerializer(m).data
+            t['unresolved'] = t['unresolved'] or (not bool(m.annotation.is_resolved))
+            threads[tid] = t
+        result = list(threads.values())
+        result.sort(key=lambda x: x['latest_message']['created_at'])
+        return Response(result, status=status.HTTP_200_OK)
+    else:
+        threads = {}
+        for m in qs:
+            aid = str(m.annotation_id)
+            t = threads.get(aid) or {'annotation': AnnotationSerializer(m.annotation).data, 'latest_message': None, 'messages_count': 0, 'unresolved': not bool(m.annotation.is_resolved)}
+            t['messages_count'] += 1
+            t['latest_message'] = MessageSerializer(m).data
+            t['unresolved'] = t['unresolved'] or (not bool(m.annotation.is_resolved))
+            threads[aid] = t
+        result = list(threads.values())
+        result.sort(key=lambda x: x['latest_message']['created_at'])
+        return Response(result, status=status.HTTP_200_OK)
 
 
 @api_view(['GET'])
