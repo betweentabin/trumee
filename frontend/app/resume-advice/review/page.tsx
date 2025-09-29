@@ -58,7 +58,9 @@ export default function ResumeReviewPage() {
   const searchRef = useRef<HTMLInputElement | null>(null);
   const [didAutoSelectThread, setDidAutoSelectThread] = useState(false);
   // Edit mode (Phase 2 skeleton)
-  const [mode, setMode] = useState<'comments' | 'edit'>('comments');
+  const [mode, setMode] = useState<'comments' | 'edit'>('edit');
+  // Layout split (left preview | right editor)
+  const [split, setSplit] = useState<'leftWide' | 'balanced' | 'rightWide'>('balanced');
   const [editSelfPr, setEditSelfPr] = useState('');
   const [editWorkDesc, setEditWorkDesc] = useState<string[]>([]); // mirrors extra_data.workExperiences[].description
   const [editJobSummary, setEditJobSummary] = useState('');
@@ -813,14 +815,24 @@ export default function ResumeReviewPage() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        <h1 className="text-2xl md:text-3xl font-bold text-secondary-800 text-center mb-8">
-          職務経歴書の添削内容を確認、コメントを追加してください
-        </h1>
+        <div className="max-w-7xl mx-auto px-4 py-8">
+        <div className="flex items-center justify-between mb-4">
+          <h1 className="text-2xl md:text-3xl font-bold text-secondary-800">
+            職務経歴書の添削
+          </h1>
+          <div className="hidden lg:flex items-center gap-2">
+            <span className="text-xs text-secondary-600">表示幅</span>
+            <div className="inline-flex rounded-md border overflow-hidden">
+              <button className={`px-2 py-1 text-xs ${split==='leftWide'?'bg-primary-50 text-primary-700':'bg-white'}`} onClick={() => setSplit('leftWide')}>左広い</button>
+              <button className={`px-2 py-1 text-xs border-l ${split==='balanced'?'bg-primary-50 text-primary-700':'bg-white'}`} onClick={() => setSplit('balanced')}>標準</button>
+              <button className={`px-2 py-1 text-xs border-l ${split==='rightWide'?'bg-primary-50 text-primary-700':'bg-white'}`} onClick={() => setSplit('rightWide')}>右広い</button>
+            </div>
+          </div>
+        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Left: Resume preview (actual data or baseline when editing) */}
-          <section className="lg:col-span-8 bg-white border rounded-lg shadow-sm p-4 overflow-auto max-h-[75vh]">
+          <section className={`${split === 'leftWide' ? 'lg:col-span-8' : split === 'balanced' ? 'lg:col-span-7' : 'lg:col-span-6'} bg-white border rounded-lg shadow-sm p-4 overflow-auto max-h-[75vh]`}>
             {(overridePreview || selected) ? (
               <div
                 className="relative pr-[260px] w-full"
@@ -1009,7 +1021,7 @@ export default function ResumeReviewPage() {
           </section>
 
           {/* Right: Comments panel or Edit panel */}
-          <aside className="lg:col-span-4 flex flex-col bg-white border rounded-lg shadow-sm overflow-hidden max-h-[75vh]">
+          <aside className={`${split === 'leftWide' ? 'lg:col-span-4' : split === 'balanced' ? 'lg:col-span-5' : 'lg:col-span-6'} flex flex-col bg-white border rounded-lg shadow-sm overflow-hidden max-h-[75vh]`}>
             {/* Panel header */}
             <div className="bg-primary-600 text-white px-4 py-3 flex items-center justify-between">
               <div className="font-semibold">{mode === 'edit' ? '編集' : sectionTitle}</div>
