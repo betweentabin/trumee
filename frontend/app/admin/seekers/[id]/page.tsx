@@ -750,7 +750,27 @@ export default function AdminSeekerDetailPage() {
                     <option value="unresolved">未解決のみ</option>
                     <option value="resolved">解決済みのみ</option>
                   </select>
-                  <input value={threadSearch} onChange={(e) => setThreadSearch(e.target.value)} placeholder="検索..." className="ml-auto rounded border px-2 py-1 text-xs w-[150px] focus:outline-none focus:ring-2 focus:ring-gray-700 ring-inset" />
+                  <input
+                    value={threadSearch}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      const m = v.match(/^#(\d+)\s*/);
+                      if (m) {
+                        const idx = parseInt(m[1], 10);
+                        const ann = annotations[idx - 1];
+                        if (ann) {
+                          setAnnotationFilter(String(ann.id));
+                          setActiveThread(null);
+                          setDidAutoSelectThread(false);
+                        }
+                        setThreadSearch(v.slice(m[0].length));
+                      } else {
+                        setThreadSearch(v);
+                      }
+                    }}
+                    placeholder="検索..."
+                    className="ml-auto rounded border px-2 py-1 text-xs w-[150px] focus:outline-none focus:ring-2 focus:ring-gray-700 ring-inset"
+                  />
                 </div>
 
                 <div className="h-[460px] overflow-y-auto border rounded-md p-3 space-y-2 bg-gray-50">
