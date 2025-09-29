@@ -54,6 +54,7 @@ export default function ResumeReviewPage() {
   const [showUnresolvedOnly, setShowUnresolvedOnly] = useState(false);
   const [threadSearch, setThreadSearch] = useState('');
   const searchRef = useRef<HTMLInputElement | null>(null);
+  const [didAutoSelectThread, setDidAutoSelectThread] = useState(false);
   // Edit mode (Phase 2 skeleton)
   const [mode, setMode] = useState<'comments' | 'edit'>('comments');
   const [editSelfPr, setEditSelfPr] = useState('');
@@ -512,6 +513,17 @@ export default function ResumeReviewPage() {
     // clear reply box when switching
     setReplyInput('');
   }, [activeThread]);
+
+  // Auto-select first thread so users immediately see a threaded view
+  useEffect(() => {
+    if (didAutoSelectThread) return;
+    const first = (threadsFiltered && threadsFiltered[0]) || null;
+    const annId = first?.annotation?.id ? String(first.annotation.id) : null;
+    if (annId) {
+      setActiveThread(annId);
+      setDidAutoSelectThread(true);
+    }
+  }, [threadsFiltered, didAutoSelectThread]);
 
   const visibleMessages = useMemo(() => {
     if (!activeThread) return messagesAll;
