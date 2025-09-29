@@ -831,13 +831,35 @@ export default function ResumeReviewPage() {
           <h1 className="text-2xl md:text-3xl font-bold text-secondary-800">
             職務経歴書の添削
           </h1>
-          <div className="hidden lg:flex items-center gap-2">
+          <div className="hidden lg:flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-secondary-600">モード</span>
+              <div className="inline-flex rounded-md border overflow-hidden">
+                <button
+                  className={`px-2 py-1 text-xs ${mode==='comments'?'bg-primary-50 text-primary-700':'bg-white'}`}
+                  onClick={() => setMode('comments')}
+                >コメント</button>
+                <button
+                  className={`px-2 py-1 text-xs border-l ${mode==='edit'?'bg-primary-50 text-primary-700':'bg-white'} ${!isOwner?'opacity-50 cursor-not-allowed':''}`}
+                  onClick={() => { if (isOwner) setMode('edit'); }}
+                  title={isOwner ? '編集' : '編集は本人のみ可能です'}
+                >編集</button>
+              </div>
+            </div>
             <span className="text-xs text-secondary-600">表示幅</span>
             <div className="inline-flex rounded-md border overflow-hidden">
               <button className={`px-2 py-1 text-xs ${split==='leftWide'?'bg-primary-50 text-primary-700':'bg-white'}`} onClick={() => setSplit('leftWide')}>左広い</button>
               <button className={`px-2 py-1 text-xs border-l ${split==='balanced'?'bg-primary-50 text-primary-700':'bg-white'}`} onClick={() => setSplit('balanced')}>標準</button>
               <button className={`px-2 py-1 text-xs border-l ${split==='rightWide'?'bg-primary-50 text-primary-700':'bg-white'}`} onClick={() => setSplit('rightWide')}>右広い</button>
             </div>
+          </div>
+        </div>
+        {/* モバイルでもモードが切替えられる簡易トグル */}
+        <div className="flex lg:hidden items-center gap-2 mb-3">
+          <span className="text-xs text-secondary-600">モード</span>
+          <div className="inline-flex rounded-md border overflow-hidden">
+            <button className={`px-2 py-1 text-xs ${mode==='comments'?'bg-primary-50 text-primary-700':'bg-white'}`} onClick={() => setMode('comments')}>コメント</button>
+            <button className={`px-2 py-1 text-xs border-l ${mode==='edit'?'bg-primary-50 text-primary-700':'bg-white'} ${!isOwner?'opacity-50 cursor-not-allowed':''}`} onClick={() => { if (isOwner) setMode('edit'); }} title={isOwner ? '編集' : '編集は本人のみ可能です'}>編集</button>
           </div>
         </div>
 
