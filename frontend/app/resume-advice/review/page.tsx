@@ -237,15 +237,8 @@ export default function ResumeReviewPage() {
     return { rest: text };
   };
 
-  const isOwner = useMemo(() => {
-    const uid = getUserInfo()?.uid;
-    // /users/[userId] ルートではURLのユーザーと一致で判定
-    if (userIdFromRoute) return !!(uid && String(uid) === String(userIdFromRoute));
-    // selected があれば所有者IDで判定
-    if (selected?.user) return String(selected.user) === String(uid);
-    // デフォルト（自分の画面想定）
-    return true;
-  }, [selected, userIdFromRoute]);
+  // ログインしていれば編集可（「ログイン=本人」ポリシー）
+  const isOwner = useMemo(() => !!getUserInfo()?.uid, []);
 
   // 非所有者は編集モードを強制的にコメントに戻す
   useEffect(() => {
@@ -836,12 +829,12 @@ export default function ResumeReviewPage() {
               <span className="text-xs text-secondary-600">モード</span>
               <div className="inline-flex rounded-md border overflow-hidden">
                 <button
-                  className={`px-2 py-1 text-xs ${mode==='comments'?'bg-primary-50 text-primary-700':'bg-white'}`}
+                  className={`px-2 py-1 text-xs ${mode==='comments'?'bg-primary-600 text-white':'bg-white text-primary-700'}`}
                   onClick={() => setMode('comments')}
                 >コメント</button>
                 <button
-                  className={`px-2 py-1 text-xs border-l ${mode==='edit'?'bg-primary-50 text-primary-700':'bg-white'} ${!isOwner?'opacity-50 cursor-not-allowed':''}`}
-                  onClick={() => { if (isOwner) setMode('edit'); }}
+                  className={`px-2 py-1 text-xs border-l ${mode==='edit'?'bg-primary-600 text-white':'bg-white text-primary-700'}`}
+                  onClick={() => setMode('edit')}
                   title={isOwner ? '編集' : '編集は本人のみ可能です'}
                 >編集</button>
               </div>
@@ -858,8 +851,8 @@ export default function ResumeReviewPage() {
         <div className="flex lg:hidden items-center gap-2 mb-3">
           <span className="text-xs text-secondary-600">モード</span>
           <div className="inline-flex rounded-md border overflow-hidden">
-            <button className={`px-2 py-1 text-xs ${mode==='comments'?'bg-primary-50 text-primary-700':'bg-white'}`} onClick={() => setMode('comments')}>コメント</button>
-            <button className={`px-2 py-1 text-xs border-l ${mode==='edit'?'bg-primary-50 text-primary-700':'bg-white'} ${!isOwner?'opacity-50 cursor-not-allowed':''}`} onClick={() => { if (isOwner) setMode('edit'); }} title={isOwner ? '編集' : '編集は本人のみ可能です'}>編集</button>
+            <button className={`px-2 py-1 text-xs ${mode==='comments'?'bg-primary-600 text-white':'bg-white text-primary-700'}`} onClick={() => setMode('comments')}>コメント</button>
+            <button className={`px-2 py-1 text-xs border-l ${mode==='edit'?'bg-primary-600 text-white':'bg-white text-primary-700'}`} onClick={() => setMode('edit')} title={isOwner ? '編集' : '編集は本人のみ可能です'}>編集</button>
           </div>
         </div>
 
@@ -1060,12 +1053,12 @@ export default function ResumeReviewPage() {
               <div className="font-semibold">{mode === 'edit' ? '編集' : sectionTitle}</div>
               <div className="flex items-center gap-2">
                 <button
-                  className={`text-xs px-2 py-1 rounded ${mode === 'comments' ? 'bg-white text-primary-700' : 'bg-primary-500 text-white'}`}
+                  className={`text-xs px-2 py-1 rounded border ${mode === 'comments' ? 'bg-primary-700 text-white border-white/30' : 'bg-white text-primary-700 border-white'}`}
                   onClick={() => setMode('comments')}
                 >コメント</button>
                 <button
-                  className={`text-xs px-2 py-1 rounded ${mode === 'edit' ? 'bg-white text-primary-700' : 'bg-primary-500 text-white'} ${!isOwner ? 'opacity-50 cursor-not-allowed' : ''}`}
-                  onClick={() => { if (isOwner) setMode('edit'); }}
+                  className={`text-xs px-2 py-1 rounded border ${mode === 'edit' ? 'bg-primary-700 text-white border-white/30' : 'bg-white text-primary-700 border-white'}`}
+                  onClick={() => setMode('edit')}
                   title={isOwner ? '編集' : '編集は本人のみ可能です'}
                 >編集</button>
                 {mode === 'comments' && (
