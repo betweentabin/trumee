@@ -514,6 +514,22 @@ export default function ResumeReviewPage() {
     setReplyInput('');
   }, [activeThread]);
 
+  // Filter threads (search + unresolved)
+  const threadsFiltered = useMemo(() => {
+    let list = Array.isArray(threads) ? [...threads] : [];
+    if (showUnresolvedOnly) list = list.filter((t: any) => !!t?.unresolved);
+    const q = threadSearch.trim().toLowerCase();
+    if (q) {
+      list = list.filter((t: any) => {
+        const aid = (t?.annotation?.anchor_id || '').toLowerCase();
+        const raw = (t?.latest_message?.content || '') as string;
+        const { rest } = parseAnnotation(raw);
+        return aid.includes(q) || raw.toLowerCase().includes(q) || rest.toLowerCase().includes(q);
+      });
+    }
+    return list;
+  }, [threads, showUnresolvedOnly, threadSearch]);
+
   // Auto-select first thread so users immediately see a threaded view
   useEffect(() => {
     if (didAutoSelectThread) return;
@@ -530,20 +546,7 @@ export default function ResumeReviewPage() {
     return threadMessages[activeThread] || [];
   }, [messagesAll, activeThread, threadMessages]);
 
-  const threadsFiltered = useMemo(() => {
-    let list = Array.isArray(threads) ? [...threads] : [];
-    if (showUnresolvedOnly) list = list.filter((t: any) => !!t?.unresolved);
-    const q = threadSearch.trim().toLowerCase();
-    if (q) {
-      list = list.filter((t: any) => {
-        const aid = (t?.annotation?.anchor_id || '').toLowerCase();
-        const raw = (t?.latest_message?.content || '') as string;
-        const { rest } = parseAnnotation(raw);
-        return aid.includes(q) || raw.toLowerCase().includes(q) || rest.toLowerCase().includes(q);
-      });
-    }
-    return list;
-  }, [threads, showUnresolvedOnly, threadSearch]);
+  
 
   const send = async () => {
     const text = input.trim();
