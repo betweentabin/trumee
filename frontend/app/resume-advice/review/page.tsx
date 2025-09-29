@@ -111,7 +111,13 @@ export default function ResumeReviewPage() {
           } catch {}
           return;
         }
-        const uid = getUserInfo()?.uid;
+        let uid: any = getUserInfo()?.uid;
+        if ((!uid || uid === 'undefined') && typeof window !== 'undefined') {
+          const raw = localStorage.getItem('current_user_v2');
+          if (raw) {
+            try { const u = JSON.parse(raw); if (u?.id) uid = u.id; } catch {}
+          }
+        }
         const isOwner = uid && String(uid) === String(userIdFromRoute);
         const tryOwner = await fetchResumePreview({ userId: userIdFromRoute, token, forOwner: Boolean(isOwner) }).catch(() => emptyResumePreview);
         if ((tryOwner.jobhistoryList || []).length > 0 || tryOwner.selfPR || tryOwner.jobSummary) {
@@ -254,11 +260,37 @@ export default function ResumeReviewPage() {
 
   // 本人のみ編集可: ルートに userId があれば一致を確認、なければ自身の一覧=本人
   const isOwner = useMemo(() => {
-    const uid = getUserInfo()?.uid;
-    if (!uid) return false;
-    if (userIdFromRoute) return String(uid) === String(userIdFromRoute);
-    return true;
+    try {
+      let uid = getUserInfo()?.uid ? String(getUserInfo()?.uid) : '';
+      // v2 認証では current_user_v2 にユーザ情報が保存されるためフォールバック
+      if ((!uid || uid === 'undefined') && typeof window !== 'undefined') {
+        const raw = localStorage.getItem('current_user_v2');
+        if (raw) {
+          try {
+            const u = JSON.parse(raw);
+            if (u?.id) uid = String(u.id);
+          } catch {}
+        }
+      }
+      if (!uid) return false;
+      if (userIdFromRoute) return String(uid) === String(userIdFromRoute);
+      return true;
+    } catch {
+      return false;
+    }
   }, [userIdFromRoute]);
+
+  // 共通: タイムアウト付きfetch
+  const fetchWithTimeout = async (url: string, options: RequestInit, timeoutMs = 15000) => {
+    const controller = new AbortController();
+    const id = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      const res = await fetch(url, { ...options, signal: controller.signal });
+      return res;
+    } finally {
+      clearTimeout(id);
+    }
+  };
 
   // モードはユーザー操作を優先（自動で戻さない）
 
@@ -433,21 +465,57 @@ export default function ResumeReviewPage() {
         workExperiences,
         jobSummary: editJobSummary,
       };
-      const res = await fetch(`${apiUrl}/api/v2/resumes/${encodeURIComponent(rid)}/`, {
+      const res = await fetchWithTimeout(`${apiUrl}/api/v2/resumes/${encodeURIComponent(rid)}/`, {
         method: 'PATCH',
         headers: { ...getAuthHeaders() },
         body: JSON.stringify({
           self_pr: editSelfPr,
           extra_data: { ...(extra || {}), workExperiences, jobSummary: editJobSummary, baseline },
         }),
-      });
+      }, 15000);
       if (res.ok) {
-        const updated = await res.json();
-        setSelected((prev: any) => ({ ...(prev || {}), ...updated }));
-        setFormError(null);
+        // 直後に詳細を再取得して反映確認
+        try {
+          const det = await fetchWithTimeout(`${apiUrl}/api/v2/resumes/${encodeURIComponent(rid)}/`, { headers: { ...getAuthHeaders() } }, 10000);
+          if (det.ok) {
+            const updated = await det.json();
+            setSelected((prev: any) => ({ ...(prev || {}), ...updated }));
+            setFormError(null);
+            setError(null);
+          } else {
+            // 取得失敗でもPATCH成功時は成功扱いとし、ユーザーに後で再読込を案内
+            setFormError(null);
+            setError(null);
+          }
+        } catch {
+          // タイムアウト等でも成功は成功扱い
+          setFormError(null);
+          setError(null);
+        }
+      } else {
+        // エラー詳細を表示
+        try {
+          const payload = await res.json();
+          setError(payload?.detail || payload?.error || '公開反映に失敗しました');
+        } catch {
+          setError('公開反映に失敗しました');
+        }
       }
-    } catch {
-      setError('公開反映に失敗しました');
+    } catch (e: any) {
+      if (e?.name === 'AbortError') {
+        setError('公開反映がタイムアウトしました。反映状況を確認しています…');
+        // タイムアウト時も反映済みの可能性があるため最終状態を確認
+        try {
+          const det = await fetchWithTimeout(`${apiUrl}/api/v2/resumes/${encodeURIComponent(rid)}/`, { headers: { ...getAuthHeaders() } }, 8000);
+          if (det.ok) {
+            const updated = await det.json();
+            setSelected((prev: any) => ({ ...(prev || {}), ...updated }));
+            setError(null);
+          }
+        } catch {}
+      } else {
+        setError('公開反映に失敗しました');
+      }
     } finally {
       setLoading(false);
     }
