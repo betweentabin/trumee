@@ -333,18 +333,19 @@ export default function ResumeReviewPage() {
   }, [mode, selected]);
 
   const saveDraft = async () => {
-    if (!selected?.id || !isOwner) { setError('編集は本人のみ可能です'); return; }
+    const rid = String(selected?.id || overridePreview?.resumeId || '');
+    if (!rid || !isOwner) { setError('編集は本人のみ可能です'); return; }
     const v = validateEdit();
     if (v) { setFormError(v); return; }
     setLoading(true);
     try {
-      const extra = selected.extra_data || {};
+      const extra = selected?.extra_data || {};
       const workExperiences = (Array.isArray(currentWorkExperiences) ? currentWorkExperiences : []).map((w: any, i: number) => ({ ...w, description: editWorkDesc[i] ?? w.description }));
       const payload: any = {
         self_pr: editSelfPr,
         extra_data: { ...(extra || {}), workExperiences, jobSummary: editJobSummary },
       };
-      const res = await fetch(`${apiUrl}/api/v2/resumes/${encodeURIComponent(String(selected.id))}/`, {
+      const res = await fetch(`${apiUrl}/api/v2/resumes/${encodeURIComponent(rid)}/`, {
         method: 'PATCH',
         headers: { ...getAuthHeaders() },
         body: JSON.stringify(payload),
@@ -368,13 +369,14 @@ export default function ResumeReviewPage() {
   };
 
   const cancelToBaseline = async () => {
-    if (!selected?.id || !isOwner) { setError('編集は本人のみ可能です'); return; }
-    const extra = selected.extra_data || {};
+    const rid = String(selected?.id || overridePreview?.resumeId || '');
+    if (!rid || !isOwner) { setError('編集は本人のみ可能です'); return; }
+    const extra = selected?.extra_data || {};
     const baseline = (extra as any).baseline;
     if (!baseline) return;
     setLoading(true);
     try {
-      const res = await fetch(`${apiUrl}/api/v2/resumes/${encodeURIComponent(String(selected.id))}/`, {
+      const res = await fetch(`${apiUrl}/api/v2/resumes/${encodeURIComponent(rid)}/`, {
         method: 'PATCH',
         headers: { ...getAuthHeaders() },
         body: JSON.stringify({
@@ -398,19 +400,20 @@ export default function ResumeReviewPage() {
   };
 
   const publishBaseline = async () => {
-    if (!selected?.id || !isOwner) { setError('編集は本人のみ可能です'); return; }
+    const rid = String(selected?.id || overridePreview?.resumeId || '');
+    if (!rid || !isOwner) { setError('編集は本人のみ可能です'); return; }
     const v = validateEdit();
     if (v) { setFormError(v); return; }
     setLoading(true);
     try {
-      const extra = selected.extra_data || {};
+      const extra = selected?.extra_data || {};
       const workExperiences = (Array.isArray(currentWorkExperiences) ? currentWorkExperiences : []).map((w: any, i: number) => ({ ...w, description: editWorkDesc[i] ?? w.description }));
       const baseline = {
         self_pr: editSelfPr,
         workExperiences,
         jobSummary: editJobSummary,
       };
-      const res = await fetch(`${apiUrl}/api/v2/resumes/${encodeURIComponent(String(selected.id))}/`, {
+      const res = await fetch(`${apiUrl}/api/v2/resumes/${encodeURIComponent(rid)}/`, {
         method: 'PATCH',
         headers: { ...getAuthHeaders() },
         body: JSON.stringify({
