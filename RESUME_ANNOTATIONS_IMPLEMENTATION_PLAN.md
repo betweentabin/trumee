@@ -222,6 +222,51 @@
 - [x] FE: 保存/取消/公開反映ボタン
 - [ ] BE: baseline（extra_data） 保存/復元の補助関数（既存PATCH活用で暫定対応）
 
+---
+
+## 注釈番号ドリルダウン（検索/返信連動）計画
+
+### ゴール
+- 注釈の下線バッジ（#番号）または右ペインの注釈プルダウンで絞り込むと、その注釈に紐づく「親コメント＝スレッド」だけを一覧表示。
+- 一覧から親コメントを選択すると、その親＋返信のみ（ネスト1段）を右ペインに表示し、下部の入力はそのスレッドへの返信になる。
+- 吹き出しの「返信」を押しても同じスレッド選択と返信状態に遷移。
+
+### API
+- 既存拡張
+  - GET `/api/v2/advice/threads/?subject=resume_advice&mode=comment&annotation_id=<ann>`
+    - 親コメント（parent=null）単位のサマリに annotation_id フィルタを追加。
+    - 返却: `[{ thread_id, annotation, latest_message, messages_count, unresolved }]`
+  - GET `/api/v2/advice/messages/?parent_id=<thread_id>` 親＋返信のみ返却。
+  - POST `/api/v2/advice/messages/` 本文＋`annotation_id`＋`parent_id`（＋`user_id`）で返信を作成。
+
+### フロント（レビュー画面）
+- 状態
+  - `activeAnnotation: string | ''` 選択中の注釈ID（下線# or プルダウン）
+  - `activeThread: string | null` 選択中のスレッド（親コメントのID）
+- イベント
+  - 下線バッジ（#N）クリック → `activeAnnotation` 設定 → `threads?mode=comment&annotation_id` 再取得 → 先頭 `thread_id` を `activeThread` に自動選択。
+  - 右ペイン注釈プルダウン選択 → 同上フロー。
+  - 吹き出し「返信」クリック → 対応する `thread_id` を `activeThread` に設定し、返信フォームへスクロール。
+- 表示
+  - 右ペイン上部: 注釈プルダウン（#番号/anchor_id）、ステータス（全件/未解決/解決済）、自由検索。
+  - 右ペイン本文: `activeThread` があれば親＋返信（1段）と返信フォーム／なければガイダンス。
+  - 非選択時（`activeAnnotation==''`）は全スレッドを対象に既存のリスト/タブ表示。
+
+### 管理画面適用（admin/seekers/[id]）
+- エンドポイントに `user_id` を付与して同一仕様で適用。
+- 概要: `/advice/threads?user_id=<id>&subject=resume_advice&mode=comment&annotation_id=<ann?>`
+- 詳細: `/advice/messages?user_id=<id>&parent_id=<thread_id>`
+- 返信: `POST /advice/messages` に `user_id + annotation_id + parent_id + content`。
+
+### UX 細則
+- 検索ボックスで `#3 〇〇` のように入力された場合は `#3` を注釈番号として解釈して `activeAnnotation=#3` に設定し、残りのテキストで内容検索を行う（任意）。
+- スレッドが0件のときは「この注釈にはまだコメントがありません」バナーを表示。
+
+### QA
+- #番号選択→該当注釈のスレッドのみ一覧→先頭が自動選択→右ペインに親＋返信＋返信フォームが表示される。
+- 吹き出し/注釈プルダウン/下線バッジのいずれからでも同じ遷移が成立。
+- ステータス（未解決/解決済）・自由検索と注釈番号の併用で意図通りに絞り込める。
+
 ### フェーズ3：差分/履歴（任意）
 - [ ] BE: `ResumeSnapshot` 実装 + API
 - [ ] FE: スナップショット切替 + 差分ハイライト

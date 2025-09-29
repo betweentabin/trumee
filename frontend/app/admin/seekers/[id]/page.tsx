@@ -44,6 +44,15 @@ export default function AdminSeekerDetailPage() {
   // Annotations + positions
   const [annotations, setAnnotations] = useState<any[]>([]);
   const [markTops, setMarkTops] = useState<Record<string, number>>({});
+  // Threads (comment-mode)
+  const [threads, setThreads] = useState<any[]>([]);
+  const [activeThread, setActiveThread] = useState<string | null>(null);
+  const [threadMessages, setThreadMessages] = useState<Record<string, ReviewMsg[]>>({});
+  const [statusFilter, setStatusFilter] = useState<'all' | 'unresolved' | 'resolved'>('all');
+  const [annotationFilter, setAnnotationFilter] = useState<string>('');
+  const [threadSearch, setThreadSearch] = useState('');
+  const [didAutoSelectThread, setDidAutoSelectThread] = useState(false);
+  const [threadReplyInput, setThreadReplyInput] = useState('');
 
   const token = useMemo(() => {
     if (typeof window === 'undefined') return '';
@@ -160,6 +169,15 @@ export default function AdminSeekerDetailPage() {
             if (data?.resumeId) {
               const a = await fetch(buildApiUrl(`/advice/annotations/?resume_id=${encodeURIComponent(String(data.resumeId))}&subject=resume_advice`), { headers: getApiHeaders(token) });
               if (a.ok) setAnnotations(await a.json());
+              // Load threads (comment-mode)
+              try {
+                const qs = new URLSearchParams();
+                qs.set('subject', 'resume_advice');
+                qs.set('mode', 'comment');
+                qs.set('user_id', String(id));
+                const tr = await fetch(buildApiUrl(`/advice/threads/?${qs.toString()}`), { headers: getApiHeaders(token) });
+                if (tr.ok) setThreads(await tr.json());
+              } catch {}
             }
           } catch {}
         }
@@ -198,6 +216,100 @@ export default function AdminSeekerDetailPage() {
     });
     setMarkTops(map);
   }, [annotations, resumePreview]);
+
+  // Threads filters + auto select
+  const threadsFiltered = useMemo(() => {
+    let list = Array.isArray(threads) ? [...threads] : [];
+    if (statusFilter === 'unresolved') list = list.filter((t: any) => !!t?.unresolved);
+    if (statusFilter === 'resolved') list = list.filter((t: any) => t?.unresolved === false);
+    if (annotationFilter) list = list.filter((t: any) => String(t?.annotation?.id || '') === String(annotationFilter));
+    const q = threadSearch.trim().toLowerCase();
+    if (q) {
+      list = list.filter((t: any) => {
+        const aid = (t?.annotation?.anchor_id || '').toLowerCase();
+        const raw = (t?.latest_message?.content || '') as string;
+        return aid.includes(q) || raw.toLowerCase().includes(q);
+      });
+    }
+    return list;
+  }, [threads, statusFilter, annotationFilter, threadSearch]);
+
+  useEffect(() => {
+    if (didAutoSelectThread) return;
+    const first = threadsFiltered && threadsFiltered[0];
+    const tid = first?.thread_id ? String(first.thread_id) : null;
+    if (tid) {
+      setActiveThread(tid);
+      setDidAutoSelectThread(true);
+    }
+  }, [threadsFiltered, didAutoSelectThread]);
+
+  // Refetch threads on annotation filter change
+  useEffect(() => {
+    const run = async () => {
+      try {
+        const qs = new URLSearchParams();
+        qs.set('subject', 'resume_advice');
+        qs.set('mode', 'comment');
+        qs.set('user_id', String(id));
+        if (annotationFilter) qs.set('annotation_id', annotationFilter);
+        const res = await fetch(buildApiUrl(`/advice/threads/?${qs.toString()}`), { headers: getApiHeaders(token) });
+        if (res.ok) setThreads(await res.json());
+      } catch {}
+    };
+    run();
+  }, [annotationFilter, id, token]);
+
+  // Load thread messages on selection
+  useEffect(() => {
+    const load = async (parentId: string) => {
+      try {
+        const qs = new URLSearchParams();
+        qs.set('subject', 'resume_advice');
+        qs.set('user_id', String(id));
+        qs.set('parent_id', parentId);
+        const res = await fetch(buildApiUrl(`/advice/messages/?${qs.toString()}`), { headers: getApiHeaders(token) });
+        if (!res.ok) return;
+        const data = await res.json();
+        const mapped: ReviewMsg[] = (data || []).map((m: any) => ({
+          id: String(m.id), sender: String(m.sender), content: m.content, body: m.content, created_at: m.created_at,
+          isAnnotation: !!m.annotation, annotationId: m.annotation ? String(m.annotation) : undefined, parentId: m.parent ? String(m.parent) : null,
+        }));
+        setThreadMessages((prev) => ({ ...prev, [parentId]: mapped }));
+      } catch {}
+    };
+    if (activeThread && !threadMessages[activeThread]) load(activeThread);
+  }, [activeThread, id, token, threadMessages]);
+
+  const sendThreadReply = useCallback(async () => {
+    if (!activeThread || !threadReplyInput.trim()) return;
+    try {
+      const list = threadMessages[activeThread] || [];
+      const root = list.find((m) => !(m as any).parentId) || list[0];
+      const annotationId = (root as any)?.annotationId || (threads.find((t: any) => String(t.thread_id) === String(activeThread))?.annotation?.id);
+      const body: any = { user_id: id, subject: 'resume_advice', content: threadReplyInput.trim(), parent_id: activeThread };
+      if (annotationId) body.annotation_id = String(annotationId);
+      const res = await fetch(buildApiUrl('/advice/messages/'), { method: 'POST', headers: getApiHeaders(token), body: JSON.stringify(body) });
+      if (!res.ok) throw new Error('failed');
+      setThreadReplyInput('');
+      // refresh thread
+      setThreadMessages((prev) => ({ ...prev, [activeThread]: undefined as any }));
+      const qs = new URLSearchParams();
+      qs.set('subject', 'resume_advice'); qs.set('user_id', String(id)); qs.set('parent_id', activeThread);
+      const next = await fetch(buildApiUrl(`/advice/messages/?${qs.toString()}`), { headers: getApiHeaders(token) });
+      if (next.ok) {
+        const data = await next.json();
+        const mapped: ReviewMsg[] = (data || []).map((m: any) => ({ id: String(m.id), sender: String(m.sender), content: m.content, body: m.content, created_at: m.created_at, isAnnotation: !!m.annotation, annotationId: m.annotation ? String(m.annotation) : undefined, parentId: m.parent ? String(m.parent) : null }));
+        setThreadMessages((prev) => ({ ...prev, [activeThread]: mapped }));
+      }
+      // refresh threads summary
+      try {
+        const tqs = new URLSearchParams(); tqs.set('subject', 'resume_advice'); tqs.set('mode', 'comment'); tqs.set('user_id', String(id));
+        const tr = await fetch(buildApiUrl(`/advice/threads/?${tqs.toString()}`), { headers: getApiHeaders(token) });
+        if (tr.ok) setThreads(await tr.json());
+      } catch {}
+    } catch {}
+  }, [activeThread, threadReplyInput, id, token, threadMessages, threads]);
 
   // Selection/annotation state for inline comments
   const previewWrapRef = useRef<HTMLDivElement | null>(null);
@@ -602,7 +714,33 @@ export default function AdminSeekerDetailPage() {
               {/* right: comments + input */}
               <div className="w-full md:w-[360px] p-6">
                 <div className="text-lg font-semibold mb-3">職務内容について</div>
+                {/* Threads toolbar */}
+                <div className="sticky top-0 z-[1] bg-white/80 border rounded-md p-2 mb-2 flex items-center gap-2">
+                  <select value={annotationFilter} onChange={(e) => { setAnnotationFilter(e.target.value); setActiveThread(null); setDidAutoSelectThread(false); }} className="rounded border px-2 py-1 text-xs">
+                    <option value="">注釈: すべて</option>
+                    {annotations.map((a: any, i: number) => (<option key={String(a.id)} value={String(a.id)}>#{i+1} - {a.anchor_id}</option>))}
+                  </select>
+                  <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as any)} className="rounded border px-2 py-1 text-xs">
+                    <option value="all">全件</option>
+                    <option value="unresolved">未解決のみ</option>
+                    <option value="resolved">解決済みのみ</option>
+                  </select>
+                  <input value={threadSearch} onChange={(e) => setThreadSearch(e.target.value)} placeholder="検索..." className="ml-auto rounded border px-2 py-1 text-xs w-[150px]" />
+                </div>
+
                 <div className="h-[460px] overflow-y-auto border rounded-md p-3 space-y-2 bg-gray-50">
+                  {/* Threads quick select */}
+                  <div className="flex flex-wrap gap-2">
+                    {threadsFiltered.map((t: any, i: number) => {
+                      const annId = String(t.annotation?.id || '');
+                      const idx = annId ? (annotations.findIndex(a => String(a.id) === annId) + 1) : (i + 1);
+                      const tid = String(t.thread_id || '');
+                      return (
+                        <button key={tid || i} onClick={() => setActiveThread(tid)} title={t.annotation?.anchor_id || ''} className={`text-xs px-2 py-1 rounded border ${String(activeThread) === tid ? 'bg-gray-100 border-gray-400' : 'bg-white border-gray-300'}`}>#{idx} ({t.messages_count})</button>
+                      );
+                    })}
+                  </div>
+
                   {reviewMessages.length === 0 && (
                     <div className="text-gray-400 text-sm text-center py-8">まだコメントがありません。</div>
                   )}

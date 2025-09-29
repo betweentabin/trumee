@@ -547,6 +547,25 @@ export default function ResumeReviewPage() {
     }
   }, [threadsFiltered, didAutoSelectThread]);
 
+  // Refetch threads when annotationFilter changes
+  useEffect(() => {
+    const loadThreads = async () => {
+      try {
+        const qs = new URLSearchParams();
+        qs.set('subject', 'resume_advice');
+        qs.set('mode', 'comment');
+        if (userIdFromRoute) qs.set('user_id', userIdFromRoute);
+        if (annotationFilter) qs.set('annotation_id', annotationFilter);
+        const res = await fetch(`${apiUrl}/api/v2/advice/threads/?${qs.toString()}`, { headers: { ...getAuthHeaders() } });
+        if (res.ok) {
+          const data = await res.json();
+          setThreads(data);
+        }
+      } catch {}
+    };
+    loadThreads();
+  }, [annotationFilter]);
+
   const visibleMessages = useMemo(() => {
     if (!activeThread) return messagesAll;
     return threadMessages[activeThread] || [];
@@ -799,6 +818,25 @@ export default function ResumeReviewPage() {
                 className="relative pr-[260px] w-full"
                 ref={previewWrapRef}
                 onMouseUp={handlePreviewMouseUp}
+                onClick={(e) => {
+                  try {
+                    const container = previewWrapRef.current;
+                    let el = e.target as HTMLElement | null;
+                    while (el && el !== container) {
+                      if (el.hasAttribute && el.hasAttribute('data-annot-ref')) {
+                        const ref = el.getAttribute('data-annot-ref') || '';
+                        if (ref.startsWith('ann-')) {
+                          const id = ref.replace('ann-', '');
+                          setAnnotationFilter(String(id));
+                          setActiveThread(null);
+                          setDidAutoSelectThread(false);
+                        }
+                        break;
+                      }
+                      el = el.parentElement as HTMLElement | null;
+                    }
+                  } catch {}
+                }}
               >
                 {mode === 'edit' && leftPreviewData ? (
                   <ResumePreview
@@ -1014,7 +1052,7 @@ export default function ResumeReviewPage() {
               {/* Annotation (#) filter */}
               <select
                 value={annotationFilter}
-                onChange={(e) => setAnnotationFilter(e.target.value)}
+                onChange={(e) => { setAnnotationFilter(e.target.value); setActiveThread(null); setDidAutoSelectThread(false); }}
                 className="ml-auto rounded border px-2 py-1 text-xs"
                 title="注釈番号で絞り込み"
               >
@@ -1041,7 +1079,22 @@ export default function ResumeReviewPage() {
               <input
                 ref={searchRef}
                 value={threadSearch}
-                onChange={(e) => setThreadSearch(e.target.value)}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  const m = v.match(/^#(\d+)\s*/);
+                  if (m) {
+                    const idx = parseInt(m[1], 10);
+                    const ann = annotations[idx - 1];
+                    if (ann) {
+                      setAnnotationFilter(String(ann.id));
+                      setActiveThread(null);
+                      setDidAutoSelectThread(false);
+                    }
+                    setThreadSearch(v.slice(m[0].length));
+                  } else {
+                    setThreadSearch(v);
+                  }
+                }}
                 placeholder="検索..."
                 className="rounded border px-2 py-1 text-xs w-[160px]"
               />

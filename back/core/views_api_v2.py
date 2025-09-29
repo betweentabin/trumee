@@ -1552,6 +1552,7 @@ def advice_threads(request):
     SUBJECT = request.GET.get('subject') or 'resume_advice'
     user_id = request.GET.get('user_id')
     mode = request.GET.get('mode') or 'annotation'
+    annotation_id = request.GET.get('annotation_id')
 
     # 対向ユーザーの決定（advice_messages と同等）
     def resolve_counterpart(for_user, specified_user_id=None):
@@ -1583,6 +1584,8 @@ def advice_threads(request):
         ).filter(subject=SUBJECT)
 
     qs = qs.filter(annotation__isnull=False).select_related('annotation').order_by('created_at')
+    if annotation_id:
+        qs = qs.filter(annotation_id=annotation_id)
 
     if mode == 'comment':
         threads = {}
