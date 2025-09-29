@@ -116,8 +116,23 @@ export default function ResumeReviewPage() {
         const tryOwner = await fetchResumePreview({ userId: userIdFromRoute, token, forOwner: Boolean(isOwner) }).catch(() => emptyResumePreview);
         if ((tryOwner.jobhistoryList || []).length > 0 || tryOwner.selfPR || tryOwner.jobSummary) {
           setOverridePreview(tryOwner);
-          setSelected(null);
           setResumes([]);
+          // 本人の場合は詳細を取得して編集対象に設定
+          if (isOwner && tryOwner.resumeId) {
+            try {
+              const det = await fetch(`${apiUrl}/api/v2/resumes/${encodeURIComponent(String(tryOwner.resumeId))}/`, { headers: { ...getAuthHeaders() } });
+              if (det.ok) {
+                const detail = await det.json();
+                setSelected(detail);
+              } else {
+                setSelected(null);
+              }
+            } catch {
+              setSelected(null);
+            }
+          } else {
+            setSelected(null);
+          }
           try {
             const rid = String(tryOwner.resumeId || '');
             const a = await fetch(`${apiUrl}/api/v2/advice/annotations/?resume_id=${encodeURIComponent(rid)}&subject=resume_advice`, { headers: { ...getAuthHeaders() } }); if (a.ok) setAnnotations(await a.json());
@@ -237,8 +252,13 @@ export default function ResumeReviewPage() {
     return { rest: text };
   };
 
-  // ログインしていれば編集可（「ログイン=本人」ポリシー）
-  const isOwner = useMemo(() => !!getUserInfo()?.uid, []);
+  // 本人のみ編集可: ルートに userId があれば一致を確認、なければ自身の一覧=本人
+  const isOwner = useMemo(() => {
+    const uid = getUserInfo()?.uid;
+    if (!uid) return false;
+    if (userIdFromRoute) return String(uid) === String(userIdFromRoute);
+    return true;
+  }, [userIdFromRoute]);
 
   // モードはユーザー操作を優先（自動で戻さない）
 
