@@ -689,7 +689,16 @@ export default function ResumeReviewPage() {
         },
         body: JSON.stringify(body),
       });
-      if (!res.ok) throw new Error('failed');
+      if (!res.ok) {
+        try {
+          const payload = await res.json();
+          const msg = payload?.detail || payload?.error || '送信に失敗しました';
+          setError(msg);
+        } catch {
+          setError('送信に失敗しました');
+        }
+        return;
+      }
       setInput('');
       await fetchMessages();
     } catch (e) {
@@ -707,17 +716,30 @@ export default function ResumeReviewPage() {
     const list = threadMessages[activeThread] || [];
     const root = list.find((m) => !m.parentId) || list[0];
     const parentId = root ? root.id : undefined;
+    // resolve annotation id for this thread (from threads summary)
+    const threadMeta = (Array.isArray(threads) ? threads : []).find((t: any) => String(t?.thread_id || '') === String(activeThread));
+    const annotationIdResolved = threadMeta?.annotation?.id ? String(threadMeta.annotation.id) : undefined;
     setLoading(true);
     try {
-      const body: any = { content: text, subject: 'resume_advice', annotation_id: activeThread };
+      const body: any = { content: text, subject: 'resume_advice' };
       if (parentId) body.parent_id = parentId;
+      if (annotationIdResolved) body.annotation_id = annotationIdResolved;
       if (userIdFromRoute) body.user_id = userIdFromRoute;
       const res = await fetch(`${apiUrl}/api/v2/advice/messages/`, {
         method: 'POST',
         headers: { ...getAuthHeaders() },
         body: JSON.stringify(body),
       });
-      if (!res.ok) throw new Error('failed');
+      if (!res.ok) {
+        try {
+          const payload = await res.json();
+          const msg = payload?.detail || payload?.error || '返信の送信に失敗しました';
+          setError(msg);
+        } catch {
+          setError('返信の送信に失敗しました');
+        }
+        return;
+      }
       setReplyInput('');
       // refresh this thread only
       setThreadMessages((prev) => ({ ...prev, [activeThread]: undefined as any }));
@@ -725,7 +747,8 @@ export default function ResumeReviewPage() {
       const qs = new URLSearchParams();
       qs.set('subject', 'resume_advice');
       if (userIdFromRoute) qs.set('user_id', userIdFromRoute);
-      qs.set('annotation_id', activeThread);
+      // activeThread is parent message id (thread_id)
+      qs.set('parent_id', activeThread);
       const next = await fetch(`${apiUrl}/api/v2/advice/messages/?${qs.toString()}`, { headers: { ...getAuthHeaders() } });
       if (next.ok) {
         const data = await next.json();
