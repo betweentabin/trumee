@@ -51,7 +51,9 @@ export default function ResumeReviewPage() {
   const [annotations, setAnnotations] = useState<any[]>([]);
   const [threads, setThreads] = useState<any[]>([]);
   const [activeThread, setActiveThread] = useState<string | null>(null); // annotationId or null for all
-  const [showUnresolvedOnly, setShowUnresolvedOnly] = useState(false);
+  // Filters
+  const [statusFilter, setStatusFilter] = useState<'all' | 'unresolved' | 'resolved'>('all');
+  const [annotationFilter, setAnnotationFilter] = useState<string>('');
   const [threadSearch, setThreadSearch] = useState('');
   const searchRef = useRef<HTMLInputElement | null>(null);
   const [didAutoSelectThread, setDidAutoSelectThread] = useState(false);
@@ -517,7 +519,11 @@ export default function ResumeReviewPage() {
   // Filter threads (search + unresolved)
   const threadsFiltered = useMemo(() => {
     let list = Array.isArray(threads) ? [...threads] : [];
-    if (showUnresolvedOnly) list = list.filter((t: any) => !!t?.unresolved);
+    // status filter
+    if (statusFilter === 'unresolved') list = list.filter((t: any) => !!t?.unresolved);
+    if (statusFilter === 'resolved') list = list.filter((t: any) => t?.unresolved === false);
+    // annotation filter
+    if (annotationFilter) list = list.filter((t: any) => String(t?.annotation?.id || '') === String(annotationFilter));
     const q = threadSearch.trim().toLowerCase();
     if (q) {
       list = list.filter((t: any) => {
@@ -528,7 +534,7 @@ export default function ResumeReviewPage() {
       });
     }
     return list;
-  }, [threads, showUnresolvedOnly, threadSearch]);
+  }, [threads, statusFilter, annotationFilter, threadSearch]);
 
   // Auto-select first thread so users immediately see a threaded view
   useEffect(() => {
@@ -1005,17 +1011,40 @@ export default function ResumeReviewPage() {
                   </button>
                 );
               })}
+              {/* Annotation (#) filter */}
+              <select
+                value={annotationFilter}
+                onChange={(e) => setAnnotationFilter(e.target.value)}
+                className="ml-auto rounded border px-2 py-1 text-xs"
+                title="注釈番号で絞り込み"
+              >
+                <option value="">注釈: すべて</option>
+                {annotations.map((a: any, i: number) => (
+                  <option key={String(a.id)} value={String(a.id)}>
+                    #{i + 1} - {(a.anchor_id || '')}
+                  </option>
+                ))}
+              </select>
+
+              {/* Status filter */}
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value as any)}
+                className="rounded border px-2 py-1 text-xs"
+                title="ステータスで絞り込み"
+              >
+                <option value="all">全件</option>
+                <option value="unresolved">未解決のみ</option>
+                <option value="resolved">解決済みのみ</option>
+              </select>
+
               <input
                 ref={searchRef}
                 value={threadSearch}
                 onChange={(e) => setThreadSearch(e.target.value)}
                 placeholder="検索..."
-                className="ml-auto rounded border px-2 py-1 text-xs w-[140px]"
+                className="rounded border px-2 py-1 text-xs w-[160px]"
               />
-              <label className="flex items-center gap-1 text-xs text-secondary-700 whitespace-nowrap">
-                <input type="checkbox" checked={showUnresolvedOnly} onChange={(e) => setShowUnresolvedOnly(e.target.checked)} />
-                未解決のみ
-              </label>
             </div>
             ) : (
             <div className="border-b px-3 py-2 bg-white/80 sticky top-0 z-[1] flex items-center gap-2">
