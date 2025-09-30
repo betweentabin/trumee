@@ -24,6 +24,7 @@ export default function UserPaymentPage() {
   const router = useRouter();
   const { isAuthenticated, initializeAuth } = useAuthV2();
   const [loading, setLoading] = useState(false);
+  const [hasLoaded, setHasLoaded] = useState(false);
 
   useEffect(() => {
     initializeAuth();
@@ -40,8 +41,19 @@ export default function UserPaymentPage() {
         return;
       }
     }
-    if (isAuthenticated) fetchPaymentMethods();
+    if (isAuthenticated && !hasLoaded) fetchPaymentMethods();
   }, [isAuthenticated, router]);
+
+  // Safe loader for existing payment methods (optional)
+  const fetchPaymentMethods = async () => {
+    try {
+      setHasLoaded(true);
+      const res = await fetch(buildApiUrl('/payments/'), { headers: { ...getAuthHeaders() } });
+      // Silently ignore errors for now; UI only offers Stripe checkout
+      if (!res.ok) return;
+      await res.json();
+    } catch {}
+  };
 
   const gotoStripeCheckout = async (plan: 'basic' | 'premium' | 'enterprise' = 'premium') => {
     try {

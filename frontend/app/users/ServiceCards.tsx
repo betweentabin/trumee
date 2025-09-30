@@ -31,7 +31,7 @@ export default function ServiceCards() {
         <h2 className="font-bold text-sm mb-4">各サービスを利用する</h2>
         <div className="space-y-3">
           {[
-            { text: '職務経歴書に関するアドバイス', href: perUser('career') || '/career' },
+            { text: '職務経歴書に関するアドバイス', href: perUser('resume-advice/review') || '/resume-advice/review' },
             { text: '面接対策・質問集', href: perUser('interview') || '/interview' },
             { text: '企業からのスカウト確認', href: perUser('scouts') || '/scouts' },
           ].map(({ text, href }, idx) => (
@@ -56,7 +56,7 @@ export default function ServiceCards() {
             href: perUser('profile') || `/users/${currentUser?.id}/profile`,
           }, {
             label: '職務経歴書',
-            href: perUser('career') || `/users/${currentUser?.id}/career`,
+            href: perUser('resumes') || `/users/${currentUser?.id}/resumes`,
           }, {
             label: '希望条件',
             href: perUser('preference') || `/users/${currentUser?.id}/preference`,
