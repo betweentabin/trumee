@@ -15,6 +15,7 @@ type AdminSeeker = {
   is_active?: boolean;
   created_at?: string;
   updated_at?: string;
+  first_resume_created_at?: string;
 };
 
 type Paginated<T> = {
@@ -76,35 +77,13 @@ export default function AdminSeekersPage() {
       }
       setData({ ...json, results: filtered });
 
-      // 追加取得: 各ユーザーの最初の履歴書作成日を取得して表示用に反映
-      try {
-        const entries = await Promise.all(
-          (filtered || []).map(async (u) => {
-            try {
-              const res = await fetch(buildApiUrl(`/admin/users/${encodeURIComponent(String(u.id))}/resumes/`), { headers: getApiHeaders(token) });
-              if (!res.ok) return [String(u.id), u.created_at] as const;
-              const list: any[] = await res.json();
-              const dates = (list || [])
-                .map((r) => r?.created_at)
-                .filter(Boolean)
-                .map((s: string) => new Date(s).getTime())
-                .sort((a, b) => a - b);
-              if (dates.length > 0) {
-                // 表示は「最初の職務経歴書の作成日」を優先
-                return [String(u.id), new Date(dates[0]).toISOString()] as const;
-              }
-              return [String(u.id), u.created_at] as const;
-            } catch {
-              return [String(u.id), u.created_at] as const;
-            }
-          })
-        );
-        const map: Record<string, string> = {};
-        entries.forEach(([id, dt]) => { if (dt) map[id] = dt; });
-        setEffectiveDates(map);
-      } catch {
-        // ignore
-      }
+      // バックエンドが first_resume_created_at を返すようにしたので、まずそれを採用
+      const map: Record<string, string> = {};
+      (filtered || []).forEach((u) => {
+        const dt = u.first_resume_created_at || u.created_at || '';
+        if (dt) map[String(u.id)] = dt;
+      });
+      setEffectiveDates(map);
     } catch (e: any) {
       setError(e.message || 'failed to load');
     } finally {

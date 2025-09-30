@@ -13,6 +13,7 @@ class UserSerializer(serializers.ModelSerializer):
     scout_credits_total = serializers.IntegerField(read_only=True)
     scout_credits_used = serializers.IntegerField(read_only=True)
     scout_credits_remaining = serializers.SerializerMethodField()
+    first_resume_created_at = serializers.SerializerMethodField()
     class Meta:
         model = User
         fields = [
@@ -23,7 +24,9 @@ class UserSerializer(serializers.ModelSerializer):
             'scout_credits_remaining',
             # 管理者可視のためのフラグを公開（read-only）
             'is_staff', 'is_superuser',
-            'created_at', 'updated_at'
+            'created_at', 'updated_at',
+            # 追加: 最初の履歴書作成日時（一覧での登録日表示に使用）
+            'first_resume_created_at',
         ]
         read_only_fields = ['id', 'created_at', 'updated_at', 'is_staff', 'is_superuser']
 
@@ -32,6 +35,18 @@ class UserSerializer(serializers.ModelSerializer):
             return obj.scout_credits_remaining
         except Exception:
             return 0
+
+    def get_first_resume_created_at(self, obj):
+        # アノテーション済みならそれを返す
+        val = getattr(obj, 'first_resume_created_at', None)
+        if val:
+            return val
+        try:
+            from .models import Resume
+            first = Resume.objects.filter(user=obj).order_by('created_at').values_list('created_at', flat=True).first()
+            return first
+        except Exception:
+            return None
 
 
 class UserRegisterSerializer(serializers.ModelSerializer):

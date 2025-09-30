@@ -17,6 +17,7 @@ from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.authtoken.models import Token
 from django.shortcuts import get_object_or_404
 from django.db import transaction
+from django.db.models import OuterRef, Subquery
 from django.db import connection
 from django.db.models.functions import Cast
 from django.db.models import IntegerField
@@ -329,6 +330,12 @@ def admin_seekers_v2(request):
         return Response({'detail': '管理者権限が必要です'}, status=status.HTTP_403_FORBIDDEN)
 
     queryset = User.objects.filter(role='user').order_by('-created_at')
+    # annotate earliest resume creation
+    try:
+        first_resume_subq = Resume.objects.filter(user=OuterRef('pk')).order_by('created_at').values('created_at')[:1]
+        queryset = queryset.annotate(first_resume_created_at=Subquery(first_resume_subq))
+    except Exception:
+        pass
 
     # フィルタ（v1互換）
     status_filter = request.query_params.get('status', '')
@@ -384,6 +391,13 @@ def admin_users_v2(request):
         queryset = queryset.filter(created_at__gte=date_from)
     if date_to:
         queryset = queryset.filter(created_at__lte=date_to)
+
+    # annotate earliest resume creation
+    try:
+        first_resume_subq = Resume.objects.filter(user=OuterRef('pk')).order_by('created_at').values('created_at')[:1]
+        queryset = queryset.annotate(first_resume_created_at=Subquery(first_resume_subq))
+    except Exception:
+        pass
 
     from rest_framework.pagination import PageNumberPagination
     paginator = PageNumberPagination()
