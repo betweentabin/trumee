@@ -375,7 +375,7 @@ export default function ResumeAdvicePage() {
                 <div className="flex justify-end">
                   <button
                     type="submit"
-                    className="w-full md:w-auto px-6 py-2 rounded-md bg-[#FF733E] text-white font-semibold hover:bg-orange-600 disabled:opacity-50"
+                    className="w-full md:w-auto px-6 py-2 rounded-md bg-[#FF733E] text-white font-semibold hover:bg-[#FF8659] disabled:bg-[#FF733E]/60 disabled:text-white focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-[#FF733E]"
                     disabled={sending}
                   >
                     送信

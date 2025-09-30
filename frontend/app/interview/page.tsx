@@ -23,7 +23,7 @@ export default function InterviewTopPage() {
           <div className="flex gap-2">
             <button onClick={() => router.push(to('/interview/1'))} className="px-3 py-2 rounded bg-gray-200 hover:bg-gray-300 text-gray-800">転職理由</button>
             <button onClick={() => router.push(to('/interview/2'))} className="px-3 py-2 rounded bg-gray-200 hover:bg-gray-300 text-gray-800">職務経歴書</button>
-            <button onClick={() => router.push(to('/interview/3'))} className="px-3 py-2 rounded bg-gray-200 hover:bg-gray-300 text-gray-800">模擬面接</button>
+            {/* 模擬面接ボタンは非表示 */}
           </div>
         </div>
 

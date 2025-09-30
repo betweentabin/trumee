@@ -32,7 +32,8 @@ const MessageBox = ({
         />
         <button
           className={`w-full md:w-auto px-6 py-2 rounded-md bg-[#FF733E] text-white font-semibold
-            hover:bg-primary-dark disabled:opacity-50 disabled:cursor-not-allowed
+            hover:bg-[#FF8659] disabled:bg-[#FF733E]/60 disabled:text-white disabled:cursor-not-allowed
+            border border-transparent focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-[#FF733E]
             transition-colors duration-200
           `}
           disabled={isPending}

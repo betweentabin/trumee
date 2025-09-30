@@ -66,6 +66,8 @@ export default function ResumeReviewPage() {
   const [editJobSummary, setEditJobSummary] = useState('');
   const [initialBaselineEnsured, setInitialBaselineEnsured] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  // Recently published anchors to temporarily highlight as markers
+  const [recentlyChangedAnchors, setRecentlyChangedAnchors] = useState<Set<string>>(new Set());
   // Preview wrapper ref (scroll container)
   const previewWrapRef = useRef<HTMLDivElement | null>(null);
   // Pending selection → comment composer state
@@ -299,6 +301,34 @@ export default function ResumeReviewPage() {
     return Array.isArray((extra as any).workExperiences) ? ((extra as any).workExperiences as any[]) : [];
   }, [selected]);
 
+  // Helper: compute changed anchors compared with baseline
+  const computeChangedAnchors = useMemo(() => {
+    return () => {
+      try {
+        const extra = selected?.extra_data || {};
+        const baseline = (extra as any).baseline as any;
+        if (!baseline) return new Set<string>();
+        const changed = new Set<string>();
+        const baseJobSummary = String(baseline?.jobSummary || '');
+        const curJobSummary = String(editJobSummary || '');
+        if (baseJobSummary !== curJobSummary) changed.add('job_summary');
+        const baseSelfPr = String(baseline?.self_pr || '');
+        const curSelfPr = String(editSelfPr || '');
+        if (baseSelfPr !== curSelfPr) changed.add('self_pr');
+        const baseJobs = Array.isArray(baseline?.workExperiences) ? baseline.workExperiences : [];
+        baseJobs.forEach((bj: any, i: number) => {
+          const cur = (Array.isArray(currentWorkExperiences) ? currentWorkExperiences[i] : undefined) || {};
+          const curDesc = String((editWorkDesc[i] ?? cur.description) || '');
+          const baseDesc = String(bj?.description || '');
+          if (curDesc !== baseDesc) changed.add(`work_content-job${i + 1}`);
+        });
+        return changed;
+      } catch {
+        return new Set<string>();
+      }
+    };
+  }, [selected, editJobSummary, editSelfPr, editWorkDesc, currentWorkExperiences]);
+
   // Ensure baseline snapshot exists (owner only)
   useEffect(() => {
     const ensureBaseline = async () => {
@@ -465,6 +495,8 @@ export default function ResumeReviewPage() {
         workExperiences,
         jobSummary: editJobSummary,
       };
+      // compute anchors that changed before updating baseline on server
+      const changedAnchors = computeChangedAnchors();
       const res = await fetchWithTimeout(`${apiUrl}/api/v2/resumes/${encodeURIComponent(rid)}/`, {
         method: 'PATCH',
         headers: { ...getAuthHeaders() },
@@ -482,6 +514,10 @@ export default function ResumeReviewPage() {
             setSelected((prev: any) => ({ ...(prev || {}), ...updated }));
             setFormError(null);
             setError(null);
+            // temporarily mark changed anchors as highlighted markers
+            setRecentlyChangedAnchors(changedAnchors);
+            // auto-clear after a few seconds
+            setTimeout(() => setRecentlyChangedAnchors(new Set()), 5000);
           } else {
             // 取得失敗でもPATCH成功時は成功扱いとし、ユーザーに後で再読込を案内
             setFormError(null);
@@ -491,6 +527,8 @@ export default function ResumeReviewPage() {
           // タイムアウト等でも成功は成功扱い
           setFormError(null);
           setError(null);
+          setRecentlyChangedAnchors(changedAnchors);
+          setTimeout(() => setRecentlyChangedAnchors(new Set()), 5000);
         }
       } else {
         // エラー詳細を表示
@@ -574,39 +612,39 @@ export default function ResumeReviewPage() {
   }, []);
 
   // On-demand fetch for active thread
+  const fetchThreadMessages = async (parentId: string) => {
+    const qs = new URLSearchParams();
+    qs.set('subject', 'resume_advice');
+    if (userIdFromRoute) qs.set('user_id', userIdFromRoute);
+    qs.set('parent_id', parentId);
+    const res = await fetch(`${apiUrl}/api/v2/advice/messages/?${qs.toString()}`, { headers: { ...getAuthHeaders() } });
+    if (!res.ok) return;
+    const data = await res.json();
+    const uid = getUserInfo()?.uid;
+    const mapped: AnnMessage[] = data.map((m: any) => {
+      const role = uid && String(m.sender) === String(uid) ? 'seeker' : 'advisor';
+      const raw = m.content as string;
+      const { meta, rest } = parseAnnotation(raw);
+      return {
+        id: String(m.id),
+        role,
+        text: raw,
+        body: rest,
+        isAnnotation: Boolean(meta) || Boolean(m.annotation),
+        anchor: meta || undefined,
+        annotationId: m.annotation ? String(m.annotation) : undefined,
+        parentId: m.parent ? String(m.parent) : null,
+        senderId: m.sender,
+        timestamp: new Date(m.created_at).toLocaleString('ja-JP'),
+      } as AnnMessage;
+    });
+    setThreadMessages((prev) => ({ ...prev, [parentId]: mapped }));
+  };
+
   useEffect(() => {
-    const loadThread = async (parentId: string) => {
-      const qs = new URLSearchParams();
-      qs.set('subject', 'resume_advice');
-      if (userIdFromRoute) qs.set('user_id', userIdFromRoute);
-      qs.set('parent_id', parentId);
-      const res = await fetch(`${apiUrl}/api/v2/advice/messages/?${qs.toString()}`, { headers: { ...getAuthHeaders() } });
-      if (!res.ok) return;
-      const data = await res.json();
-      const uid = getUserInfo()?.uid;
-      const mapped: AnnMessage[] = data.map((m: any) => {
-        const role = uid && String(m.sender) === String(uid) ? 'seeker' : 'advisor';
-        const raw = m.content as string;
-        const { meta, rest } = parseAnnotation(raw);
-        return {
-          id: String(m.id),
-          role,
-          text: raw,
-          body: rest,
-          isAnnotation: Boolean(meta) || Boolean(m.annotation),
-          anchor: meta || undefined,
-          annotationId: m.annotation ? String(m.annotation) : undefined,
-          parentId: m.parent ? String(m.parent) : null,
-          senderId: m.sender,
-          timestamp: new Date(m.created_at).toLocaleString('ja-JP'),
-        } as AnnMessage;
-      });
-      setThreadMessages((prev) => ({ ...prev, [parentId]: mapped }));
-    };
     if (activeThread && !threadMessages[activeThread]) {
-      loadThread(activeThread);
+      fetchThreadMessages(activeThread);
     }
-    // clear reply box when switching
     setReplyInput('');
   }, [activeThread]);
 
@@ -641,7 +679,7 @@ export default function ResumeReviewPage() {
     }
   }, [threadsFiltered, didAutoSelectThread]);
 
-  // Refetch threads when annotationFilter changes
+  // Refetch threads when annotationFilter changes and auto-open the first thread
   useEffect(() => {
     const loadThreads = async () => {
       try {
@@ -654,13 +692,16 @@ export default function ResumeReviewPage() {
         if (res.ok) {
           const data = await res.json();
           setThreads(data);
-          // Auto pick first thread when filtering by annotation
+          // Auto pick and open first thread when filtering by annotation
           if (Array.isArray(data) && data.length > 0) {
             const tid = data[0]?.thread_id ? String(data[0].thread_id) : null;
             if (tid) {
               setActiveThread(tid);
+              await fetchThreadMessages(tid);
               setDidAutoSelectThread(true);
             }
+          } else {
+            setActiveThread(null);
           }
         }
       } catch {}
@@ -1022,23 +1063,10 @@ export default function ResumeReviewPage() {
                     annotations={annotations}
                     changedAnchors={(() => {
                       try {
-                        const changed = new Set<string>();
-                        // Compare job summary
-                        const baseJobSummary = String(leftPreviewData.jobSummary || '');
-                        const curJobSummary = String(editJobSummary || '');
-                        if (baseJobSummary !== curJobSummary) changed.add('job_summary');
-                        // Compare self PR
-                        const baseSelfPr = String(leftPreviewData.selfPR || '');
-                        const curSelfPr = String(editSelfPr || '');
-                        if (baseSelfPr !== curSelfPr) changed.add('self_pr');
-                        // Compare each work content by index (job1, job2, ...)
-                        const keys = leftPreviewData.jobhistoryList || [];
-                        keys.forEach((key, i) => {
-                          const baseWork = String((leftPreviewData.formValues as any)?.[key]?.work_content || '');
-                          const curWork = String((editWorkDesc[i] ?? (Array.isArray(currentWorkExperiences) ? currentWorkExperiences[i]?.description : '')) || '');
-                          if (baseWork !== curWork) changed.add(`work_content-${key}`);
-                        });
-                        return changed;
+                        // union of current edit diff and recently published markers
+                        const live = computeChangedAnchors();
+                        const union = new Set<string>([...Array.from(live), ...Array.from(recentlyChangedAnchors)]);
+                        return union;
                       } catch {
                         return [] as string[];
                       }
@@ -1055,6 +1083,7 @@ export default function ResumeReviewPage() {
                     skills={overridePreview.skills}
                     education={overridePreview.education}
                     annotations={annotations}
+                    changedAnchors={recentlyChangedAnchors}
                     className="w-full"
                   />
                 ) : (
@@ -1075,6 +1104,7 @@ export default function ResumeReviewPage() {
                         skills={skillsArray}
                         education={Array.isArray((extra as any)?.education) ? (extra as any).education : []}
                         annotations={annotations}
+                        changedAnchors={recentlyChangedAnchors}
                         className="w-full"
                       />
                     );
