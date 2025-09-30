@@ -49,6 +49,13 @@ export default function QuestionBrowser({ type = 'interview', initialCategory, s
       future: '将来像',
       stress: 'ストレス耐性',
       experience: '経験',
+      // 以下はAPI側が英語キーで返すカテゴリの日本語化
+      reverse: '逆質問',
+      case: 'ケース',
+      conditions: '条件',
+      closing: 'クロージング',
+      personality: '性格・資質',
+      workstyle: '働き方',
       generated: '生成',
     };
     return map[String(cat || '')] || String(cat || '');
@@ -201,4 +208,3 @@ export default function QuestionBrowser({ type = 'interview', initialCategory, s
     </section>
   );
 }
-

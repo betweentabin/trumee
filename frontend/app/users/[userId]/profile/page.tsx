@@ -176,7 +176,7 @@ export default function UserProfileByIdPage() {
             {!isEditing ? (
               <button
                 onClick={startEditing}
-                className="px-4 py-2 text-sm bg-primary-600 hover:bg-primary-700 text-white rounded-md"
+                className="px-4 py-2 text-sm bg-primary-600 hover:bg-primary-700 text-white rounded-md shadow ring-1 ring-primary-700/40"
               >
                 プロフィールを編集する
               </button>
@@ -210,7 +210,7 @@ export default function UserProfileByIdPage() {
           </div>
         )}
         {(typeof seeker.experience_years !== "undefined" || isEditing) && (
-          <div className="bg-white border rounded p-4">
+          <div className="bg-white border rounded p-4 relative">
             <div className="text-xs text-gray-500">経験年数</div>
             {isEditing && isOwner ? (
               <input
@@ -222,12 +222,20 @@ export default function UserProfileByIdPage() {
                 max="50"
               />
             ) : (
-              <div className="text-sm">{seeker.experience_years}年</div>
+              <>
+                <div className="text-sm">{seeker.experience_years}年</div>
+                {isOwner && !isEditing && (
+                  <button
+                    onClick={startEditing}
+                    className="absolute top-3 right-3 text-xs px-2 py-1 rounded border border-primary-600 text-primary-700 bg-white hover:bg-primary-50"
+                  >編集</button>
+                )}
+              </>
             )}
           </div>
         )}
         {(seeker.prefecture || isEditing) && (
-          <div className="bg-white border rounded p-4">
+          <div className="bg-white border rounded p-4 relative">
             <div className="text-xs text-gray-500">都道府県</div>
             {isEditing && isOwner ? (
               <select
@@ -241,12 +249,20 @@ export default function UserProfileByIdPage() {
                 ))}
               </select>
             ) : (
-              <div className="text-sm">{seeker.prefecture}</div>
+              <>
+                <div className="text-sm">{seeker.prefecture}</div>
+                {isOwner && !isEditing && (
+                  <button
+                    onClick={startEditing}
+                    className="absolute top-3 right-3 text-xs px-2 py-1 rounded border border-primary-600 text-primary-700 bg-white hover:bg-primary-50"
+                  >編集</button>
+                )}
+              </>
             )}
           </div>
         )}
         {(data.email || isEditing) && (
-          <div className="bg-white border rounded p-4">
+          <div className="bg-white border rounded p-4 relative">
             <div className="text-xs text-gray-500">メール</div>
             {isEditing && isOwner ? (
               <input
@@ -257,12 +273,20 @@ export default function UserProfileByIdPage() {
                 placeholder="example@email.com"
               />
             ) : (
-              <div className="text-sm">{data.email}</div>
+              <>
+                <div className="text-sm">{data.email}</div>
+                {isOwner && !isEditing && (
+                  <button
+                    onClick={startEditing}
+                    className="absolute top-3 right-3 text-xs px-2 py-1 rounded border border-primary-600 text-primary-700 bg-white hover:bg-primary-50"
+                  >編集</button>
+                )}
+              </>
             )}
           </div>
         )}
         {(data.phone || isEditing) && (
-          <div className="bg-white border rounded p-4">
+          <div className="bg-white border rounded p-4 relative">
             <div className="text-xs text-gray-500">電話番号</div>
             {isEditing && isOwner ? (
               <input
@@ -273,7 +297,15 @@ export default function UserProfileByIdPage() {
                 placeholder="09012345678"
               />
             ) : (
-              <div className="text-sm">{data.phone}</div>
+              <>
+                <div className="text-sm">{data.phone}</div>
+                {isOwner && !isEditing && (
+                  <button
+                    onClick={startEditing}
+                    className="absolute top-3 right-3 text-xs px-2 py-1 rounded border border-primary-600 text-primary-700 bg-white hover:bg-primary-50"
+                  >編集</button>
+                )}
+              </>
             )}
           </div>
         )}

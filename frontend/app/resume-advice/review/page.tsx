@@ -1252,11 +1252,11 @@ export default function ResumeReviewPage() {
               <div className="font-semibold">{mode === 'edit' ? '編集' : sectionTitle}</div>
               <div className="flex items-center gap-2">
                 <button
-                  className={`text-xs px-2 py-1 rounded border ${mode === 'comments' ? 'bg-primary-700 text-white border-white/30' : 'bg-white text-primary-700 border-white'}`}
+                  className={`text-xs px-2 py-1 rounded border ${mode === 'comments' ? 'bg-primary-700 text-white border-white/30' : 'bg-white text-primary-700 border-secondary-200'}`}
                   onClick={() => setMode('comments')}
                 >コメント</button>
                 <button
-                  className={`text-xs px-2 py-1 rounded border ${mode === 'edit' ? 'bg-primary-700 text-white border-white/30' : 'bg-white text-primary-700 border-white'}`}
+                  className={`text-xs px-2 py-1 rounded border ${mode === 'edit' ? 'bg-primary-700 text-white border-white/30' : 'bg-white text-primary-700 border-secondary-200'}`}
                   onClick={() => setMode('edit')}
                   title={isOwner ? '編集' : '編集は本人のみ可能です'}
                 >編集</button>
