@@ -41,6 +41,7 @@ export default function AdminSeekerDetailPage() {
   const [resumePreview, setResumePreview] = useState<ResumePreviewData>(emptyResumePreview);
   const [resumeLoading, setResumeLoading] = useState(false);
   const [resumeError, setResumeError] = useState<string | null>(null);
+  const [effectiveRegisteredAt, setEffectiveRegisteredAt] = useState<string | null>(null);
   // Annotations + positions
   const [annotations, setAnnotations] = useState<any[]>([]);
   const [markTops, setMarkTops] = useState<Record<string, number>>({});
@@ -173,6 +174,19 @@ export default function AdminSeekerDetailPage() {
         const data = await fetchResumePreview({ userId: String(id), token, forAdmin: true });
         if (!canceled) {
           setResumePreview(data);
+          // 併せて「最初の履歴書作成日」を取得して登録日に反映
+          try {
+            const res = await fetch(buildApiUrl(`/admin/users/${encodeURIComponent(String(id))}/resumes/`), { headers: getApiHeaders(token) });
+            if (res.ok) {
+              const list: any[] = await res.json();
+              const dates = (list || [])
+                .map((r) => r?.created_at)
+                .filter(Boolean)
+                .map((s: string) => new Date(s).getTime())
+                .sort((a, b) => a - b);
+              if (dates.length > 0) setEffectiveRegisteredAt(new Date(dates[0]).toISOString());
+            }
+          } catch {}
           // load annotations for this resume
           try {
             if (data?.resumeId) {
@@ -958,7 +972,10 @@ export default function AdminSeekerDetailPage() {
                   </div>
                   <div>
                     <span className="text-gray-500">登録日</span>
-                    <div className="font-medium">{user?.created_at ? new Date(user.created_at).toLocaleDateString() : '—'}</div>
+                    <div className="font-medium">{(() => {
+                      const dt = effectiveRegisteredAt || user?.created_at;
+                      return dt ? new Date(dt).toLocaleDateString('ja-JP') : '—';
+                    })()}</div>
                   </div>
                   <div>
                     <span className="text-gray-500">年齢</span>
