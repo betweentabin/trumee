@@ -38,7 +38,9 @@ export default function OtherQuestionsPage() {
   const parseContent = (c:any)=>{ try{ const o = JSON.parse(c); return o.message || o.draft || c; } catch { return String(c||''); } };
   const loadThread = async ()=>{
     try{
-      const res = await fetch(`${buildApiUrl('/advice/messages/')}?subject=advice`, { headers: getApiHeaders(token) });
+      const base = `${buildApiUrl('/advice/messages/')}?subject=advice`;
+      const url = userIdFromPath ? `${base}&user_id=${encodeURIComponent(String(userIdFromPath))}` : base;
+      const res = await fetch(url, { headers: getApiHeaders(token) });
       if(!res.ok) return; const list = await res.json();
       setThread((list||[]).map((m:any)=>({ id:String(m.id), sender:String(m.sender), text:parseContent(m.content), created_at:m.created_at })));
       endRef.current?.scrollIntoView({ behavior:'smooth' });
@@ -49,7 +51,9 @@ export default function OtherQuestionsPage() {
   const sendThread = async ()=>{
     const text = threadInput.trim(); if(!text) return;
     try{
-      const res = await fetch(buildApiUrl('/advice/messages/'), { method:'POST', headers:getApiHeaders(token), body: JSON.stringify({ subject:'advice', content: JSON.stringify({ type:'other', message:text }) }) });
+      const body: any = { subject:'advice', content: JSON.stringify({ type:'other', message:text }) };
+      if (userIdFromPath) body.user_id = String(userIdFromPath);
+      const res = await fetch(buildApiUrl('/advice/messages/'), { method:'POST', headers:getApiHeaders(token), body: JSON.stringify(body) });
       if(!res.ok) return toast.error('メッセージ送信に失敗しました');
       setThreadInput(''); await loadThread();
     }catch{ toast.error('メッセージ送信に失敗しました'); }

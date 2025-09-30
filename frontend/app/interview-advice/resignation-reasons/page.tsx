@@ -72,7 +72,8 @@ export default function ResignationReasonsPage() {
 
   const loadThread = async () => {
     try {
-      const url = `${buildApiUrl("/advice/messages/")}?subject=advice`;
+      const base = `${buildApiUrl("/advice/messages/")}?subject=advice`;
+      const url = userIdFromPath ? `${base}&user_id=${encodeURIComponent(String(userIdFromPath))}` : base;
       const res = await fetch(url, { headers: getApiHeaders(token) });
       if (!res.ok) return;
       const list = await res.json();
@@ -98,11 +99,9 @@ export default function ResignationReasonsPage() {
     const text = threadInput.trim();
     if (!text) return;
     try {
-      const res = await fetch(buildApiUrl("/advice/messages/"), {
-        method: "POST",
-        headers: getApiHeaders(token),
-        body: JSON.stringify({ subject: "advice", content: JSON.stringify({ type: "resignation_reason", message: text }) }),
-      });
+      const body: any = { subject: "advice", content: JSON.stringify({ type: "resignation_reason", message: text }) };
+      if (userIdFromPath) body.user_id = String(userIdFromPath);
+      const res = await fetch(buildApiUrl("/advice/messages/"), { method: "POST", headers: getApiHeaders(token), body: JSON.stringify(body) });
       if (!res.ok) return toast.error("メッセージ送信に失敗しました");
       setThreadInput("");
       await loadThread();
@@ -256,11 +255,9 @@ export default function ResignationReasonsPage() {
                       <button
                         onClick={async () => {
                           try {
-                            await fetch(buildApiUrl("/advice/messages/"), {
-                              method: "POST",
-                              headers: getApiHeaders(token),
-                              body: JSON.stringify({ subject: "advice", content: JSON.stringify({ type: "resignation_reason_draft", draft }) }),
-                            });
+                            const body: any = { subject: "advice", content: JSON.stringify({ type: "resignation_reason_draft", draft }) };
+                            if (userIdFromPath) body.user_id = String(userIdFromPath);
+                            await fetch(buildApiUrl("/advice/messages/"), { method: "POST", headers: getApiHeaders(token), body: JSON.stringify(body) });
                             toast.success("相談内容を送信しました");
                           } catch {
                             toast.error("送信に失敗しました");

@@ -113,7 +113,8 @@ export default function PrepareInterviewPage() {
 
   const loadThread = async () => {
     try {
-      const url = `${buildApiUrl("/advice/messages/")}?subject=interview`;
+      const base = `${buildApiUrl("/advice/messages/")}?subject=interview`;
+      const url = userIdFromPath ? `${base}&user_id=${encodeURIComponent(String(userIdFromPath))}` : base;
       const res = await fetch(url, { headers: getApiHeaders(token) });
       if (!res.ok) return;
       const list = await res.json();
@@ -140,11 +141,9 @@ export default function PrepareInterviewPage() {
     if (!text) return;
     if (!requirePremium()) return;
     try {
-      const res = await fetch(buildApiUrl("/advice/messages/"), {
-        method: "POST",
-        headers: getApiHeaders(token),
-        body: JSON.stringify({ subject: "interview", content: text }),
-      });
+      const body: any = { subject: "interview", content: text };
+      if (userIdFromPath) body.user_id = String(userIdFromPath);
+      const res = await fetch(buildApiUrl("/advice/messages/"), { method: "POST", headers: getApiHeaders(token), body: JSON.stringify(body) });
       if (!res.ok) {
         toast.error("メッセージ送信に失敗しました");
         return;

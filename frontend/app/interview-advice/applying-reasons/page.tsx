@@ -100,7 +100,7 @@ export default function ApplyingReasonsPage() {
       return;
     }
     try {
-      const body = {
+      const body: any = {
         subject: 'advice',
         content: JSON.stringify({
           type: 'applying_reason',
@@ -110,6 +110,8 @@ export default function ApplyingReasonsPage() {
           draft: generatedReason,
         }),
       };
+      // ユーザー別ページの場合は対象ユーザーIDを付与
+      if (userIdFromPath) body.user_id = String(userIdFromPath);
       const res = await fetch(buildApiUrl('/advice/messages/'), {
         method: 'POST',
         headers: getApiHeaders(token),
@@ -144,7 +146,8 @@ export default function ApplyingReasonsPage() {
 
   const loadThread = async () => {
     try {
-      const url = `${buildApiUrl('/advice/messages/')}?subject=advice`;
+      const base = `${buildApiUrl('/advice/messages/')}?subject=advice`;
+      const url = userIdFromPath ? `${base}&user_id=${encodeURIComponent(String(userIdFromPath))}` : base;
       const res = await fetch(url, { headers: getApiHeaders(token) });
       if (!res.ok) return;
       const list = await res.json();
@@ -182,10 +185,12 @@ export default function ApplyingReasonsPage() {
         topic: selectedTopic,
         message: text,
       };
-      const body = {
+      const body: any = {
         subject: 'advice',
         content: JSON.stringify(payload),
       };
+      // ユーザー別ページの場合は対象ユーザーIDを付与
+      if (userIdFromPath) body.user_id = String(userIdFromPath);
       const res = await fetch(buildApiUrl('/advice/messages/'), {
         method: 'POST',
         headers: getApiHeaders(token),
