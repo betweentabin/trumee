@@ -33,6 +33,8 @@ export default function AdminSeekersPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<Paginated<AdminSeeker>>({ count: 0, next: null, previous: null, results: [] });
+  // ユーザーごとの「実質的な登録日」（最初の履歴書作成日があればそれを優先）
+  const [effectiveDates, setEffectiveDates] = useState<Record<string, string>>({});
 
   const token = useMemo(() => {
     if (typeof window === 'undefined') return '';
@@ -73,6 +75,36 @@ export default function AdminSeekersPage() {
         );
       }
       setData({ ...json, results: filtered });
+
+      // 追加取得: 各ユーザーの最初の履歴書作成日を取得して表示用に反映
+      try {
+        const entries = await Promise.all(
+          (filtered || []).map(async (u) => {
+            try {
+              const res = await fetch(buildApiUrl(`/admin/users/${encodeURIComponent(String(u.id))}/resumes/`), { headers: getApiHeaders(token) });
+              if (!res.ok) return [String(u.id), u.created_at] as const;
+              const list: any[] = await res.json();
+              const dates = (list || [])
+                .map((r) => r?.created_at)
+                .filter(Boolean)
+                .map((s: string) => new Date(s).getTime())
+                .sort((a, b) => a - b);
+              if (dates.length > 0) {
+                // 表示は「最初の職務経歴書の作成日」を優先
+                return [String(u.id), new Date(dates[0]).toISOString()] as const;
+              }
+              return [String(u.id), u.created_at] as const;
+            } catch {
+              return [String(u.id), u.created_at] as const;
+            }
+          })
+        );
+        const map: Record<string, string> = {};
+        entries.forEach(([id, dt]) => { if (dt) map[id] = dt; });
+        setEffectiveDates(map);
+      } catch {
+        // ignore
+      }
     } catch (e: any) {
       setError(e.message || 'failed to load');
     } finally {
@@ -151,7 +183,10 @@ export default function AdminSeekersPage() {
                   <tr key={u.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => router.push(`/admin/seekers/${u.id}`)}>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{u.full_name || u.username || '—'}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{u.email}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{u.created_at ? new Date(u.created_at).toLocaleDateString() : '—'}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{(() => {
+                      const dt = effectiveDates[String(u.id)] || u.created_at;
+                      return dt ? new Date(dt).toLocaleDateString('ja-JP') : '—';
+                    })()}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
                       {u.is_premium ? (
                         <span className="inline-flex items-center rounded-full bg-yellow-100 px-2.5 py-0.5 text-xs font-medium text-yellow-800">プレミアム</span>

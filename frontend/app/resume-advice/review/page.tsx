@@ -578,11 +578,17 @@ export default function ResumeReviewPage() {
         const role = uid && String(m.sender) === String(uid) ? 'seeker' : 'advisor';
         const raw = m.content as string;
         const { meta, rest } = parseAnnotation(raw);
+        // unwrap JSON payloads like { type: 'interview_hint', message: '...' }
+        let bodyText = rest;
+        try {
+          const obj = JSON.parse(rest);
+          if (obj && typeof obj === 'object') bodyText = obj.message || rest;
+        } catch {}
         return {
           id: String(m.id),
           role,
           text: raw,
-          body: rest,
+          body: bodyText,
           isAnnotation: Boolean(meta) || Boolean(m.annotation),
           anchor: meta || (m.annotation ? { anchorId: 'from-annotation', top: 0 } as any : undefined),
           annotationId: m.annotation ? String(m.annotation) : undefined,
@@ -621,23 +627,28 @@ export default function ResumeReviewPage() {
     if (!res.ok) return;
     const data = await res.json();
     const uid = getUserInfo()?.uid;
-    const mapped: AnnMessage[] = data.map((m: any) => {
-      const role = uid && String(m.sender) === String(uid) ? 'seeker' : 'advisor';
-      const raw = m.content as string;
-      const { meta, rest } = parseAnnotation(raw);
-      return {
-        id: String(m.id),
-        role,
-        text: raw,
-        body: rest,
-        isAnnotation: Boolean(meta) || Boolean(m.annotation),
-        anchor: meta || undefined,
-        annotationId: m.annotation ? String(m.annotation) : undefined,
-        parentId: m.parent ? String(m.parent) : null,
-        senderId: m.sender,
-        timestamp: new Date(m.created_at).toLocaleString('ja-JP'),
-      } as AnnMessage;
-    });
+      const mapped: AnnMessage[] = data.map((m: any) => {
+        const role = uid && String(m.sender) === String(uid) ? 'seeker' : 'advisor';
+        const raw = m.content as string;
+        const { meta, rest } = parseAnnotation(raw);
+        let bodyText = rest;
+        try {
+          const obj = JSON.parse(rest);
+          if (obj && typeof obj === 'object') bodyText = obj.message || rest;
+        } catch {}
+        return {
+          id: String(m.id),
+          role,
+          text: raw,
+          body: bodyText,
+          isAnnotation: Boolean(meta) || Boolean(m.annotation),
+          anchor: meta || undefined,
+          annotationId: m.annotation ? String(m.annotation) : undefined,
+          parentId: m.parent ? String(m.parent) : null,
+          senderId: m.sender,
+          timestamp: new Date(m.created_at).toLocaleString('ja-JP'),
+        } as AnnMessage;
+      });
     setThreadMessages((prev) => ({ ...prev, [parentId]: mapped }));
   };
 
@@ -804,17 +815,25 @@ export default function ResumeReviewPage() {
       if (next.ok) {
         const data = await next.json();
         const uid = getUserInfo()?.uid;
-        const mapped: AnnMessage[] = data.map((m: any) => ({
-          id: String(m.id),
-          role: uid && String(m.sender) === String(uid) ? 'seeker' : 'advisor',
-          text: m.content,
-          body: m.content,
-          isAnnotation: Boolean(m.annotation),
-          annotationId: m.annotation ? String(m.annotation) : undefined,
-          parentId: m.parent ? String(m.parent) : null,
-          senderId: m.sender,
-          timestamp: new Date(m.created_at).toLocaleString('ja-JP'),
-        }));
+    const mapped: AnnMessage[] = data.map((m: any) => {
+      const raw = String(m.content || '');
+      let bodyText = raw;
+      try {
+        const obj = JSON.parse(raw);
+        if (obj && typeof obj === 'object') bodyText = obj.message || raw;
+      } catch {}
+      return {
+        id: String(m.id),
+        role: uid && String(m.sender) === String(uid) ? 'seeker' : 'advisor',
+        text: raw,
+        body: bodyText,
+        isAnnotation: Boolean(m.annotation),
+        annotationId: m.annotation ? String(m.annotation) : undefined,
+        parentId: m.parent ? String(m.parent) : null,
+        senderId: m.sender,
+        timestamp: new Date(m.created_at).toLocaleString('ja-JP'),
+      } as AnnMessage;
+    });
         setThreadMessages((prev) => ({ ...prev, [activeThread]: mapped }));
       }
       // refresh threads summary to update counts
@@ -1436,15 +1455,6 @@ export default function ResumeReviewPage() {
                 <div className="text-sm text-error-600">{formError}</div>
               )}
               <div>
-                <label className="block text-sm font-semibold text-secondary-800 mb-1">自己PR</label>
-                <textarea
-                  value={editSelfPr}
-                  onChange={(e) => setEditSelfPr(e.target.value)}
-                  className="w-full min-h-28 rounded border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-600 bg-white"
-                />
-                <div className="text-[11px] text-secondary-500 text-right">{editSelfPr.length} / {limits.selfPr}</div>
-              </div>
-              <div>
                 <label className="block text-sm font-semibold text-secondary-800 mb-1">職務要約</label>
                 <textarea
                   value={editJobSummary}
@@ -1466,6 +1476,15 @@ export default function ResumeReviewPage() {
                   <div className="text-[11px] text-secondary-500 text-right">{(editWorkDesc[i] || '').length} / {limits.workDesc}</div>
                 </div>
               ))}
+              <div>
+                <label className="block text-sm font-semibold text-secondary-800 mb-1">自己PR</label>
+                <textarea
+                  value={editSelfPr}
+                  onChange={(e) => setEditSelfPr(e.target.value)}
+                  className="w-full min-h-28 rounded border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-600 bg-white"
+                />
+                <div className="text-[11px] text-secondary-500 text-right">{editSelfPr.length} / {limits.selfPr}</div>
+              </div>
             </div>
             )}
 

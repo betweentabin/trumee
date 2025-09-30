@@ -27,7 +27,7 @@ export default function AdminSeekerDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'review' | 'interview' | 'advice' | 'member'>('review');
   type AnchorMeta = { anchorId: string; top: number; quote?: string };
-  type ReviewMsg = { id:string; sender:string; content:string; created_at:string; body?: string; isAnnotation?: boolean; anchor?: AnchorMeta };
+  type ReviewMsg = { id:string; sender:string; content:string; created_at:string; body?: string; isAnnotation?: boolean; anchor?: AnchorMeta; kind?: 'review' | 'interview' };
   const [reviewMessages, setReviewMessages] = useState<ReviewMsg[]>([]);
   const [reviewInput, setReviewInput] = useState('');
   const [adviceMessages, setAdviceMessages] = useState<any[]>([]);
@@ -135,15 +135,24 @@ export default function AdminSeekerDetailPage() {
       const mapped = (list || []).map((m: any) => {
         const raw = String(m.content || '');
         const { meta, rest } = parseAnnotation(raw);
+        let kind: 'review' | 'interview' = 'review';
+        let bodyText = rest;
+        try {
+          const obj = JSON.parse(rest);
+          if (obj && typeof obj === 'object') {
+            if (obj.type === 'interview_hint') { kind = 'interview'; bodyText = obj.message || rest; }
+          }
+        } catch {}
         return {
           id: String(m.id),
           sender: String(m.sender),
           content: raw,
-          body: rest,
+          body: bodyText,
           isAnnotation: Boolean(meta) || Boolean(m.annotation),
           anchor: meta,
           annotationId: m.annotation ? String(m.annotation) : undefined,
           created_at: m.created_at,
+          kind,
         } as ReviewMsg;
       });
       setReviewMessages(mapped);
@@ -325,6 +334,7 @@ export default function AdminSeekerDetailPage() {
   const previewWrapRef = useRef<HTMLDivElement | null>(null);
   const [pendingAnchor, setPendingAnchor] = useState<AnchorMeta | null>(null);
   const [composerOpen, setComposerOpen] = useState(false);
+  const [composerType, setComposerType] = useState<'review' | 'interview'>('review');
   const [composerText, setComposerText] = useState('');
   const [composerPos, setComposerPos] = useState<{ top: number; left: number } | null>(null);
 
@@ -381,11 +391,11 @@ export default function AdminSeekerDetailPage() {
         });
         if (annRes.ok) { const ann = await annRes.json(); createdAnn = ann; annotationId = String(ann.id); }
       }
-
+      const contentStr = composerType === 'interview' ? JSON.stringify({ type: 'interview_hint', message: msg }) : msg;
       const res = await fetch(buildApiUrl('/advice/messages/'), {
         method: 'POST',
         headers: getApiHeaders(token),
-        body: JSON.stringify({ content: msg, user_id: id, subject: 'resume_advice', annotation_id: annotationId || undefined }),
+        body: JSON.stringify({ content: contentStr, user_id: id, subject: 'resume_advice', annotation_id: annotationId || undefined }),
       });
       if (!res.ok) {
         const text = await res.text();
@@ -396,6 +406,7 @@ export default function AdminSeekerDetailPage() {
       setComposerOpen(false);
       setComposerText('');
       setPendingAnchor(null);
+      setComposerType('review');
       if (createdAnn) setAnnotations((prev) => [...prev, createdAnn]);
       await loadReviewMessages();
     } catch (e) {
@@ -403,7 +414,7 @@ export default function AdminSeekerDetailPage() {
     } finally {
       setSendingReview(false);
     }
-  }, [pendingAnchor, composerText, token, id, loadReviewMessages]);
+  }, [pendingAnchor, composerText, token, id, loadReviewMessages, composerType]);
 
   const resolveAnnotation = useCallback(async (annotationId?: string) => {
     if (!annotationId) return;
@@ -725,7 +736,12 @@ export default function AdminSeekerDetailPage() {
                               {m.anchor?.quote && (
                                 <div className="px-3 pt-2 text-xs text-secondary-600"><span className="bg-yellow-100 px-1 py-[2px] rounded">{m.anchor.quote}</span></div>
                               )}
-                              <div className="px-3 py-2 text-sm text-secondary-800 whitespace-pre-wrap">{m.body || m.content}</div>
+                              <div className="px-3 py-2 text-sm text-secondary-800 whitespace-pre-wrap">
+                                {(m as any).kind === 'interview' && (
+                                  <span className="inline-block text-[10px] px-1.5 py-[1px] mr-2 rounded-full bg-blue-100 text-blue-700 border border-blue-200 align-middle">面接</span>
+                                )}
+                                <span className="align-middle">{m.body || m.content}</span>
+                              </div>
                               <div className="px-3 pb-2 text-xs text-primary-700 flex gap-3">
                                 <button
                                   className="hover:underline"
@@ -766,9 +782,18 @@ export default function AdminSeekerDetailPage() {
                               <div className="text-xs text-secondary-700 mb-2"><span className="bg-yellow-100 px-1 py-[2px] rounded">{pendingAnchor.quote}</span></div>
                             )}
                             <textarea className="w-full h-20 border rounded px-2 py-1 text-sm" value={composerText} onChange={(e) => setComposerText(e.target.value)} placeholder="コメント内容を入力" />
-                            <div className="mt-2 flex justify-end gap-2">
-                              <button className="text-sm px-2 py-1 border rounded hover:bg-secondary-50" onClick={() => { setComposerOpen(false); setPendingAnchor(null); setComposerText(''); }}>キャンセル</button>
-                              <button className="text-sm px-3 py-1 bg-gray-800 text-white rounded hover:bg-gray-700" onClick={() => sendAnnotation()} disabled={sendingReview}>コメント追加</button>
+                            <div className="mt-2 flex items-center justify-between gap-2">
+                              <label className="text-xs text-secondary-700 flex items-center gap-1">
+                                種別:
+                                <select className="border rounded px-1 py-[2px] text-xs" value={composerType} onChange={(e) => setComposerType(e.target.value as any)}>
+                                  <option value="review">添削コメント</option>
+                                  <option value="interview">面接アドバイス</option>
+                                </select>
+                              </label>
+                              <div className="flex justify-end gap-2">
+                                <button className="text-sm px-2 py-1 border rounded hover:bg-secondary-50" onClick={() => { setComposerOpen(false); setPendingAnchor(null); setComposerText(''); }}>キャンセル</button>
+                                <button className="text-sm px-3 py-1 bg-gray-800 text-white rounded hover:bg-gray-700" onClick={() => sendAnnotation()} disabled={sendingReview}>コメント追加</button>
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -852,7 +877,12 @@ export default function AdminSeekerDetailPage() {
                           {idx && (
                             <span className="inline-flex items-center justify-center text-[10px] leading-[10px] rounded-sm px-[4px] py-[1px] mr-2" style={ color ? { background: color + '22', color, border: `1px solid ${color}` } : undefined }>{idx}</span>
                           )}
-                          <div>{(m as any).body || m.content}</div>
+                          <div>
+                            {(m as any).kind === 'interview' && (
+                              <span className="inline-block text-[10px] px-1.5 py-[1px] mr-2 rounded-full bg-blue-100 text-blue-700 border border-blue-200 align-middle">面接</span>
+                            )}
+                            <span className="align-middle">{(m as any).body || m.content}</span>
+                          </div>
                           <div className="text-[11px] opacity-70 mt-1">{new Date(m.created_at).toLocaleString()}</div>
                         </div>
                       </div>
