@@ -1059,8 +1059,9 @@ export default function ResumeReviewPage() {
                         const ref = el.getAttribute('data-annot-ref') || '';
                         if (ref.startsWith('ann-')) {
                           const id = ref.replace('ann-', '');
+                          // フリッカー回避のため、スレッド読み込みが完了するまでは
+                          // activeThread を維持しておく
                           setAnnotationFilter(String(id));
-                          setActiveThread(null);
                           setDidAutoSelectThread(false);
                         }
                         break;
@@ -1357,7 +1358,7 @@ export default function ResumeReviewPage() {
                 (() => {
                   const list = visibleMessages;
                   const root = list.find((m) => !m.parentId) || list[0];
-                  const replies = list.filter((m) => m.parentId && root && String(m.parentId) === String(root.id));
+                  const replies = root ? list.filter((m) => m.parentId && String(m.parentId) === String(root.id)) : [];
                   const renderMsg = (m: AnnMessage, indent = false) => {
                     const palette = ['#E56B6F','#6C9BD2','#7FB069','#E6B31E','#A77BD1','#E58F6B'];
                     const colorOf = (id: string) => { let h=0; for (let i=0;i<id.length;i++) h=(h*31+id.charCodeAt(i))>>>0; return palette[h%palette.length]; };
@@ -1396,9 +1397,20 @@ export default function ResumeReviewPage() {
                       </div>
                     );
                   };
+                  // フォールバック: ルートが見つからない場合はフラット表示
+                  if (!list || list.length === 0) {
+                    return <div className="text-secondary-500 text-sm">メッセージがありません。</div>;
+                  }
+                  if (!root) {
+                    return (
+                      <div className="space-y-2">
+                        {list.map((m) => renderMsg(m))}
+                      </div>
+                    );
+                  }
                   return (
                     <div className="space-y-2">
-                      {root && renderMsg(root)}
+                      {renderMsg(root)}
                       {replies.length > 0 && (
                         <div className="pl-3 border-l-2 border-secondary-200 space-y-2">
                           {replies.map((r) => renderMsg(r, true))}
@@ -1495,12 +1507,12 @@ export default function ResumeReviewPage() {
                   <label className="block text-sm font-semibold text-secondary-800">スレッドに返信</label>
                   <button className="text-xs text-secondary-600 hover:underline" onClick={() => setActiveThread(null)}>全てに戻る</button>
                 </div>
-                <div className="flex items-end gap-2">
+                <div className="flex items-end gap-2 flex-wrap">
                   <textarea
                     value={replyInput}
                     onChange={(e) => setReplyInput(e.target.value)}
                     placeholder="返信内容を入力..."
-                    className="flex-1 h-20 resize-none rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-600"
+                    className="flex-1 min-w-0 h-20 resize-none rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-600"
                   />
                   <button
                     disabled={loading}
@@ -1516,12 +1528,12 @@ export default function ResumeReviewPage() {
             ) : mode === 'comments' ? (
               <div className="border-t bg-white p-3">
                 <label className="block text-sm font-semibold text-secondary-800 mb-2">メッセージ入力</label>
-                <div className="flex items-end gap-2">
+                <div className="flex items-end gap-2 flex-wrap">
                   <textarea
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     placeholder="メッセージを入力してください。"
-                    className="flex-1 h-20 resize-none rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-600"
+                    className="flex-1 min-w-0 h-20 resize-none rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-600"
                   />
                   <button
                     disabled={loading}
