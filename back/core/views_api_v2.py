@@ -1554,7 +1554,14 @@ def advice_messages(request):
             msg_kwargs['parent'] = parent_msg
         except (Message.DoesNotExist, ValueError):
             pass
-    msg = Message.objects.create(**msg_kwargs)
+    # Create message with safety guard to avoid 500 without details
+    try:
+        msg = Message.objects.create(**msg_kwargs)
+    except Exception as e:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.exception('advice_messages: failed to create message')
+        return Response({'error': 'internal_error', 'detail': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     return Response(MessageSerializer(msg).data, status=status.HTTP_201_CREATED)
 
 

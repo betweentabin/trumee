@@ -45,6 +45,8 @@ export default function AdminSeekersPage() {
     try {
       const qs = new URLSearchParams();
       qs.set('page', String(page));
+      // 明示的に求職者（role=user）のみ取得
+      qs.set('role', 'user');
       if (status) qs.set('status', status);
       // 既存APIはキーワード未対応のため、実装時はバック側に合わせる
       // v2 admin/users を優先。404時は admin/seekers にフォールバック
@@ -55,6 +57,9 @@ export default function AdminSeekersPage() {
       if (res.status === 404) {
         const urlSeekers = `${buildApiUrl(API_CONFIG.endpoints.adminSeekers)}?${qs.toString()}`;
         res = await fetch(urlSeekers, { headers: getApiHeaders(token) });
+      }
+      if (res.status === 403) {
+        throw new Error('管理者権限が必要です（ログインし直してください）');
       }
       if (!res.ok) throw new Error(`Failed to fetch: ${res.status}`);
       const json = (await res.json()) as Paginated<AdminSeeker>;

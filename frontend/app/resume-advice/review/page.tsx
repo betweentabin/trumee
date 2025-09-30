@@ -681,7 +681,12 @@ export default function ResumeReviewPage() {
     setLoading(true);
     try {
       const body: any = { content: text, subject: 'resume_advice' };
-      if (userIdFromRoute) body.user_id = userIdFromRoute;
+      // 管理者のみ user_id を付与（対象ユーザー指定）
+      try {
+        const raw = typeof window !== 'undefined' ? localStorage.getItem('current_user_v2') : null;
+        const isStaff = raw ? !!(JSON.parse(raw)?.is_staff) : false;
+        if (isStaff && userIdFromRoute) body.user_id = userIdFromRoute;
+      } catch {}
       const res = await fetch(`${apiUrl}/api/v2/advice/messages/`, {
         method: 'POST',
         headers: {
@@ -724,7 +729,12 @@ export default function ResumeReviewPage() {
       const body: any = { content: text, subject: 'resume_advice' };
       if (parentId) body.parent_id = parentId;
       if (annotationIdResolved) body.annotation_id = annotationIdResolved;
-      if (userIdFromRoute) body.user_id = userIdFromRoute;
+      // 管理者のみ user_id を付与（対象ユーザー指定）
+      try {
+        const raw = typeof window !== 'undefined' ? localStorage.getItem('current_user_v2') : null;
+        const isStaff = raw ? !!(JSON.parse(raw)?.is_staff) : false;
+        if (isStaff && userIdFromRoute) body.user_id = userIdFromRoute;
+      } catch {}
       const res = await fetch(`${apiUrl}/api/v2/advice/messages/`, {
         method: 'POST',
         headers: { ...getAuthHeaders() },
@@ -806,7 +816,12 @@ export default function ResumeReviewPage() {
 
       // 2) Post message that links to annotation
       const body: any = { content: msg, subject: 'resume_advice' };
-      if (userIdFromRoute) body.user_id = userIdFromRoute;
+      // 管理者のみ user_id を付与（対象ユーザー指定）
+      try {
+        const raw = typeof window !== 'undefined' ? localStorage.getItem('current_user_v2') : null;
+        const isStaff = raw ? !!(JSON.parse(raw)?.is_staff) : false;
+        if (isStaff && userIdFromRoute) body.user_id = userIdFromRoute;
+      } catch {}
       if (annotationId) body.annotation_id = annotationId;
       const res = await fetch(`${apiUrl}/api/v2/advice/messages/`, {
         method: 'POST',

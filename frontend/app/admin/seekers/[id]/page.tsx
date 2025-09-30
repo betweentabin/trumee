@@ -638,7 +638,34 @@ export default function AdminSeekerDetailPage() {
                   </div>
                 ) : (
                   <div className="max-h-[600px] overflow-y-auto">
-                    <div className="relative pr-[260px] w-full" ref={previewWrapRef} onMouseUp={handlePreviewMouseUp}>
+                    <div
+                      className="relative pr-[260px] w-full"
+                      ref={previewWrapRef}
+                      onMouseUp={handlePreviewMouseUp}
+                      onClick={(e) => {
+                        try {
+                          const container = previewWrapRef.current;
+                          let el = e.target as HTMLElement | null;
+                          while (el && el !== container) {
+                            if (el.hasAttribute && el.hasAttribute('data-annot-ref')) {
+                              const ref = el.getAttribute('data-annot-ref') || '';
+                              if (ref.startsWith('ann-')) {
+                                const id = ref.replace('ann-', '');
+                                setAnnotationFilter(String(id));
+                                setActiveThread(null);
+                                setDidAutoSelectThread(false);
+                                try {
+                                  const panel = document.querySelector('#admin-thread-toolbar');
+                                  panel && (panel as HTMLElement).scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                                } catch {}
+                              }
+                              break;
+                            }
+                            el = el.parentElement as HTMLElement | null;
+                          }
+                        } catch {}
+                      }}
+                    >
                       <ResumePreview
                         userName={resumePreview.userName || user?.full_name}
                         jobhistoryList={resumePreview.jobhistoryList}
@@ -659,16 +686,30 @@ export default function AdminSeekerDetailPage() {
                           const idx = m.annotationId ? (annotations.findIndex(a => String(a.id) === String(m.annotationId)) + 1) : undefined;
                           // connector line removed
                           return (
-                          <div key={m.id} className="absolute right-[-240px] w-[220px] pointer-events-auto" style={{ top: Math.max(0, topGuess - 8) }} onClick={() => {
-                            if (m.annotationId) {
-                              const el = previewWrapRef.current?.querySelector(`[data-annot-ref="ann-${m.annotationId}"]`) as HTMLElement | null;
-                              if (el && previewWrapRef.current) {
-                                previewWrapRef.current.scrollTo({ top: (markTops[m.annotationId] || 0) - 40, behavior: 'smooth' });
-                                el.classList.add('ring-2','ring-[#E5A6A6]');
-                                setTimeout(() => el.classList.remove('ring-2','ring-[#E5A6A6]'), 1200);
+                          <div
+                            key={m.id}
+                            className="absolute right-[-240px] w-[220px] pointer-events-auto"
+                            style={{ top: Math.max(0, topGuess - 8) }}
+                            onClick={() => {
+                              if (m.annotationId) {
+                                const sel = `[data-annot-ref=\\"ann-${m.annotationId}\\"]`;
+                                const el = previewWrapRef.current?.querySelector(sel) as HTMLElement | null;
+                                if (el && previewWrapRef.current) {
+                                  previewWrapRef.current.scrollTo({ top: (markTops[m.annotationId] || 0) - 40, behavior: 'smooth' });
+                                  el.classList.add('ring-2','ring-[#E5A6A6]');
+                                  setTimeout(() => el.classList.remove('ring-2','ring-[#E5A6A6]'), 1200);
+                                }
+                                // Also narrow the list to this annotation
+                                setAnnotationFilter(String(m.annotationId));
+                                setActiveThread(null);
+                                setDidAutoSelectThread(false);
+                                try {
+                                  const panel = document.querySelector('#admin-thread-toolbar');
+                                  panel && (panel as HTMLElement).scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                                } catch {}
                               }
-                            }
-                          }}>
+                            }}
+                          >
                             {/* connector line removed */}
                             <div className="border bg-white rounded-md shadow-sm" style={{ borderColor: color }} onMouseEnter={() => { try { if (markSelector) (previewWrapRef.current?.querySelector(markSelector) as HTMLElement)?.classList.add('ring-2','ring-[#E5A6A6]'); } catch {} }} onMouseLeave={() => { try { if (markSelector) (previewWrapRef.current?.querySelector(markSelector) as HTMLElement)?.classList.remove('ring-2','ring-[#E5A6A6]'); } catch {} }}>
                               <div className="px-2 pt-1">
