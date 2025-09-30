@@ -333,7 +333,11 @@ def admin_seekers_v2(request):
     # annotate earliest resume creation
     try:
         first_resume_subq = Resume.objects.filter(user=OuterRef('pk')).order_by('created_at').values('created_at')[:1]
-        queryset = queryset.annotate(first_resume_created_at=Subquery(first_resume_subq))
+        last_resume_subq = Resume.objects.filter(user=OuterRef('pk')).order_by('-created_at').values('created_at')[:1]
+        queryset = queryset.annotate(
+            first_resume_created_at=Subquery(first_resume_subq),
+            last_resume_created_at=Subquery(last_resume_subq),
+        )
     except Exception:
         pass
 
@@ -392,10 +396,14 @@ def admin_users_v2(request):
     if date_to:
         queryset = queryset.filter(created_at__lte=date_to)
 
-    # annotate earliest resume creation
+    # annotate earliest and latest resume creation
     try:
         first_resume_subq = Resume.objects.filter(user=OuterRef('pk')).order_by('created_at').values('created_at')[:1]
-        queryset = queryset.annotate(first_resume_created_at=Subquery(first_resume_subq))
+        last_resume_subq = Resume.objects.filter(user=OuterRef('pk')).order_by('-created_at').values('created_at')[:1]
+        queryset = queryset.annotate(
+            first_resume_created_at=Subquery(first_resume_subq),
+            last_resume_created_at=Subquery(last_resume_subq),
+        )
     except Exception:
         pass
 

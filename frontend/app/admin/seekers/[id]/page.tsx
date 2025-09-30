@@ -179,12 +179,12 @@ export default function AdminSeekerDetailPage() {
             const res = await fetch(buildApiUrl(`/admin/users/${encodeURIComponent(String(id))}/resumes/`), { headers: getApiHeaders(token) });
             if (res.ok) {
               const list: any[] = await res.json();
-              const dates = (list || [])
+              const latest = (list || [])
                 .map((r) => r?.created_at)
                 .filter(Boolean)
                 .map((s: string) => new Date(s).getTime())
-                .sort((a, b) => a - b);
-              if (dates.length > 0) setEffectiveRegisteredAt(new Date(dates[0]).toISOString());
+                .sort((a, b) => b - a);
+              if (latest.length > 0) setEffectiveRegisteredAt(new Date(latest[0]).toISOString());
             }
           } catch {}
           // load annotations for this resume

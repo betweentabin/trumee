@@ -16,6 +16,7 @@ type AdminSeeker = {
   created_at?: string;
   updated_at?: string;
   first_resume_created_at?: string;
+  last_resume_created_at?: string;
 };
 
 type Paginated<T> = {
@@ -80,7 +81,8 @@ export default function AdminSeekersPage() {
       // バックエンドが first_resume_created_at を返すようにしたので、まずそれを採用
       const map: Record<string, string> = {};
       (filtered || []).forEach((u) => {
-        const dt = u.first_resume_created_at || u.created_at || '';
+        // 登録日は「最新の履歴書作成日」を優先。無ければ初回作成日→ユーザー作成日
+        const dt = u.last_resume_created_at || u.first_resume_created_at || u.created_at || '';
         if (dt) map[String(u.id)] = dt;
       });
       setEffectiveDates(map);
