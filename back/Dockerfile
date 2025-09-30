@@ -1,12 +1,15 @@
 FROM public.ecr.aws/docker/library/python:3.11-slim
 
+# Avoid interactive prompts during apt operations
+ARG DEBIAN_FRONTEND=noninteractive
+
 # Force complete rebuild - v4.0 - $(date)
 RUN echo "Forced rebuild at $(date) - CACHE_BUST_v17_MANUAL_DATA" > /rebuild.txt
 
 WORKDIR /app
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
+# Install system dependencies (quiet + no recommends)
+RUN apt-get update -yq && apt-get install -yq --no-install-recommends \
     gcc \
     libpq-dev \
     curl \
