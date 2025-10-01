@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { FaArrowLeft, FaSearch, FaPaperPlane } from 'react-icons/fa';
 import { getAuthHeaders, getUserInfo } from '@/utils/auth';
+import PlanGate from '@/components/PlanGate';
 import ResumePreview from '@/components/pure/resume/preview';
 import { emptyResumePreview, fetchResumePreview, ResumePreviewData } from '@/utils/resume-preview';
 
@@ -58,7 +59,8 @@ export default function ResumeReviewPage() {
   const searchRef = useRef<HTMLInputElement | null>(null);
   const [didAutoSelectThread, setDidAutoSelectThread] = useState(false);
   // Edit mode (Phase 2 skeleton)
-  const [mode, setMode] = useState<'comments' | 'edit'>('edit');
+  // Default to comments mode so選択→コメントの流れが分かりやすい
+  const [mode, setMode] = useState<'comments' | 'edit'>('comments');
   // Layout split (left preview | right editor)
   const [split, setSplit] = useState<'leftWide' | 'balanced' | 'rightWide'>('balanced');
   const [editSelfPr, setEditSelfPr] = useState('');
@@ -1005,6 +1007,8 @@ export default function ResumeReviewPage() {
         </div>
       </div>
 
+        {/* Main content is feature-gated; whenプラン未満 → ブラー＆ご案内 */}
+        <PlanGate feature="resume_review_chat" withOverlay>
         <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-4">
           <h1 className="text-2xl md:text-3xl font-bold text-secondary-800">
@@ -1550,6 +1554,7 @@ export default function ResumeReviewPage() {
           </aside>
         </div>
       </div>
+      </PlanGate>
     </div>
   );
 }

@@ -348,7 +348,6 @@ export default function AdminSeekerDetailPage() {
   const previewWrapRef = useRef<HTMLDivElement | null>(null);
   const [pendingAnchor, setPendingAnchor] = useState<AnchorMeta | null>(null);
   const [composerOpen, setComposerOpen] = useState(false);
-  const [composerType, setComposerType] = useState<'review' | 'interview'>('review');
   const [composerText, setComposerText] = useState('');
   const [composerPos, setComposerPos] = useState<{ top: number; left: number } | null>(null);
 
@@ -405,11 +404,10 @@ export default function AdminSeekerDetailPage() {
         });
         if (annRes.ok) { const ann = await annRes.json(); createdAnn = ann; annotationId = String(ann.id); }
       }
-      const contentStr = composerType === 'interview' ? JSON.stringify({ type: 'interview_hint', message: msg }) : msg;
       const res = await fetch(buildApiUrl('/advice/messages/'), {
         method: 'POST',
         headers: getApiHeaders(token),
-        body: JSON.stringify({ content: contentStr, user_id: id, subject: 'resume_advice', annotation_id: annotationId || undefined }),
+        body: JSON.stringify({ content: msg, user_id: id, subject: 'resume_advice', annotation_id: annotationId || undefined }),
       });
       if (!res.ok) {
         const text = await res.text();
@@ -420,7 +418,6 @@ export default function AdminSeekerDetailPage() {
       setComposerOpen(false);
       setComposerText('');
       setPendingAnchor(null);
-      setComposerType('review');
       if (createdAnn) setAnnotations((prev) => [...prev, createdAnn]);
       await loadReviewMessages();
     } catch (e) {
@@ -428,7 +425,7 @@ export default function AdminSeekerDetailPage() {
     } finally {
       setSendingReview(false);
     }
-  }, [pendingAnchor, composerText, token, id, loadReviewMessages, composerType]);
+  }, [pendingAnchor, composerText, token, id, loadReviewMessages]);
 
   const resolveAnnotation = useCallback(async (annotationId?: string) => {
     if (!annotationId) return;
@@ -796,18 +793,9 @@ export default function AdminSeekerDetailPage() {
                               <div className="text-xs text-secondary-700 mb-2"><span className="bg-yellow-100 px-1 py-[2px] rounded">{pendingAnchor.quote}</span></div>
                             )}
                             <textarea className="w-full h-20 border rounded px-2 py-1 text-sm" value={composerText} onChange={(e) => setComposerText(e.target.value)} placeholder="コメント内容を入力" />
-                            <div className="mt-2 flex items-center justify-between gap-2">
-                              <label className="text-xs text-secondary-700 flex items-center gap-1">
-                                種別:
-                                <select className="border rounded px-1 py-[2px] text-xs" value={composerType} onChange={(e) => setComposerType(e.target.value as any)}>
-                                  <option value="review">添削コメント</option>
-                                  <option value="interview">面接アドバイス</option>
-                                </select>
-                              </label>
-                              <div className="flex justify-end gap-2">
-                                <button className="text-sm px-2 py-1 border rounded hover:bg-secondary-50" onClick={() => { setComposerOpen(false); setPendingAnchor(null); setComposerText(''); }}>キャンセル</button>
-                                <button className="text-sm px-3 py-1 bg-gray-800 text-white rounded hover:bg-gray-700" onClick={() => sendAnnotation()} disabled={sendingReview}>コメント追加</button>
-                              </div>
+                            <div className="mt-2 flex justify-end gap-2">
+                              <button className="text-sm px-2 py-1 border rounded hover:bg-secondary-50" onClick={() => { setComposerOpen(false); setPendingAnchor(null); setComposerText(''); }}>キャンセル</button>
+                              <button className="text-sm px-3 py-1 bg-gray-800 text-white rounded hover:bg-gray-700" onClick={() => sendAnnotation()} disabled={sendingReview}>コメント追加</button>
                             </div>
                           </div>
                         </div>
