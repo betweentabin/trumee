@@ -174,12 +174,7 @@ export default function UserProfileByIdPage() {
         {isOwner && (
           <div className="mt-3 flex gap-2">
             {!isEditing ? (
-              <button
-                onClick={startEditing}
-                className="px-4 py-2 text-sm bg-primary-600 hover:bg-primary-700 text-white rounded-md shadow ring-1 ring-primary-700/40"
-              >
-                プロフィールを編集する
-              </button>
+              <button onClick={startEditing} className="btn-outline btn-outline-md">プロフィールを編集する</button>
             ) : (
               <>
                 <button
@@ -225,10 +220,7 @@ export default function UserProfileByIdPage() {
               <>
                 <div className="text-sm">{seeker.experience_years}年</div>
                 {isOwner && !isEditing && (
-                  <button
-                    onClick={startEditing}
-                    className="absolute top-3 right-3 text-xs px-2 py-1 rounded border border-primary-600 text-primary-700 bg-white hover:bg-primary-50"
-                  >編集</button>
+                  <button onClick={startEditing} className="btn-outline btn-outline-sm absolute top-3 right-3">編集</button>
                 )}
               </>
             )}
@@ -252,10 +244,7 @@ export default function UserProfileByIdPage() {
               <>
                 <div className="text-sm">{seeker.prefecture}</div>
                 {isOwner && !isEditing && (
-                  <button
-                    onClick={startEditing}
-                    className="absolute top-3 right-3 text-xs px-2 py-1 rounded border border-primary-600 text-primary-700 bg-white hover:bg-primary-50"
-                  >編集</button>
+                  <button onClick={startEditing} className="btn-outline btn-outline-sm absolute top-3 right-3">編集</button>
                 )}
               </>
             )}
@@ -276,10 +265,7 @@ export default function UserProfileByIdPage() {
               <>
                 <div className="text-sm">{data.email}</div>
                 {isOwner && !isEditing && (
-                  <button
-                    onClick={startEditing}
-                    className="absolute top-3 right-3 text-xs px-2 py-1 rounded border border-primary-600 text-primary-700 bg-white hover:bg-primary-50"
-                  >編集</button>
+                  <button onClick={startEditing} className="btn-outline btn-outline-sm absolute top-3 right-3">編集</button>
                 )}
               </>
             )}
@@ -300,10 +286,7 @@ export default function UserProfileByIdPage() {
               <>
                 <div className="text-sm">{data.phone}</div>
                 {isOwner && !isEditing && (
-                  <button
-                    onClick={startEditing}
-                    className="absolute top-3 right-3 text-xs px-2 py-1 rounded border border-primary-600 text-primary-700 bg-white hover:bg-primary-50"
-                  >編集</button>
+                  <button onClick={startEditing} className="btn-outline btn-outline-sm absolute top-3 right-3">編集</button>
                 )}
               </>
             )}

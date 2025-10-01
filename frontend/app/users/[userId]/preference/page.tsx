@@ -157,10 +157,7 @@ export default function UserPreferenceByIdPage() {
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-2xl font-bold">希望条件</h1>
         {isOwner && !editing && (
-          <button
-            onClick={() => setEditing(true)}
-            className="px-3 py-1.5 text-sm bg-primary-600 hover:bg-primary-700 text-white rounded-md shadow ring-1 ring-primary-700/40"
-          >
+          <button onClick={() => setEditing(true)} className="btn-outline btn-outline-md">
             編集する
           </button>
         )}
@@ -172,11 +169,7 @@ export default function UserPreferenceByIdPage() {
             <div className="text-xs text-gray-500">希望職種</div>
             <div className="text-sm">{target.desired_job || '未設定'}</div>
             {isOwner && !editing && (
-              <button
-                onClick={() => setEditing(true)}
-                className="absolute top-3 right-3 text-xs px-2 py-1 rounded border border-primary-600 text-primary-700 bg-white hover:bg-primary-50"
-                aria-label="希望条件を編集"
-              >編集</button>
+              <button onClick={() => setEditing(true)} className="btn-outline btn-outline-sm absolute top-3 right-3" aria-label="希望条件を編集">編集</button>
             )}
           </div>
 
@@ -184,11 +177,7 @@ export default function UserPreferenceByIdPage() {
             <div className="text-xs text-gray-500">希望業界</div>
             <div className="text-sm">{(target.desired_industries || []).join('、') || '未設定'}</div>
             {isOwner && !editing && (
-              <button
-                onClick={() => setEditing(true)}
-                className="absolute top-3 right-3 text-xs px-2 py-1 rounded border border-primary-600 text-primary-700 bg-white hover:bg-primary-50"
-                aria-label="希望条件を編集"
-              >編集</button>
+              <button onClick={() => setEditing(true)} className="btn-outline btn-outline-sm absolute top-3 right-3" aria-label="希望条件を編集">編集</button>
             )}
           </div>
 
@@ -196,11 +185,7 @@ export default function UserPreferenceByIdPage() {
             <div className="text-xs text-gray-500">希望勤務地</div>
             <div className="text-sm">{(target.desired_locations || []).join('、') || '未設定'}</div>
             {isOwner && !editing && (
-              <button
-                onClick={() => setEditing(true)}
-                className="absolute top-3 right-3 text-xs px-2 py-1 rounded border border-primary-600 text-primary-700 bg-white hover:bg-primary-50"
-                aria-label="希望条件を編集"
-              >編集</button>
+              <button onClick={() => setEditing(true)} className="btn-outline btn-outline-sm absolute top-3 right-3" aria-label="希望条件を編集">編集</button>
             )}
           </div>
         </>
