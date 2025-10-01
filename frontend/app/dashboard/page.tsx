@@ -421,14 +421,14 @@ const HeroSection = () => {
         <div className="absolute inset-0 hidden md:block pointer-events-none z-30">
           <ImageCardWithBg
             src={"/images/header-man-05.png"}
-            left={1}
+            left={0}
             top={10}
             borderRadius={12}
             width={16}
           />
           <ImageCardWithBg
             src={"/images/header-girl-03.png"}
-            right={1}
+            right={0}
             top={10}
             borderRadius={12}
             width={16}
