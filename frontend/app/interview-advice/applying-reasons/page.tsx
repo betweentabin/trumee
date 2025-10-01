@@ -7,6 +7,8 @@ import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { useAppSelector } from '@/app/redux/hooks';
 import { FaBriefcase, FaLightbulb, FaPencilAlt, FaStar, FaPlus, FaMinus } from 'react-icons/fa';
 import { buildApiUrl, getApiHeaders } from '@/config/api';
+import PlanGate, { useCurrentPlanTier } from '@/components/PlanGate';
+import { isAllowed } from '@/config/feature-gates';
 import toast from 'react-hot-toast';
 // import QuestionBrowser from '@/components/interview/QuestionBrowser';
 
@@ -14,6 +16,9 @@ import toast from 'react-hot-toast';
 type ThreadMsg = { id: string; sender: string; text: string; created_at: string; topic?: string };
 
 export default function ApplyingReasonsPage() {
+  const planTier = useCurrentPlanTier();
+  const canAdvice = isAllowed(planTier, 'motivation_review_chat');
+  const canInterview = isAllowed(planTier, 'interview_chat');
   const router = useRouter();
   const pathname = usePathname();
   const authState = useAppSelector(state => state.auth);
@@ -238,6 +243,7 @@ export default function ApplyingReasonsPage() {
     } catch {}
   };
   const sendInterviewChat = async () => {
+    if (!canInterview) return;
     const text = interviewInput.trim();
     if (!text) return;
     try {
@@ -253,6 +259,7 @@ export default function ApplyingReasonsPage() {
   const sendThreadMessage = async () => {
     const text = threadInput.trim();
     if (!text || !selectedTopic) return;
+    if ((selectedTopic === 'applying' || selectedTopic === 'aspiration') && !canAdvice) return;
     try {
       const payload = {
         type: selectedTopic,
@@ -332,7 +339,7 @@ export default function ApplyingReasonsPage() {
               </div>
 
               {selectedTopic === 'interview' ? (
-                <>
+                <PlanGate feature="interview_chat" withOverlay>
                   {/* 面接対策チャット（管理画面と同じ subject='interview'） */}
                   <div className="h-[300px] overflow-y-auto p-4 space-y-2 bg-gray-50">
                     {interviewChat.length === 0 && (
@@ -360,7 +367,7 @@ export default function ApplyingReasonsPage() {
                     />
                     <button onClick={sendInterviewChat} className="rounded-md bg-[#FF733E] text-white px-4 py-2">送信</button>
                   </div>
-                </>
+                </PlanGate>
               ) : (
                 <>
                   <div className="h-[300px] overflow-y-auto p-4 space-y-2 bg-gray-50">
@@ -495,12 +502,14 @@ export default function ApplyingReasonsPage() {
                     >
                       {loading ? '生成中...' : '志望理由を生成'}
                     </button>
-                    <button
-                      onClick={handleSendAdvice}
-                      className="flex-1 py-3 border border-gray-300 rounded-lg hover:bg-gray-50"
-                    >
-                      相談を送信
-                    </button>
+                    <PlanGate feature="motivation_review_chat" withOverlay className="flex-1">
+                      <button
+                        onClick={handleSendAdvice}
+                        className="w-full py-3 border border-gray-300 rounded-lg hover:bg-gray-50"
+                      >
+                        相談を送信
+                      </button>
+                    </PlanGate>
                   </div>
                 </div>
               </div>

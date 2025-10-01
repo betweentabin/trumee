@@ -9,6 +9,7 @@ import { buildApiUrl, getApiHeaders } from "@/config/api";
 import toast from "react-hot-toast";
 import { FaHandshake, FaPlus, FaMinus } from "react-icons/fa";
 import ClientPaidPlanModal from "@/components/modal/ClientPaidPlanModal";
+import PlanGate from "@/components/PlanGate";
 import QuestionBrowser from "@/components/interview/QuestionBrowser";
 // MockInterviewTrainer is intentionally disabled
 
@@ -195,31 +196,40 @@ export default function PrepareInterviewPage() {
                 "面接対策",
                 "志望理由",
                 "その他、質問",
-              ].map((t, i) => (
-                <button
-                  key={i}
-                  onClick={() => {
-                    const path =
-                      t === "転職理由(志望理由)"
-                        ? "/interview-advice/applying-reasons"
-                        : t === "職務経歴書に関する質問"
-                        ? "/interview-advice/resume-questions"
-                        : t === "志望理由"
-                        ? "/interview-advice/applying-reasons"
-                        : t === "面接対策"
-                        ? "/interview-advice/prepare-interview"
-                        : t === "その他、質問"
-                        ? "/interview-advice/other-questions"
-                        : "/interview-advice/prepare-interview";
-                    router.push(to(path));
-                  }}
-                  className={`w-full text-left px-4 py-3 border-b last:border-b-0 ${
-                    t === "面接対策" ? "bg-[#FFF7E6] font-semibold" : "hover:bg-gray-50"
-                  }`}
-                >
-                  {t}
-                </button>
-              ))}
+              ].map((t, i) => {
+                const path =
+                  t === "転職理由(志望理由)" || t === "志望理由"
+                    ? "/interview-advice/applying-reasons"
+                    : t === "職務経歴書に関する質問"
+                    ? "/interview-advice/resume-questions"
+                    : t === "面接対策"
+                    ? "/interview-advice/prepare-interview"
+                    : t === "その他、質問"
+                    ? "/interview-advice/other-questions"
+                    : "/interview-advice/prepare-interview";
+                const feature = t === "転職理由(志望理由)" || t === "志望理由" ? 'motivation_review_chat' : (t === '面接対策' ? 'interview_chat' : undefined);
+                const button = (
+                  <button
+                    key={i}
+                    onClick={() => router.push(to(path))}
+                    className={`w-full text-left px-4 py-3 border-b last:border-b-0 ${
+                      t === "面接対策" ? "bg-[#FFF7E6] font-semibold" : "hover:bg-gray-50"
+                    }`}
+                  >
+                    {t}
+                  </button>
+                );
+                return feature ? (
+                  <div key={i} className="relative">
+                    {/* Plan overlay blocks navigation when locked */}
+                    <PlanGate feature={feature as any} withOverlay>
+                      {button}
+                    </PlanGate>
+                  </div>
+                ) : (
+                  <div key={i}>{button}</div>
+                );
+              })}
             </div>
           </aside>
 

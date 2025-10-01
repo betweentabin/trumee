@@ -1469,8 +1469,22 @@ def advice_messages(request):
             if plan != 'premium':
                 return Response({'error': 'plan_required', 'feature': 'interview_chat', 'required': 'premium'}, status=status.HTTP_403_FORBIDDEN)
         elif SUBJECT == 'advice':
-            # 志望理由等の個別アドバイスはスタンダード以上
-            if plan not in ('standard', 'premium'):
+            # body.content が JSON の場合、type で細分化
+            data = request.data or {}
+            content = data.get('content')
+            content_type = None
+            if isinstance(content, dict):
+                content_type = content.get('type')
+            elif isinstance(content, str):
+                try:
+                    import json
+                    obj = json.loads(content)
+                    if isinstance(obj, dict):
+                        content_type = obj.get('type')
+                except Exception:
+                    content_type = None
+            # 志望理由関連（applying / aspiration / applying_reason）のみ Standard 以上を要求
+            if (content_type in ('applying', 'aspiration', 'applying_reason')) and plan not in ('standard', 'premium'):
                 return Response({'error': 'plan_required', 'feature': 'motivation_review_chat', 'required': 'standard'}, status=status.HTTP_403_FORBIDDEN)
 
     # 対向ユーザーの決定

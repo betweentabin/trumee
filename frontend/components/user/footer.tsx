@@ -1,6 +1,7 @@
 "use client"
 import { useRouter } from "next/navigation";
 import Link from 'next/link';
+import GatedLink from '@/components/GatedLink';
 import { useMemo } from 'react';
 
 const Footer = () => {
@@ -65,10 +66,18 @@ const Footer = () => {
                             <div>
                             <p className="font-bold mb-2">面接に関するアドバイス</p>
                             <ul className="space-y-1">
-                                <li><Link href={applyingReasonsHref} className="hover:text-[#FF733E] transition-colors">転職理由（志望理由）</Link></li>
+                                <li>
+                                  <GatedLink href={applyingReasonsHref} feature="motivation_review_chat">
+                                    転職理由（志望理由）
+                                  </GatedLink>
+                                </li>
                                 <li><Link href={resumeQuestionsHref} className="hover:text-[#FF733E] transition-colors">職務経歴書に関する質問</Link></li>
                                 <li><Link href={prQuestionsHref} className="hover:text-[#FF733E] transition-colors">自己PRに関係する質問</Link></li>
-                                <li><Link href={prepareHref} className="hover:text-[#FF733E] transition-colors">面接対策</Link></li>
+                                <li>
+                                  <GatedLink href={prepareHref} feature="interview_chat">
+                                    面接対策
+                                  </GatedLink>
+                                </li>
                             </ul>
                             </div>
 

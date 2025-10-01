@@ -1,6 +1,7 @@
 "use client";
 
 import Link from 'next/link';
+import GatedLink from '@/components/GatedLink';
 import { usePathname } from 'next/navigation';
 import { FaChevronRight } from 'react-icons/fa';
 import useAuthV2 from '@/hooks/useAuthV2';
@@ -30,20 +31,30 @@ export default function ServiceCards() {
       <div className="flex-1 bg-white border rounded-xl shadow-sm p-4">
         <h2 className="font-bold text-sm mb-4">各サービスを利用する</h2>
         <div className="space-y-3">
-          {[
-            { text: '職務経歴書に関するアドバイス', href: perUser('resume-advice/review') || '/resume-advice/review' },
-            { text: '面接対策・質問集', href: perUser('interview') || '/interview' },
-            { text: '企業からのスカウト確認', href: perUser('scouts') || '/scouts' },
-          ].map(({ text, href }, idx) => (
-            <Link 
-              href={href} 
-              key={idx}
-              className="w-full flex items-center justify-between px-4 py-2 border rounded-md text-sm hover:bg-gray-50 cursor-pointer"
-            >
-              <span>{text}</span>
+          {/* Individual rows to allow gating per item */}
+          <Link 
+            href={perUser('resume-advice/review') || '/resume-advice/review'} 
+            className="w-full flex items-center justify-between px-4 py-2 border rounded-md text-sm hover:bg-gray-50 cursor-pointer"
+          >
+            <span>職務経歴書に関するアドバイス</span>
+            <FaChevronRight className="text-gray-400 text-xs" />
+          </Link>
+          <GatedLink
+            href={perUser('interview') || '/interview'}
+            feature="interview_chat"
+          >
+            <div className="w-full flex items-center justify-between px-4 py-2 border rounded-md text-sm">
+              <span>面接対策・質問集</span>
               <FaChevronRight className="text-gray-400 text-xs" />
-            </Link>
-          ))}
+            </div>
+          </GatedLink>
+          <Link 
+            href={perUser('scouts') || '/scouts'} 
+            className="w-full flex items-center justify-between px-4 py-2 border rounded-md text-sm hover:bg-gray-50 cursor-pointer"
+          >
+            <span>企業からのスカウト確認</span>
+            <FaChevronRight className="text-gray-400 text-xs" />
+          </Link>
         </div>
       </div>
 
