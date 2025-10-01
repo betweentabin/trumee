@@ -22,8 +22,8 @@ const Footer = () => {
     const base = uid ? `/users/${uid}/myinfo` : '/users/myinfo';
     const scoutsHref = uid ? `/users/${uid}/scouts` : '/scouts';
     const applyingReasonsHref = uid ? `/users/${uid}/interview-advice/applying-reasons` : '/interview-advice/applying-reasons';
-    const resumeQuestionsHref = uid ? `/users/${uid}/interview-advice/resume-questions` : '/interview-advice/resume-questions';
-    const prQuestionsHref = uid ? `/users/${uid}/interview-advice/pr-questions` : '/interview-advice/pr-questions';
+    const resumeQuestionsHref = `${applyingReasonsHref}?focus=resume`;
+    const prQuestionsHref = `${applyingReasonsHref}?focus=pr`;
     const prepareHref = uid ? `/users/${uid}/interview-advice/prepare-interview` : '/interview-advice/prepare-interview';
 
     return(

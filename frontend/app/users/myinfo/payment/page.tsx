@@ -86,10 +86,7 @@ export default function UserPaymentPage() {
         <div className="bg-white rounded-lg shadow-md p-6">
           <h2 className="text-xl font-semibold mb-4">お支払いの管理</h2>
           <p className="text-gray-700 mb-6">クレジットカード情報は当サイトでは保存しません。Stripeの安全なチェックアウトで決済・管理します。</p>
-          <div className="flex flex-col md:flex-row gap-3">
-            <button onClick={() => gotoStripeCheckout('premium')} disabled={loading} className="px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-lg disabled:bg-secondary-300">Stripeでプラン購入</button>
-            <button onClick={() => gotoStripeCheckout('basic')} disabled={loading} className="px-6 py-3 bg-secondary-900 hover:bg-secondary-800 text-white rounded-lg disabled:bg-secondary-300">単発決済（例）</button>
-          </div>
+          {/* 決済ボタンは現在非表示にします */}
         </div>
 
         {/* No in-app card form; managed on Stripe */}

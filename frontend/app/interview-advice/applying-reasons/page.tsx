@@ -3,7 +3,7 @@
 import React from 'react';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { useAppSelector } from '@/app/redux/hooks';
 import { FaBriefcase, FaLightbulb, FaPencilAlt, FaStar, FaPlus, FaMinus } from 'react-icons/fa';
 import { buildApiUrl, getApiHeaders } from '@/config/api';
@@ -58,6 +58,7 @@ export default function ApplyingReasonsPage() {
     return null;
   }, [pathname]);
   const to = (path: string) => (userIdFromPath ? `/users/${userIdFromPath}${path}` : path);
+  const searchParams = useSearchParams();
 
   // Avoid early redirect before persisted auth rehydrates
   useEffect(() => {
@@ -66,6 +67,13 @@ export default function ApplyingReasonsPage() {
       router.push('/auth/login');
     }
   }, [authState.isAuthenticated, router]);
+
+  // Deep link support from footer: ?focus=resume | ?focus=pr
+  useEffect(() => {
+    const focus = (searchParams?.get('focus') || '').toLowerCase();
+    if (focus === 'resume') setSelectedTopic('resume');
+    else if (focus === 'pr') setSelectedTopic('interview');
+  }, [searchParams]);
 
   const handleGenerate = async () => {
     if (!companyName || !position) {
