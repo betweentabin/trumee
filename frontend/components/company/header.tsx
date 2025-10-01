@@ -3,8 +3,6 @@ import React from "react";
 import Image from "next/image";
 import { useRouter } from 'next/navigation';
 import Link from "next/link";
-// import toast from 'react-hot-toast';
-// import apiV2Client from '@/lib/api-v2-client';
 import { clearAuthData } from '@/utils/auth';
 import useAuthV2 from '@/hooks/useAuthV2';
 
