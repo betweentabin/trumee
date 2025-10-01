@@ -53,8 +53,7 @@ export default function ResumeReviewPage() {
   const [annotations, setAnnotations] = useState<any[]>([]);
   const [threads, setThreads] = useState<any[]>([]);
   const [activeThread, setActiveThread] = useState<string | null>(null); // annotationId or null for all
-  // Filters
-  const [statusFilter, setStatusFilter] = useState<'all' | 'unresolved' | 'resolved'>('all');
+  // Filters (status filter removed)
   const [annotationFilter, setAnnotationFilter] = useState<string>('');
   const [threadSearch, setThreadSearch] = useState('');
   const searchRef = useRef<HTMLInputElement | null>(null);
@@ -512,7 +511,17 @@ export default function ResumeReviewPage() {
         headers: { ...getAuthHeaders() },
         body: JSON.stringify({
           self_pr: editSelfPr,
-          extra_data: { ...(extra || {}), workExperiences, jobSummary: editJobSummary, baseline },
+          // Persist a hint for admin UI to render marker-style highlights
+          // Admin page doesn't know the pre-baseline diff, so store the
+          // anchors we just changed together with a timestamp.
+          extra_data: {
+            ...(extra || {}),
+            workExperiences,
+            jobSummary: editJobSummary,
+            baseline,
+            recently_changed_anchors: Array.from(changedAnchors || []),
+            recently_changed_at: new Date().toISOString(),
+          },
         }),
       }, 15000);
       if (res.ok) {
@@ -686,9 +695,6 @@ export default function ResumeReviewPage() {
   // Filter threads (search + unresolved)
   const threadsFiltered = useMemo(() => {
     let list = Array.isArray(threads) ? [...threads] : [];
-    // status filter
-    if (statusFilter === 'unresolved') list = list.filter((t: any) => !!t?.unresolved);
-    if (statusFilter === 'resolved') list = list.filter((t: any) => t?.unresolved === false);
     // annotation filter
     if (annotationFilter) list = list.filter((t: any) => String(t?.annotation?.id || '') === String(annotationFilter));
     const q = threadSearch.trim().toLowerCase();
@@ -701,7 +707,7 @@ export default function ResumeReviewPage() {
       });
     }
     return list;
-  }, [threads, statusFilter, annotationFilter, threadSearch]);
+  }, [threads, annotationFilter, threadSearch]);
 
   // Auto-select first thread so users immediately see a threaded view
   useEffect(() => {
@@ -1351,17 +1357,7 @@ export default function ResumeReviewPage() {
                 ))}
               </select>
 
-              {/* Status filter */}
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value as any)}
-                className="rounded border px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-primary-600 ring-inset"
-                title="ステータスで絞り込み"
-              >
-                <option value="all">全件</option>
-                <option value="unresolved">未解決のみ</option>
-                <option value="resolved">解決済みのみ</option>
-              </select>
+              {/* Status filter removed */}
 
               <input
                 ref={searchRef}

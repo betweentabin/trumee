@@ -241,7 +241,7 @@ export const fetchResumePreview = async ({ userId, token, forAdmin, forOwner }: 
       || undefined;
 
     // Compute recently changed anchors by comparing baseline snapshot
-    const changedAnchors: string[] = (() => {
+    const changedAnchorsFromBaseline: string[] = (() => {
       try {
         const baseline = (resume?.extra_data && (resume.extra_data as any).baseline) || null;
         if (!baseline) return [];
@@ -268,6 +268,22 @@ export const fetchResumePreview = async ({ userId, token, forAdmin, forOwner }: 
         return [];
       }
     })();
+
+    // Read persisted "recently changed" anchors if available (set by owner publish)
+    const persisted: string[] = (() => {
+      try {
+        const extra = (resume?.extra_data || {}) as any;
+        const arr =
+          extra.recently_changed_anchors ||
+          extra.last_changed_anchors ||
+          extra.changed_anchors ||
+          extra.recentlyChangedAnchors || [];
+        if (!Array.isArray(arr)) return [];
+        return arr.map((s: any) => String(s)).filter(Boolean);
+      } catch { return []; }
+    })();
+
+    const changedAnchors = Array.from(new Set([ ...changedAnchorsFromBaseline, ...persisted ]));
 
     return {
       userName: resolvedUserName || undefined,
