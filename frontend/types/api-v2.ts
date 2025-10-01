@@ -56,6 +56,8 @@ export interface User extends BaseModel {
   phone?: string;
   is_premium: boolean;
   premium_expiry?: string;
+  // 課金プラン（starter / standard / premium）。空は未設定
+  plan_tier?: string;
 }
 
 export interface SeekerProfile extends BaseModel {

@@ -1458,6 +1458,21 @@ def advice_messages(request):
     subject_param = request.GET.get('subject') if request.method == 'GET' else (request.data or {}).get('subject')
     SUBJECT = subject_param or DEFAULT_SUBJECT
 
+    # Plan gating (POST only; GET is allowed for read)
+    if request.method == 'POST' and not request.user.is_staff:
+        try:
+            plan = (getattr(request.user, 'plan_tier', '') or '').strip() or 'starter'
+        except Exception:
+            plan = 'starter'
+        if SUBJECT == 'interview':
+            # 面接対策セッションはプレミアム限定
+            if plan != 'premium':
+                return Response({'error': 'plan_required', 'feature': 'interview_chat', 'required': 'premium'}, status=status.HTTP_403_FORBIDDEN)
+        elif SUBJECT == 'advice':
+            # 志望理由等の個別アドバイスはスタンダード以上
+            if plan not in ('standard', 'premium'):
+                return Response({'error': 'plan_required', 'feature': 'motivation_review_chat', 'required': 'standard'}, status=status.HTTP_403_FORBIDDEN)
+
     # 対向ユーザーの決定
     def resolve_counterpart(for_user, specified_user_id=None):
         if for_user.is_staff:

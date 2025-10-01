@@ -3,10 +3,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import { buildApiUrl, getApiHeaders } from "@/config/api";
+import PlanGate, { useCurrentPlanTier } from "@/components/PlanGate";
+import { isAllowed } from "@/config/feature-gates";
 
 type Msg = { id: string; sender: string; content: string; created_at: string };
 
 export default function InterviewAdvicePage() {
+  const planTier = useCurrentPlanTier();
+  const canUse = isAllowed(planTier, 'interview_chat');
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
@@ -37,6 +41,7 @@ export default function InterviewAdvicePage() {
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
 
   const send = async () => {
+    if (!canUse) return; // client guard
     if (!input.trim()) return;
     try {
       setSending(true);
@@ -56,6 +61,7 @@ export default function InterviewAdvicePage() {
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
+      <PlanGate feature="interview_chat" withOverlay>
       <div className="max-w-3xl mx-auto bg-white rounded-xl shadow border p-6">
         <h1 className="text-xl font-semibold mb-4">面接に関するアドバイス</h1>
         <div className="h-[60vh] overflow-y-auto border rounded-md p-3 space-y-2 bg-gray-50">
@@ -74,10 +80,11 @@ export default function InterviewAdvicePage() {
           <div ref={endRef} />
         </div>
         <div className="mt-4 flex gap-2">
-          <input className="flex-1 rounded-md border px-3 py-2" placeholder="入力してください。" value={input} onChange={(e) => setInput(e.target.value)} />
-          <button className="rounded-md bg-gray-800 text-white px-4 py-2 disabled:opacity-50" onClick={send} disabled={sending}>{sending ? "送信中…" : "送信"}</button>
+          <input className="flex-1 rounded-md border px-3 py-2" placeholder="入力してください。" value={input} onChange={(e) => setInput(e.target.value)} disabled={!canUse} />
+          <button className="rounded-md bg-gray-800 text-white px-4 py-2 disabled:opacity-50" onClick={send} disabled={sending || !canUse}>{sending ? "送信中…" : "送信"}</button>
         </div>
       </div>
+      </PlanGate>
     </div>
   );
 }

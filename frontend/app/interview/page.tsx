@@ -3,11 +3,15 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { buildApiUrl } from '@/config/api';
+import PlanGate, { useCurrentPlanTier } from '@/components/PlanGate';
+import { isAllowed } from '@/config/feature-gates';
 import { getAuthHeaders } from '@/utils/auth';
 
 type Msg = { id: string; sender: string; content: string; created_at: string };
 
 export default function InterviewTopPage() {
+  const planTier = useCurrentPlanTier();
+  const canUse = isAllowed(planTier, 'interview_chat');
   const pathname = usePathname();
   const userIdFromPath = useMemo(() => {
     if (!pathname) return null as string | null;
@@ -49,6 +53,7 @@ export default function InterviewTopPage() {
   useEffect(() => { load(); }, [userIdFromPath]);
 
   const send = async () => {
+    if (!canUse) return; // guard on client
     const text = input.trim();
     if (!text) return;
     try {
@@ -81,7 +86,8 @@ export default function InterviewTopPage() {
         </aside>
 
         {/* Right: chat */}
-        <main className="bg-white rounded-lg shadow border p-4 md:col-span-2 flex flex-col min-h-[60vh]">
+        <PlanGate feature="interview_chat" className="md:col-span-2" withOverlay>
+        <main className="bg-white rounded-lg shadow border p-4 flex flex-col min-h-[60vh]">
           <h2 className="text-lg font-semibold mb-3">やり取り</h2>
           <div className="flex-1 overflow-auto space-y-2 pr-1">
             {messages.map((m) => {
@@ -95,10 +101,11 @@ export default function InterviewTopPage() {
             <div ref={endRef} />
           </div>
           <div className="mt-3 flex gap-2">
-            <input value={input} onChange={(e) => setInput(e.target.value)} className="flex-1 border rounded px-3 py-2" placeholder="回答やメッセージを入力" />
-            <button onClick={send} disabled={loading} className="btn-outline btn-outline-md">送信</button>
+            <input value={input} onChange={(e) => setInput(e.target.value)} className="flex-1 border rounded px-3 py-2" placeholder="回答やメッセージを入力" disabled={!canUse} />
+            <button onClick={send} disabled={loading || !canUse} className="btn-outline btn-outline-md">送信</button>
           </div>
         </main>
+        </PlanGate>
       </div>
     </div>
   );
