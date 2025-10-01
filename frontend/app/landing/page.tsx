@@ -422,7 +422,7 @@ const HeroSection = () => {
           }
         </div>
         {/* Side hero images (desktop) */}
-        <div className="absolute inset-0 hidden md:block pointer-events-none z-10">
+        <div className="absolute inset-0 hidden md:block pointer-events-none z-30">
           <ImageCardWithBg
             src={"/images/header-man-05.png"}
             left={1}
