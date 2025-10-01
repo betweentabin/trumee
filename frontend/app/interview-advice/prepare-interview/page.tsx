@@ -111,6 +111,15 @@ export default function PrepareInterviewPage() {
     return true;
   };
 
+  const parseInterviewContent = (c: any) => {
+    if (!c) return '';
+    try {
+      const obj = typeof c === 'string' ? JSON.parse(c) : c;
+      if (obj && typeof obj === 'object') return obj.message || String(c);
+    } catch {}
+    return String(c);
+  };
+
   const loadThread = async () => {
     try {
       const base = `${buildApiUrl("/advice/messages/")}?subject=interview`;
@@ -121,7 +130,7 @@ export default function PrepareInterviewPage() {
       const mapped: ThreadMsg[] = (list || []).map((m: any) => ({
         id: String(m.id),
         sender: String(m.sender),
-        text: m.content ?? m.message ?? "",
+        text: parseInterviewContent(m.content ?? m.message ?? ''),
         created_at: m.created_at,
       }));
       setThread(mapped);

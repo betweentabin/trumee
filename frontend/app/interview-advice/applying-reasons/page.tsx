@@ -125,6 +125,7 @@ export default function ApplyingReasonsPage() {
       return;
     }
     try {
+      const summary = `志望理由の相談：会社=${companyName} / 職種=${position}${reasons ? '（強み・経験あり）' : ''}`;
       const body: any = {
         subject: 'advice',
         content: JSON.stringify({
@@ -133,6 +134,7 @@ export default function ApplyingReasonsPage() {
           position,
           strengths: reasons,
           draft: generatedReason,
+          message: summary,
         }),
       };
       // ユーザー別ページの場合は対象ユーザーIDを付与
@@ -159,9 +161,23 @@ export default function ApplyingReasonsPage() {
   const parseContent = (c: any) => {
     if (!c) return { text: '', topic: undefined as string | undefined };
     try {
-      const obj = JSON.parse(c);
+      const obj = typeof c === 'string' ? JSON.parse(c) : c;
       if (obj && typeof obj === 'object') {
-        return { text: obj.message || obj.draft || String(c), topic: obj.topic };
+        const msg = (obj.message ?? '').toString().trim();
+        const draft = (obj.draft ?? '').toString().trim();
+        if (msg) return { text: msg, topic: obj.topic };
+        if (draft) return { text: draft, topic: obj.topic };
+        if (obj.type === 'applying_reason') {
+          const parts: string[] = [];
+          if (obj.company) parts.push(`会社: ${obj.company}`);
+          if (obj.position) parts.push(`職種: ${obj.position}`);
+          if (obj.strengths) parts.push('強み・経験あり');
+          return { text: `志望理由の相談（${parts.join(' / ')}）`, topic: obj.topic };
+        }
+        if (obj.type === 'future_plan') return { text: '将来やりたいことに関する相談', topic: obj.topic };
+        if (obj.type === 'resignation_reason' || obj.type === 'resignation_reason_draft') return { text: '退職理由に関する相談', topic: obj.topic };
+        if (obj.type === 'achievement') return { text: '実績・成果に関する相談', topic: obj.topic };
+        return { text: String(c), topic: obj.topic };
       }
     } catch (e) {
       // noop

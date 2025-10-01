@@ -64,8 +64,23 @@ export default function ResignationReasonsPage() {
   const parseContent = (c: any) => {
     if (!c) return "";
     try {
-      const obj = JSON.parse(c);
-      if (obj && typeof obj === "object") return obj.message || obj.draft || c;
+      const obj = typeof c === 'string' ? JSON.parse(c) : c;
+      if (obj && typeof obj === "object") {
+        const msg = (obj.message ?? '').toString().trim();
+        if (msg) return msg;
+        const draft = (obj.draft ?? '').toString().trim();
+        if (draft) return draft;
+        if (obj.type === 'applying_reason') {
+          const parts: string[] = [];
+          if (obj.company) parts.push(`会社: ${obj.company}`);
+          if (obj.position) parts.push(`職種: ${obj.position}`);
+          if (obj.strengths) parts.push('強み・経験あり');
+          return `志望理由の相談（${parts.join(' / ')}）`;
+        }
+        if (obj.type === 'future_plan') return '将来やりたいことに関する相談';
+        if (obj.type === 'resignation_reason' || obj.type === 'resignation_reason_draft') return '退職理由に関する相談';
+        if (obj.type === 'achievement') return '実績・成果に関する相談';
+      }
     } catch {}
     return String(c);
   };

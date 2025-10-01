@@ -35,7 +35,28 @@ export default function OtherQuestionsPage() {
   }, [pathname]);
   const to = (p: string) => (userIdFromPath ? `/users/${userIdFromPath}${p}` : p);
 
-  const parseContent = (c:any)=>{ try{ const o = JSON.parse(c); return o.message || o.draft || c; } catch { return String(c||''); } };
+  const parseContent = (c:any)=>{
+    try{
+      const o = typeof c === 'string' ? JSON.parse(c) : c;
+      if (o && typeof o === 'object') {
+        const msg = (o.message ?? '').toString().trim();
+        if (msg) return msg;
+        const draft = (o.draft ?? '').toString().trim();
+        if (draft) return draft;
+        if (o.type === 'applying_reason') {
+          const parts: string[] = [];
+          if (o.company) parts.push(`会社: ${o.company}`);
+          if (o.position) parts.push(`職種: ${o.position}`);
+          if (o.strengths) parts.push('強み・経験あり');
+          return `志望理由の相談（${parts.join(' / ')}）`;
+        }
+        if (o.type === 'future_plan') return '将来やりたいことに関する相談';
+        if (o.type === 'resignation_reason' || o.type === 'resignation_reason_draft') return '退職理由に関する相談';
+        if (o.type === 'achievement') return '実績・成果に関する相談';
+      }
+    } catch { /* noop */ }
+    return String(c||'');
+  };
   const loadThread = async ()=>{
     try{
       const base = `${buildApiUrl('/advice/messages/')}?subject=advice`;
