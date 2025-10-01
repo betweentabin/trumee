@@ -3,8 +3,8 @@ import React from "react";
 import Image from "next/image";
 import { useRouter } from 'next/navigation';
 import Link from "next/link";
-import toast from 'react-hot-toast';
-import apiV2Client from '@/lib/api-v2-client';
+// import toast from 'react-hot-toast';
+// import apiV2Client from '@/lib/api-v2-client';
 import { clearAuthData } from '@/utils/auth';
 import useAuthV2 from '@/hooks/useAuthV2';
 
@@ -27,13 +27,9 @@ const Header = () => {
     router.push(to);
   }
 
-  const openThisMonth = async () => {
-    try {
-      const page = await apiV2Client.getCompanyMonthlyCurrent();
-      router.push(page.page_url);
-    } catch (e) {
-      toast.error('月次ページの取得に失敗しました');
-    }
+  const goCreateJob = () => {
+    const to = currentUser?.id ? `/company/${currentUser.id}/jobs/new` : '/company/jobs/new';
+    router.push(to);
   }
 
     return (
@@ -55,10 +51,10 @@ const Header = () => {
               求職者の検索
             </button>
             <button
-              onClick={openThisMonth}
+              onClick={goCreateJob}
               className="px-4 py-2 text-sm rounded-full bg-primary-600 hover:bg-primary-700 text-white transition"
             >
-              今月のページ
+              求人票を作成
             </button>
             <button
               onClick={mypage}
