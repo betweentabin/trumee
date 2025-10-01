@@ -10,7 +10,7 @@ import toast from "react-hot-toast";
 import { FaHandshake, FaPlus, FaMinus } from "react-icons/fa";
 import ClientPaidPlanModal from "@/components/modal/ClientPaidPlanModal";
 import QuestionBrowser from "@/components/interview/QuestionBrowser";
-import MockInterviewTrainer from "@/components/interview/MockInterviewTrainer";
+// MockInterviewTrainer is intentionally disabled
 
 type ThreadMsg = { id: string; sender: string; text: string; created_at: string };
 
@@ -348,8 +348,7 @@ export default function PrepareInterviewPage() {
               </div>
             </section>
 
-            {/* 模擬面接（タイマー付き） */}
-            <MockInterviewTrainer />
+            {/* 模擬面接（タイマー付き）: 非表示 */}
           </main>
         </div>
       </div>

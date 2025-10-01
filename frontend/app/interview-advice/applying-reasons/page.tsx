@@ -30,15 +30,6 @@ export default function ApplyingReasonsPage() {
     if (typeof window === 'undefined') return null as any;
     try { return JSON.parse(localStorage.getItem('current_user_v2') || 'null'); } catch { return null as any; }
   }, []);
-  // Determine viewer id for correct alignment (fallback to route userId)
-  const viewerId = useMemo(() => {
-    try {
-      const mid = me?.id ? String(me.id) : '';
-      const rid = userIdFromPath ? String(userIdFromPath) : '';
-      return mid || rid || '';
-    } catch { return userIdFromPath ? String(userIdFromPath) : ''; }
-  }, [me, userIdFromPath]);
-
   // Thread state
   const [thread, setThread] = useState<ThreadMsg[]>([]);
   const [threadInput, setThreadInput] = useState('');
@@ -71,6 +62,15 @@ export default function ApplyingReasonsPage() {
   }, [pathname]);
   const to = (path: string) => (userIdFromPath ? `/users/${userIdFromPath}${path}` : path);
   const searchParams = useSearchParams();
+
+  // Determine viewer id for correct alignment (fallback to route userId)
+  const viewerId = useMemo(() => {
+    try {
+      const mid = me?.id ? String(me.id) : '';
+      const rid = userIdFromPath ? String(userIdFromPath) : '';
+      return mid || rid || '';
+    } catch { return userIdFromPath ? String(userIdFromPath) : ''; }
+  }, [me, userIdFromPath]);
 
   // Avoid early redirect before persisted auth rehydrates
   useEffect(() => {
