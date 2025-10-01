@@ -65,6 +65,7 @@ urlpatterns = [
     # 企業専用エンドポイント
     path('company/dashboard/', views_api_v2.company_dashboard, name='company-dashboard'),
     path('company/profile/', views_api_v2.company_profile_detail, name='company-profile-detail'),
+    path('company/jobs/', views_api_v2.company_jobs_list, name='company-jobs-list'),
     path('company/jobs/new/', views_api_v2.company_jobs_new, name='company-jobs-new'),
     path('company/scouts/', views_api_v2.company_scouts_list, name='company-scouts-list'),
     path('company/applications/', views_api_v2.company_applications_list, name='company-applications-list'),
@@ -106,6 +107,8 @@ urlpatterns = [
     path('interview/categories/', views_api_v2.interview_categories_v2, name='interview-categories'),
     path('interview/questions/', views_api_v2.interview_questions_v2, name='interview-questions'),
     path('interview/personalize/', views_api_v2.interview_personalize_v2, name='interview-personalize'),
+    # 管理: 面接質問の作成（管理者限定）
+    path('interview/admin/questions/', views_api_v2.interview_question_create, name='interview-question-create'),
     path('templates/render/', views_api_v2.template_render_v2, name='template-render'),
 
     # 企業↔求職者メッセージ

@@ -237,6 +237,7 @@ export default function ResumeAdvicePage() {
                 skills={resumePreview.skills}
                 education={resumePreview.education}
                 annotations={annotations}
+                changedAnchors={resumePreview.changedAnchors}
                 className="w-full mb-8"
               />
               {/* overlays */}

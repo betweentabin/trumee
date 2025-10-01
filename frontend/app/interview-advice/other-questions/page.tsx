@@ -123,9 +123,7 @@ export default function OtherQuestionsPage() {
             <div className="bg-white rounded-lg shadow-md p-6">
               <label className="block text-sm font-medium text-gray-700 mb-2">質問・相談内容</label>
               <textarea value={question} onChange={(e)=>setQuestion(e.target.value)} rows={6} className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"/>
-              <div className="mt-3 text-right">
-                <button onClick={()=>{ if(!question.trim()){ toast.error('内容を入力してください'); return;} setThreadInput(question); sendThread(); setQuestion(''); }} className="px-4 py-2 bg-[#FF733E] text-white rounded-lg hover:bg-[#FF8659]">相談を送信</button>
-              </div>
+              {/* 相談を送信ボタンは廃止（下部のチャット入力から送信できます） */}
             </div>
 
             <section className="bg-white rounded-lg shadow-md border">

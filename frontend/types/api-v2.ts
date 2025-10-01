@@ -301,6 +301,19 @@ export interface JobTicketLedger extends BaseModel {
   tickets_remaining: number;
 }
 
+export interface JobPosting extends BaseModel {
+  company?: UUID;
+  title: string;
+  description?: string;
+  requirements?: string;
+  employment_type?: EmploymentType;
+  salary_min?: number | null;
+  salary_max?: number | null;
+  location?: string;
+  remote_allowed?: boolean;
+  is_active?: boolean;
+}
+
 // ============================================================================
 // リクエスト・レスポンス型
 // ============================================================================

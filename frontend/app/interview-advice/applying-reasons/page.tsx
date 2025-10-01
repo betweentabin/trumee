@@ -125,43 +125,7 @@ export default function ApplyingReasonsPage() {
     }
   };
 
-  const handleSendAdvice = async () => {
-    if (!companyName || !position) {
-      toast.error('企業名と希望職種を入力してください');
-      return;
-    }
-    try {
-      const summary = `志望理由の相談：会社=${companyName} / 職種=${position}${reasons ? '（強み・経験あり）' : ''}`;
-      const body: any = {
-        subject: 'advice',
-        content: JSON.stringify({
-          type: 'applying_reason',
-          company: companyName,
-          position,
-          strengths: reasons,
-          draft: generatedReason,
-          message: summary,
-        }),
-      };
-      // ユーザー別ページの場合は対象ユーザーIDを付与
-      if (userIdFromPath) body.user_id = String(userIdFromPath);
-      const res = await fetch(buildApiUrl('/advice/messages/'), {
-        method: 'POST',
-        headers: getApiHeaders(token),
-        body: JSON.stringify(body),
-      });
-      if (!res.ok) {
-        const t = await res.text();
-        console.error('send failed', res.status, t);
-        toast.error('相談の送信に失敗しました');
-        return;
-      }
-      toast.success('相談内容を送信しました');
-    } catch (e) {
-      console.error(e);
-      toast.error('相談の送信に失敗しました');
-    }
-  };
+  // 相談を送信ボタンは廃止。チャットから個別に送れます。
 
   // Thread helpers
   const parseContent = (c: any) => {
@@ -503,14 +467,7 @@ export default function ApplyingReasonsPage() {
                     >
                       {loading ? '生成中...' : '志望理由を生成'}
                     </button>
-                    <PlanGate feature="motivation_review_chat" withOverlay variant="blur" showHint={false} className="flex-1">
-                      <button
-                        onClick={handleSendAdvice}
-                        className="w-full py-3 border border-gray-300 rounded-lg hover:bg-gray-50"
-                      >
-                        相談を送信
-                      </button>
-                    </PlanGate>
+                    {/* 相談を送信ボタンは削除 */}
                   </div>
                 </div>
               </div>

@@ -295,6 +295,89 @@ def interview_personalize_v2(request):
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
+def interview_question_create(request):
+    """Create a new InterviewQuestion (staff only).
+
+    Body JSON:
+      - type: 'interview' | 'self_pr' | 'resume' | 'motivation' (default: 'interview')
+      - category: string
+      - subcategory: string (optional)
+      - text: string (required)
+      - answer_guide: string (optional)
+      - difficulty: 'easy' | 'medium' | 'hard' (default: 'medium')
+      - tags: string (comma-separated) or array of strings (optional)
+      - locale: string (default: 'ja-JP')
+      - is_active: boolean (default: true)
+    Returns created (or upserted) question.
+    """
+    if not request.user.is_staff:
+        return Response({'detail': 'forbidden'}, status=status.HTTP_403_FORBIDDEN)
+
+    body = request.data or {}
+    qtype = (body.get('type') or 'interview').strip()
+    category = (body.get('category') or '').strip()
+    subcategory = (body.get('subcategory') or '').strip()
+    text = (body.get('text') or '').strip()
+    answer_guide = (body.get('answer_guide') or '').strip()
+    difficulty = (body.get('difficulty') or 'medium').strip().lower()
+    locale = (body.get('locale') or 'ja-JP').strip()
+    is_active = bool(body.get('is_active') if body.get('is_active') is not None else True)
+
+    # Normalize tags
+    raw_tags = body.get('tags')
+    tags = []
+    if isinstance(raw_tags, list):
+        tags = [str(t).strip() for t in raw_tags if str(t).strip()]
+    elif isinstance(raw_tags, str):
+        tags = [t.strip() for t in raw_tags.split(',') if t.strip()]
+
+    allowed_types = [t[0] for t in InterviewQuestion.TYPE_CHOICES]
+    if qtype not in allowed_types:
+        return Response({'detail': 'invalid_type', 'allowed': allowed_types}, status=status.HTTP_400_BAD_REQUEST)
+    allowed_levels = [d[0] for d in InterviewQuestion.DIFFICULTY_CHOICES]
+    if difficulty not in allowed_levels:
+        difficulty = 'medium'
+    if not text:
+        return Response({'detail': 'text_required'}, status=status.HTTP_400_BAD_REQUEST)
+
+    # Upsert (avoid exact duplicates by type/category/difficulty/text)
+    try:
+        obj, created = InterviewQuestion.objects.get_or_create(
+            type=qtype,
+            category=category,
+            difficulty=difficulty,
+            text=text,
+            defaults={
+                'subcategory': subcategory,
+                'answer_guide': answer_guide,
+                'tags': tags,
+                'locale': locale,
+                'source': 'manual',
+                'is_active': is_active,
+            }
+        )
+        if not created:
+            changed = False
+            if obj.subcategory != subcategory:
+                obj.subcategory = subcategory; changed = True
+            if answer_guide and obj.answer_guide != answer_guide:
+                obj.answer_guide = answer_guide; changed = True
+            if tags and obj.tags != tags:
+                obj.tags = tags; changed = True
+            if obj.locale != locale:
+                obj.locale = locale; changed = True
+            if obj.is_active != is_active:
+                obj.is_active = is_active; changed = True
+            if changed:
+                obj.save(update_fields=['subcategory','answer_guide','tags','locale','is_active','updated_at'])
+    except Exception as e:
+        return Response({'detail': 'create_failed', 'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    return Response(InterviewQuestionSerializer(obj).data, status=status.HTTP_201_CREATED)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def template_render_v2(request):
     """テンプレートを履歴書でレンダリングして返す"""
     body = request.data or {}
@@ -2781,6 +2864,21 @@ def company_jobs_new(request):
 
     # 作成済みデータを返す
     return Response(JobPostingSerializer(instance).data, status=status.HTTP_201_CREATED)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def company_jobs_list(request):
+    """
+    企業の求人一覧
+    GET /api/v2/company/jobs/
+    """
+    if request.user.role != 'company':
+        return Response({'error': 'This endpoint is for companies only'}, status=status.HTTP_403_FORBIDDEN)
+
+    jobs = JobPosting.objects.filter(company=request.user).order_by('-created_at')
+    serializer = JobPostingSerializer(jobs, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 @api_view(['GET'])

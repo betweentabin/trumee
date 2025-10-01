@@ -20,6 +20,7 @@ import SeekerCard from "./_component/seeker_card";
 import { DefaultSelect } from "@/components/pure/select";
 import JobSeekerDetailModal from "@/components/modal/jobseeker-detail";
 import apiV2Client from '@/lib/api-v2-client';
+import type { JobPosting, JobTicketLedger } from '@/types/api-v2';
 import search from "../api/api";
 import { getPrefectureName } from '@/components/content/common/prefectures';
 import { getIndustryNames, getFirstJobTypeName } from '@/components/helpers/jobTypeHelper';
@@ -31,6 +32,12 @@ export default function Search() {
   const authState = useAppSelector(state => state.authV2);
   
   const [results, setResults] = useState<any[]>([]);
+  const [jobs, setJobs] = useState<JobPosting[]>([]);
+  const [selectedJobId, setSelectedJobId] = useState<string>('');
+  const [jobTickets, setJobTickets] = useState<JobTicketLedger | null>(null);
+  const [consumeSeekerId, setConsumeSeekerId] = useState('');
+  const [consumeInterviewDate, setConsumeInterviewDate] = useState('');
+  const [consuming, setConsuming] = useState(false);
   const [isScouting, setIsScouting] = useState<boolean>(false);
   const [isSearching, setIsSearching] = useState(false);
 
@@ -90,9 +97,31 @@ export default function Search() {
         } catch (e) {
           // 取得失敗は無視（UIの抑止機能が効かないだけ）
         }
+        try {
+          const list = await apiV2Client.getCompanyJobs();
+          setJobs(list || []);
+          if ((list || []).length > 0) {
+            setSelectedJobId(String((list as any)[0].id));
+          }
+        } catch (e) {
+          // ignore
+        }
       })();
     }
   }, [isAuthenticated, currentUser, router, pathname]);
+
+  // Fetch tickets for selected job
+  useEffect(() => {
+    if (!selectedJobId) { setJobTickets(null); return; }
+    (async () => {
+      try {
+        const t = await apiV2Client.getJobTickets(selectedJobId);
+        setJobTickets(t as any);
+      } catch {
+        setJobTickets(null);
+      }
+    })();
+  }, [selectedJobId]);
 
   // 認証復元中はローディング表示
   const restoring = typeof window !== 'undefined' && !!localStorage.getItem('drf_token_v2') && isAuthenticated === false;
@@ -362,6 +391,81 @@ export default function Search() {
         <p className="text-base">登録している求職者の検索が行えます。</p>
       </section>
       <section className="w-full">
+        {/* Job tickets summary */}
+        <div className="mb-6 bg-white border rounded-lg p-4">
+          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-3">
+            <div className="flex-1">
+              <div className="text-sm text-gray-700 mb-1">求人チケット状況</div>
+              <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
+                <select
+                  className="w-full sm:w-auto border rounded px-3 py-2 text-sm"
+                  value={selectedJobId}
+                  onChange={(e)=>setSelectedJobId(e.target.value)}
+                >
+                  {(jobs || []).map((j) => (
+                    <option key={String(j.id)} value={String(j.id)}>{j.title || String(j.id)}</option>
+                  ))}
+                </select>
+                {jobTickets ? (
+                  <div className="text-sm text-gray-900">
+                    残: <span className="font-medium">{jobTickets.tickets_remaining}</span> / {jobTickets.tickets_total}（消費: {jobTickets.tickets_used}）
+                  </div>
+                ) : (
+                  <div className="text-sm text-gray-500">選択中の求人にチケットがありません</div>
+                )}
+              </div>
+            </div>
+            <div className="flex-1">
+              <div className="text-sm text-gray-700 mb-1">面接確定（1チケット消費）</div>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <input
+                  className="flex-1 border rounded px-3 py-2 text-sm"
+                  placeholder="求職者ID（UUID）"
+                  value={consumeSeekerId}
+                  onChange={(e)=>setConsumeSeekerId(e.target.value)}
+                />
+                <input
+                  className="flex-1 border rounded px-3 py-2 text-sm"
+                  placeholder="面接日（任意：2025-01-15）"
+                  value={consumeInterviewDate}
+                  onChange={(e)=>setConsumeInterviewDate(e.target.value)}
+                />
+                <button
+                  className={`px-4 py-2 rounded text-white ${consuming ? 'bg-gray-400' : 'bg-gray-800 hover:bg-gray-900'}`}
+                  disabled={consuming || !selectedJobId}
+                  onClick={async ()=>{
+                    if (!selectedJobId) { toast.error('求人を選択してください'); return; }
+                    if (!consumeSeekerId.trim()) { toast.error('求職者IDを入力してください'); return; }
+                    setConsuming(true);
+                    try {
+                      const payload: any = { seeker: consumeSeekerId.trim() };
+                      if (consumeInterviewDate.trim()) payload.interview_date = consumeInterviewDate.trim();
+                      const updated = await apiV2Client.consumeJobTicket(selectedJobId, payload);
+                      setJobTickets(updated as any);
+                      toast.success('面接確定としてチケットを1消費しました');
+                      setConsumeSeekerId('');
+                      setConsumeInterviewDate('');
+                    } catch (e: any) {
+                      const status = e?.response?.status;
+                      const data = e?.response?.data || {};
+                      if (status === 409 && data?.error === 'no_tickets') {
+                        toast.error('選択中の求人にチケット残がありません');
+                      } else if (status === 409 && data?.error === 'already_consumed_for_seeker') {
+                        toast.error('この求職者はすでに消費済みです');
+                      } else {
+                        toast.error(data?.detail || 'チケットの消費に失敗しました');
+                      }
+                    } finally {
+                      setConsuming(false);
+                    }
+                  }}
+                >
+                  {consuming ? '処理中…' : '面接確定（1消費）'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
         <div className="w-full h-[50px] grid grid-cols-3 gap-3">
           {search_filters.map((_item) => (
             <div

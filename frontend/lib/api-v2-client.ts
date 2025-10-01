@@ -393,6 +393,12 @@ class ApiV2Client {
     return response.data as any;
   }
 
+  async getCompanyJobs(): Promise<import('@/types/api-v2').JobPosting[]> {
+    const res = await this.client.get('/api/v2/company/jobs/');
+    const data = res.data as any;
+    return Array.isArray(data) ? data : (data?.results ?? []);
+  }
+
   // スカウト関連
   async getScouts(): Promise<Scout[]> {
     const response = await this.client.get<any>(API_ENDPOINTS.SCOUTS);
