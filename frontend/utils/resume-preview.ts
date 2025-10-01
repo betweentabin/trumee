@@ -9,6 +9,8 @@ export type ResumePreviewData = {
   selfPR?: string;
   skills?: string[];
   education?: Array<{ school?: string; degree?: string; field?: string; graduationDate?: string }>;
+  // Anchors that should render with a marker-like background
+  // e.g. [ 'job_summary', 'self_pr', 'work_content-exp_0' ]
   changedAnchors?: string[];
 };
 
@@ -136,17 +138,17 @@ const buildPreviewFromExperiences = (experiences: any[]) => {
 
   experiences.forEach((exp, idx) => {
     const key = jobhistoryList[idx];
-    const sinceRaw = pickField(exp, ['period_from', 'periodFrom', 'start_date', 'startDate', 'since']);
-    const toRaw = pickField(exp, ['period_to', 'periodTo', 'end_date', 'endDate', 'to']);
+    const sinceRaw = pickField(exp, [
+      'period_from', 'periodFrom', 'start_date', 'startDate', 'since',
+    ]);
+    const toRaw = pickField(exp, [
+      'period_to', 'periodTo', 'end_date', 'endDate', 'to',
+    ]);
     const isCurrentFlag = pickField(exp, ['is_current', 'isCurrent', 'current']);
 
     let toValue = normalizeDate(toRaw);
-    if (!toValue && typeof isCurrentFlag === 'boolean' && isCurrentFlag) {
-      toValue = '現在';
-    }
-    if (!toValue && typeof toRaw === 'string' && /present/i.test(toRaw)) {
-      toValue = '現在';
-    }
+    if (!toValue && typeof isCurrentFlag === 'boolean' && isCurrentFlag) toValue = '現在';
+    if (!toValue && typeof toRaw === 'string' && /present/i.test(String(toRaw))) toValue = '現在';
 
     formValues[key] = {
       since: normalizeDate(sinceRaw),
@@ -162,49 +164,7 @@ const buildPreviewFromExperiences = (experiences: any[]) => {
     };
   });
 
-  return {
-      userName: resolvedUserName || undefined,
-      jobhistoryList,
-      formValues,
-      resumeId: resume?.id ? String(resume.id) : undefined,
-      jobSummary: toStringSafe(resume?.extra_data?.jobSummary) || undefined,
-      selfPR: toStringSafe(resume?.self_pr) || undefined,
-      skills: (toStringSafe(resume?.skills) || '')
-        .split(/
-|,/)?.map((s) => s.trim())
-        .filter(Boolean),
-      education: Array.isArray(resume?.extra_data?.education) ? resume.extra_data.education : undefined,
-      changedAnchors: (() => {
-        try {
-          const baseline = resume?.extra_data?.baseline || {};
-          const changed: string[] = [];
-          const baseJobSummary = String(baseline?.jobSummary || '');
-          const curJobSummary = String(resume?.extra_data?.jobSummary || '');
-          if (baseJobSummary !== curJobSummary) changed.push('job_summary');
-          const baseSelfPr = String(baseline?.self_pr || '');
-          const curSelfPr = String(resume?.self_pr || '');
-          if (baseSelfPr !== curSelfPr) changed.push('self_pr');
-          const baseJobs = Array.isArray(baseline?.workExperiences) ? baseline.workExperiences : [];
-          const curJobs = Array.isArray(resume?.extra_data?.workExperiences) ? resume.extra_data.workExperiences : [];
-          baseJobs.forEach((bj: any, i: number) => {
-            const cur = curJobs[i] || {};
-            const curDesc = String(cur?.description || '');
-            const baseDesc = String(bj?.description || '');
-            if (curDesc !== baseDesc) changed.push(`work_content-job${i + 1}`);
-          });
-          return changed;
-        } catch {
-          return [];
-        }
-      })(),
-    };
-  } catch (err) {
-    console.warn('Failed to load resume preview data', err);
-    return {
-      ...emptyResumePreview,
-      userName,
-    };
-  }
+  return { jobhistoryList, formValues };
 };
 
 export const fetchResumePreview = async ({ userId, token, forAdmin, forOwner }: FetchResumePreviewParams): Promise<ResumePreviewData> => {
@@ -280,6 +240,35 @@ export const fetchResumePreview = async ({ userId, token, forAdmin, forOwner }: 
       || toStringSafe(resume?.user_full_name)
       || undefined;
 
+    // Compute recently changed anchors by comparing baseline snapshot
+    const changedAnchors: string[] = (() => {
+      try {
+        const baseline = (resume?.extra_data && (resume.extra_data as any).baseline) || null;
+        if (!baseline) return [];
+        const changed: string[] = [];
+        // job summary
+        const baseJobSummary = String(baseline?.jobSummary || '');
+        const curJobSummary = String((resume?.extra_data || ({} as any))?.jobSummary || '');
+        if (baseJobSummary !== curJobSummary) changed.push('job_summary');
+        // self PR
+        const baseSelfPr = String(baseline?.self_pr || '');
+        const curSelfPr = String(resume?.self_pr || '');
+        if (baseSelfPr !== curSelfPr) changed.push('self_pr');
+        // work contents (align to jobhistoryList keys)
+        const baseJobs = Array.isArray(baseline?.workExperiences) ? baseline.workExperiences : [];
+        baseJobs.forEach((bj: any, i: number) => {
+          const key = jobhistoryList[i]; // 'exp_0', 'exp_1', ...
+          if (!key) return;
+          const currentDesc = String((formValues?.[key]?.work_content) || '');
+          const baseDesc = String(bj?.description || '');
+          if (currentDesc !== baseDesc) changed.push(`work_content-${key}`);
+        });
+        return changed;
+      } catch {
+        return [];
+      }
+    })();
+
     return {
       userName: resolvedUserName || undefined,
       jobhistoryList,
@@ -288,9 +277,10 @@ export const fetchResumePreview = async ({ userId, token, forAdmin, forOwner }: 
       jobSummary: toStringSafe(resume?.extra_data?.jobSummary) || undefined,
       selfPR: toStringSafe(resume?.self_pr) || undefined,
       skills: (toStringSafe(resume?.skills) || '')
-        .split(/\n|,/)?.map((s) => s.trim())
+        .split(/[\n\r,、，]+/)?.map((s) => s.trim())
         .filter(Boolean),
       education: Array.isArray(resume?.extra_data?.education) ? resume.extra_data.education : undefined,
+      changedAnchors,
     };
   } catch (err) {
     console.warn('Failed to load resume preview data', err);

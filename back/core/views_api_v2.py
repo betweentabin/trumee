@@ -1935,6 +1935,8 @@ def advice_threads(request):
     user_id = request.GET.get('user_id')
     mode = request.GET.get('mode') or 'annotation'
     annotation_id = request.GET.get('annotation_id')
+    # Optional free-text query. Client-sideでもフィルタしているが、API側でも軽く対応しておく
+    q = (request.GET.get('q') or '').strip()
 
     # 対向ユーザーの決定（advice_messages と同等）
     def resolve_counterpart(for_user, specified_user_id=None):
@@ -1966,6 +1968,12 @@ def advice_threads(request):
         ).filter(subject=SUBJECT)
 
     qs = qs.filter(annotation__isnull=False).select_related('annotation').order_by('created_at')
+    if q:
+        try:
+            # アンカーIDと本文の簡易検索（前方一致ではなく部分一致）
+            qs = qs.filter(Q(annotation__anchor_id__icontains=q) | Q(content__icontains=q))
+        except Exception:
+            pass
     if annotation_id:
         try:
             uuid.UUID(str(annotation_id))
@@ -2490,7 +2498,8 @@ def company_view_user_resumes(request, user_id):
             # 除去対象キー（大文字小文字やバリエーションは最小限の想定）
             pii_keys = {
                 'user_email', 'email', 'phone', 'tel', 'contact', 'contact_phone', 'contact_email',
-                'firstName', 'lastName', 'first_name', 'last_name', 'name_kana', 'company', 'companyName'
+                'firstName', 'lastName', 'first_name', 'last_name', 'fullName', 'full_name', 'name_kana',
+                'company', 'companyName'
             }
             # dict直下のPIIキーを除去
             for k in list(obj.keys()):
