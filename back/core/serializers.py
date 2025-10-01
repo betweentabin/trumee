@@ -75,9 +75,11 @@ class UserRegisterSerializer(serializers.ModelSerializer):
     
     def create(self, validated_data):
         password = validated_data.pop('password')
+        # 新規登録時はデフォルトでスタータープランを付与
         user = User.objects.create_user(
             **validated_data,
-            password=password
+            password=password,
+            plan_tier='starter'
         )
         return user
 
@@ -100,11 +102,13 @@ class CompanyRegisterSerializer(serializers.ModelSerializer):
         first_name = validated_data.pop('first_name')
         last_name = validated_data.pop('last_name')
         
+        # 新規登録時はデフォルトでスタータープランを付与（企業アカウント）
         user = User.objects.create_user(
             **validated_data,
             password=password,
             role='company',
-            full_name=f"{last_name} {first_name}"
+            full_name=f"{last_name} {first_name}",
+            plan_tier='starter'
         )
         return user
 
