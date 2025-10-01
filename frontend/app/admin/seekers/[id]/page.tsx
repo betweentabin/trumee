@@ -49,7 +49,6 @@ export default function AdminSeekerDetailPage() {
   const [threads, setThreads] = useState<any[]>([]);
   const [activeThread, setActiveThread] = useState<string | null>(null);
   const [threadMessages, setThreadMessages] = useState<Record<string, ReviewMsg[]>>({});
-  const [statusFilter, setStatusFilter] = useState<'all' | 'unresolved' | 'resolved'>('all');
   const [annotationFilter, setAnnotationFilter] = useState<string>('');
   const [threadSearch, setThreadSearch] = useState('');
   const [didAutoSelectThread, setDidAutoSelectThread] = useState(false);
@@ -243,8 +242,7 @@ export default function AdminSeekerDetailPage() {
   // Threads filters + auto select
   const threadsFiltered = useMemo(() => {
     let list = Array.isArray(threads) ? [...threads] : [];
-    if (statusFilter === 'unresolved') list = list.filter((t: any) => !!t?.unresolved);
-    if (statusFilter === 'resolved') list = list.filter((t: any) => t?.unresolved === false);
+    // status filter removed: always show all
     if (annotationFilter) list = list.filter((t: any) => String(t?.annotation?.id || '') === String(annotationFilter));
     const q = threadSearch.trim().toLowerCase();
     if (q) {
@@ -255,7 +253,7 @@ export default function AdminSeekerDetailPage() {
       });
     }
     return list;
-  }, [threads, statusFilter, annotationFilter, threadSearch]);
+  }, [threads, annotationFilter, threadSearch]);
 
   useEffect(() => {
     if (didAutoSelectThread) return;
@@ -698,6 +696,7 @@ export default function AdminSeekerDetailPage() {
                         education={resumePreview.education}
                         annotations={annotations}
                         className="w-full"
+                        changedAnchors={resumePreview.changedAnchors}
                       />
                       <div className="absolute inset-0 pointer-events-none">
                         {reviewMessages.filter(m => m.isAnnotation).map((m) => {
@@ -813,11 +812,7 @@ export default function AdminSeekerDetailPage() {
                     <option value="">注釈: すべて</option>
                     {annotations.map((a: any, i: number) => (<option key={String(a.id)} value={String(a.id)}>#{i+1} - {a.anchor_id}</option>))}
                   </select>
-                  <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as any)} className="rounded border px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-gray-700 ring-inset">
-                    <option value="all">全件</option>
-                    <option value="unresolved">未解決のみ</option>
-                    <option value="resolved">解決済みのみ</option>
-                  </select>
+                  {/* status filter removed */}
                   <input
                     value={threadSearch}
                     onChange={(e) => {
