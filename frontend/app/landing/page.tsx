@@ -422,20 +422,20 @@ const HeroSection = () => {
           }
         </div>
         {/* Side hero images (desktop) */}
-        <div className="absolute inset-0 hidden md:block pointer-events-none">
+        <div className="absolute inset-0 hidden md:block pointer-events-none z-10">
           <ImageCardWithBg
             src={"/images/header-man-05.png"}
-            left={2}
-            top={8}
+            left={1}
+            top={10}
             borderRadius={12}
-            width={18}
+            width={16}
           />
           <ImageCardWithBg
             src={"/images/header-girl-03.png"}
-            right={2}
-            top={8}
+            right={1}
+            top={10}
             borderRadius={12}
-            width={18}
+            width={16}
           />
         </div>
         <div className="w-full aspect-5/4 relative grid grid-cols-2 md:hidden">
