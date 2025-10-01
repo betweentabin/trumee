@@ -9,11 +9,10 @@ export default function PRQuestionsRedirect() {
     try {
       const uid = JSON.parse(localStorage.getItem('current_user_v2') || 'null')?.id;
       const base = uid ? `/users/${uid}` : '';
-      router.replace(`${base}/interview-advice/applying-reasons?focus=pr`);
+      router.replace(`${base}/interview-advice/applying-reasons?focus=self_pr`);
     } catch {
-      router.replace(`/interview-advice/applying-reasons?focus=pr`);
+      router.replace(`/interview-advice/applying-reasons?focus=self_pr`);
     }
   }, [router]);
   return null;
 }
-

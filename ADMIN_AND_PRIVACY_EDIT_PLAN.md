@@ -138,13 +138,13 @@
 
 ## 4. タスク一覧（チェックリスト）
 
-- [ ] 自己PR: `QuestionBrowser` に `self_pr` 対応を追加（`frontend/components/interview/QuestionBrowser.tsx:16`）
-- [ ] 自己PR: `pr-questions` ルートを自己PR専用表示へ修正（`frontend/app/interview-advice/pr-questions/page.tsx:1`）
-- [ ] 自己PR: `focus=pr`→`self_pr` の切替（`frontend/app/interview-advice/applying-reasons/page.tsx:88`）
-- [ ] 自己PR: `topics` に `self_pr` を追加（`frontend/app/interview-advice/applying-reasons/page.tsx:47`）
-- [ ] 匿名化(API): `company_view_user_resumes` のサニタイズ実装（`back/core/views_api_v2.py:2238`）
-- [ ] 匿名化(Front): 企業画面プレビューで会社名を渡さない（`frontend/components/modal/jobseeker-detail.tsx:1`）
-- [ ] スカウト: Stripe Webhook 追加、`credits100` 決済成功時に +100（`back/core/urls_api_v2.py` 新規, ビュー追加）
+- [x] 自己PR: `QuestionBrowser` に `self_pr` 対応を追加（`frontend/components/interview/QuestionBrowser.tsx:16`）
+- [x] 自己PR: `pr-questions` ルートを自己PR専用表示へ修正（`frontend/app/interview-advice/pr-questions/page.tsx:1`）
+- [x] 自己PR: `focus=pr`→`self_pr` の切替（`frontend/app/interview-advice/applying-reasons/page.tsx:88`）
+- [x] 自己PR: `topics` に `self_pr` を追加（`frontend/app/interview-advice/applying-reasons/page.tsx:47`）
+- [x] 匿名化(API): `company_view_user_resumes` のサニタイズ実装（`back/core/views_api_v2.py:2238`）
+- [x] 匿名化(Front): 企業画面プレビューで会社名を渡さない（`frontend/components/modal/jobseeker-detail.tsx:1`）
+- [x] スカウト: Stripe Webhook 追加、`credits100` 決済成功時に +100（`back/core/urls_api_v2.py` 新規, ビュー追加）
 - [ ] 任意: Admin UI に「添削済み」バッジを追加
 
 ---
@@ -171,4 +171,3 @@
 
 - Admin 側の質問管理は Django Admin で運用可能（CSV 取り込みコマンドも既存）
 - 将来的に匿名化ルールを拡張する場合、サーバ側サニタイズ関数に寄せると保守が容易
-

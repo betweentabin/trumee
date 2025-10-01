@@ -49,6 +49,7 @@ export default function ApplyingReasonsPage() {
     { key: 'retire', label: '退職理由' },
     { key: 'future', label: '将来やりたいこと' },
     { key: 'resume', label: '職務経歴書に関する質問' },
+    { key: 'self_pr', label: '自己PR' },
     { key: 'results', label: '実績など' },
     { key: 'interview', label: '面接対策' },
     { key: 'aspiration', label: '志望理由' },
@@ -85,11 +86,11 @@ export default function ApplyingReasonsPage() {
     }
   }, [authState.isAuthenticated, router]);
 
-  // Deep link support from footer: ?focus=resume | ?focus=pr
+  // Deep link support from footer: ?focus=resume | ?focus=pr | ?focus=self_pr
   useEffect(() => {
     const focus = (searchParams?.get('focus') || '').toLowerCase();
     if (focus === 'resume') setSelectedTopic('resume');
-    else if (focus === 'pr') setSelectedTopic('interview');
+    else if (focus === 'pr' || focus === 'self_pr') setSelectedTopic('self_pr');
   }, [searchParams]);
 
   // When entering 面接対策タブ, load chat messages

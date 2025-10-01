@@ -126,7 +126,8 @@ const JobSeekerDetailModal = ({
     histories.forEach((history: any, index: number) => {
       const prefix = `job${index + 1}`;
       formValues[prefix] = {
-        company: history.companyName || '',
+        // 企業画面では会社名を表示しない（サーバ側サニタイズに加え二重の安全策）
+        company: '',
         capital: history.capital || 0,
         work_content: history.workActivity || '',
         since: fmtYm(history.startDate),

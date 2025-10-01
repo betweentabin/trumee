@@ -15,7 +15,7 @@ export interface QuestionItem {
 }
 
 interface Props {
-  type?: 'interview' | 'resume';
+  type?: 'interview' | 'resume' | 'self_pr';
   initialCategory?: string;
   showPersonalize?: boolean;
   className?: string;

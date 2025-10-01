@@ -2252,9 +2252,48 @@ def company_view_user_resumes(request, user_id):
 
     resumes_qs = Resume.objects.filter(user=user, is_active=True).order_by('-updated_at')
     data = ResumeSerializer(resumes_qs, many=True).data
-    for r in data:
-        r.pop('user_email', None)
-    return Response(data, status=status.HTTP_200_OK)
+
+    # サニタイズ関数（会社名・氏名・電話・メールなどのPIIを除去）
+    def _sanitize_extra(obj):
+        if isinstance(obj, dict):
+            # 除去対象キー（大文字小文字やバリエーションは最小限の想定）
+            pii_keys = {
+                'user_email', 'email', 'phone', 'tel', 'contact', 'contact_phone', 'contact_email',
+                'firstName', 'lastName', 'first_name', 'last_name', 'name_kana', 'company', 'companyName'
+            }
+            # dict直下のPIIキーを除去
+            for k in list(obj.keys()):
+                if k in pii_keys:
+                    obj.pop(k, None)
+            # workExperiences/company など入れ子のPIIを除去
+            for k, v in list(obj.items()):
+                if isinstance(v, (dict, list)):
+                    _sanitize_extra(v)
+        elif isinstance(obj, list):
+            for item in obj:
+                _sanitize_extra(item)
+
+    def sanitize_resume_for_company(r: dict) -> dict:
+        try:
+            # 明示的に user_email を除去
+            r.pop('user_email', None)
+            # experiences 内の company を除去
+            exps = r.get('experiences') or []
+            if isinstance(exps, list):
+                for e in exps:
+                    if isinstance(e, dict):
+                        e.pop('company', None)
+            # extra_data の入れ子に含まれるPIIを除去
+            extra = r.get('extra_data')
+            if extra:
+                _sanitize_extra(extra)
+        except Exception:
+            # サニタイズはベストエフォート
+            pass
+        return r
+
+    sanitized = [sanitize_resume_for_company(r) for r in data]
+    return Response(sanitized, status=status.HTTP_200_OK)
 
 
 @api_view(['GET', 'PUT'])
@@ -2614,3 +2653,89 @@ def user_settings(request):
             profile_ext.save()
         
         return Response({'message': 'Settings updated successfully'}, status=status.HTTP_200_OK)
+
+
+# =============================
+# Stripe Webhook (credits100)
+# =============================
+
+@api_view(['POST'])
+@permission_classes([])  # Stripeからの呼び出し用（認証なし）
+def stripe_webhook(request):
+    """
+    Stripe Webhookエンドポイント。
+
+    対応イベント:
+      - checkout.session.completed: metadata.plan_type == 'credits100' の場合、スカウトクレジット +100。
+
+    備考:
+      - STRIPE_SECRET_KEY / STRIPE_WEBHOOK_SECRET が設定されている前提（Webhook Secret未設定時は検証をスキップし、ベストエフォートで処理）。
+      - 冪等性: ActivityLog に stripe_event_id を記録し、重複処理を抑止（best-effort）。
+    """
+    import json
+    from django.conf import settings as dj_settings
+    try:
+        import stripe
+    except Exception:
+        return Response({'detail': 'stripe_not_available'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    stripe.api_key = getattr(dj_settings, 'STRIPE_SECRET_KEY', '')
+    webhook_secret = getattr(dj_settings, 'STRIPE_WEBHOOK_SECRET', '')
+
+    payload = request.body
+    sig_header = request.META.get('HTTP_STRIPE_SIGNATURE', '')
+
+    # イベント検証
+    try:
+        if webhook_secret:
+            event = stripe.Webhook.construct_event(
+                payload=payload, sig_header=sig_header, secret=webhook_secret
+            )
+        else:
+            event = json.loads(payload.decode('utf-8'))
+    except Exception as e:
+        return Response({'detail': f'webhook_error: {e}'}, status=status.HTTP_400_BAD_REQUEST)
+
+    # 正規化
+    ev_type = getattr(event, 'type', None) or (event.get('type') if isinstance(event, dict) else None)
+    ev_id = getattr(event, 'id', None) or (event.get('id') if isinstance(event, dict) else None)
+    try:
+        data_object = event['data']['object'] if isinstance(event, dict) else event.data.object
+    except Exception:
+        data_object = None
+
+    # 冪等性チェック
+    try:
+        if ev_id:
+            from .models import ActivityLog
+            if ActivityLog.objects.filter(details__stripe_event_id=ev_id).exists():
+                return Response({'detail': 'duplicate_event_ignored'}, status=status.HTTP_200_OK)
+    except Exception:
+        pass
+
+    # 追加クレジットの処理
+    if ev_type == 'checkout.session.completed' and isinstance(data_object, dict):
+        metadata = data_object.get('metadata') or {}
+        plan_type = str(metadata.get('plan_type') or '')
+        target_user_id = metadata.get('user_id')
+        if plan_type == 'credits100' and target_user_id:
+            try:
+                user = User.objects.get(id=target_user_id)
+                user.scout_credits_total = int(user.scout_credits_total) + 100
+                user.save(update_fields=['scout_credits_total', 'updated_at'])
+                # ログ（冪等用）
+                try:
+                    from .models import ActivityLog
+                    ActivityLog.objects.create(
+                        user=user,
+                        action='message',
+                        details={'stripe_event_id': ev_id or '', 'plan_type': plan_type, 'delta': 100}
+                    )
+                except Exception:
+                    pass
+            except User.DoesNotExist:
+                return Response({'detail': 'user_not_found'}, status=status.HTTP_200_OK)
+            except Exception:
+                return Response({'detail': 'update_failed'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    return Response({'status': 'ok'}, status=status.HTTP_200_OK)
