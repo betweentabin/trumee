@@ -1132,7 +1132,15 @@ export default function ResumeReviewPage() {
                     skills={overridePreview.skills}
                     education={overridePreview.education}
                     annotations={annotations}
-                    changedAnchors={recentlyChangedAnchors}
+                    changedAnchors={(() => {
+                      try {
+                        const live = computeChangedAnchors();
+                        const union = new Set<string>([...Array.from(live), ...Array.from(recentlyChangedAnchors)]);
+                        return union;
+                      } catch {
+                        return recentlyChangedAnchors;
+                      }
+                    })()}
                     className="w-full"
                   />
                 ) : (
@@ -1153,7 +1161,15 @@ export default function ResumeReviewPage() {
                         skills={skillsArray}
                         education={Array.isArray((extra as any)?.education) ? (extra as any).education : []}
                         annotations={annotations}
-                        changedAnchors={recentlyChangedAnchors}
+                        changedAnchors={(() => {
+                          try {
+                            const live = computeChangedAnchors();
+                            const union = new Set<string>([...Array.from(live), ...Array.from(recentlyChangedAnchors)]);
+                            return union;
+                          } catch {
+                            return recentlyChangedAnchors;
+                          }
+                        })()}
                         className="w-full"
                       />
                     );
