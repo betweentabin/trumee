@@ -9,6 +9,7 @@ import { useForm } from 'react-hook-form';
 import ResumePreview from '@/components/pure/resume/preview';
 import { emptyResumePreview, fetchResumePreview, ResumePreviewData } from '@/utils/resume-preview';
 import toast from 'react-hot-toast';
+import type { PlanTier } from '@/config/plans';
 
 type AdminSeeker = {
   id: string;
@@ -42,6 +43,9 @@ export default function AdminSeekerDetailPage() {
   const [resumeLoading, setResumeLoading] = useState(false);
   const [resumeError, setResumeError] = useState<string | null>(null);
   const [effectiveRegisteredAt, setEffectiveRegisteredAt] = useState<string | null>(null);
+  // Plan change controls
+  const [planTierInput, setPlanTierInput] = useState<PlanTier | ''>('');
+  const [planSaving, setPlanSaving] = useState(false);
   // Annotations + positions
   const [annotations, setAnnotations] = useState<any[]>([]);
   const [markTops, setMarkTops] = useState<Record<string, number>>({});
@@ -101,6 +105,9 @@ export default function AdminSeekerDetailPage() {
           if (resOv.ok) {
             const ov = await resOv.json();
             setOverview(ov);
+            // Init plan selector from overview
+            const t = (ov?.user?.plan_tier as PlanTier | '') || '';
+            setPlanTierInput(t);
           }
         } catch {}
       } catch (e: any) {
@@ -111,6 +118,44 @@ export default function AdminSeekerDetailPage() {
     };
     fetchOne();
   }, [id, token]);
+
+  const savePlanTier = useCallback(async () => {
+    if (!id) return;
+    setPlanSaving(true);
+    try {
+      const tier = planTierInput || '';
+      const url = buildApiUrl(API_CONFIG.endpoints.adminUserPlan(String(id)));
+      const body = {
+        plan_tier: tier,
+        // auto align is_premium: standard/premium -> true, otherwise false
+        is_premium: tier === 'standard' || tier === 'premium',
+      };
+      const res = await fetch(url, {
+        method: 'PATCH',
+        headers: getApiHeaders(token),
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err?.detail || '更新に失敗しました');
+      }
+      const updated = await res.json();
+      // reflect in overview state
+      setOverview((prev: any) => ({
+        ...(prev || {}),
+        user: {
+          ...((prev && prev.user) || {}),
+          plan_tier: updated?.plan_tier || tier,
+          is_premium: updated?.is_premium ?? (tier === 'standard' || tier === 'premium'),
+        },
+      }));
+      toast.success('プランを更新しました');
+    } catch (e: any) {
+      toast.error(e?.message || 'プラン更新に失敗しました');
+    } finally {
+      setPlanSaving(false);
+    }
+  }, [API_CONFIG, id, planTierInput, token]);
 
   const currentUser = useMemo(() => {
     if (typeof window === 'undefined') return null as any;
@@ -1037,6 +1082,32 @@ export default function AdminSeekerDetailPage() {
               <div className="rounded-xl border p-6">
                 <div className="text-lg font-semibold mb-4">アプローチされた会社</div>
                 <div className="text-gray-500 text-sm">データ準備中</div>
+              </div>
+
+              {/* Plan editor */}
+              <div className="rounded-xl border p-6">
+                <div className="text-lg font-semibold mb-4">プラン設定（管理者）</div>
+                <div className="flex flex-col md:flex-row items-start md:items-center gap-3">
+                  <label className="text-sm text-gray-600">プランを選択</label>
+                  <select
+                    className="border rounded px-3 py-2"
+                    value={planTierInput}
+                    onChange={(e) => setPlanTierInput(e.target.value as PlanTier | '')}
+                  >
+                    <option value="">未設定</option>
+                    <option value="starter">starter</option>
+                    <option value="standard">standard</option>
+                    <option value="premium">premium</option>
+                  </select>
+                  <button
+                    className={`px-4 py-2 rounded text-white ${planSaving ? 'bg-gray-400' : 'bg-blue-600 hover:bg-blue-700'}`}
+                    onClick={savePlanTier}
+                    disabled={planSaving}
+                  >
+                    {planSaving ? '更新中…' : '更新'}
+                  </button>
+                </div>
+                <div className="text-xs text-gray-500 mt-2">standard/premium を選択すると is_premium が有効になります。</div>
               </div>
             </div>
           )}

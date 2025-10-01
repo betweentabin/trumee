@@ -7,6 +7,7 @@ import apiClient from "@/lib/api-v2-client";
 import type { Resume, ResumeFile } from "@/types/api-v2";
 import { FaPlus, FaEdit, FaTrash, FaEye, FaCheckCircle, FaClock } from "react-icons/fa";
 import toast from "react-hot-toast";
+import { getAuthHeaders } from "@/utils/auth";
 
 export default function UserResumesByIdPage() {
   const params = useParams<{ userId: string }>();
@@ -21,6 +22,8 @@ export default function UserResumesByIdPage() {
   const [loading, setLoading] = useState(true);
   const [resumes, setResumes] = useState<Resume[]>([]);
   const [resumeFiles, setResumeFiles] = useState<ResumeFile[]>([]);
+  const [threadCounts, setThreadCounts] = useState<Record<string, { total: number; unresolved: number }>>({});
+  const [firstUnresolvedAnn, setFirstUnresolvedAnn] = useState<Record<string, string>>({});
 
   const fetchResumes = async () => {
     try {
@@ -39,12 +42,43 @@ export default function UserResumesByIdPage() {
         const local = stored ? JSON.parse(stored) : [];
         setResumes(local as any);
       }
+      // Fetch comment threads to compute counts per resume
+      try {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'production' ? 'https://trumee-production.up.railway.app' : 'http://localhost:8000');
+        const res = await fetch(`${apiUrl}/api/v2/advice/threads/?subject=resume_advice&mode=comment`, { headers: { ...getAuthHeaders() } });
+        if (res.ok) {
+          const threads: any[] = await res.json();
+          const counts: Record<string, { total: number; unresolved: number }> = {};
+          const first: Record<string, string> = {};
+          threads.forEach((t: any) => {
+            const rid = String(t?.annotation?.resume || '');
+            if (!rid) return;
+            const c = counts[rid] || { total: 0, unresolved: 0 };
+            c.total += 1;
+            if (t?.unresolved) c.unresolved += 1;
+            counts[rid] = c;
+            if (t?.unresolved && !first[rid]) {
+              first[rid] = String(t?.annotation?.id || '');
+            }
+          });
+          setThreadCounts(counts);
+          setFirstUnresolvedAnn(first);
+        } else {
+          setThreadCounts({});
+          setFirstUnresolvedAnn({});
+        }
+      } catch {
+        setThreadCounts({});
+        setFirstUnresolvedAnn({});
+      }
     } catch (e: any) {
       toast.error(e?.response?.data?.detail || "履歴書の取得に失敗しました");
       const stored = typeof window !== 'undefined' ? localStorage.getItem('debug_career_resumes') : null;
       const local = stored ? JSON.parse(stored) : [];
       setResumes(local as any);
       setResumeFiles([]);
+      setThreadCounts({});
+      setFirstUnresolvedAnn({});
     } finally {
       setLoading(false);
     }
@@ -125,13 +159,27 @@ export default function UserResumesByIdPage() {
                 <div key={r.id} className="bg-white rounded-lg shadow hover:shadow-md transition-shadow">
                   <div className="p-6">
                     <div className="flex items-start justify-between mb-4">
-                      <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
-                      {r.is_active && (
-                        <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">
-                          <FaCheckCircle className="mr-1" />
-                          有効
-                        </span>
-                      )}
+                      <div className="min-w-0">
+                        <h3 className="text-lg font-semibold text-gray-900 truncate" title={title}>{title}</h3>
+                        {(threadCounts[String(r.id)]?.total || 0) > 0 && (
+                          <div className="mt-1 text-xs">
+                            <span className="inline-flex items-center px-2 py-[2px] rounded-full bg-red-50 text-red-700 border border-red-200">
+                              コメント {threadCounts[String(r.id)]?.total || 0}
+                              {(threadCounts[String(r.id)]?.unresolved || 0) > 0 && (
+                                <span className="ml-1 text-[10px] text-red-600">(未解決 {threadCounts[String(r.id)].unresolved})</span>
+                              )}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {r.is_active && (
+                          <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">
+                            <FaCheckCircle className="mr-1" />
+                            有効
+                          </span>
+                        )}
+                      </div>
                     </div>
                     {skills && (
                       <div className="mb-4">
@@ -148,6 +196,13 @@ export default function UserResumesByIdPage() {
                         className="flex-1 inline-flex items-center justify-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
                       >
                         <FaEye className="mr-1" /> 詳細
+                      </Link>
+                      <Link
+                        href={to(`/resume-advice/review?resume_id=${r.id}${firstUnresolvedAnn[String(r.id)] ? `&annotation_id=${firstUnresolvedAnn[String(r.id)]}` : ''}`)}
+                        className="flex-1 inline-flex items-center justify-center px-3 py-2 border border-[#EE6C4D] text-sm font-medium rounded-md text-[#EE6C4D] bg-white hover:bg-orange-50"
+                        title="添削コメントを見る"
+                      >
+                        添削を見る
                       </Link>
                       <Link
                         href={to(`/career/edit/${r.id}`)}

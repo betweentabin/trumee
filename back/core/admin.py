@@ -16,8 +16,8 @@ from .models import Resume
 @admin.register(User)
 class UserAdmin(BaseUserAdmin):
     """カスタムユーザー管理"""
-    list_display = ['email', 'full_name', 'role', 'is_active', 'is_premium', 'created_at']
-    list_filter = ['role', 'is_active', 'is_premium', 'gender']
+    list_display = ['email', 'full_name', 'role', 'is_active', 'plan_tier', 'is_premium', 'created_at']
+    list_filter = ['role', 'is_active', 'plan_tier', 'is_premium', 'gender']
     search_fields = ['email', 'full_name', 'company_name']
     ordering = ['-created_at']
     
@@ -26,7 +26,7 @@ class UserAdmin(BaseUserAdmin):
         ('個人情報', {'fields': ('full_name', 'kana', 'gender', 'phone')}),
         ('企業情報', {'fields': ('company_name', 'capital', 'company_url')}),
         ('権限', {'fields': ('role', 'is_active', 'is_staff', 'is_superuser')}),
-        ('プレミアム', {'fields': ('is_premium', 'premium_expiry')}),
+        ('プラン', {'fields': ('plan_tier', 'is_premium', 'premium_expiry')}),
         ('日付', {'fields': ('created_at', 'updated_at')}),
     )
     

@@ -339,7 +339,7 @@ export default function ApplyingReasonsPage() {
               </div>
 
               {selectedTopic === 'interview' ? (
-                <PlanGate feature="interview_chat" withOverlay>
+                <PlanGate feature="interview_chat" withOverlay variant="blur" showHint={false}>
                   {/* 面接対策チャット（管理画面と同じ subject='interview'） */}
                   <div className="h-[300px] overflow-y-auto p-4 space-y-2 bg-gray-50">
                     {interviewChat.length === 0 && (
@@ -502,7 +502,7 @@ export default function ApplyingReasonsPage() {
                     >
                       {loading ? '生成中...' : '志望理由を生成'}
                     </button>
-                    <PlanGate feature="motivation_review_chat" withOverlay className="flex-1">
+                    <PlanGate feature="motivation_review_chat" withOverlay variant="blur" showHint={false} className="flex-1">
                       <button
                         onClick={handleSendAdvice}
                         className="w-full py-3 border border-gray-300 rounded-lg hover:bg-gray-50"

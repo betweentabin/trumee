@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import { FaArrowLeft, FaSearch, FaPaperPlane } from 'react-icons/fa';
 import { getAuthHeaders, getUserInfo } from '@/utils/auth';
 import PlanGate from '@/components/PlanGate';
@@ -36,6 +36,7 @@ type AnnMessage = Message & {
 
 export default function ResumeReviewPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [sectionTitle] = useState('職務内容について');
   // All messages for "全て" view
   const [messagesAll, setMessagesAll] = useState<AnnMessage[]>([]);
@@ -171,14 +172,18 @@ export default function ResumeReviewPage() {
         const data = await res.json();
         const list = data.results || data || [];
         setResumes(list);
-        const active = list.find((r: any) => r.is_active) || list[0] || null;
+        const requestedResumeId = (searchParams?.get('resume_id') || '').trim();
+        const active = (requestedResumeId ? list.find((r: any) => String(r.id) === String(requestedResumeId)) : null) || list.find((r: any) => r.is_active) || list[0] || null;
         setSelected(active);
         // load annotations for active resume
         try {
           if (active?.id) {
             const rid = String(active.id);
             const a = await fetch(`${apiUrl}/api/v2/advice/annotations/?resume_id=${encodeURIComponent(rid)}&subject=resume_advice`, { headers: { ...getAuthHeaders() } }); if (a.ok) setAnnotations(await a.json());
-            const t = await fetch(`${apiUrl}/api/v2/advice/threads/?subject=resume_advice&mode=comment`, { headers: { ...getAuthHeaders() } });
+            // honor annotation_id query for initial focus
+            const annId = (searchParams?.get('annotation_id') || '').trim();
+            const q = annId ? `?subject=resume_advice&mode=comment&annotation_id=${encodeURIComponent(annId)}` : `?subject=resume_advice&mode=comment`;
+            const t = await fetch(`${apiUrl}/api/v2/advice/threads/${q}`, { headers: { ...getAuthHeaders() } });
             if (t.ok) setThreads(await t.json());
           }
         } catch {}
@@ -186,7 +191,7 @@ export default function ResumeReviewPage() {
       } catch {}
     };
     load();
-  }, [userIdFromRoute]);
+  }, [userIdFromRoute, searchParams]);
 
   // Recalculate mark positions when annotations or preview change
   useEffect(() => {
@@ -1008,7 +1013,7 @@ export default function ResumeReviewPage() {
       </div>
 
         {/* Main content is feature-gated; whenプラン未満 → ブラー＆ご案内 */}
-        <PlanGate feature="resume_review_chat" withOverlay>
+        <PlanGate feature="resume_review_chat" withOverlay variant="blur">
         <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-4">
           <h1 className="text-2xl md:text-3xl font-bold text-secondary-800">
@@ -1036,6 +1041,9 @@ export default function ResumeReviewPage() {
               <button className={`px-2 py-1 text-xs border-l ${split==='rightWide'?'bg-primary-50 text-primary-700':'bg-white'}`} onClick={() => setSplit('rightWide')}>右広い</button>
             </div>
           </div>
+        </div>
+        <div className="mb-3 text-xs text-secondary-600">
+          本文中のカラー下線と番号が添削箇所です。右側のコメントをクリックすると該当箇所にスクロールします。
         </div>
         {/* モバイルでもモードが切替えられる簡易トグル */}
         <div className="flex lg:hidden items-center gap-2 mb-3">

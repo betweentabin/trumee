@@ -415,6 +415,78 @@ def admin_users_v2(request):
     return paginator.get_paginated_response(serializer.data)
 
 
+@api_view(['PATCH', 'PUT'])
+@permission_classes([IsAuthenticated])
+def admin_update_user_plan(request, user_id):
+    """
+    管理者用: ユーザーのプラン情報を更新
+
+    PATCH/PUT /api/v2/admin/users/<uuid:user_id>/plan/
+    Body 例:
+    { "plan_tier": "starter|standard|premium|" , "is_premium": true/false, "premium_expiry": "2025-12-31T00:00:00Z" }
+
+    備考:
+    - is_staff のみ許可
+    - plan_tier 指定時に is_premium が未指定なら、standard/premium で True、その他は False に自動補完
+    - premium_expiry は省略可。
+    """
+    if not request.user.is_staff:
+        return Response({'detail': '管理者権限が必要です'}, status=status.HTTP_403_FORBIDDEN)
+
+    target = get_object_or_404(User, id=user_id)
+
+    try:
+        import logging
+        logger = logging.getLogger(__name__)
+        data = request.data or {}
+        # ペイロードが { user: {...} } の場合も許容
+        if isinstance(data, dict) and 'user' in data and isinstance(data['user'], dict):
+            data = data['user']
+
+        allowed_tiers = {'', 'starter', 'standard', 'premium'}
+
+        updated = False
+        if 'plan_tier' in data:
+            tier = (data.get('plan_tier') or '').strip()
+            if tier not in allowed_tiers:
+                return Response({'detail': 'invalid_plan_tier'}, status=status.HTTP_400_BAD_REQUEST)
+            target.plan_tier = tier
+            updated = True
+
+            # is_premium が未指定なら自動補完（standard/premium -> True, その他 False）
+            if 'is_premium' not in data:
+                target.is_premium = tier in {'standard', 'premium'}
+
+        if 'is_premium' in data:
+            target.is_premium = bool(data.get('is_premium'))
+            updated = True
+
+        if 'premium_expiry' in data:
+            # 文字列 or null を許容
+            exp = data.get('premium_expiry')
+            if exp in (None, ''):
+                target.premium_expiry = None
+            else:
+                from django.utils.dateparse import parse_datetime
+                dt = parse_datetime(str(exp))
+                if not dt:
+                    return Response({'detail': 'invalid_premium_expiry'}, status=status.HTTP_400_BAD_REQUEST)
+                target.premium_expiry = dt
+            updated = True
+
+        if not updated:
+            return Response({'detail': 'no_fields_updated'}, status=status.HTTP_400_BAD_REQUEST)
+
+        target.save(update_fields=['plan_tier', 'is_premium', 'premium_expiry', 'updated_at'])
+        return Response(UserSerializer(target).data, status=status.HTTP_200_OK)
+    except Exception as e:
+        try:
+            logger.exception('admin_update_user_plan failed: %s', e)
+        except Exception:
+            pass
+        return Response({'detail': 'update_failed'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def admin_user_overview(request, user_id):

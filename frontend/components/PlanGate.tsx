@@ -10,6 +10,12 @@ type Props = {
   className?: string;
   // When true, overlay is visible and content interaction is disabled if locked.
   withOverlay?: boolean;
+  // Overlay variant: 'card' (default) shows a message card; 'blur' only blurs and blocks interaction
+  variant?: 'card' | 'blur';
+  // Optional custom link for upgrade action
+  actionHref?: string;
+  // When variant='blur', show a small hint button (default true)
+  showHint?: boolean;
 };
 
 // Lightweight hook to obtain plan tier from localStorage snapshot.
@@ -26,7 +32,7 @@ export function useCurrentPlanTier(): string | null {
   }
 }
 
-export default function PlanGate({ feature, planTier, withOverlay = true, className, children }: PropsWithChildren<Props>) {
+export default function PlanGate({ feature, planTier, withOverlay = true, className, children, variant = 'card', actionHref, showHint = true }: PropsWithChildren<Props>) {
   const tier = planTier ?? useCurrentPlanTier();
   const allowed = useMemo(() => isAllowed(tier, feature), [tier, feature]);
 
@@ -34,6 +40,26 @@ export default function PlanGate({ feature, planTier, withOverlay = true, classN
 
   const req = FEATURE_REQUIREMENTS[feature];
   const reqLabel = Array.isArray(req) ? req[0] : req; // show the minimum required tier
+
+  const href = actionHref || '/users/myinfo/paidplans';
+
+  if (variant === 'blur') {
+    return (
+      <div className={`relative ${className || ''}`}>
+        <div className="pointer-events-none select-none blur-[2px] opacity-60">
+          {children}
+        </div>
+        {/* Transparent blocker to disable interactions */}
+        <Link href={href} className="absolute inset-0" aria-label={`この機能は現在のプランでは利用できません。ご利用には ${reqLabel} プラン以上が必要です。`} />
+        {/* Small hint button (non-intrusive) */}
+        {showHint && (
+          <div className="absolute top-2 right-2">
+            <Link href={href} className="text-[11px] rounded bg-[#EE6C4D] text-white px-2 py-1 shadow">有料プラン</Link>
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className={`relative ${className || ''}`}>
@@ -44,7 +70,7 @@ export default function PlanGate({ feature, planTier, withOverlay = true, classN
         <div className="bg-white/90 backdrop-blur rounded-xl border shadow p-4 max-w-md text-center">
           <div className="text-base font-semibold mb-1">この機能は現在のプランでは利用できません</div>
           <div className="text-sm text-gray-600 mb-3">ご利用には {reqLabel} プラン以上が必要です。</div>
-          <Link href="/users/myinfo/paidplans" className="inline-block rounded-md bg-[#EE6C4D] text-white px-4 py-2">
+          <Link href={href} className="inline-block rounded-md bg-[#EE6C4D] text-white px-4 py-2">
             プランを確認する
           </Link>
         </div>
@@ -52,4 +78,3 @@ export default function PlanGate({ feature, planTier, withOverlay = true, classN
     </div>
   );
 }
-
