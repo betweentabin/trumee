@@ -145,7 +145,7 @@
 - [x] 匿名化(API): `company_view_user_resumes` のサニタイズ実装（`back/core/views_api_v2.py:2238`）
 - [x] 匿名化(Front): 企業画面プレビューで会社名を渡さない（`frontend/components/modal/jobseeker-detail.tsx:1`）
 - [x] スカウト: Stripe Webhook 追加、`credits100` 決済成功時に +100（`back/core/urls_api_v2.py` 新規, ビュー追加）
-- [ ] 任意: Admin UI に「添削済み」バッジを追加
+- [x] 任意: Admin UI に「添削済み」バッジを追加
 
 ---
 

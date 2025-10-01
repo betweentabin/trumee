@@ -648,7 +648,16 @@ export default function AdminSeekerDetailPage() {
         <h1 className="text-2xl font-bold text-gray-900">{user?.full_name || user?.username || '求職者'}</h1>
         <div className="text-sm text-gray-500">{user?.email}</div>
       </div>
-      <div className="text-sm">
+      <div className="flex items-center gap-2 text-sm">
+        {overview?.review?.last_reviewed_at ? (
+          <span className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800" title="最新の添削日時が記録されています">
+            添削済み
+          </span>
+        ) : (
+          <span className="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-600" title="添削履歴が未確認です">
+            未添削
+          </span>
+        )}
         {user?.is_premium ? (
           <span className="inline-flex items-center rounded-full bg-yellow-100 px-2.5 py-0.5 text-xs font-medium text-yellow-800">プレミアム</span>
         ) : null}
