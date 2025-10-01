@@ -417,7 +417,7 @@ export default function Search() {
             </div>
             <div className="flex-1">
               <div className="text-sm text-gray-700 mb-1">面接確定（1チケット消費）</div>
-              <div className="flex flex-col sm:flex-row gap-2">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
                 <input
                   className="flex-1 border rounded px-3 py-2 text-sm"
                   placeholder="求職者ID（UUID）"

@@ -30,11 +30,11 @@ export default function ServiceCards() {
       {/* Left Card */}
       <div className="flex-1 bg-white border rounded-xl shadow-sm p-4">
         <h2 className="font-bold text-sm mb-4">各サービスを利用する</h2>
-        <div className="space-y-3">
+        <div className="grid grid-cols-1 gap-3">
           {/* Individual rows to allow gating per item */}
           <Link 
             href={perUser('resume-advice/review') || '/resume-advice/review'} 
-            className="w-full flex items-center justify-between px-4 py-2 border rounded-md text-sm hover:bg-gray-50 cursor-pointer"
+            className="w-full flex items-center justify-between px-4 py-3 border rounded-md text-sm hover:bg-gray-50 cursor-pointer"
           >
             <span>職務経歴書に関するアドバイス</span>
             <FaChevronRight className="text-gray-400 text-xs" />
@@ -43,14 +43,14 @@ export default function ServiceCards() {
             href={perUser('interview') || '/interview'}
             feature="interview_chat"
           >
-            <div className="w-full flex items-center justify-between px-4 py-2 border rounded-md text-sm">
+            <div className="w-full flex items-center justify-between px-4 py-3 border rounded-md text-sm hover:bg-gray-50 cursor-pointer">
               <span>面接対策・質問集</span>
               <FaChevronRight className="text-gray-400 text-xs" />
             </div>
           </GatedLink>
           <Link 
             href={perUser('scouts') || '/scouts'} 
-            className="w-full flex items-center justify-between px-4 py-2 border rounded-md text-sm hover:bg-gray-50 cursor-pointer"
+            className="w-full flex items-center justify-between px-4 py-3 border rounded-md text-sm hover:bg-gray-50 cursor-pointer"
           >
             <span>企業からのスカウト確認</span>
             <FaChevronRight className="text-gray-400 text-xs" />
