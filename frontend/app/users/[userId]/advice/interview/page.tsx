@@ -61,7 +61,7 @@ export default function InterviewAdvicePage() {
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
-      <PlanGate feature="interview_chat" withOverlay>
+      <PlanGate feature="interview_chat" withOverlay variant="blur" showHint={false}>
       <div className="max-w-3xl mx-auto bg-white rounded-xl shadow border p-6">
         <h1 className="text-xl font-semibold mb-4">面接に関するアドバイス</h1>
         <div className="h-[60vh] overflow-y-auto border rounded-md p-3 space-y-2 bg-gray-50">

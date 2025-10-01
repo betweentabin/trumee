@@ -86,7 +86,7 @@ export default function InterviewTopPage() {
         </aside>
 
         {/* Right: chat */}
-        <PlanGate feature="interview_chat" className="md:col-span-2" withOverlay>
+        <PlanGate feature="interview_chat" className="md:col-span-2" withOverlay variant="blur" showHint={false}>
         <main className="bg-white rounded-lg shadow border p-4 flex flex-col min-h-[60vh]">
           <h2 className="text-lg font-semibold mb-3">やり取り</h2>
           <div className="flex-1 overflow-auto space-y-2 pr-1">

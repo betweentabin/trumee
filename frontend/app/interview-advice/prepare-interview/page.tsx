@@ -222,7 +222,7 @@ export default function PrepareInterviewPage() {
                 return feature ? (
                   <div key={i} className="relative">
                     {/* Plan overlay blocks navigation when locked (blur only) */}
-                    <PlanGate feature={feature as any} withOverlay variant="blur">
+                    <PlanGate feature={feature as any} withOverlay variant="blur" showHint={false}>
                       {button}
                     </PlanGate>
                   </div>
