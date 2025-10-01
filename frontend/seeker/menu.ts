@@ -65,11 +65,7 @@ const seeker_menu_list = [
                 label: "パスワードの変更",
                 href: "/users/myinfo/password"
             },
-            {
-                label: "支払い情報登録・変更",
-                href: "/users/myinfo/payment"
-            },
-            {
+      {
                 label: "有料プラン",
                 href: "/users/myinfo/paidplans"
             },

@@ -280,6 +280,28 @@ export interface CompanyMonthlyPage extends BaseModel {
 }
 
 // ============================================================================
+// Jobs: Cap / Tickets
+// ============================================================================
+
+export interface JobCapPlan extends BaseModel {
+  job_posting: UUID;
+  cap_percent: 20 | 22 | 25 | number;
+  cap_amount_limit?: number | null;
+  total_cost: number;
+  cap_reached_at?: string | null;
+}
+
+export interface JobTicketLedger extends BaseModel {
+  job_posting: UUID;
+  tickets_total: number;
+  tickets_used: number;
+  bonus_tickets_total: number;
+  rollover_allowed: boolean;
+  last_reset_at?: string | null;
+  tickets_remaining: number;
+}
+
+// ============================================================================
 // リクエスト・レスポンス型
 // ============================================================================
 
@@ -521,6 +543,7 @@ export const API_ENDPOINTS = {
   // 企業 月次ページ
   COMPANY_MONTHLY_BASE: '/api/v2/company/monthly/',
   COMPANY_MONTHLY_CURRENT: '/api/v2/company/monthly/current/',
+  // Jobs (Cap/Tickets) - parameterized endpoints are constructed in client
   
   // 公開ユーザー情報
   PUBLIC_USER_BASE: '/api/v2/users/',

@@ -22,7 +22,6 @@ export default function Leftpage() {
     { label: 'TOP', href: userId ? `/users/${userId}` : '/users' },
     { label: '登録情報の確認・変更', href: `${base}/registerdata` },
     { label: 'パスワードの変更', href: `${base}/password` },
-    { label: '支払い情報登録・変更', href: `${base}/payment` },
     { label: '有料プラン', href: `${base}/paidplans` },
   ];
 

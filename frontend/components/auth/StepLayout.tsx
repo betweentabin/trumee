@@ -21,7 +21,6 @@ const StepLayout = ({ children, currentStep, stepTitle }: StepLayoutProps) => {
     { label: 'TOP', href: '/dashboard', icon: null },
     { label: '登録情報の確認・変更', href: userId ? `/users/${userId}/myinfo/registerdata` : '/users/myinfo/registerdata', icon: <ChevronRight className="w-4 h-4" /> },
     { label: 'パスワードの変更', href: userId ? `/users/${userId}/myinfo/password` : '/users/myinfo/password', icon: <ChevronRight className="w-4 h-4" /> },
-    { label: '支払い情報登録・変更', href: userId ? `/users/${userId}/myinfo/payment` : '/users/myinfo/payment', icon: <ChevronRight className="w-4 h-4" /> },
     { label: '有料プラン', href: userId ? `/users/${userId}/myinfo/paidplans` : '/users/myinfo/paidplans', icon: <ChevronRight className="w-4 h-4" /> },
   ];
 

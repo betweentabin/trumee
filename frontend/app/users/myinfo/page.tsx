@@ -36,12 +36,6 @@ export default function MyInfoPage() {
       color: 'bg-primary-600'
     },
     {
-      title: '支払い情報登録・変更',
-      icon: <FaCreditCard className="text-2xl" />,
-      href: `${base}/payment`,
-      color: 'bg-primary-600'
-    },
-    {
       title: '有料プラン',
       icon: <FaCrown className="text-2xl" />,
       href: `${base}/paidplans`,

@@ -36,7 +36,8 @@ from django.core.cache import cache
 from .models import (
     User, SeekerProfile, CompanyProfile, Resume, Experience, 
     Education, Certification, Application, Scout, Message, JobPosting,
-    CompanyMonthlyPage, ResumeFile, InterviewQuestion, PromptTemplate, Annotation, Payment
+    CompanyMonthlyPage, ResumeFile, InterviewQuestion, PromptTemplate, Annotation, Payment,
+    JobCapPlan, JobTicketLedger, TicketConsumption
 )
 from .serializers import (
     UserSerializer, SeekerProfileSerializer, CompanyProfileSerializer,
@@ -1510,6 +1511,236 @@ def user_profile_v2(request):
 
 
 # ============================================================================
+# Jobs: Cap plan / Ticket ledger (read-only minimal endpoints)
+# ============================================================================
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def job_cap_plan_detail(request, job_id):
+    """Get Cap plan for a job. Company owner or staff only.
+
+    GET /api/v2/jobs/<uuid:job_id>/cap_plan/
+    """
+    try:
+        job = JobPosting.objects.get(id=job_id)
+    except JobPosting.DoesNotExist:
+        return Response({'detail': 'job_not_found'}, status=status.HTTP_404_NOT_FOUND)
+
+    if not (request.user.is_staff or (request.user.role == 'company' and job.company_id == request.user.id)):
+        return Response({'detail': 'forbidden'}, status=status.HTTP_403_FORBIDDEN)
+
+    plan = JobCapPlan.objects.filter(job_posting=job).first()
+    if not plan:
+        return Response({'detail': 'cap_plan_not_found'}, status=status.HTTP_404_NOT_FOUND)
+
+    from .serializers import JobCapPlanSerializer
+    return Response(JobCapPlanSerializer(plan).data, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def job_ticket_ledger_detail(request, job_id):
+    """Get Ticket ledger for a job. Company owner or staff only.
+
+    GET /api/v2/jobs/<uuid:job_id>/tickets/
+    """
+    try:
+        job = JobPosting.objects.get(id=job_id)
+    except JobPosting.DoesNotExist:
+        return Response({'detail': 'job_not_found'}, status=status.HTTP_404_NOT_FOUND)
+
+    if not (request.user.is_staff or (request.user.role == 'company' and job.company_id == request.user.id)):
+        return Response({'detail': 'forbidden'}, status=status.HTTP_403_FORBIDDEN)
+
+    ledger = JobTicketLedger.objects.filter(job_posting=job).first()
+    if not ledger:
+        return Response({'detail': 'ticket_ledger_not_found'}, status=status.HTTP_404_NOT_FOUND)
+
+    from .serializers import JobTicketLedgerSerializer
+    return Response(JobTicketLedgerSerializer(ledger).data, status=status.HTTP_200_OK)
+
+
+@api_view(['POST', 'PUT'])
+@permission_classes([IsAuthenticated])
+def job_cap_plan_upsert(request, job_id):
+    """Create or update Cap plan for a job (owner or staff)
+
+    POST/PUT /api/v2/jobs/<uuid:job_id>/cap_plan/set/
+    body: { cap_percent: 20|22|25, cap_amount_limit?: number|null }
+    """
+    try:
+        job = JobPosting.objects.get(id=job_id)
+    except JobPosting.DoesNotExist:
+        return Response({'detail': 'job_not_found'}, status=status.HTTP_404_NOT_FOUND)
+
+    if not (request.user.is_staff or (request.user.role == 'company' and job.company_id == request.user.id)):
+        return Response({'detail': 'forbidden'}, status=status.HTTP_403_FORBIDDEN)
+
+    body = request.data or {}
+    try:
+        cap_percent = int(body.get('cap_percent'))
+    except Exception:
+        return Response({'cap_percent': ['Invalid value']}, status=status.HTTP_400_BAD_REQUEST)
+    if cap_percent not in (20, 22, 25):
+        return Response({'cap_percent': ['Must be one of 20, 22, 25']}, status=status.HTTP_400_BAD_REQUEST)
+
+    cap_amount_limit = body.get('cap_amount_limit', None)
+    try:
+        cap_amount_limit_val = int(cap_amount_limit) if cap_amount_limit not in (None, '', 'null') else None
+    except Exception:
+        return Response({'cap_amount_limit': ['Must be integer or null']}, status=status.HTTP_400_BAD_REQUEST)
+
+    plan, _ = JobCapPlan.objects.get_or_create(job_posting=job, defaults={
+        'cap_percent': cap_percent,
+        'cap_amount_limit': cap_amount_limit_val,
+    })
+    # update if exists
+    plan.cap_percent = cap_percent
+    plan.cap_amount_limit = cap_amount_limit_val
+    plan.save(update_fields=['cap_percent', 'cap_amount_limit', 'updated_at'])
+
+    from .serializers import JobCapPlanSerializer
+    return Response(JobCapPlanSerializer(plan).data, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def job_ticket_issue(request, job_id):
+    """Issue/add tickets to the job's ledger (owner or staff)
+
+    POST /api/v2/jobs/<uuid:job_id>/tickets/issue/
+    body: { tickets_add: number>0, rollover_allowed?: boolean, as_bonus?: boolean }
+    """
+    try:
+        job = JobPosting.objects.get(id=job_id)
+    except JobPosting.DoesNotExist:
+        return Response({'detail': 'job_not_found'}, status=status.HTTP_404_NOT_FOUND)
+
+    if not (request.user.is_staff or (request.user.role == 'company' and job.company_id == request.user.id)):
+        return Response({'detail': 'forbidden'}, status=status.HTTP_403_FORBIDDEN)
+
+    body = request.data or {}
+    try:
+        tickets_add = int(body.get('tickets_add'))
+    except Exception:
+        return Response({'tickets_add': ['Invalid value']}, status=status.HTTP_400_BAD_REQUEST)
+    if tickets_add <= 0:
+        return Response({'tickets_add': ['Must be > 0']}, status=status.HTTP_400_BAD_REQUEST)
+
+    rollover_allowed = bool(body.get('rollover_allowed')) if 'rollover_allowed' in body else None
+    as_bonus = bool(body.get('as_bonus')) if 'as_bonus' in body else False
+
+    ledger, _ = JobTicketLedger.objects.get_or_create(job_posting=job)
+    # update totals
+    ledger.tickets_total = int(ledger.tickets_total or 0) + tickets_add
+    if as_bonus:
+        ledger.bonus_tickets_total = int(ledger.bonus_tickets_total or 0) + tickets_add
+    if rollover_allowed is not None:
+        ledger.rollover_allowed = rollover_allowed
+    ledger.save(update_fields=['tickets_total', 'bonus_tickets_total', 'rollover_allowed', 'updated_at'])
+
+    from .serializers import JobTicketLedgerSerializer
+    return Response(JobTicketLedgerSerializer(ledger).data, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def job_ticket_consume(request, job_id):
+    """Consume 1 ticket for a confirmed interview.
+
+    POST /api/v2/jobs/<uuid:job_id>/tickets/consume/
+    body: { seeker?: uuid, scout_id?: uuid, application_id?: uuid, interview_date?: ISOString }
+
+    Rules:
+      - Company owner (of job) or staff only
+      - Requires at least 1 remaining ticket
+      - If seeker provided and already consumed for this job, returns 409
+    """
+    try:
+        job = JobPosting.objects.get(id=job_id)
+    except JobPosting.DoesNotExist:
+        return Response({'detail': 'job_not_found'}, status=status.HTTP_404_NOT_FOUND)
+
+    if not (request.user.is_staff or (request.user.role == 'company' and job.company_id == request.user.id)):
+        return Response({'detail': 'forbidden'}, status=status.HTTP_403_FORBIDDEN)
+
+    ledger, _ = JobTicketLedger.objects.get_or_create(job_posting=job)
+    remaining = max(0, int(ledger.tickets_total or 0) - int(ledger.tickets_used or 0))
+    if remaining <= 0:
+        return Response({'error': 'no_tickets', 'detail': 'No tickets remaining for this job.'}, status=status.HTTP_409_CONFLICT)
+
+    data = request.data or {}
+    seeker_id = data.get('seeker') or data.get('seeker_id')
+    scout_id = data.get('scout_id')
+    application_id = data.get('application_id')
+    interview_date_raw = data.get('interview_date')
+
+    # prevent duplicate consumption per seeker per job (if seeker specified)
+    if seeker_id:
+        try:
+            if TicketConsumption.objects.filter(ledger=ledger, seeker_id=seeker_id).exists():
+                return Response({'error': 'already_consumed_for_seeker'}, status=status.HTTP_409_CONFLICT)
+        except Exception:
+            pass
+
+    # Resolve optional relations safely
+    seeker_obj = None
+    if seeker_id:
+        try:
+            seeker_obj = User.objects.get(id=seeker_id)
+        except User.DoesNotExist:
+            seeker_obj = None
+
+    scout_obj = None
+    if scout_id:
+        try:
+            scout_obj = Scout.objects.get(id=scout_id)
+        except Scout.DoesNotExist:
+            scout_obj = None
+
+    app_obj = None
+    if application_id:
+        try:
+            app_obj = Application.objects.get(id=application_id)
+        except Application.DoesNotExist:
+            app_obj = None
+
+    # Parse interview_date
+    interview_dt = None
+    if interview_date_raw:
+        try:
+            from datetime import datetime
+            from django.utils import timezone as djtz
+            # Accept ISO or YYYY-MM-DD
+            try:
+                interview_dt = datetime.fromisoformat(str(interview_date_raw).replace('Z', '+00:00'))
+            except ValueError:
+                interview_dt = datetime.strptime(str(interview_date_raw), '%Y-%m-%d')
+            if interview_dt.tzinfo is None:
+                interview_dt = djtz.make_aware(interview_dt, djtz.get_current_timezone())
+        except Exception:
+            interview_dt = None
+
+    # Perform consumption
+    try:
+        TicketConsumption.objects.create(
+            ledger=ledger,
+            seeker=seeker_obj,
+            scout=scout_obj,
+            application=app_obj,
+            interview_date=interview_dt,
+            notes='confirmed_interview'
+        )
+        ledger.tickets_used = int(ledger.tickets_used or 0) + 1
+        ledger.save(update_fields=['tickets_used', 'updated_at'])
+    except Exception as e:
+        return Response({'detail': 'consume_failed', 'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    from .serializers import JobTicketLedgerSerializer
+    return Response(JobTicketLedgerSerializer(ledger).data, status=status.HTTP_200_OK)
+
+
+# ============================================================================
 # 添削（ユーザー↔管理者）メッセージ API ー 既存 Message テーブルを活用
 # ============================================================================
 
@@ -2483,9 +2714,64 @@ def company_jobs_new(request):
     """
     if request.user.role != 'company':
         return Response({'error': 'This endpoint is for companies only'}, status=status.HTTP_403_FORBIDDEN)
-    
-    # 求人モデルが必要なため、現時点では仮実装
-    return Response({'message': 'Job posted successfully', 'job_id': 'dummy-id'}, status=status.HTTP_201_CREATED)
+    # 入力値の取得と軽いバリデーション
+    payload = request.data or {}
+    title = (payload.get('title') or '').strip()
+    description = (payload.get('description') or '').strip()
+    requirements = (payload.get('requirements') or '').strip()
+    location = (payload.get('location') or '').strip()
+    employment_type = (payload.get('employment_type') or 'fulltime').strip()
+    salary_min = payload.get('salary_min')
+    salary_max = payload.get('salary_max')
+
+    errors = {}
+    if not title:
+      errors['title'] = ['This field is required.']
+    if not description:
+      errors['description'] = ['This field is required.']
+    if not requirements:
+      errors['requirements'] = ['This field is required.']
+    if not location:
+      errors['location'] = ['This field is required.']
+
+    # 年収帯（salary_min/max）は今回の要件上必須として扱う
+    try:
+        salary_min_val = int(salary_min) if salary_min is not None and str(salary_min) != '' else None
+    except Exception:
+        salary_min_val = None
+        errors['salary_min'] = ['Must be an integer.']
+    try:
+        salary_max_val = int(salary_max) if salary_max is not None and str(salary_max) != '' else None
+    except Exception:
+        salary_max_val = None
+        errors['salary_max'] = ['Must be an integer.']
+
+    if salary_min_val is None:
+        errors.setdefault('salary_min', []).append('This field is required.')
+    if salary_max_val is None:
+        errors.setdefault('salary_max', []).append('This field is required.')
+    if salary_min_val is not None and salary_max_val is not None and salary_min_val > salary_max_val:
+        errors.setdefault('salary_min', []).append('Must be less than or equal to salary_max.')
+
+    if errors:
+        return Response(errors, status=status.HTTP_400_BAD_REQUEST)
+
+    # Serializer 経由で作成（companyはサーバ側で紐付け）
+    create_data = {
+        'title': title,
+        'description': description,
+        'requirements': requirements,
+        'location': location,
+        'employment_type': employment_type,
+        'salary_min': salary_min_val,
+        'salary_max': salary_max_val,
+    }
+    serializer = JobPostingSerializer(data=create_data)
+    serializer.is_valid(raise_exception=True)
+    instance = serializer.save(company=request.user)
+
+    # 作成済みデータを返す
+    return Response(JobPostingSerializer(instance).data, status=status.HTTP_201_CREATED)
 
 
 @api_view(['GET'])

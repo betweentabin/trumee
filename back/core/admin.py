@@ -8,6 +8,7 @@ from .models import (
     Application, Scout, Message, Payment,
     ActivityLog, MLModel, MLPrediction,
     InterviewQuestion, PromptTemplate,
+    JobCapPlan, JobTicketLedger, TicketConsumption,
 )
 from .utils_templates import render_prompt_with_resume
 from .models import Resume
@@ -224,3 +225,28 @@ class PromptTemplateAdmin(admin.ModelAdmin):
             <pre style="white-space: pre-wrap; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace;">{rendered}</pre>
         """
         return HttpResponse(html, content_type='text/html; charset=utf-8')
+
+
+@admin.register(JobCapPlan)
+class JobCapPlanAdmin(admin.ModelAdmin):
+    list_display = ['job_posting', 'cap_percent', 'cap_amount_limit', 'total_cost', 'cap_reached_at', 'updated_at']
+    list_filter = ['cap_percent']
+    search_fields = ['job_posting__title']
+    raw_id_fields = ['job_posting']
+    readonly_fields = ['created_at', 'updated_at']
+
+
+@admin.register(JobTicketLedger)
+class JobTicketLedgerAdmin(admin.ModelAdmin):
+    list_display = ['job_posting', 'tickets_total', 'tickets_used', 'bonus_tickets_total', 'rollover_allowed', 'updated_at']
+    search_fields = ['job_posting__title']
+    raw_id_fields = ['job_posting']
+    readonly_fields = ['created_at', 'updated_at']
+
+
+@admin.register(TicketConsumption)
+class TicketConsumptionAdmin(admin.ModelAdmin):
+    list_display = ['ledger', 'seeker', 'scout', 'application', 'interview_date', 'consumed_at']
+    list_filter = ['consumed_at']
+    search_fields = ['seeker__email', 'ledger__job_posting__title']
+    raw_id_fields = ['ledger', 'seeker', 'scout', 'application']

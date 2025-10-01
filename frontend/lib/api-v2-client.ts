@@ -441,6 +441,40 @@ class ApiV2Client {
     return response.data;
   }
 
+  // ============================================================================
+  // Jobs: Cap / Tickets
+  // ============================================================================
+
+  async getJobCapPlan(jobId: string): Promise<import('@/types/api-v2').JobCapPlan> {
+    const url = `/api/v2/jobs/${jobId}/cap_plan/`;
+    const res = await this.client.get(url);
+    return res.data as any;
+  }
+
+  async setJobCapPlan(jobId: string, payload: { cap_percent: 20 | 22 | 25; cap_amount_limit?: number | null }): Promise<import('@/types/api-v2').JobCapPlan> {
+    const url = `/api/v2/jobs/${jobId}/cap_plan/set/`;
+    const res = await this.client.post(url, payload);
+    return res.data as any;
+  }
+
+  async getJobTickets(jobId: string): Promise<import('@/types/api-v2').JobTicketLedger> {
+    const url = `/api/v2/jobs/${jobId}/tickets/`;
+    const res = await this.client.get(url);
+    return res.data as any;
+  }
+
+  async issueJobTickets(jobId: string, payload: { tickets_add: number; rollover_allowed?: boolean; as_bonus?: boolean }): Promise<import('@/types/api-v2').JobTicketLedger> {
+    const url = `/api/v2/jobs/${jobId}/tickets/issue/`;
+    const res = await this.client.post(url, payload);
+    return res.data as any;
+  }
+
+  async consumeJobTicket(jobId: string, payload: { seeker?: string; seeker_id?: string; scout_id?: string; application_id?: string; interview_date?: string }): Promise<import('@/types/api-v2').JobTicketLedger> {
+    const url = `/api/v2/jobs/${jobId}/tickets/consume/`;
+    const res = await this.client.post(url, payload);
+    return res.data as any;
+  }
+
   // ==========================================================================
   // アドバイス通知
   // ==========================================================================

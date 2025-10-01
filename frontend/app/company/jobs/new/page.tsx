@@ -18,6 +18,8 @@ export default function CompanyNewJobPage() {
   const [requirements, setRequirements] = useState('');
   const [location, setLocation] = useState('');
   const [employmentType, setEmploymentType] = useState('fulltime');
+  const [salaryMin, setSalaryMin] = useState<string>('');
+  const [salaryMax, setSalaryMax] = useState<string>('');
   const [loading, setLoading] = useState(false);
 
   // init auth & role
@@ -31,9 +33,23 @@ export default function CompanyNewJobPage() {
       toast.error('タイトルと仕事内容は必須です');
       return;
     }
+    if (!salaryMin || !salaryMax) {
+      toast.error('年収帯（最小・最大）を入力してください');
+      return;
+    }
+    const min = parseInt(String(salaryMin).replace(/[^0-9]/g, ''), 10);
+    const max = parseInt(String(salaryMax).replace(/[^0-9]/g, ''), 10);
+    if (!Number.isFinite(min) || !Number.isFinite(max)) {
+      toast.error('年収帯には数値を入力してください');
+      return;
+    }
+    if (min > max) {
+      toast.error('年収の最小値は最大値以下で入力してください');
+      return;
+    }
     setLoading(true);
     try {
-      const payload = { title, description, requirements, location, employment_type: employmentType };
+      const payload = { title, description, requirements, location, employment_type: employmentType, salary_min: min, salary_max: max };
       const res = await apiV2Client.createCompanyJob(payload);
       toast.success('求人を作成しました');
     } catch (e: any) {
@@ -75,6 +91,30 @@ export default function CompanyNewJobPage() {
               <option value="contract">契約社員</option>
               <option value="internship">インターン</option>
             </select>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">年収（最小）</label>
+            <input
+              className="w-full border rounded-lg px-4 py-2"
+              placeholder="例：4000000"
+              inputMode="numeric"
+              value={salaryMin}
+              onChange={(e)=>setSalaryMin(e.target.value)}
+            />
+            <p className="text-xs text-gray-500 mt-1">単位: 円</p>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">年収（最大）</label>
+            <input
+              className="w-full border rounded-lg px-4 py-2"
+              placeholder="例：8000000"
+              inputMode="numeric"
+              value={salaryMax}
+              onChange={(e)=>setSalaryMax(e.target.value)}
+            />
+            <p className="text-xs text-gray-500 mt-1">単位: 円</p>
           </div>
         </div>
         <div className="flex justify-end gap-3">

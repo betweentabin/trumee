@@ -5,6 +5,7 @@ from .models import (
     Application, Scout, Message, Payment, JobPosting,
     ActivityLog, MLModel, MLPrediction, CompanyMonthlyPage, ResumeFile,
     InterviewQuestion, PromptTemplate, Annotation,
+    JobCapPlan, JobTicketLedger, TicketConsumption,
 )
 
 
@@ -531,6 +532,43 @@ class PromptTemplateSerializer(serializers.ModelSerializer):
         model = PromptTemplate
         fields = ['id', 'name', 'target', 'template_text', 'description', 'is_active', 'created_at', 'updated_at']
         read_only_fields = ['created_at', 'updated_at']
+
+
+# =============================
+# Cap/Ticket シリアライザー
+# =============================
+
+class JobCapPlanSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = JobCapPlan
+        fields = [
+            'id', 'job_posting', 'cap_percent', 'cap_amount_limit',
+            'total_cost', 'cap_reached_at', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['created_at', 'updated_at']
+
+
+class JobTicketLedgerSerializer(serializers.ModelSerializer):
+    tickets_remaining = serializers.IntegerField(read_only=True)
+
+    class Meta:
+        model = JobTicketLedger
+        fields = [
+            'id', 'job_posting', 'tickets_total', 'tickets_used',
+            'bonus_tickets_total', 'rollover_allowed', 'last_reset_at',
+            'tickets_remaining', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['tickets_remaining', 'created_at', 'updated_at']
+
+
+class TicketConsumptionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TicketConsumption
+        fields = [
+            'id', 'ledger', 'seeker', 'scout', 'application',
+            'interview_date', 'notes', 'consumed_at'
+        ]
+        read_only_fields = ['consumed_at']
 
 
 # 互換性のための旧シリアライザー（段階的に削除予定）

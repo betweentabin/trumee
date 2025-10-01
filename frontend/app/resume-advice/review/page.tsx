@@ -488,6 +488,9 @@ export default function ResumeReviewPage() {
     }
   };
 
+  // ユーザーが直近で編集を反映した時刻（admin の次コメントまでマーカー維持）
+  const [lastEditAt, setLastEditAt] = useState<number | null>(null);
+
   const publishBaseline = async () => {
     const rid = String(selected?.id || overridePreview?.resumeId || '');
     if (!rid || !isOwner) { setError('編集は本人のみ可能です'); return; }
@@ -521,10 +524,9 @@ export default function ResumeReviewPage() {
             setSelected((prev: any) => ({ ...(prev || {}), ...updated }));
             setFormError(null);
             setError(null);
-            // temporarily mark changed anchors as highlighted markers
+            // ユーザー編集で変更されたアンカーをマーカー表示（admin が次にコメントするまで維持）
             setRecentlyChangedAnchors(changedAnchors);
-            // auto-clear after a few seconds
-            setTimeout(() => setRecentlyChangedAnchors(new Set()), 5000);
+            setLastEditAt(Date.now());
           } else {
             // 取得失敗でもPATCH成功時は成功扱いとし、ユーザーに後で再読込を案内
             setFormError(null);
@@ -535,7 +537,7 @@ export default function ResumeReviewPage() {
           setFormError(null);
           setError(null);
           setRecentlyChangedAnchors(changedAnchors);
-          setTimeout(() => setRecentlyChangedAnchors(new Set()), 5000);
+          setLastEditAt(Date.now());
         }
       } else {
         // エラー詳細を表示
@@ -580,6 +582,21 @@ export default function ResumeReviewPage() {
       if (!res.ok) throw new Error('failed');
       const data = await res.json();
       const uid = getUserInfo()?.uid;
+      // admin のコメントがユーザー編集後に届いたら、編集マーカーをクリアする
+      try {
+        if (lastEditAt) {
+          const adminReplied = (data || []).some((m: any) => {
+            const role = uid && String(m.sender) === String(uid) ? 'seeker' : 'advisor';
+            if (role !== 'advisor') return false;
+            const ts = m.created_at ? new Date(m.created_at).getTime() : 0;
+            return ts > lastEditAt;
+          });
+          if (adminReplied) {
+            setRecentlyChangedAnchors(new Set());
+            setLastEditAt(null);
+          }
+        }
+      } catch {}
       // Map to local structure
       const mapped: AnnMessage[] = data.map((m: any) => {
         const role = uid && String(m.sender) === String(uid) ? 'seeker' : 'advisor';

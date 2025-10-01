@@ -19,7 +19,7 @@ export default function GatedLink({ href, feature, className, children }: Props)
   const allowed = useMemo(() => isAllowed(tier, feature), [tier, feature]);
 
   // いずれの場合も遷移はその機能のページへ。
-  // 未許可のときは控えめなロック表示だけにし、実際のブロックは遷移先で PlanGate が担当します。
+  // 未許可時の見た目は控えめにし、鍵マークなどの絵文字は表示しない。
   return (
     <Link
       href={href}
@@ -27,11 +27,6 @@ export default function GatedLink({ href, feature, className, children }: Props)
       title={allowed ? undefined : 'この機能は現在のプランでは利用できません（遷移先でご案内）'}
     >
       {children}
-      {!allowed && (
-        <span className="ml-1 inline-block align-middle text-[11px] text-[#EE6C4D]" aria-hidden>
-          🔒
-        </span>
-      )}
     </Link>
   );
 }

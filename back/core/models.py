@@ -835,6 +835,104 @@ class CompanyMonthlyPage(models.Model):
 
 
 # ============================================================
+# 採用プラン（Cap）/ チケット台帳（求人単位）
+# ============================================================
+
+class JobCapPlan(models.Model):
+    """求人ごとのCapプラン設定
+
+    - cap_percent: 20/22/25 から選択
+    - cap_amount_limit: 必要に応じ固定上限（円）を設定可能（任意）
+    - total_cost: 請求対象累計（円）。到達検知に利用予定
+    - cap_reached_at: Cap到達時刻
+    """
+    CAP_CHOICES = [
+        (20, '20%'),
+        (22, '22%'),
+        (25, '25%'),
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    job_posting = models.OneToOneField(JobPosting, on_delete=models.CASCADE, related_name='cap_plan')
+    cap_percent = models.IntegerField(choices=CAP_CHOICES)
+    cap_amount_limit = models.BigIntegerField(null=True, blank=True)
+    total_cost = models.BigIntegerField(default=0)
+    cap_reached_at = models.DateTimeField(null=True, blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'job_cap_plans'
+        indexes = [
+            models.Index(fields=['cap_percent']),
+            models.Index(fields=['-updated_at']),
+        ]
+
+    def __str__(self):
+        return f"Cap {self.cap_percent}% for {self.job_posting.title}"
+
+
+class JobTicketLedger(models.Model):
+    """求人ごとのチケット台帳
+
+    - tickets_total: 発行済みチケット数（基本+追加+ボーナスを合算して管理）
+    - tickets_used: 消費済みチケット数
+    - bonus_tickets_total: Cap到達時の同数付与などボーナス源泉の管理
+    - rollover_allowed: 同一求人の再募集時に一部繰越を許可するフラグ
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    job_posting = models.OneToOneField(JobPosting, on_delete=models.CASCADE, related_name='ticket_ledger')
+    tickets_total = models.IntegerField(default=0)
+    tickets_used = models.IntegerField(default=0)
+    bonus_tickets_total = models.IntegerField(default=0)
+    rollover_allowed = models.BooleanField(default=False)
+    last_reset_at = models.DateTimeField(null=True, blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'job_ticket_ledgers'
+        indexes = [
+            models.Index(fields=['-updated_at']),
+        ]
+
+    def __str__(self):
+        return f"Tickets {self.tickets_used}/{self.tickets_total} for {self.job_posting.title}"
+
+    @property
+    def tickets_remaining(self) -> int:
+        try:
+            return max(0, int(self.tickets_total) - int(self.tickets_used))
+        except Exception:
+            return 0
+
+
+class TicketConsumption(models.Model):
+    """チケット消費ログ（承諾+面接確定などのタイミングを記録）"""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    ledger = models.ForeignKey(JobTicketLedger, on_delete=models.CASCADE, related_name='consumptions')
+    seeker = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='ticket_consumptions')
+    scout = models.ForeignKey(Scout, on_delete=models.SET_NULL, null=True, blank=True, related_name='ticket_consumptions')
+    application = models.ForeignKey(Application, on_delete=models.SET_NULL, null=True, blank=True, related_name='ticket_consumptions')
+    interview_date = models.DateTimeField(null=True, blank=True)
+    notes = models.CharField(max_length=255, blank=True)
+
+    consumed_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'ticket_consumptions'
+        indexes = [
+            models.Index(fields=['ledger', '-consumed_at']),
+            models.Index(fields=['seeker', '-consumed_at']),
+        ]
+
+    def __str__(self):
+        return f"Use 1 ticket on {self.consumed_at} for job {self.ledger.job_posting_id}"
+
+
+# ============================================================
 # 面接・自己PR・履歴書関連の質問マスタ/テンプレート
 # ============================================================
 
