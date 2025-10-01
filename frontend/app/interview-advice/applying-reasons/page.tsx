@@ -30,6 +30,18 @@ export default function ApplyingReasonsPage() {
   const [openReason, setOpenReason] = useState(true);
   const [openRetire, setOpenRetire] = useState(false);
   const [openFuture, setOpenFuture] = useState(true);
+  // Active editor (controls the right-hand cards)
+  type EditorMode = 'applying' | 'resignation' | 'future';
+  const [editorMode, setEditorMode] = useState<EditorMode>('applying');
+  // Resignation inputs
+  const [resignIssue, setResignIssue] = useState('');
+  const [resignWhat, setResignWhat] = useState('');
+  const [resignPositive, setResignPositive] = useState('');
+  const [resignDraft, setResignDraft] = useState('');
+  // Future plan inputs
+  const [futureVision, setFutureVision] = useState('');
+  const [futureSteps, setFutureSteps] = useState('');
+  const [futureDraft, setFutureDraft] = useState('');
   const token = useMemo(() => (typeof window !== 'undefined' ? localStorage.getItem('drf_token_v2') || '' : ''), []);
   const me = useMemo(() => {
     if (typeof window === 'undefined') return null as any;
@@ -126,6 +138,29 @@ export default function ApplyingReasonsPage() {
   };
 
   // 相談を送信ボタンは廃止。チャットから個別に送れます。
+  
+  // Generators for other panels
+  const handleGenerateResignation = () => {
+    if (!resignIssue.trim()) { toast.error('現職・前職での課題を入力してください'); return; }
+    setLoading(true);
+    setTimeout(() => {
+      const text = `退職理由（ポジティブ表現）\n\n【現職で感じた課題】\n${resignIssue}\n\n【改善に向けて取り組んだこと】\n${resignWhat || '（取り組みを簡潔に記載）'}\n\n【今後に向けた前向きな意図】\n${resignPositive || '専門性をより高め、より大きな価値提供ができる環境に挑戦したいと考えています。'}\n\n上記の通り、現職で得た学びを活かし、次の環境でさらなる成長と貢献を実現したいと考えています。`;
+      setResignDraft(text);
+      setLoading(false);
+      toast.success('退職理由の草案を生成しました');
+    }, 600);
+  };
+
+  const handleGenerateFuture = () => {
+    if (!futureVision.trim()) { toast.error('将来やりたいことを入力してください'); return; }
+    setLoading(true);
+    setTimeout(() => {
+      const text = `将来やりたいこと\n\n【ビジョン】\n${futureVision}\n\n【実現のためのステップ】\n${futureSteps || '必要なスキル習得とプロジェクト経験を積む計画です。'}\n\n上記を通して中長期的に価値提供を高めていきます。`;
+      setFutureDraft(text);
+      setLoading(false);
+      toast.success('草案を生成しました');
+    }, 600);
+  };
 
   // Thread helpers
   const parseContent = (c: any) => {
@@ -387,7 +422,7 @@ export default function ApplyingReasonsPage() {
           <main className="lg:col-span-9 space-y-6">
             {/* Collapsible sections */}
             <div className="bg-white rounded-lg shadow-sm border">
-              <button onClick={() => setOpenReason(!openReason)} className="w-full flex items-center justify-between px-4 py-3 font-semibold">
+              <button onClick={() => { const next = !openReason; setEditorMode('applying'); setOpenReason(next); if (next) { setOpenRetire(false); setOpenFuture(false); } }} className="w-full flex items-center justify-between px-4 py-3 font-semibold">
                 転職理由(志望理由)
                 {openReason ? <FaMinus /> : <FaPlus />}
               </button>
@@ -402,7 +437,7 @@ export default function ApplyingReasonsPage() {
             </div>
 
             <div className="bg-white rounded-lg shadow-sm border">
-              <button onClick={() => setOpenRetire(!openRetire)} className="w-full flex items-center justify-between px-4 py-3 font-semibold">
+              <button onClick={() => { const next = !openRetire; setEditorMode('resignation'); setOpenRetire(next); if (next) { setOpenReason(false); setOpenFuture(false); } }} className="w-full flex items-center justify-between px-4 py-3 font-semibold">
                 退職理由
                 {openRetire ? <FaMinus /> : <FaPlus />}
               </button>
@@ -414,7 +449,7 @@ export default function ApplyingReasonsPage() {
             </div>
 
             <div className="bg-white rounded-lg shadow-sm border">
-              <button onClick={() => setOpenFuture(!openFuture)} className="w-full flex items-center justify-between px-4 py-3 font-semibold">
+              <button onClick={() => { const next = !openFuture; setEditorMode('future'); setOpenFuture(next); if (next) { setOpenReason(false); setOpenRetire(false); } }} className="w-full flex items-center justify-between px-4 py-3 font-semibold">
                 将来やりたいこと
                 {openFuture ? <FaMinus /> : <FaPlus />}
               </button>
@@ -425,78 +460,107 @@ export default function ApplyingReasonsPage() {
               )}
             </div>
 
-            {/* Two-column: Form and Generated */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="bg-white rounded-lg shadow-md p-6">
-                <h2 className="text-xl font-semibold mb-4">基本情報入力</h2>
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">企業名</label>
-                    <input
-                      type="text"
-                      value={companyName}
-                      onChange={(e) => setCompanyName(e.target.value)}
-                      placeholder="例: 株式会社ABC"
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF733E]"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">希望職種</label>
-                    <input
-                      type="text"
-                      value={position}
-                      onChange={(e) => setPosition(e.target.value)}
-                      placeholder="例: システムエンジニア"
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF733E]"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">あなたの強み・経験（任意）</label>
-                    <textarea
-                      value={reasons}
-                      onChange={(e) => setReasons(e.target.value)}
-                      placeholder="これまでの経験や強みを記入してください..."
-                      className="w-full h-32 p-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-[#FF733E]"
-                    />
-                  </div>
-                  <div className="flex flex-col sm:flex-row gap-3">
-                    <button
-                      onClick={handleGenerate}
-                      disabled={loading}
-                      className="flex-1 py-3 bg-[#FF733E] text-white rounded-lg hover:bg-orange-70 active:bg-orange-60 transition disabled:bg-gray-400"
-                    >
-                      {loading ? '生成中...' : '志望理由を生成'}
-                    </button>
-                    {/* 相談を送信ボタンは削除 */}
+            {/* Two-column: Form and Generated (switch by editorMode) */}
+            {editorMode === 'applying' && (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="bg-white rounded-lg shadow-md p-6">
+                  <h2 className="text-xl font-semibold mb-4">基本情報入力</h2>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">企業名</label>
+                      <input type="text" value={companyName} onChange={(e) => setCompanyName(e.target.value)} placeholder="例: 株式会社ABC" className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF733E]" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">希望職種</label>
+                      <input type="text" value={position} onChange={(e) => setPosition(e.target.value)} placeholder="例: システムエンジニア" className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF733E]" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">あなたの強み・経験（任意）</label>
+                      <textarea value={reasons} onChange={(e) => setReasons(e.target.value)} placeholder="これまでの経験や強みを記入してください..." className="w-full h-32 p-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-[#FF733E]" />
+                    </div>
+                    <div className="flex flex-col sm:flex-row gap-3">
+                      <button onClick={handleGenerate} disabled={loading} className="flex-1 py-3 bg-[#FF733E] text-white rounded-lg hover:bg-orange-70 active:bg-orange-60 transition disabled:bg-gray-400">{loading ? '生成中...' : '志望理由を生成'}</button>
+                    </div>
                   </div>
                 </div>
+                <div className="bg-white rounded-lg shadow-md p-6">
+                  <h2 className="text-xl font-semibold mb-4 flex items-center gap-2"><FaLightbulb className="text-yellow-500" />生成された志望理由</h2>
+                  {generatedReason ? (
+                    <div className="space-y-4">
+                      <div className="p-4 bg-orange-50 border-l-4 border-[#FF733E] rounded"><pre className="whitespace-pre-wrap text-gray-700 font-sans">{generatedReason}</pre></div>
+                      <div className="flex gap-3">
+                        <button className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">コピー</button>
+                        <button className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition">編集</button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="h-96 flex items-center justify-center text-gray-400"><div className="text-center"><FaPencilAlt className="text-6xl mx-auto mb-4" /><p>企業情報を入力して志望理由を生成してください</p></div></div>
+                  )}
+                </div>
               </div>
+            )}
 
-              <div className="bg-white rounded-lg shadow-md p-6">
-                <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-                  <FaLightbulb className="text-yellow-500" />
-                  生成された志望理由
-                </h2>
-                {generatedReason ? (
+            {editorMode === 'resignation' && (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="bg-white rounded-lg shadow-md p-6">
+                  <h2 className="text-xl font-semibold mb-4">入力</h2>
                   <div className="space-y-4">
-                    <div className="p-4 bg-orange-50 border-l-4 border-[#FF733E] rounded">
-                      <pre className="whitespace-pre-wrap text-gray-700 font-sans">{generatedReason}</pre>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">現職・前職で感じた課題</label>
+                      <textarea value={resignIssue} onChange={(e)=>setResignIssue(e.target.value)} placeholder="例: 裁量が極端に限定され、成長機会が限られている" className="w-full h-24 p-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500" />
                     </div>
-                    <div className="flex gap-3">
-                      <button className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">コピー</button>
-                      <button className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition">編集</button>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">改善に向けて取り組んだこと（任意）</label>
+                      <textarea value={resignWhat} onChange={(e)=>setResignWhat(e.target.value)} placeholder="例: 業務改善の提案、社内プロジェクト参画 など" className="w-full h-20 p-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500" />
                     </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">今後に向けた前向きな意図（任意）</label>
+                      <textarea value={resignPositive} onChange={(e)=>setResignPositive(e.target.value)} placeholder="例: 専門性を活かせる環境で価値提供を高めたい" className="w-full h-20 p-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                    </div>
+                    <button onClick={handleGenerateResignation} disabled={loading} className="w-full py-3 bg-[#FF733E] text-white rounded-lg hover:bg-[#FF8659] disabled:bg-gray-400">{loading ? '生成中…' : '退職理由案を生成'}</button>
                   </div>
-                ) : (
-                  <div className="h-96 flex items-center justify-center text-gray-400">
-                    <div className="text-center">
-                      <FaPencilAlt className="text-6xl mx-auto mb-4" />
-                      <p>企業情報を入力して志望理由を生成してください</p>
+                </div>
+                <div className="bg-white rounded-lg shadow-md p-6">
+                  <h2 className="text-xl font-semibold mb-4">生成結果</h2>
+                  {resignDraft ? (
+                    <div className="space-y-4">
+                      <div className="p-4 bg-blue-50 border-l-4 border-blue-500 rounded max-h-96 overflow-y-auto"><pre className="whitespace-pre-wrap text-sm text-gray-700">{resignDraft}</pre></div>
                     </div>
-                  </div>
-                )}
+                  ) : (
+                    <div className="h-96 flex items-center justify-center text-gray-400">入力して草案を生成してください</div>
+                  )}
+                </div>
               </div>
-            </div>
+            )}
+
+            {editorMode === 'future' && (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="bg-white rounded-lg shadow-md p-6">
+                  <h2 className="text-xl font-semibold mb-4">入力</h2>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">ビジョン</label>
+                      <textarea value={futureVision} onChange={(e)=>setFutureVision(e.target.value)} className="w-full h-28 p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">実現までのステップ（任意）</label>
+                      <textarea value={futureSteps} onChange={(e)=>setFutureSteps(e.target.value)} className="w-full h-24 p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                    </div>
+                    <button onClick={handleGenerateFuture} disabled={loading} className="w-full py-3 bg-[#FF733E] text-white rounded-lg hover:bg-[#FF8659] disabled:bg-gray-400">{loading ? '生成中…' : '草案を生成'}</button>
+                  </div>
+                </div>
+                <div className="bg-white rounded-lg shadow-md p-6">
+                  <h2 className="text-xl font-semibold mb-4">生成結果</h2>
+                  {futureDraft ? (
+                    <div className="space-y-4">
+                      <div className="p-4 bg-blue-50 border-l-4 border-blue-500 rounded max-h-96 overflow-y-auto"><pre className="whitespace-pre-wrap text-sm text-gray-700">{futureDraft}</pre></div>
+                    </div>
+                  ) : (
+                    <div className="h-96 flex items-center justify-center text-gray-400">入力して草案を生成してください</div>
+                  )}
+                </div>
+              </div>
+            )}
 
             {/* Tips */}
             <div className="bg-white rounded-lg shadow-md p-6">

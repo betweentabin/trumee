@@ -421,6 +421,23 @@ const HeroSection = () => {
             ))
           }
         </div>
+        {/* Side hero images (desktop) */}
+        <div className="absolute inset-0 hidden md:block pointer-events-none">
+          <ImageCardWithBg
+            src={"/images/header-man-05.png"}
+            left={2}
+            top={8}
+            borderRadius={12}
+            width={18}
+          />
+          <ImageCardWithBg
+            src={"/images/header-girl-03.png"}
+            right={2}
+            top={8}
+            borderRadius={12}
+            width={18}
+          />
+        </div>
         <div className="w-full aspect-5/4 relative grid grid-cols-2 md:hidden">
           <div className="w-full h-full relative overflow-hidden">
             <ImageCardWithBg
