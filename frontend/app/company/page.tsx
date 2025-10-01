@@ -419,19 +419,19 @@ export default function Search() {
               <div className="text-sm text-gray-700 mb-1">面接確定（1チケット消費）</div>
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
                 <input
-                  className="flex-1 border rounded px-3 py-2 text-sm"
+                  className="flex-1 border rounded px-3 py-2 text-sm h-10"
                   placeholder="求職者ID（UUID）"
                   value={consumeSeekerId}
                   onChange={(e)=>setConsumeSeekerId(e.target.value)}
                 />
                 <input
-                  className="flex-1 border rounded px-3 py-2 text-sm"
+                  className="flex-1 border rounded px-3 py-2 text-sm h-10"
                   placeholder="面接日（任意：2025-01-15）"
                   value={consumeInterviewDate}
                   onChange={(e)=>setConsumeInterviewDate(e.target.value)}
                 />
                 <button
-                  className={`px-4 py-2 rounded text-white ${consuming ? 'bg-gray-400' : 'bg-gray-800 hover:bg-gray-900'}`}
+                  className={`inline-flex items-center justify-center h-10 px-4 rounded text-white whitespace-nowrap shrink-0 ${consuming ? 'bg-gray-400' : 'bg-gray-800 hover:bg-gray-900'}`}
                   disabled={consuming || !selectedJobId}
                   onClick={async ()=>{
                     if (!selectedJobId) { toast.error('求人を選択してください'); return; }

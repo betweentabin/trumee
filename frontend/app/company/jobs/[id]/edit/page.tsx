@@ -109,20 +109,20 @@ export default function CompanyEditJobPage() {
                   <div className="text-sm font-medium mb-2">面接確定（1チケット消費）</div>
                   <label className="block text-xs text-gray-600 mb-1">求職者ID</label>
                   <input
-                    className="w-full border rounded px-3 py-2 text-sm"
+                    className="w-full border rounded px-3 py-2 text-sm h-10"
                     placeholder="seeker UUID"
                     value={consumeSeekerId}
                     onChange={(e)=>setConsumeSeekerId(e.target.value)}
                   />
                   <label className="block text-xs text-gray-600 mt-3 mb-1">面接日（任意, YYYY-MM-DD またはISO）</label>
                   <input
-                    className="w-full border rounded px-3 py-2 text-sm"
+                    className="w-full border rounded px-3 py-2 text-sm h-10"
                     placeholder="2025-01-15"
                     value={consumeInterviewDate}
                     onChange={(e)=>setConsumeInterviewDate(e.target.value)}
                   />
                   <button
-                    className={`mt-3 w-full px-4 py-2 rounded-md text-white ${consuming ? 'bg-gray-400' : 'bg-gray-800 hover:bg-gray-900'}`}
+                    className={`mt-3 w-full inline-flex items-center justify-center h-10 px-4 rounded-md text-white ${consuming ? 'bg-gray-400' : 'bg-gray-800 hover:bg-gray-900'}`}
                     disabled={consuming}
                     onClick={async ()=>{
                       if (!consumeSeekerId.trim()) { toast.error('求職者IDを入力してください'); return; }
