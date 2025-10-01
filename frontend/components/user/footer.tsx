@@ -24,6 +24,9 @@ const Footer = () => {
     const base = uid ? `/users/${uid}/myinfo` : '/users/myinfo';
     const scoutsHref = uid ? `/users/${uid}/scouts` : '/scouts';
     const applyingReasonsHref = uid ? `/users/${uid}/interview-advice/applying-reasons` : '/interview-advice/applying-reasons';
+    const resumeQuestionsHref = uid ? `/users/${uid}/interview-advice/resume-questions` : '/interview-advice/resume-questions';
+    const prQuestionsHref = uid ? `/users/${uid}/interview-advice/pr-questions` : '/interview-advice/pr-questions';
+    const prepareHref = uid ? `/users/${uid}/interview-advice/prepare-interview` : '/interview-advice/prepare-interview';
 
     return(
         <>
@@ -62,9 +65,9 @@ const Footer = () => {
                             <p className="font-bold mb-2">面接に関するアドバイス</p>
                             <ul className="space-y-1">
                                 <li><Link href={applyingReasonsHref} className="hover:text-[#FF733E] transition-colors">転職理由（志望理由）</Link></li>
-                                <li><Link href="/interview-advice/applying-reasons" className="hover:text-[#FF733E] transition-colors">職務経歴書に関する質問</Link></li>
-                                <li><Link href="/interview-advice/applying-reasons" className="hover:text-[#FF733E] transition-colors">自己PRに関係する質問</Link></li>
-                                <li><Link href="/interview-advice/applying-reasons" className="hover:text-[#FF733E] transition-colors">面接対策</Link></li>
+                                <li><Link href={resumeQuestionsHref} className="hover:text-[#FF733E] transition-colors">職務経歴書に関する質問</Link></li>
+                                <li><Link href={prQuestionsHref} className="hover:text-[#FF733E] transition-colors">自己PRに関係する質問</Link></li>
+                                <li><Link href={prepareHref} className="hover:text-[#FF733E] transition-colors">面接対策</Link></li>
                             </ul>
                             </div>
 

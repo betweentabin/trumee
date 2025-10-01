@@ -156,7 +156,7 @@ export default function ResumesPage() {
           </div>
           <Link
             href="/career/create"
-            className="inline-flex items-center px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors"
+            className="inline-flex items-center btn-outline btn-outline-md"
           >
             <FaPlus className="mr-2" />
             新規作成
@@ -175,7 +175,7 @@ export default function ResumesPage() {
             </p>
             <Link
               href="/career/create"
-              className="inline-flex items-center px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors"
+              className="inline-flex items-center btn-outline btn-outline-md"
             >
               <FaPlus className="mr-2" />
               最初の履歴書を作成
