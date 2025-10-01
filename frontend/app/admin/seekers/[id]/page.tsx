@@ -348,6 +348,7 @@ export default function AdminSeekerDetailPage() {
   const [composerOpen, setComposerOpen] = useState(false);
   const [composerText, setComposerText] = useState('');
   const [composerPos, setComposerPos] = useState<{ top: number; left: number } | null>(null);
+  const [composerAsInterview, setComposerAsInterview] = useState(false);
 
   const sendReviewMessage = useCallback(async () => {
     if (!reviewInput.trim()) return;
@@ -402,10 +403,14 @@ export default function AdminSeekerDetailPage() {
         });
         if (annRes.ok) { const ann = await annRes.json(); createdAnn = ann; annotationId = String(ann.id); }
       }
+      // 2) build content (plain or interview hint)
+      const content = composerAsInterview
+        ? JSON.stringify({ type: 'interview_hint', message: msg })
+        : msg;
       const res = await fetch(buildApiUrl('/advice/messages/'), {
         method: 'POST',
         headers: getApiHeaders(token),
-        body: JSON.stringify({ content: msg, user_id: id, subject: 'resume_advice', annotation_id: annotationId || undefined }),
+        body: JSON.stringify({ content, user_id: id, subject: 'resume_advice', annotation_id: annotationId || undefined }),
       });
       if (!res.ok) {
         const text = await res.text();
@@ -415,6 +420,7 @@ export default function AdminSeekerDetailPage() {
       }
       setComposerOpen(false);
       setComposerText('');
+      setComposerAsInterview(false);
       setPendingAnchor(null);
       if (createdAnn) setAnnotations((prev) => [...prev, createdAnn]);
       await loadReviewMessages();
@@ -423,7 +429,7 @@ export default function AdminSeekerDetailPage() {
     } finally {
       setSendingReview(false);
     }
-  }, [pendingAnchor, composerText, token, id, loadReviewMessages]);
+  }, [pendingAnchor, composerText, composerAsInterview, token, id, loadReviewMessages]);
 
   const resolveAnnotation = useCallback(async (annotationId?: string) => {
     if (!annotationId) return;
@@ -786,18 +792,22 @@ export default function AdminSeekerDetailPage() {
                           onMouseUp={(e) => e.stopPropagation()}
                           onClick={(e) => e.stopPropagation()}
                         >
-                          <div className="border border-gray-400 bg-white rounded-md shadow-lg p-2">
-                            <div className="text-xs text-secondary-600 mb-1">コメント対象: <span className="font-mono">{pendingAnchor.anchorId}</span></div>
-                            {pendingAnchor.quote && (
-                              <div className="text-xs text-secondary-700 mb-2"><span className="bg-yellow-100 px-1 py-[2px] rounded">{pendingAnchor.quote}</span></div>
-                            )}
-                            <textarea className="w-full h-20 border rounded px-2 py-1 text-sm" value={composerText} onChange={(e) => setComposerText(e.target.value)} placeholder="コメント内容を入力" />
-                            <div className="mt-2 flex justify-end gap-2">
-                              <button className="text-sm px-2 py-1 border rounded hover:bg-secondary-50" onClick={() => { setComposerOpen(false); setPendingAnchor(null); setComposerText(''); }}>キャンセル</button>
-                              <button className="text-sm px-3 py-1 bg-gray-800 text-white rounded hover:bg-gray-700" onClick={() => sendAnnotation()} disabled={sendingReview}>コメント追加</button>
-                            </div>
-                          </div>
+                      <div className="border border-gray-400 bg-white rounded-md shadow-lg p-2">
+                        <div className="text-xs text-secondary-600 mb-1">コメント対象: <span className="font-mono">{pendingAnchor.anchorId}</span></div>
+                        {pendingAnchor.quote && (
+                          <div className="text-xs text-secondary-700 mb-2"><span className="bg-yellow-100 px-1 py-[2px] rounded">{pendingAnchor.quote}</span></div>
+                        )}
+                        <textarea className="w-full h-20 border rounded px-2 py-1 text-sm" value={composerText} onChange={(e) => setComposerText(e.target.value)} placeholder="コメント内容を入力" />
+                        <div className="mt-2 flex items-center gap-2 text-xs text-secondary-700">
+                          <input id="asInterview" type="checkbox" checked={composerAsInterview} onChange={(e) => setComposerAsInterview(e.target.checked)} />
+                          <label htmlFor="asInterview">面接で聞かれそうなポイントとして投稿</label>
                         </div>
+                        <div className="mt-2 flex justify-end gap-2">
+                          <button className="text-sm px-2 py-1 border rounded hover:bg-secondary-50" onClick={() => { setComposerOpen(false); setPendingAnchor(null); setComposerText(''); }}>キャンセル</button>
+                          <button className="text-sm px-3 py-1 bg-gray-800 text-white rounded hover:bg-gray-700" onClick={() => sendAnnotation()} disabled={sendingReview}>コメント追加</button>
+                        </div>
+                      </div>
+                    </div>
                       )}
                     </div>
                   </div>
