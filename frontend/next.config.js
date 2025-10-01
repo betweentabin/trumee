@@ -62,6 +62,8 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  // Enable source maps in production to get readable stack traces
+  productionBrowserSourceMaps: true,
   // No custom rewrites; serve public assets and app routes directly
   async rewrites() { return []; },
 
