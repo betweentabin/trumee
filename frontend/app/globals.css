@@ -1,7 +1,5 @@
+/* Tailwind v4: import once. Do not mix with @tailwind base/components/utilities */
 @import "tailwindcss";
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
 
 
 :root {
