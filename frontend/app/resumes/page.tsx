@@ -154,13 +154,16 @@ export default function ResumesPage() {
               履歴書を作成・編集して、企業にアピールしましょう
             </p>
           </div>
-          <Link
-            href="/career/create"
-            className="inline-flex items-center btn-outline btn-outline-md"
-          >
-            <FaPlus className="mr-2" />
-            新規作成
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link href="/users/myinfo/paidplans" className="btn-outline btn-outline-md">有料プラン</Link>
+            <Link
+              href="/career/create"
+              className="inline-flex items-center btn-outline btn-outline-md"
+            >
+              <FaPlus className="mr-2" />
+              新規作成
+            </Link>
+          </div>
         </div>
 
         {/* Resume List */}
