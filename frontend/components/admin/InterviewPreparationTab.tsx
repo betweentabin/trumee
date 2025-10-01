@@ -1,5 +1,6 @@
 import MessageBox from "@/components/pure/message-box";
-import React, { useRef } from "react";
+import React from "react";
+import QuestionBrowser from "@/components/interview/QuestionBrowser";
 
 const ADMIN_SENDER_ID = "admin"; // Adjust as needed or pass as prop
 
@@ -40,18 +41,28 @@ const InterviewPreparationTab: React.FC<InterviewPreparationTabProps> = ({
 }) => (
   <div className="flex flex-col md:flex-row h-full w-full bg-white">
     {/* Left: Questions panel */}
-    <div className="w-full md:w-1/3 max-w-full md:max-w-[400px] bg-[#F5F5F5] border-b md:border-b-0 md:border-r border-black p-6 md:p-8 flex-shrink-0">
-      <h2 className="mb-4 text-lg font-bold">質問内容</h2>
-      <div className="flex flex-col gap-4 max-h-[40vh] md:max-h-[calc(100vh-100px)] overflow-y-auto">
-        {interviewQuestions.map((q, idx) => (
-          <div
-            key={idx}
-            className="bg-white border border-gray-300 rounded-lg p-4 text-base"
-          >
-            {q}
+    <div className="w-full md:w-1/3 max-w-full md:max-w-[400px] bg-[#F5F5F5] border-b md:border-b-0 md:border-r border-black p-4 md:p-6 flex-shrink-0">
+      <h2 className="mb-3 text-lg font-bold">質問一覧（送信可）</h2>
+      <QuestionBrowser
+        type="interview"
+        showPersonalize={false}
+        className="bg-transparent shadow-none"
+        onPick={(q) => sendInterviewMessage({ message: q.text, type: 'interview' })}
+        pickLabel="送信"
+      />
+      {interviewQuestions?.length > 0 && (
+        <div className="mt-4">
+          <div className="text-xs text-gray-500 mb-2">固定質問（参考）</div>
+          <div className="flex flex-col gap-2 max-h-[30vh] overflow-y-auto">
+            {interviewQuestions.map((q, idx) => (
+              <div key={idx} className="bg-white border border-gray-300 rounded-lg p-3 text-sm flex justify-between items-center">
+                <span className="pr-2">{q}</span>
+                <button className="btn-outline btn-outline-sm" onClick={() => sendInterviewMessage({ message: q, type: 'interview' })}>送信</button>
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
+        </div>
+      )}
     </div>
 
     {/* Right: Answers and MessageBox */}

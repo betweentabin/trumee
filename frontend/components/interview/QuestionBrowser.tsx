@@ -19,9 +19,12 @@ interface Props {
   initialCategory?: string;
   showPersonalize?: boolean;
   className?: string;
+  // Optional: when provided, renders a send button per item
+  onPick?: (q: QuestionItem) => void;
+  pickLabel?: string;
 }
 
-export default function QuestionBrowser({ type = 'interview', initialCategory, showPersonalize = true, className }: Props) {
+export default function QuestionBrowser({ type = 'interview', initialCategory, showPersonalize = true, className, onPick, pickLabel = '送信' }: Props) {
   const [loading, setLoading] = useState(false);
   const [categories, setCategories] = useState<string[]>([]);
   const [selected, setSelected] = useState<string | null>(initialCategory || null);
@@ -194,12 +197,15 @@ export default function QuestionBrowser({ type = 'interview', initialCategory, s
         <ul className="space-y-3">
           {questions.map((q, i) => (
             <li key={(q.id || '') + i} className="border rounded p-3 flex items-start justify-between gap-3">
-              <div className="text-gray-900">{q.text}</div>
+              <div className="text-gray-900 pr-2">{q.text}</div>
               <div className="shrink-0 flex items-center gap-2">
                 {q.source === 'gemini' && (
                   <span className="px-2 py-1 text-xs rounded bg-blue-100 text-blue-800">AI</span>
                 )}
                 <span className={`px-2 py-1 text-xs rounded ${badgeColor(q.difficulty)}`}>{difficultyLabel(q.difficulty || 'medium')}</span>
+                {onPick && (
+                  <button className="btn-outline btn-outline-sm" onClick={() => onPick(q)}>{pickLabel}</button>
+                )}
               </div>
             </li>
           ))}
