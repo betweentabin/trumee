@@ -30,6 +30,14 @@ export default function ApplyingReasonsPage() {
     if (typeof window === 'undefined') return null as any;
     try { return JSON.parse(localStorage.getItem('current_user_v2') || 'null'); } catch { return null as any; }
   }, []);
+  // Determine viewer id for correct alignment (fallback to route userId)
+  const viewerId = useMemo(() => {
+    try {
+      const mid = me?.id ? String(me.id) : '';
+      const rid = userIdFromPath ? String(userIdFromPath) : '';
+      return mid || rid || '';
+    } catch { return userIdFromPath ? String(userIdFromPath) : ''; }
+  }, [me, userIdFromPath]);
 
   // Thread state
   const [thread, setThread] = useState<ThreadMsg[]>([]);
@@ -315,7 +323,7 @@ export default function ApplyingReasonsPage() {
                       <div className="text-center text-gray-400 text-sm py-10">メッセージはありません。</div>
                     )}
                     {interviewChat.map((m) => {
-                      const isMine = me && String(m.sender) === String(me.id);
+                      const isMine = viewerId ? String(m.sender) === viewerId : false;
                       return (
                         <div key={m.id} className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}>
                           <div className={`max-w-[80%] rounded-md p-3 text-sm ${isMine ? 'bg-[#3A2F1C] text-white' : 'bg-white text-gray-900 border'}`}>
@@ -344,7 +352,7 @@ export default function ApplyingReasonsPage() {
                       <div className="text-center text-gray-400 text-sm py-10">メッセージはありません。</div>
                     )}
                     {thread.filter(m => (m.topic || 'others') === selectedTopic).map((m) => {
-                      const isMine = me && String(m.sender) === String(me.id);
+                      const isMine = viewerId ? String(m.sender) === viewerId : false;
                       return (
                         <div key={m.id} className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}>
                           <div className={`max-w-[80%] rounded-md p-3 text-sm ${isMine ? 'bg-[#3A2F1C] text-white' : 'bg-white text-gray-900 border'}`}>
