@@ -16,9 +16,9 @@ const Footer = () => {
                     <Link href="/contact-us" className="hover:text-primary-600 transition-colors">お問い合わせ</Link>
                 </div>
                 <div className="flex gap-9 mt-6 text-[10px]">
-                <a href="https://docs.google.com/document/d/1_IejVWnELrA8757p9SPh5LtFv1w-Z5DaCxAKjfJp9QA/view" target="_blank" rel="noopener noreferrer" className="hover:text-primary-600 transition-colors">
+                <Link href="/account/personal-info-license" className="hover:text-primary-600 transition-colors">
                     個人情報利用許諾
-                </a> 
+                </Link> 
                 <Link href="/transaction-law" className="hover:text-primary-600 transition-colors">特定商取引法</Link>
                 </div>
             </div>

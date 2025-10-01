@@ -108,7 +108,7 @@ const business_footer_menu_list = [
 const seeker_footer_link_list = [
     {
         label: "個人情報利用許諾",
-        href: "account/personal-info-license",
+        href: "/account/personal-info-license",
     },
     {
         label: "利用規約",

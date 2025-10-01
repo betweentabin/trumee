@@ -266,23 +266,7 @@ export default function ResignationReasonsPage() {
                     <div className="p-4 bg-blue-50 border-l-4 border-blue-500 rounded max-h-96 overflow-y-auto">
                       <pre className="whitespace-pre-wrap text-gray-700 font-sans text-sm">{draft}</pre>
                     </div>
-                    <div className="flex gap-2 justify-end">
-                      <button
-                        onClick={async () => {
-                          try {
-                            const body: any = { subject: "advice", content: JSON.stringify({ type: "resignation_reason_draft", draft }) };
-                            if (userIdFromPath) body.user_id = String(userIdFromPath);
-                            await fetch(buildApiUrl("/advice/messages/"), { method: "POST", headers: getApiHeaders(token), body: JSON.stringify(body) });
-                            toast.success("相談内容を送信しました");
-                          } catch {
-                            toast.error("送信に失敗しました");
-                          }
-                        }}
-                        className="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-800"
-                      >
-                        相談として送信
-                      </button>
-                    </div>
+                    {/* 相談送信ボタンは削除。下部のチャット入力から送信してください。 */}
                   </div>
                 ) : (
                   <div className="h-96 flex items-center justify-center text-gray-400">入力して草案を生成してください</div>

@@ -67,9 +67,9 @@ const Footer = () => {
       <div className="bg-[#3E2E2B] text-white text-xs py-3">
         <div className="max-w-7xl mx-auto px-4 flex flex-wrap justify-between items-center gap-4">
           <div className="flex flex-wrap gap-4">
-            <a href="https://docs.google.com/document/d/1_IejVWnELrA8757p9SPh5LtFv1w-Z5DaCxAKjfJp9QA/view" target="_blank" rel="noopener noreferrer" className="hover:underline">
+            <Link href="/account/personal-info-license" className="hover:underline">
               個人情報利用許諾
-            </a>
+            </Link>
             <Link href="/terms-of-use" className="hover:underline">
               利用規約
             </Link>
