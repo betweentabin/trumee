@@ -78,6 +78,10 @@ urlpatterns = [
     # 共通エンドポイント
     path('user/settings/', views_api_v2.user_settings, name='user-settings'),
 
+    # Jobs: 公開一覧/詳細（未ログイン可）
+    path('jobs/', views_api_v2.jobs_public_list, name='jobs-public-list'),
+    path('jobs/<uuid:job_id>/', views_api_v2.jobs_public_detail, name='jobs-public-detail'),
+
     # Jobs: Cap/Tickets (read-only minimal)
     path('jobs/<uuid:job_id>/cap_plan/', views_api_v2.job_cap_plan_detail, name='job-cap-plan-detail'),
     path('jobs/<uuid:job_id>/tickets/', views_api_v2.job_ticket_ledger_detail, name='job-ticket-ledger-detail'),

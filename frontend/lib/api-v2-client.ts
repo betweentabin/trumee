@@ -457,6 +457,18 @@ class ApiV2Client {
     return res.data as any;
   }
 
+  // Public jobs
+  async getPublicJobs(): Promise<import('@/types/api-v2').JobPosting[]> {
+    const res = await this.client.get('/api/v2/jobs/');
+    const data = res.data as any;
+    return Array.isArray(data) ? data : (data?.results ?? []);
+  }
+
+  async getPublicJob(id: string): Promise<import('@/types/api-v2').JobPosting> {
+    const res = await this.client.get(`/api/v2/jobs/${id}/`);
+    return res.data as any;
+  }
+
   async setJobCapPlan(jobId: string, payload: { cap_percent: 20 | 22 | 25; cap_amount_limit?: number | null }): Promise<import('@/types/api-v2').JobCapPlan> {
     const url = `/api/v2/jobs/${jobId}/cap_plan/set/`;
     const res = await this.client.post(url, payload);

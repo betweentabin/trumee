@@ -2881,6 +2881,37 @@ def company_jobs_list(request):
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 
+# ============================================================================
+# 公開求人一覧/詳細（未ログインでも閲覧可）
+# ============================================================================
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def jobs_public_list(request):
+    """
+    公開求人一覧
+    GET /api/v2/jobs/
+    """
+    qs = JobPosting.objects.filter(is_active=True).order_by('-created_at')
+    data = JobPostingSerializer(qs, many=True).data
+    return Response(data, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def jobs_public_detail(request, job_id):
+    """
+    公開求人詳細
+    GET /api/v2/jobs/<uuid:job_id>/
+    """
+    try:
+        job = JobPosting.objects.get(id=job_id, is_active=True)
+    except JobPosting.DoesNotExist:
+        return Response({'detail': 'not_found'}, status=status.HTTP_404_NOT_FOUND)
+    data = JobPostingSerializer(job).data
+    return Response(data, status=status.HTTP_200_OK)
+
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def company_scouts_list(request):

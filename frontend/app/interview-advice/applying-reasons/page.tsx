@@ -410,7 +410,21 @@ export default function ApplyingReasonsPage() {
               {topics.map((t) => (
                 <div key={t.key} className={`px-4 py-3 border-b last:border-b-0 text-sm flex items-center justify-between ${selectedTopic===t.key ? 'bg-orange-50' : 'hover:bg-gray-50'}`}>
                   <span>{t.label}</span>
-                  <button aria-label="Open chat" onClick={() => setSelectedTopic(t.key)} className="p-1 rounded hover:bg-gray-200">
+                  <button
+                    aria-label="Open chat"
+                    onClick={() => {
+                      setSelectedTopic(t.key);
+                      // Sync editor on right with topic selection
+                      if (t.key === 'applying' || t.key === 'aspiration') {
+                        setEditorMode('applying'); setOpenReason(true); setOpenRetire(false); setOpenFuture(false);
+                      } else if (t.key === 'retire') {
+                        setEditorMode('resignation'); setOpenReason(false); setOpenRetire(true); setOpenFuture(false);
+                      } else if (t.key === 'future') {
+                        setEditorMode('future'); setOpenReason(false); setOpenRetire(false); setOpenFuture(true);
+                      }
+                    }}
+                    className="p-1 rounded hover:bg-gray-200"
+                  >
                     <FaPlus />
                   </button>
                 </div>

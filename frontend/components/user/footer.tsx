@@ -29,6 +29,7 @@ const Footer = () => {
     const resumeQuestionsHref = `${applyingReasonsHref}?focus=resume`;
     const prQuestionsHref = `${applyingReasonsHref}?focus=pr`;
     const prepareHref = uid ? `/users/${uid}/interview-advice/prepare-interview` : '/interview-advice/prepare-interview';
+    const interviewHref = uid ? `/users/${uid}/interview` : '/interview';
 
     return(
         <>
@@ -74,7 +75,7 @@ const Footer = () => {
                                 <li><Link href={resumeQuestionsHref} className="hover:text-[#FF733E] transition-colors">職務経歴書に関する質問</Link></li>
                                 <li><Link href={prQuestionsHref} className="hover:text-[#FF733E] transition-colors">自己PRに関係する質問</Link></li>
                                 <li>
-                                  <GatedLink href={prepareHref} feature="interview_chat">
+                                  <GatedLink href={interviewHref} feature="interview_chat">
                                     面接対策
                                   </GatedLink>
                                 </li>

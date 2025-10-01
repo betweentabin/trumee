@@ -303,6 +303,7 @@ export interface JobTicketLedger extends BaseModel {
 
 export interface JobPosting extends BaseModel {
   company?: UUID;
+  company_name?: string;
   title: string;
   description?: string;
   requirements?: string;
