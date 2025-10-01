@@ -8,7 +8,7 @@ import { useAppSelector } from '@/app/redux/hooks';
 import { FaBriefcase, FaLightbulb, FaPencilAlt, FaStar, FaPlus, FaMinus } from 'react-icons/fa';
 import { buildApiUrl, getApiHeaders } from '@/config/api';
 import toast from 'react-hot-toast';
-import QuestionBrowser from '@/components/interview/QuestionBrowser';
+// import QuestionBrowser from '@/components/interview/QuestionBrowser';
 
 // Local types
 type ThreadMsg = { id: string; sender: string; text: string; created_at: string; topic?: string };
@@ -35,6 +35,10 @@ export default function ApplyingReasonsPage() {
   const [thread, setThread] = useState<ThreadMsg[]>([]);
   const [threadInput, setThreadInput] = useState('');
   const endRef = useRef<HTMLDivElement | null>(null);
+  // Interview chat (user ↔ admin)
+  type ChatMsg = { id: string; sender: string; content: string; created_at: string };
+  const [interviewChat, setInterviewChat] = useState<ChatMsg[]>([]);
+  const [interviewInput, setInterviewInput] = useState('');
   // Chat topic selection
   const topics = [
     { key: 'applying', label: '転職理由(志望理由)' },
@@ -74,6 +78,11 @@ export default function ApplyingReasonsPage() {
     if (focus === 'resume') setSelectedTopic('resume');
     else if (focus === 'pr') setSelectedTopic('interview');
   }, [searchParams]);
+
+  // When entering 面接対策タブ, load chat messages
+  useEffect(() => {
+    if (selectedTopic === 'interview') loadInterviewChat();
+  }, [selectedTopic]);
 
   const handleGenerate = async () => {
     if (!companyName || !position) {
@@ -184,6 +193,39 @@ export default function ApplyingReasonsPage() {
     }
   };
 
+  // Interview chat helpers (subject='interview')
+  const parseInterviewContent = (c: any) => {
+    if (!c) return '';
+    try { const obj = JSON.parse(c); if (obj && typeof obj === 'object') return obj.message || String(c); } catch {}
+    return String(c);
+  };
+  const loadInterviewChat = async () => {
+    try {
+      const base = `${buildApiUrl('/advice/messages/')}?subject=interview`;
+      const url = userIdFromPath ? `${base}&user_id=${encodeURIComponent(String(userIdFromPath))}` : base;
+      const res = await fetch(url, { headers: getApiHeaders(token) });
+      if (!res.ok) return;
+      const data = await res.json();
+      const mapped: ChatMsg[] = (data || []).map((m: any) => ({ id: String(m.id), sender: String(m.sender), content: parseInterviewContent(m.content), created_at: m.created_at }));
+      setInterviewChat(mapped);
+      try {
+        await fetch(buildApiUrl('/advice/mark_read/'), { method: 'POST', headers: getApiHeaders(token), body: JSON.stringify({ subject: 'interview' }) });
+      } catch {}
+    } catch {}
+  };
+  const sendInterviewChat = async () => {
+    const text = interviewInput.trim();
+    if (!text) return;
+    try {
+      const body: any = { subject: 'interview', content: JSON.stringify({ message: text }) };
+      if (userIdFromPath) body.user_id = String(userIdFromPath);
+      const res = await fetch(buildApiUrl('/advice/messages/'), { method: 'POST', headers: getApiHeaders(token), body: JSON.stringify(body) });
+      if (!res.ok) return;
+      setInterviewInput('');
+      await loadInterviewChat();
+    } catch {}
+  };
+
   const sendThreadMessage = async () => {
     const text = threadInput.trim();
     if (!text || !selectedTopic) return;
@@ -266,10 +308,35 @@ export default function ApplyingReasonsPage() {
               </div>
 
               {selectedTopic === 'interview' ? (
-                <div className="p-4 space-y-6">
-                  {/* 面接対策: カテゴリ別質問のみをインライン表示 */}
-                  <QuestionBrowser type="interview" showPersonalize />
-                </div>
+                <>
+                  {/* 面接対策チャット（管理画面と同じ subject='interview'） */}
+                  <div className="h-[300px] overflow-y-auto p-4 space-y-2 bg-gray-50">
+                    {interviewChat.length === 0 && (
+                      <div className="text-center text-gray-400 text-sm py-10">メッセージはありません。</div>
+                    )}
+                    {interviewChat.map((m) => {
+                      const isMine = me && String(m.sender) === String(me.id);
+                      return (
+                        <div key={m.id} className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}>
+                          <div className={`max-w-[80%] rounded-md p-3 text-sm ${isMine ? 'bg-[#3A2F1C] text-white' : 'bg-white text-gray-900 border'}`}>
+                            <div>{m.content}</div>
+                            <div className="text-[10px] opacity-70 mt-1">{new Date(m.created_at).toLocaleString('ja-JP')}</div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                    <div ref={endRef} />
+                  </div>
+                  <div className="p-4 border-t flex gap-2">
+                    <input
+                      value={interviewInput}
+                      onChange={(e) => setInterviewInput(e.target.value)}
+                      placeholder="入力してください。"
+                      className="flex-1 rounded-md border px-3 py-2"
+                    />
+                    <button onClick={sendInterviewChat} className="rounded-md bg-[#FF733E] text-white px-4 py-2">送信</button>
+                  </div>
+                </>
               ) : (
                 <>
                   <div className="h-[300px] overflow-y-auto p-4 space-y-2 bg-gray-50">
