@@ -9,6 +9,7 @@ export type ResumePreviewData = {
   selfPR?: string;
   skills?: string[];
   education?: Array<{ school?: string; degree?: string; field?: string; graduationDate?: string }>;
+  changedAnchors?: string[];
 };
 
 export const emptyResumePreview: ResumePreviewData = {
@@ -161,7 +162,49 @@ const buildPreviewFromExperiences = (experiences: any[]) => {
     };
   });
 
-  return { jobhistoryList, formValues };
+  return {
+      userName: resolvedUserName || undefined,
+      jobhistoryList,
+      formValues,
+      resumeId: resume?.id ? String(resume.id) : undefined,
+      jobSummary: toStringSafe(resume?.extra_data?.jobSummary) || undefined,
+      selfPR: toStringSafe(resume?.self_pr) || undefined,
+      skills: (toStringSafe(resume?.skills) || '')
+        .split(/
+|,/)?.map((s) => s.trim())
+        .filter(Boolean),
+      education: Array.isArray(resume?.extra_data?.education) ? resume.extra_data.education : undefined,
+      changedAnchors: (() => {
+        try {
+          const baseline = resume?.extra_data?.baseline || {};
+          const changed: string[] = [];
+          const baseJobSummary = String(baseline?.jobSummary || '');
+          const curJobSummary = String(resume?.extra_data?.jobSummary || '');
+          if (baseJobSummary !== curJobSummary) changed.push('job_summary');
+          const baseSelfPr = String(baseline?.self_pr || '');
+          const curSelfPr = String(resume?.self_pr || '');
+          if (baseSelfPr !== curSelfPr) changed.push('self_pr');
+          const baseJobs = Array.isArray(baseline?.workExperiences) ? baseline.workExperiences : [];
+          const curJobs = Array.isArray(resume?.extra_data?.workExperiences) ? resume.extra_data.workExperiences : [];
+          baseJobs.forEach((bj: any, i: number) => {
+            const cur = curJobs[i] || {};
+            const curDesc = String(cur?.description || '');
+            const baseDesc = String(bj?.description || '');
+            if (curDesc !== baseDesc) changed.push(`work_content-job${i + 1}`);
+          });
+          return changed;
+        } catch {
+          return [];
+        }
+      })(),
+    };
+  } catch (err) {
+    console.warn('Failed to load resume preview data', err);
+    return {
+      ...emptyResumePreview,
+      userName,
+    };
+  }
 };
 
 export const fetchResumePreview = async ({ userId, token, forAdmin, forOwner }: FetchResumePreviewParams): Promise<ResumePreviewData> => {

@@ -19,7 +19,7 @@ const Footer = () => {
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center">
           <div className="mb-6 sm:mb-0 flex items-center">
             <Link href="/">
-              <img src="/logo/logo_top.png" alt="Xrosspoint" className="h-6 mr-2 cursor-pointer" />
+              <img src="/logo/logo_mix.png" alt="TruMee" className="h-6 mr-2 cursor-pointer" />
             </Link>
           </div>
 
