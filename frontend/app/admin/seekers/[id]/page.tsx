@@ -686,19 +686,6 @@ export default function AdminSeekerDetailPage() {
                         } catch {}
                       }}
                     >
-                      {(() => {
-                        // Fallback: if API didn't provide changedAnchors yet,
-                        // use all unresolved annotation anchors to render as markers
-                        const fromAPI = new Set<string>(
-                          Array.isArray(resumePreview.changedAnchors) ? resumePreview.changedAnchors as string[] : []
-                        );
-                        if (fromAPI.size === 0 && Array.isArray(annotations)) {
-                          annotations.forEach((a: any) => {
-                            if (!a?.is_resolved && a?.anchor_id) fromAPI.add(String(a.anchor_id));
-                          });
-                        }
-                        const changedAnchors = fromAPI;
-                        return (
                       <ResumePreview
                         userName={resumePreview.userName || user?.full_name}
                         jobhistoryList={resumePreview.jobhistoryList}
@@ -709,10 +696,8 @@ export default function AdminSeekerDetailPage() {
                         education={resumePreview.education}
                         annotations={annotations}
                         className="w-full"
-                        changedAnchors={changedAnchors}
+                        changedAnchors={resumePreview.changedAnchors}
                       />
-                        );
-                      })()}
                       <div className="absolute inset-0 pointer-events-none">
                         {reviewMessages.filter(m => m.isAnnotation).map((m) => {
                           const topGuess = m.annotationId && markTops[m.annotationId] !== undefined ? markTops[m.annotationId] : (m.anchor?.top || 0);
