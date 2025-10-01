@@ -26,8 +26,8 @@ export default function AdminSeekerDetailPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'review' | 'interview' | 'advice' | 'member'>('review');
-  type AnchorMeta = { anchorId: string; top: number; quote?: string };
-  type ReviewMsg = { id:string; sender:string; content:string; created_at:string; body?: string; isAnnotation?: boolean; anchor?: AnchorMeta; kind?: 'review' | 'interview' };
+  type AnchorMeta = { anchorId: string; top: number; quote?: string; resumeId?: string; startOffset?: number; endOffset?: number };
+  type ReviewMsg = { id:string; sender:string; content:string; created_at:string; body?: string; isAnnotation?: boolean; anchor?: AnchorMeta; kind?: 'review' | 'interview'; annotationId?: string; parentId?: string | null };
   const [reviewMessages, setReviewMessages] = useState<ReviewMsg[]>([]);
   const [reviewInput, setReviewInput] = useState('');
   const [adviceMessages, setAdviceMessages] = useState<any[]>([]);
