@@ -61,6 +61,7 @@ export default function AdminSeekerDetailPage() {
   const [didAutoSelectThread, setDidAutoSelectThread] = useState(false);
   const [threadReplyInput, setThreadReplyInput] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'unresolved' | 'resolved'>('all');
+  const [deleteMode, setDeleteMode] = useState(false);
 
   const token = useMemo(() => {
     if (typeof window === 'undefined') return '';
@@ -586,8 +587,10 @@ export default function AdminSeekerDetailPage() {
       // reset selection if current filter points to deleted one
       setAnnotationFilter((f) => (String(f) === String(annotationId) ? '' : f));
       setActiveThread((t) => (t ? t : null));
+      // refresh flat list so 削除直後の一覧からも該当スレッドが消える
+      try { await loadReviewMessages(); } catch {}
     } catch {}
-  }, [token, id, resumePreview?.resumeId]);
+  }, [token, id, resumePreview?.resumeId, loadReviewMessages]);
 
   const handlePreviewMouseUp = () => {
     const container = previewWrapRef.current;
@@ -861,7 +864,7 @@ export default function AdminSeekerDetailPage() {
                     職務経歴書が登録されていません。
                   </div>
                 ) : (
-                  <div className="max-h-[600px] overflow-y-auto" data-admin-annot="no-underline">
+                  <div className="max-h-[600px] overflow-y-auto" data-admin-annot="no-underline" data-admin-annot-delete={deleteMode ? 'on' : 'off'}>
                     <div
                       className="relative md:pr-[260px] w-full"
                       ref={previewWrapRef}
@@ -875,9 +878,19 @@ export default function AdminSeekerDetailPage() {
                               const ref = el.getAttribute('data-annot-ref') || '';
                               if (ref.startsWith('ann-')) {
                                 const id = ref.replace('ann-', '');
-                                setAnnotationFilter(String(id));
-                                setActiveThread(null);
-                                setDidAutoSelectThread(false);
+                                if (deleteMode) {
+                                  const idx = annotations.findIndex((a: any) => String(a.id) === String(id));
+                                  const label = idx >= 0 ? `#${idx + 1} (${annotations[idx]?.anchor_id || ''})` : `#?`;
+                                  const ok = window.confirm(`${label} の下線と紐づくスレッドを削除しますか？この操作は元に戻せません。`);
+                                  if (ok) {
+                                    deleteAnnotation(id);
+                                    return;
+                                  }
+                                } else {
+                                  setAnnotationFilter(String(id));
+                                  setActiveThread(null);
+                                  setDidAutoSelectThread(false);
+                                }
                                 try {
                                   const panel = document.querySelector('#admin-thread-toolbar');
                                   panel && (panel as HTMLElement).scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -906,6 +919,10 @@ export default function AdminSeekerDetailPage() {
                       <style jsx>{`
                         [data-admin-annot="no-underline"] [data-annot-scope="resume-preview"] mark {
                           box-shadow: none !important;
+                        }
+                        [data-admin-annot-delete="on"] [data-annot-scope="resume-preview"] mark {
+                          outline: 2px dashed rgba(220,38,38,0.6);
+                          cursor: pointer;
                         }
                       `}</style>
                       <div className="hidden md:block absolute inset-0 pointer-events-none">
@@ -1030,6 +1047,12 @@ export default function AdminSeekerDetailPage() {
                     <option value="">注釈: すべて</option>
                     {annotations.map((a: any, i: number) => (<option key={String(a.id)} value={String(a.id)}>#{i+1} - {a.anchor_id}</option>))}
                   </select>
+                  <button
+                    type="button"
+                    onClick={() => setDeleteMode((v) => !v)}
+                    className={`rounded border px-2 py-1 text-xs ${deleteMode ? 'bg-red-600 text-white border-red-700' : 'bg-white text-red-700 border-red-300'}`}
+                    title="下線削除モード（ONでプレビューの下線をクリックすると削除）"
+                  >{deleteMode ? '下線削除: ON' : '下線削除: OFF'}</button>
                   <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as any)} className="rounded border px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-gray-700 ring-inset">
                     <option value="all">全件</option>
                     <option value="unresolved">未解決のみ</option>
