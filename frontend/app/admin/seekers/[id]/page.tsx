@@ -856,6 +856,12 @@ export default function AdminSeekerDetailPage() {
                       <option key={String(r.id)} value={String(r.id)}>#{i + 1} {r?.extra_data?.title || r?.desired_job || '職務経歴書'}</option>
                     ))}
                   </select>
+                  <button
+                    type="button"
+                    onClick={() => setDeleteMode((v) => !v)}
+                    className={`rounded border px-2 py-1 text-xs ${deleteMode ? 'bg-red-600 text-white border-red-700' : 'bg-white text-red-700 border-red-300'}`}
+                    title="下線削除モード（ONでプレビューの下線をクリックすると削除）"
+                  >{deleteMode ? '下線削除: ON' : '下線削除: OFF'}</button>
                 </div>
               </div>
                 {resumeError && <div className="text-sm text-red-600 mb-3">{resumeError}</div>}
@@ -1047,12 +1053,6 @@ export default function AdminSeekerDetailPage() {
                     <option value="">注釈: すべて</option>
                     {annotations.map((a: any, i: number) => (<option key={String(a.id)} value={String(a.id)}>#{i+1} - {a.anchor_id}</option>))}
                   </select>
-                  <button
-                    type="button"
-                    onClick={() => setDeleteMode((v) => !v)}
-                    className={`rounded border px-2 py-1 text-xs ${deleteMode ? 'bg-red-600 text-white border-red-700' : 'bg-white text-red-700 border-red-300'}`}
-                    title="下線削除モード（ONでプレビューの下線をクリックすると削除）"
-                  >{deleteMode ? '下線削除: ON' : '下線削除: OFF'}</button>
                   <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as any)} className="rounded border px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-gray-700 ring-inset">
                     <option value="all">全件</option>
                     <option value="unresolved">未解決のみ</option>

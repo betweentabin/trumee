@@ -108,9 +108,40 @@ export default function ResumeAdvicePage() {
     setMarkTops(map);
   }, [annotations, resumePreview]);
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
+  // When viewing a specific thread, also keep the view scrolled to the latest
+  useEffect(() => {
+    if (!activeThread) return;
+    endRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [activeThread, threadMessages]);
 
   // Form for sending message
   const { handleSubmit, reset, register } = useForm<{ message: string }>({ defaultValues: { message: "" } });
+
+  // Helper: fetch messages for a specific thread (parent message id)
+  const fetchThreadMessages = useCallback(async (tid: string) => {
+    const userId = params?.userId ? String(params.userId) : "";
+    const mqs = new URLSearchParams();
+    mqs.set('subject', 'resume_advice');
+    if (userId) mqs.set('user_id', userId);
+    mqs.set('parent_id', tid);
+    try {
+      const mr = await fetch(buildApiUrl(`/advice/messages/?${mqs.toString()}`), { headers: getApiHeaders(token) });
+      if (mr.ok) {
+        const data = await mr.json();
+        const mapped: Msg[] = (data || []).map((m: any) => ({
+          id: String(m.id),
+          sender: String(m.sender),
+          content: m.content,
+          body: m.content,
+          created_at: m.created_at,
+          isAnnotation: !!m.annotation,
+          annotationId: m.annotation ? String(m.annotation) : undefined,
+          anchor: undefined,
+        }));
+        setThreadMessages((prev) => ({ ...prev, [tid]: mapped }));
+      }
+    } catch {}
+  }, [params?.userId, token]);
 
   const onSend = async (data: { message: string }) => {
     const text = (data?.message || "").trim();
@@ -122,7 +153,15 @@ export default function ResumeAdvicePage() {
       // If a thread is active, post as a reply to that thread
       if (activeThread) {
         body.parent_id = activeThread;
-        if (annotationFilter) body.annotation_id = annotationFilter;
+        // Prefer current annotation filter; fall back to thread meta
+        let annIdForReply = annotationFilter;
+        if (!annIdForReply) {
+          try {
+            const tm = (threads || []).find((t: any) => String(t?.thread_id || '') === String(activeThread));
+            if (tm?.annotation?.id) annIdForReply = String(tm.annotation.id);
+          } catch {}
+        }
+        if (annIdForReply) body.annotation_id = annIdForReply;
       }
       const res = await fetch(buildApiUrl("/advice/messages/"), {
         method: "POST",
@@ -131,7 +170,12 @@ export default function ResumeAdvicePage() {
       });
       if (!res.ok) return;
       reset();
-      await loadMessages();
+      // Refresh just the active thread if replying within one; otherwise refresh the flat list
+      if (activeThread) {
+        await fetchThreadMessages(activeThread);
+      } else {
+        await loadMessages();
+      }
     } finally {
       setSending(false);
     }
