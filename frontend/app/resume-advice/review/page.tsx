@@ -78,6 +78,7 @@ export default function ResumeReviewPage() {
   const [split, setSplit] = useState<'leftWide' | 'balanced' | 'rightWide'>('balanced');
   const [editSelfPr, setEditSelfPr] = useState('');
   const [editWorkDesc, setEditWorkDesc] = useState<string[]>([]); // mirrors extra_data.workExperiences[].description
+  const [editAchievements, setEditAchievements] = useState<string[]>([]); // mirrors extra_data.workExperiences[].achievements (as multiline string)
   const [editJobSummary, setEditJobSummary] = useState('');
   const [initialBaselineEnsured, setInitialBaselineEnsured] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
@@ -430,6 +431,8 @@ export default function ResumeReviewPage() {
 
       const desc = (Array.isArray(currentWorkExperiences) ? currentWorkExperiences : []).map((w: any) => String(w?.description || ''));
       setEditWorkDesc(desc);
+      const achStr = (Array.isArray(currentWorkExperiences) ? currentWorkExperiences : []).map((w: any) => Array.isArray(w?.achievements) ? (w.achievements as any[]).map((s) => String(s)).join('\n') : String(w?.achievements || ''));
+      setEditAchievements(achStr);
 
       const curJobSummary = String((extra as any)?.jobSummary || '');
       const baseJobSummary = typeof (baseline as any)?.jobSummary === 'string' ? String((baseline as any).jobSummary || '') : '';
@@ -452,8 +455,15 @@ export default function ResumeReviewPage() {
         const values = overridePreview.formValues || {};
         const d = keys.map((k: string) => String(values?.[k]?.work_content || ''));
         setEditWorkDesc(d);
+        const a = keys.map((k: string) => {
+          const v = values?.[k]?.achievements as any;
+          if (Array.isArray(v)) return (v as any[]).map((s) => String(s)).join('\n');
+          return String(v || '');
+        });
+        setEditAchievements(a);
       } catch {
         setEditWorkDesc([]);
+        setEditAchievements([]);
       }
       const js = String(overridePreview.jobSummary || '') || pr;
       setEditJobSummary(js);
@@ -462,12 +472,15 @@ export default function ResumeReviewPage() {
   }, [mode, selected, currentWorkExperiences, overridePreview]);
 
   // Lightweight validation for edit fields
-  const limits = { selfPr: 4000, jobSummary: 1200, workDesc: 4000 } as const;
+  const limits = { selfPr: 4000, jobSummary: 1200, workDesc: 4000, achievements: 2000 } as const;
   const validateEdit = (): string | null => {
     if (editSelfPr.length > limits.selfPr) return `自己PRは${limits.selfPr}文字以内にしてください`;
     if (editJobSummary.length > limits.jobSummary) return `職務要約は${limits.jobSummary}文字以内にしてください`;
     for (let i = 0; i < editWorkDesc.length; i++) {
       if ((editWorkDesc[i] || '').length > limits.workDesc) return `職務内容(${i + 1})は${limits.workDesc}文字以内にしてください`;
+    }
+    for (let i = 0; i < editAchievements.length; i++) {
+      if ((editAchievements[i] || '').length > limits.achievements) return `実績(${i + 1})は${limits.achievements}文字以内にしてください`;
     }
     return null;
   };
@@ -515,7 +528,15 @@ export default function ResumeReviewPage() {
     setLoading(true);
     try {
       const extra = selected?.extra_data || {};
-      const workExperiences = (Array.isArray(currentWorkExperiences) ? currentWorkExperiences : []).map((w: any, i: number) => ({ ...w, description: editWorkDesc[i] ?? w.description }));
+      const workExperiences = (Array.isArray(currentWorkExperiences) ? currentWorkExperiences : []).map((w: any, i: number) => ({
+        ...w,
+        description: editWorkDesc[i] ?? w.description,
+        achievements: (() => {
+          const raw = String(editAchievements[i] ?? '');
+          const list = raw.split(/\r?\n/).map((s) => s.trim()).filter(Boolean);
+          return list;
+        })(),
+      }));
       const payload: any = {
         self_pr: editSelfPr,
         extra_data: { ...(extra || {}), workExperiences, jobSummary: editJobSummary },
@@ -565,6 +586,8 @@ export default function ResumeReviewPage() {
         setEditSelfPr(baseline.self_pr || '');
         const desc = (Array.isArray(baseline.workExperiences) ? baseline.workExperiences : []).map((w: any) => String(w?.description || ''));
         setEditWorkDesc(desc);
+        const achStr = (Array.isArray(baseline.workExperiences) ? baseline.workExperiences : []).map((w: any) => Array.isArray(w?.achievements) ? (w.achievements as any[]).map((s) => String(s)).join('\n') : String(w?.achievements || ''));
+        setEditAchievements(achStr);
         setEditJobSummary(String(baseline.jobSummary || ''));
       }
     } catch {
@@ -585,7 +608,15 @@ export default function ResumeReviewPage() {
     setLoading(true);
     try {
       const extra = selected?.extra_data || {};
-      const workExperiences = (Array.isArray(currentWorkExperiences) ? currentWorkExperiences : []).map((w: any, i: number) => ({ ...w, description: editWorkDesc[i] ?? w.description }));
+      const workExperiences = (Array.isArray(currentWorkExperiences) ? currentWorkExperiences : []).map((w: any, i: number) => ({
+        ...w,
+        description: editWorkDesc[i] ?? w.description,
+        achievements: (() => {
+          const raw = String(editAchievements[i] ?? '');
+          const list = raw.split(/\r?\n/).map((s) => s.trim()).filter(Boolean);
+          return list;
+        })(),
+      }));
       const baseline = {
         self_pr: editSelfPr,
         workExperiences,
@@ -1664,6 +1695,14 @@ export default function ResumeReviewPage() {
                     placeholder="職務内容を入力"
                   />
                   <div className="text-[11px] text-secondary-500 text-right">{(editWorkDesc[i] || '').length} / {limits.workDesc}</div>
+                  <div className="mt-2 text-xs text-secondary-600 mb-1">実績（箇条書き推奨）</div>
+                  <textarea
+                    value={editAchievements[i] ?? ''}
+                    onChange={(e) => setEditAchievements((prev) => { const next = [...prev]; next[i] = e.target.value; return next; })}
+                    className="w-full min-h-20 rounded border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-600"
+                    placeholder={'例:\n・売上を前年比120%に改善\n・新規顧客開拓を担当'}
+                  />
+                  <div className="text-[11px] text-secondary-500 text-right">{(editAchievements[i] || '').length} / {limits.achievements}</div>
                 </div>
               ))}
               <div>
