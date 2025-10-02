@@ -46,7 +46,6 @@ export default function AdminSeekerDetailPage() {
   const [planSaving, setPlanSaving] = useState(false);
   const [planError, setPlanError] = useState<string | null>(null);
   const [planTierInput, setPlanTierInput] = useState<string>('');
-  const [isPremiumInput, setIsPremiumInput] = useState<boolean>(false);
   const [premiumExpiryInput, setPremiumExpiryInput] = useState<string>('');
   // Annotations + positions
   const [annotations, setAnnotations] = useState<any[]>([]);
@@ -128,7 +127,6 @@ export default function AdminSeekerDetailPage() {
       const u = overview?.user;
       if (u) {
         setPlanTierInput(String(u.plan_tier || ''));
-        setIsPremiumInput(Boolean(u.is_premium));
         setPremiumExpiryInput(u.premium_expiry ? new Date(u.premium_expiry).toISOString().slice(0,16) : '');
       }
     } catch {}
@@ -1065,10 +1063,6 @@ export default function AdminSeekerDetailPage() {
                     </select>
                   </div>
                   <div className="flex items-center gap-3">
-                    <label className="w-28 text-gray-600">is_premium</label>
-                    <input type="checkbox" checked={isPremiumInput} onChange={(e)=>setIsPremiumInput(e.target.checked)} />
-                  </div>
-                  <div className="flex items-center gap-3">
                     <label className="w-28 text-gray-600">premium_expiry</label>
                     <input
                       type="datetime-local"
@@ -1087,7 +1081,7 @@ export default function AdminSeekerDetailPage() {
                       try {
                         setPlanSaving(true);
                         setPlanError(null);
-                        const payload: any = { plan_tier: planTierInput, is_premium: isPremiumInput };
+                        const payload: any = { plan_tier: planTierInput };
                         if (premiumExpiryInput) {
                           const iso = new Date(premiumExpiryInput).toISOString();
                           payload.premium_expiry = iso;
