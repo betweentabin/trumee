@@ -2190,6 +2190,33 @@ def advice_annotations(request):
         selector_meta=data.get('selector_meta') or {},
         created_by=request.user,
     )
+    # If a staff member comments on an anchor, clear its "recently changed" marker
+    try:
+        if request.user.is_staff and ann.anchor_id:
+            extra = resume.extra_data or {}
+            anchors = list(extra.get('recently_changed_anchors') or [])
+            if anchors:
+                target = str(ann.anchor_id)
+                alias = target
+                # Normalize id variants between exp_{i} and job{i+1}
+                if target.startswith('work_content-exp_'):
+                    try:
+                        idx = int(target.split('work_content-exp_')[1])
+                        alias = f'work_content-job{idx + 1}'
+                    except Exception:
+                        alias = target
+                elif target.startswith('work_content-job'):
+                    try:
+                        n = int(target.split('work_content-job')[1])
+                        alias = f'work_content-exp_{max(0, n - 1)}'
+                    except Exception:
+                        alias = target
+                anchors = [a for a in anchors if str(a) not in {target, alias}]
+                extra['recently_changed_anchors'] = anchors
+                resume.extra_data = extra
+                resume.save(update_fields=['extra_data'])
+    except Exception:
+        pass
     return Response(AnnotationSerializer(ann).data, status=status.HTTP_201_CREATED)
 
 

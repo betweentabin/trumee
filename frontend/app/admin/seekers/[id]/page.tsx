@@ -422,7 +422,28 @@ export default function AdminSeekerDetailPage() {
       setComposerText('');
       setComposerAsInterview(false);
       setPendingAnchor(null);
-      if (createdAnn) setAnnotations((prev) => [...prev, createdAnn]);
+      if (createdAnn) {
+        setAnnotations((prev) => [...prev, createdAnn]);
+        // Optimistically remove the anchor from changed markers
+        try {
+          const aid = String(createdAnn.anchor_id || '');
+          const alias = (() => {
+            if (aid.startsWith('work_content-exp_')) {
+              const idx = parseInt(aid.replace('work_content-exp_', ''), 10);
+              return isNaN(idx) ? aid : `work_content-job${idx + 1}`;
+            }
+            if (aid.startsWith('work_content-job')) {
+              const n = parseInt(aid.replace('work_content-job', ''), 10);
+              return isNaN(n) ? aid : `work_content-exp_${Math.max(0, n - 1)}`;
+            }
+            return aid;
+          })();
+          setResumePreview((prev) => ({
+            ...prev,
+            changedAnchors: (prev.changedAnchors || []).filter((x) => String(x) !== aid && String(x) !== alias),
+          }));
+        } catch {}
+      }
       await loadReviewMessages();
     } catch (e) {
       setSendError('送信に失敗しました');

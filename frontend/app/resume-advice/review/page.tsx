@@ -504,22 +504,35 @@ export default function ResumeReviewPage() {
         workExperiences,
         jobSummary: editJobSummary,
       };
-      // compute anchors that changed before updating baseline on server
-      const changedAnchors = computeChangedAnchors();
+      // Compute anchors changed in THIS publish (delta vs current resume)
+      const sessionChanged = new Set<string>();
+      try {
+        const curExtra = (selected?.extra_data || {}) as any;
+        const curWE: any[] = Array.isArray(currentWorkExperiences) ? currentWorkExperiences : [];
+        if (String(selected?.self_pr || '') !== String(editSelfPr || '')) sessionChanged.add('self_pr');
+        if (String(curExtra?.jobSummary || '') !== String(editJobSummary || '')) sessionChanged.add('job_summary');
+        for (let i = 0; i < Math.max(curWE.length, editWorkDesc.length); i++) {
+          const before = String((curWE[i]?.description) || '');
+          const after = String((editWorkDesc[i] ?? curWE[i]?.description) || '');
+          if (before !== after) {
+            // Save both id variants for cross-page compatibility
+            sessionChanged.add(`work_content-job${i + 1}`);
+            sessionChanged.add(`work_content-exp_${i}`);
+          }
+        }
+      } catch {}
       const res = await fetchWithTimeout(`${apiUrl}/api/v2/resumes/${encodeURIComponent(rid)}/`, {
         method: 'PATCH',
         headers: { ...getAuthHeaders() },
         body: JSON.stringify({
           self_pr: editSelfPr,
-          // Persist a hint for admin UI to render marker-style highlights
-          // Admin page doesn't know the pre-baseline diff, so store the
-          // anchors we just changed together with a timestamp.
           extra_data: {
             ...(extra || {}),
             workExperiences,
             jobSummary: editJobSummary,
             baseline,
-            recently_changed_anchors: Array.from(changedAnchors || []),
+            // only the anchors changed in this publish
+            recently_changed_anchors: Array.from(sessionChanged),
             recently_changed_at: new Date().toISOString(),
           },
         }),
@@ -533,8 +546,8 @@ export default function ResumeReviewPage() {
             setSelected((prev: any) => ({ ...(prev || {}), ...updated }));
             setFormError(null);
             setError(null);
-            // ユーザー編集で変更されたアンカーをマーカー表示（admin が次にコメントするまで維持）
-            setRecentlyChangedAnchors(changedAnchors);
+            // Show only the anchors changed in this publish
+            setRecentlyChangedAnchors(sessionChanged);
             setLastEditAt(Date.now());
           } else {
             // 取得失敗でもPATCH成功時は成功扱いとし、ユーザーに後で再読込を案内
@@ -545,7 +558,7 @@ export default function ResumeReviewPage() {
           // タイムアウト等でも成功は成功扱い
           setFormError(null);
           setError(null);
-          setRecentlyChangedAnchors(changedAnchors);
+          setRecentlyChangedAnchors(sessionChanged);
           setLastEditAt(Date.now());
         }
       } else {
