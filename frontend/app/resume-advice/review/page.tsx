@@ -367,11 +367,23 @@ export default function ResumeReviewPage() {
   useEffect(() => {
     if (mode !== 'edit' || !selected) return;
     const extra = selected.extra_data || {};
-    const baseline = (extra as any).baseline || { self_pr: selected.self_pr || '', workExperiences: currentWorkExperiences, jobSummary: (extra as any)?.jobSummary || '' };
-    setEditSelfPr(selected.self_pr || '');
-    const desc = (Array.isArray(currentWorkExperiences) ? currentWorkExperiences : []).map((w: any) => String(w?.description || ''));
+    const baseline = (extra as any).baseline || {
+      self_pr: selected.self_pr || '',
+      workExperiences: currentWorkExperiences,
+      jobSummary: (extra as any)?.jobSummary || '',
+    };
+    // Prefer baseline values (if already captured) so users see their last saved draft
+    setEditSelfPr((baseline as any)?.self_pr ?? selected.self_pr ?? '');
+    const baseWE = Array.isArray((baseline as any)?.workExperiences)
+      ? (baseline as any).workExperiences
+      : (Array.isArray(currentWorkExperiences) ? currentWorkExperiences : []);
+    const desc = baseWE.map((w: any) => String(w?.description || ''));
     setEditWorkDesc(desc);
-    setEditJobSummary(String((extra as any)?.jobSummary || ''));
+    const initialJobSummary =
+      typeof (baseline as any)?.jobSummary === 'string'
+        ? (baseline as any).jobSummary
+        : String((extra as any)?.jobSummary || '');
+    setEditJobSummary(initialJobSummary);
     setFormError(null);
   }, [mode, selected, currentWorkExperiences]);
 

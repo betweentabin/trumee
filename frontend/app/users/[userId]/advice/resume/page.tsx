@@ -27,6 +27,11 @@ export default function ResumeAdvicePage() {
   }, [annotations]);
   const previewWrapRef = useRef<HTMLDivElement | null>(null);
   const [markTops, setMarkTops] = useState<Record<string, number>>({});
+  // Thread selection (user view)
+  const [annotationFilter, setAnnotationFilter] = useState<string>('');
+  const [threads, setThreads] = useState<any[]>([]);
+  const [activeThread, setActiveThread] = useState<string | null>(null);
+  const [threadMessages, setThreadMessages] = useState<Record<string, Msg[]>>({});
 
   const params = useParams<{ userId: string }>();
 
@@ -113,10 +118,16 @@ export default function ResumeAdvicePage() {
     try {
       setSending(true);
       const userId = params?.userId ? String(params.userId) : "";
+      const body: any = { subject: "resume_advice", content: text, ...(userId ? { user_id: userId } : {}) };
+      // If a thread is active, post as a reply to that thread
+      if (activeThread) {
+        body.parent_id = activeThread;
+        if (annotationFilter) body.annotation_id = annotationFilter;
+      }
       const res = await fetch(buildApiUrl("/advice/messages/"), {
         method: "POST",
         headers: getApiHeaders(token),
-        body: JSON.stringify({ subject: "resume_advice", content: text, ...(userId ? { user_id: userId } : {}) }),
+        body: JSON.stringify(body),
       });
       if (!res.ok) return;
       reset();
@@ -125,6 +136,48 @@ export default function ResumeAdvicePage() {
       setSending(false);
     }
   };
+
+  // Select representative thread for an annotation and optionally fetch its messages
+  const selectThreadForAnnotation = useCallback(async (annId: string) => {
+    setAnnotationFilter(annId);
+    setActiveThread(null);
+    try {
+      const qs = new URLSearchParams();
+      qs.set('subject', 'resume_advice');
+      qs.set('mode', 'comment');
+      const userId = params?.userId ? String(params.userId) : '';
+      if (userId) qs.set('user_id', userId);
+      qs.set('annotation_id', annId);
+      const t = await fetch(buildApiUrl(`/advice/threads/?${qs.toString()}`), { headers: getApiHeaders(token) });
+      if (!t.ok) return;
+      let list = await t.json();
+      if (!Array.isArray(list)) list = [];
+      list.sort((a: any, b: any) => {
+        const ur = (b.unresolved ? 1 : 0) - (a.unresolved ? 1 : 0);
+        if (ur !== 0) return ur;
+        const tb = new Date(b?.latest_message?.created_at || 0).getTime();
+        const ta = new Date(a?.latest_message?.created_at || 0).getTime();
+        return tb - ta;
+      });
+      setThreads(list);
+      const tid = list[0]?.thread_id ? String(list[0].thread_id) : '';
+      if (!tid) return;
+      setActiveThread(tid);
+      // fetch thread messages
+      try {
+        const mqs = new URLSearchParams();
+        mqs.set('subject', 'resume_advice');
+        if (userId) mqs.set('user_id', userId);
+        mqs.set('parent_id', tid);
+        const mr = await fetch(buildApiUrl(`/advice/messages/?${mqs.toString()}`), { headers: getApiHeaders(token) });
+        if (mr.ok) {
+          const data = await mr.json();
+          const mapped: Msg[] = (data || []).map((m: any) => ({ id: String(m.id), sender: String(m.sender), content: m.content, body: m.content, created_at: m.created_at, isAnnotation: !!m.annotation, annotationId: m.annotation ? String(m.annotation) : undefined, anchor: undefined }));
+          setThreadMessages((prev) => ({ ...prev, [tid]: mapped }));
+        }
+      } catch {}
+    } catch {}
+  }, [params?.userId, token]);
 
   const resolveAnnotation = async (annotationId?: string) => {
     if (!annotationId) return;
