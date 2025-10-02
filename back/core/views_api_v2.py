@@ -2116,7 +2116,10 @@ def advice_messages(request):
     body_data = request.data or {}
     raw_content = body_data.get('content', '')
     if isinstance(raw_content, str):
+        # Some legacy clients send "[object Object]" as a string; treat as empty
         content = raw_content.strip()
+        if content == '[object Object]':
+            content = ''
     else:
         try:
             import json as _json
