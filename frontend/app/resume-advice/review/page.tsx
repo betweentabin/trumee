@@ -783,6 +783,13 @@ export default function ResumeReviewPage() {
   const send = async () => {
     const text = input.trim();
     if (!text) return;
+    // If a thread is active, treat this as a reply to that thread
+    if (activeThread) {
+      setReplyInput(text);
+      await sendReply();
+      setInput('');
+      return;
+    }
     setLoading(true);
     try {
       const body: any = { content: text, subject: 'resume_advice' };
