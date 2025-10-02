@@ -756,6 +756,11 @@ export default function AdminSeekerDetailPage() {
                         {reviewMessages.filter(m => m.isAnnotation).map((m) => {
                           const topGuess = m.annotationId && markTops[m.annotationId] !== undefined ? markTops[m.annotationId] : (m.anchor?.top || 0);
                           const markSelector = m.annotationId ? `[data-annot-ref="ann-${m.annotationId}"]` : '';
+                          // Hide overlays for resolved annotations
+                          if (m.annotationId) {
+                            const ann = annotations.find((a: any) => String(a.id) === String(m.annotationId));
+                            if (ann && ann.is_resolved) return null;
+                          }
                           const colorOf = (id: string) => { const palette = ['#E56B6F','#6C9BD2','#7FB069','#E6B31E','#A77BD1','#E58F6B']; let h=0; for (let i=0;i<id.length;i++) h=(h*31+id.charCodeAt(i))>>>0; return palette[h%palette.length]; };
                           const color = m.annotationId ? colorOf(m.annotationId) : '#E5A6A6';
                           const idx = m.annotationId ? (annotations.findIndex(a => String(a.id) === String(m.annotationId)) + 1) : undefined;
@@ -910,7 +915,25 @@ export default function AdminSeekerDetailPage() {
                   {reviewMessages.length === 0 && (
                     <div className="text-gray-400 text-sm text-center py-8">まだコメントがありません。</div>
                   )}
-                  {reviewMessages.map((m) => {
+                  {(() => {
+                    // Determine the message list to render
+                    let msgs: ReviewMsg[] = [];
+                    if (activeThread && threadMessages[activeThread]) {
+                      msgs = threadMessages[activeThread] as any;
+                    } else if (annotationFilter) {
+                      msgs = reviewMessages.filter((x) => String((x as any).annotationId || '') === String(annotationFilter));
+                    } else {
+                      msgs = reviewMessages;
+                    }
+                    // Apply statusFilter if needed using annotations
+                    const annMap: Record<string, any> = {};
+                    (annotations || []).forEach((a: any) => { annMap[String(a.id)] = a; });
+                    if (statusFilter === 'unresolved') {
+                      msgs = msgs.filter((x: any) => !x.annotationId || !annMap[String(x.annotationId)] || !annMap[String(x.annotationId)].is_resolved);
+                    } else if (statusFilter === 'resolved') {
+                      msgs = msgs.filter((x: any) => x.annotationId && annMap[String(x.annotationId)] && annMap[String(x.annotationId)].is_resolved);
+                    }
+                    return msgs.map((m) => {
                     const isAdmin = currentUser && String(m.sender) === String(currentUser.id);
                     const colorOf = (id: string) => { const palette = ['#E56B6F','#6C9BD2','#7FB069','#E6B31E','#A77BD1','#E58F6B']; let h=0; for (let i=0;i<id.length;i++) h=(h*31+id.charCodeAt(i))>>>0; return palette[h%palette.length]; };
                     const id = (m as any).annotationId as string | undefined;
@@ -942,7 +965,7 @@ export default function AdminSeekerDetailPage() {
                         </div>
                       </div>
                     );
-                  })}
+                  }); })()}
                 </div>
                 {/* message box */}
                 <div className="mt-4">

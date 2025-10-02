@@ -19,6 +19,12 @@ export default function ResumeAdvicePage() {
   // Resume preview states
   const [resumePreview, setResumePreview] = useState<ResumePreviewData>(emptyResumePreview);
   const [annotations, setAnnotations] = useState<any[]>([]);
+  // Quick lookup for resolved state
+  const annMap = useMemo(() => {
+    const m: Record<string, any> = {};
+    (annotations || []).forEach((a: any) => { m[String(a.id)] = a; });
+    return m;
+  }, [annotations]);
   const previewWrapRef = useRef<HTMLDivElement | null>(null);
   const [markTops, setMarkTops] = useState<Record<string, number>>({});
 
@@ -245,6 +251,8 @@ export default function ResumeAdvicePage() {
                 {messages.filter(m => m.isAnnotation).map((m) => {
                   const topGuess = (m as any).annotationId && markTops[(m as any).annotationId] !== undefined ? markTops[(m as any).annotationId] : (m.anchor?.top || 0);
                   const annotationId = (m as any).annotationId as string | undefined;
+                  // Hide overlays for resolved annotations on seeker view
+                  if (annotationId && annMap[annotationId]?.is_resolved) return null;
                   const colorOf = (id: string) => { const palette = ['#E56B6F','#6C9BD2','#7FB069','#E6B31E','#A77BD1','#E58F6B']; let h=0; for (let i=0;i<id.length;i++) h=(h*31+id.charCodeAt(i))>>>0; return palette[h%palette.length]; };
                   const color = annotationId ? colorOf(annotationId) : '#E5A6A6';
                   const idx = annotationId ? (annotations.findIndex(a => String(a.id) === String(annotationId)) + 1) : undefined;
@@ -327,6 +335,8 @@ export default function ResumeAdvicePage() {
                 const isMine = me && String(m.sender) === String(me.id);
                 const colorOf = (id: string) => { const palette = ['#E56B6F','#6C9BD2','#7FB069','#E6B31E','#A77BD1','#E58F6B']; let h=0; for (let i=0;i<id.length;i++) h=(h*31+id.charCodeAt(i))>>>0; return palette[h%palette.length]; };
                 const id = (m as any).annotationId as string | undefined;
+                // Hide messages for resolved annotations by default (seeker view)
+                if (id && annMap[id]?.is_resolved) return null;
                 const color = id ? colorOf(id) : undefined;
                 const idx = id ? (annotations.findIndex(a => String(a.id) === String(id)) + 1) : undefined;
                 return (
