@@ -896,7 +896,10 @@ export default function ResumeReviewPage() {
     setLoading(true);
     try {
       const body: any = { content: text, subject: 'resume_advice' };
-      if (parentId) body.parent_id = parentId; // always tie to the selected thread root
+      if (parentId) {
+        const n = String(parentId).match(/^\d+$/) ? parseInt(String(parentId), 10) : parentId;
+        body.parent_id = n; // always tie to the selected thread root
+      }
       if (annotationIdResolved) body.annotation_id = annotationIdResolved;
       // 管理者のみ user_id を付与（対象ユーザー指定）
       try {
@@ -919,8 +922,36 @@ export default function ResumeReviewPage() {
         }
         return;
       }
+      // Optimistic update: append the created message to this thread view
+      const created = await res.json();
       setReplyInput('');
-      // refresh this thread only
+      try {
+        const uid = getMeId();
+        const mapOne = (m: any): AnnMessage => {
+          const raw = String(m.content || '');
+          let bodyText = raw;
+          try { const obj = JSON.parse(raw); if (obj && typeof obj === 'object') bodyText = obj.message || raw; } catch {}
+          return {
+            id: String(m.id),
+            role: uid && String(m.sender) === String(uid) ? 'seeker' : 'advisor',
+            text: raw,
+            body: bodyText,
+            isAnnotation: !!m.annotation,
+            annotationId: m.annotation ? String(m.annotation) : undefined,
+            parentId: m.parent ? String(m.parent) : null,
+            senderId: m.sender,
+            timestamp: new Date(m.created_at).toLocaleString('ja-JP'),
+          } as AnnMessage;
+        };
+        const newMsg = mapOne(created);
+        setThreadMessages((prev) => {
+          const cur = prev[activeThread] || [];
+          // append only if it belongs to this thread
+          const belongs = !newMsg.parentId || String(newMsg.parentId) === String(activeThread) || String(newMsg.id) === String(activeThread);
+          return { ...prev, [activeThread]: belongs ? [...cur, newMsg] : cur };
+        });
+      } catch {}
+      // refresh this thread only (authoritative)
       setThreadMessages((prev) => ({ ...prev, [activeThread]: undefined as any }));
       // refetch
       const qs = new URLSearchParams();

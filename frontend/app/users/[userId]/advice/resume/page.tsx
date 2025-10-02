@@ -152,7 +152,7 @@ export default function ResumeAdvicePage() {
       const body: any = { subject: "resume_advice", content: text, ...(userId ? { user_id: userId } : {}) };
       // If a thread is active, post as a reply to that thread
       if (activeThread) {
-        body.parent_id = activeThread;
+        body.parent_id = (/^\d+$/.test(String(activeThread)) ? parseInt(String(activeThread), 10) : activeThread);
         // Always attach annotation id if possible
         let annIdForReply = annotationFilter;
         if (!annIdForReply) {
@@ -176,9 +176,23 @@ export default function ResumeAdvicePage() {
         body: JSON.stringify(body),
       });
       if (!res.ok) return;
+      const created = await res.json();
       reset();
       // Refresh just the active thread if replying within one; otherwise refresh the flat list
       if (activeThread) {
+        // Optimistic: append the created message into this thread
+        try {
+          const mapped: Msg = {
+            id: String(created.id),
+            sender: String(created.sender),
+            content: String(created.content || ''),
+            body: String(created.content || ''),
+            created_at: created.created_at,
+            isAnnotation: !!created.annotation,
+            ...(created.annotation ? { annotationId: String(created.annotation) } : {}),
+          } as any;
+          setThreadMessages((prev) => ({ ...prev, [activeThread]: [ ...(prev[activeThread] || []), mapped ] }));
+        } catch {}
         await fetchThreadMessages(activeThread);
       } else {
         await loadMessages();
