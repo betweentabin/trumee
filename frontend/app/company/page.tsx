@@ -464,7 +464,7 @@ export default function Search() {
                     }
                   }}
                 >
-                  {consuming ? '処理中…' : '面接確定（1消費）'}
+                  {consuming ? '処理中…' : '面接確定'}
                 </button>
               </div>
               <div className="mt-3 text-sm text-gray-700">候補日をまとめて提案（任意）</div>
@@ -493,7 +493,7 @@ export default function Search() {
                     }
                   }}
                 >
-                  {proposing ? '送信中…' : '候補日を提案'}
+                  {proposing ? '送信中…' : '候補提案'}
                 </button>
               </div>
             </div>

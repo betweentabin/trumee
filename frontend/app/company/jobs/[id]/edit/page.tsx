@@ -148,7 +148,7 @@ export default function CompanyEditJobPage() {
                       }
                     }}
                   >
-                    {consuming ? '処理中…' : '面接確定（1消費）'}
+                    {consuming ? '処理中…' : '面接確定'}
                   </button>
                 </div>
               </div>

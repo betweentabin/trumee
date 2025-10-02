@@ -9,10 +9,17 @@ async function login(page, email, password) {
   await page.goto(`${BASE}/auth/login`);
   await page.getByLabel('メールアドレス').fill(email);
   await page.getByLabel('パスワード').fill(password);
+  const form = page.locator('form');
   await Promise.all([
     page.waitForLoadState('networkidle'),
-    page.getByRole('button', { name: /ログイン|アカウントにログイン|Login/i }).click(),
-  ]);
+    form.getByRole('button', { name: 'ログイン' }).click(),
+  ]).catch(async () => {
+    // Fallback: click first submit in form
+    await Promise.all([
+      page.waitForLoadState('networkidle'),
+      page.locator('form button[type="submit"]').first().click(),
+    ]);
+  });
 }
 
 async function measureMarks(page) {
@@ -65,4 +72,3 @@ run().catch((e) => {
   console.error(e);
   process.exit(1);
 });
-
