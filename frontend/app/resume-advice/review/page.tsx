@@ -359,24 +359,48 @@ export default function ResumeReviewPage() {
   // モードはユーザー操作を優先（自動で戻さない）
 
   const currentWorkExperiences = useMemo(() => {
+    // 1) Prefer selected.extra_data.workExperiences
     const extra = selected?.extra_data || {};
     const legacy = Array.isArray((extra as any).workExperiences) ? ((extra as any).workExperiences as any[]) : [];
     if (legacy.length > 0) return legacy;
+    // 2) Next, selected.experiences (v2)
     const exps = Array.isArray((selected as any)?.experiences) ? ((selected as any).experiences as any[]) : [];
-    if (!exps.length) return [];
-    // Map v2 experiences into legacy-like shape consumed by editor/preview
-    return exps.map((e: any) => ({
-      company: e?.company || '',
-      position: e?.position || '',
-      business: e?.business || '',
-      capital: e?.capital || '',
-      team_size: e?.team_size || '',
-      description: e?.tasks || e?.description || '',
-      achievements: Array.isArray(e?.achievements) ? e.achievements : (e?.achievements || ''),
-      startDate: e?.period_from || e?.start_date || '',
-      endDate: e?.period_to || e?.end_date || '',
-    }));
-  }, [selected]);
+    if (exps.length > 0) {
+      return exps.map((e: any) => ({
+        company: e?.company || '',
+        position: e?.position || '',
+        business: e?.business || '',
+        capital: e?.capital || '',
+        team_size: e?.team_size || '',
+        description: e?.tasks || e?.description || '',
+        achievements: Array.isArray(e?.achievements) ? e.achievements : (e?.achievements || ''),
+        startDate: e?.period_from || e?.start_date || '',
+        endDate: e?.period_to || e?.end_date || '',
+      }));
+    }
+    // 3) Fallback: build from overridePreview (when detail fetch not yet loaded)
+    if (overridePreview && Array.isArray(overridePreview.jobhistoryList) && overridePreview.jobhistoryList.length > 0) {
+      try {
+        const keys = overridePreview.jobhistoryList;
+        const values = overridePreview.formValues || {};
+        return keys.map((k: string) => {
+          const v = values[k] || {};
+          return {
+            company: v.company || '',
+            position: v.duty || '',
+            business: v.business || '',
+            capital: v.capital || '',
+            team_size: v.people || '',
+            description: v.work_content || '',
+            achievements: Array.isArray(v.achievements) ? v.achievements : (v.achievements || ''),
+            startDate: v.since || '',
+            endDate: v.to || '',
+          } as any;
+        });
+      } catch {}
+    }
+    return [];
+  }, [selected, overridePreview]);
 
   // Helper: compute changed anchors compared with baseline
   const computeChangedAnchors = useMemo(() => {
