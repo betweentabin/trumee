@@ -13,6 +13,8 @@ type AdminSeeker = {
   company_name?: string;
   is_premium?: boolean;
   is_active?: boolean;
+  // 課金プラン（"", starter, standard, premium）
+  plan_tier?: string;
   created_at?: string;
   updated_at?: string;
   first_resume_created_at?: string;
@@ -97,6 +99,21 @@ export default function AdminSeekersPage() {
     fetchSeekers();
   }, [fetchSeekers]);
 
+  // 画面復帰/戻る時の自動リフレッシュ
+  useEffect(() => {
+    const onFocus = () => fetchSeekers();
+    const onVisibility = () => { if (document.visibilityState === 'visible') fetchSeekers(); };
+    const onPopState = () => { setTimeout(() => fetchSeekers(), 0); };
+    window.addEventListener('focus', onFocus);
+    document.addEventListener('visibilitychange', onVisibility);
+    window.addEventListener('popstate', onPopState);
+    return () => {
+      window.removeEventListener('focus', onFocus);
+      document.removeEventListener('visibilitychange', onVisibility);
+      window.removeEventListener('popstate', onPopState);
+    };
+  }, [fetchSeekers]);
+
   const totalPages = useMemo(() => Math.max(1, Math.ceil(data.count / pageSize)), [data.count, pageSize]);
 
   return (
@@ -169,11 +186,23 @@ export default function AdminSeekersPage() {
                       return dt ? new Date(dt).toLocaleDateString('ja-JP') : '—';
                     })()}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      {u.is_premium ? (
-                        <span className="inline-flex items-center rounded-full bg-yellow-100 px-2.5 py-0.5 text-xs font-medium text-yellow-800">プレミアム</span>
-                      ) : (
-                        <span className="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-700">通常</span>
-                      )}
+                      {(() => {
+                        const tier = (u.plan_tier || '').toLowerCase();
+                        if (tier === 'premium') {
+                          return (
+                            <span className="inline-flex items-center rounded-full bg-yellow-100 px-2.5 py-0.5 text-xs font-medium text-yellow-800">プレミアム</span>
+                          );
+                        }
+                        if (tier === 'standard') {
+                          return (
+                            <span className="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800">スタンダード</span>
+                          );
+                        }
+                        // 無契約 or スターター相当
+                        return (
+                          <span className="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-700">通常</span>
+                        );
+                      })()}
                     </td>
                   </tr>
                 ))}

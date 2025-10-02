@@ -217,16 +217,37 @@ export const fetchResumePreview = async ({ userId, token, forAdmin, forOwner }: 
       };
     }
 
-    const sortedByRecency = [...list].sort((a, b) => {
-      const diff = resolveResumeTimestamp(b) - resolveResumeTimestamp(a);
-      if (diff !== 0) return diff;
-      // fall back to keeping active resumes ahead if timestamps match
-      if (a?.is_active && !b?.is_active) return -1;
-      if (!a?.is_active && b?.is_active) return 1;
-      return 0;
-    });
+    // Prefer resumes that are both active and have content, falling back sensibly.
+    const hasContent = (r: any): boolean => {
+      try {
+        const exps = Array.isArray(r?.experiences) ? r.experiences : [];
+        const extraExps = Array.isArray(r?.extra_data?.workExperiences) ? r.extra_data.workExperiences : [];
+        const hasExp = (exps.length + extraExps.length) > 0;
+        const hasText = Boolean((r?.extra_data?.jobSummary || '').trim() || (r?.self_pr || '').trim());
+        return hasExp || hasText;
+      } catch { return false; }
+    };
 
-    const resume = sortedByRecency[0];
+    const sortByRecency = (arr: any[]) =>
+      [...arr].sort((a, b) => {
+        const diff = resolveResumeTimestamp(b) - resolveResumeTimestamp(a);
+        if (diff !== 0) return diff;
+        if (a?.is_active && !b?.is_active) return -1;
+        if (!a?.is_active && b?.is_active) return 1;
+        return 0;
+      });
+
+    const active = list.filter((r: any) => Boolean(r?.is_active));
+    const activeWithContent = active.filter(hasContent);
+    const anyWithContent = list.filter(hasContent);
+
+    const pick = (arr: any[]) => (arr.length ? sortByRecency(arr)[0] : undefined);
+
+    const resume =
+      pick(activeWithContent) ||
+      pick(active) ||
+      pick(anyWithContent) ||
+      pick(list);
     const experiencesFromSerializer = Array.isArray(resume?.experiences) ? resume.experiences : [];
     const extraExperiences = Array.isArray(resume?.extra_data?.workExperiences)
       ? resume.extra_data.workExperiences

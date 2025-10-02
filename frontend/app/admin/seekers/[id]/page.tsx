@@ -706,7 +706,7 @@ export default function AdminSeekerDetailPage() {
                   {resumeLoading && <span className="text-xs text-gray-500">読み込み中...</span>}
                 </div>
                 {resumeError && <div className="text-sm text-red-600 mb-3">{resumeError}</div>}
-                {resumePreview.jobhistoryList.length === 0 ? (
+                {resumePreview.jobhistoryList.length === 0 && !resumePreview.jobSummary && !resumePreview.selfPR ? (
                   <div className="h-[600px] rounded-md border bg-gray-50 p-4 text-gray-500 flex items-center justify-center text-center">
                     職務経歴書が登録されていません。
                   </div>
@@ -1076,17 +1076,19 @@ export default function AdminSeekerDetailPage() {
                   <button
                     className="px-4 py-2 rounded-md bg-gray-800 text-white disabled:opacity-50"
                     disabled={planSaving}
-                    onClick={async ()=>{
-                      if (!id) return;
-                      try {
-                        setPlanSaving(true);
-                        setPlanError(null);
-                        const payload: any = { plan_tier: planTierInput };
-                        if (premiumExpiryInput) {
-                          const iso = new Date(premiumExpiryInput).toISOString();
-                          payload.premium_expiry = iso;
-                        } else {
-                          payload.premium_expiry = '';
+                  onClick={async ()=>{
+                    if (!id) return;
+                    try {
+                      setPlanSaving(true);
+                      setPlanError(null);
+                      const payload: any = { plan_tier: planTierInput };
+                      // 明示的に is_premium を同期（バック側でも自動補完するが、フロントでも一貫させる）
+                      payload.is_premium = (planTierInput === 'standard' || planTierInput === 'premium');
+                      if (premiumExpiryInput) {
+                        const iso = new Date(premiumExpiryInput).toISOString();
+                        payload.premium_expiry = iso;
+                      } else {
+                        payload.premium_expiry = '';
                         }
                         const res = await fetch(buildApiUrl(`/admin/users/${id}/plan/`), {
                           method: 'PATCH',
