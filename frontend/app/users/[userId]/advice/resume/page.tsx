@@ -287,7 +287,6 @@ export default function ResumeAdvicePage() {
                       <div className="px-3 py-2 text-sm text-secondary-800 whitespace-pre-wrap">{m.body || m.content}</div>
                       <div className="px-3 pb-2 text-xs text-primary-700 flex gap-3">
                         <button className="hover:underline">返信</button>
-                        <button className={`hover:underline ${!annotationId ? 'opacity-40 cursor-not-allowed' : ''}`} onClick={(e) => { e.stopPropagation(); resolveAnnotation(annotationId); }} disabled={!annotationId}>解決</button>
                       </div>
                     </div>
                   </div>

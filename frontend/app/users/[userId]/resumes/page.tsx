@@ -150,23 +150,23 @@ export default function UserResumesByIdPage() {
             </Link>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {resumes.map((r) => {
               const title = (r as any)?.extra_data?.title || r.title || r.desired_job || "職務経歴書";
               const skills = r.skills;
               const updated = r.updated_at || r.created_at;
               return (
                 <div key={r.id} className="bg-white rounded-lg shadow hover:shadow-md transition-shadow">
-                  <div className="p-6">
-                    <div className="flex items-start justify-between mb-4">
+                  <div className="p-7 md:p-8">
+                    <div className="flex items-start justify-between mb-5">
                       <div className="min-w-0">
-                        <h3 className="text-lg font-semibold text-gray-900 truncate" title={title}>{title}</h3>
+                        <h3 className="text-xl font-semibold text-gray-900 truncate" title={title}>{title}</h3>
                         {(threadCounts[String(r.id)]?.total || 0) > 0 && (
-                          <div className="mt-1 text-xs">
-                            <span className="inline-flex items-center px-2 py-[2px] rounded-full bg-red-50 text-red-700 border border-red-200">
+                          <div className="mt-2 text-sm">
+                            <span className="inline-flex items-center px-2 py-1 rounded-full bg-red-50 text-red-700 border border-red-200">
                               コメント {threadCounts[String(r.id)]?.total || 0}
                               {(threadCounts[String(r.id)]?.unresolved || 0) > 0 && (
-                                <span className="ml-1 text-[10px] text-red-600">(未解決 {threadCounts[String(r.id)].unresolved})</span>
+                                <span className="ml-1 text-xs text-red-600">(未解決 {threadCounts[String(r.id)].unresolved})</span>
                               )}
                             </span>
                           </div>
@@ -187,42 +187,42 @@ export default function UserResumesByIdPage() {
                         <p className="text-sm text-gray-700 line-clamp-1">{skills}</p>
                       </div>
                     )}
-                    <div className="flex items-center text-xs text-gray-500 mb-4">
-                      <FaClock className="mr-1" /> 更新日: {formatDate(updated)}
+                    <div className="flex items-center text-sm text-gray-500 mb-5">
+                      <FaClock className="mr-2" /> 更新日: {formatDate(updated)}
                     </div>
-                    <div className="flex items-center space-x-2">
+                    <div className="flex items-center gap-3">
                       <Link
                         href={to(`/career/print?id=${r.id}`)}
-                        className="flex-1 inline-flex items-center justify-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                        className="flex-1 inline-flex items-center justify-center px-4 py-3 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
                       >
-                        <FaEye className="mr-1" /> 詳細
+                        <FaEye className="mr-2" /> 詳細
                       </Link>
-                      {/* 添削チャット（絵文字ボタン） */}
+                      {/* 添削チャット（文字ボタン） */}
                       <Link
                         href={to(`/resume-advice/review?resume_id=${r.id}${firstUnresolvedAnn[String(r.id)] ? `&annotation_id=${firstUnresolvedAnn[String(r.id)]}` : ''}`)}
-                        className="inline-flex items-center justify-center px-3 py-2 text-2xl leading-none rounded-md hover:bg-orange-50"
+                        className="flex-1 inline-flex items-center justify-center px-4 py-3 border border-orange-300 text-sm font-medium rounded-md text-orange-700 bg-white hover:bg-orange-50"
                         title="添削チャットを開く"
                         aria-label="添削チャットを開く"
                       >
-                        💬
+                        添削
                       </Link>
                       <Link
                         href={to(`/career/edit/${r.id}`)}
-                        className="flex-1 inline-flex items-center justify-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                        className="flex-1 inline-flex items-center justify-center px-4 py-3 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
                       >
-                        <FaEdit className="mr-1" /> 編集
+                        <FaEdit className="mr-2" /> 編集
                       </Link>
                       {!r.is_active && (
                         <button
                           onClick={() => handleActivate(r.id)}
-                          className="flex-1 inline-flex items-center justify-center px-3 py-2 bg-green-500 text-sm font-medium rounded-md text-white hover:bg-green-600"
+                          className="flex-1 inline-flex items-center justify-center px-4 py-3 bg-green-500 text-sm font-medium rounded-md text-white hover:bg-green-600"
                         >
                           有効化
                         </button>
                       )}
                       <button
                         onClick={() => handleDelete(r.id)}
-                        className="inline-flex items-center justify-center px-3 py-2 text-sm font-medium rounded-md text-red-600 hover:bg-red-50"
+                        className="inline-flex items-center justify-center px-4 py-3 text-sm font-medium rounded-md text-red-600 hover:bg-red-50"
                       >
                         <FaTrash />
                       </button>

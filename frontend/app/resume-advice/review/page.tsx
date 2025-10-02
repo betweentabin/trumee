@@ -1251,7 +1251,7 @@ export default function ResumeReviewPage() {
                           <div className="px-3 py-2 text-sm text-secondary-800 whitespace-pre-wrap">{rest || raw}</div>
                           <div className="px-3 pb-2 text-xs text-primary-700 flex gap-3">
                             <button className="hover:underline" onClick={(e) => { e.stopPropagation(); setActiveThread(String(t.thread_id || '')); setTimeout(() => { const el = document.getElementById('thread-reply-box'); el?.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 0); }}>返信</button>
-                            <button className="hover:underline" onClick={(e) => { e.stopPropagation(); resolveAnnotation(annId); }}>解決</button>
+                            {/* 解決ボタンは非表示に変更 */}
                           </div>
                         </div>
                       </div>
@@ -1342,20 +1342,7 @@ export default function ResumeReviewPage() {
               >
                 全て
               </button>
-              {threadsFiltered.map((t: any, i: number) => {
-                const annId = String(t.annotation?.id || '');
-                const stableIdx = annId ? (annotations.findIndex(a => String(a.id) === annId) + 1) : (i + 1);
-                const tid = String(t.thread_id || '');
-                return (
-                  <button key={tid || i}
-                    onClick={() => setActiveThread(tid)}
-                    className={`text-xs px-2 py-1 rounded border whitespace-nowrap ${String(activeThread) === tid ? 'bg-primary-50 border-primary-400 text-primary-700' : 'bg-white border-secondary-300'}`}
-                    title={(t.annotation?.anchor_id || '')}
-                  >
-                    #{stableIdx} ({t.messages_count}){t.unresolved ? '•' : ''}
-                  </button>
-                );
-              })}
+              {/* ユーザー画面では個別スレッドのクイックボタンを表示しない（注釈選択で自動的に代表スレッドを開く） */}
               {/* Annotation (#) filter */}
               <select
                 value={annotationFilter}

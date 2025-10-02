@@ -925,7 +925,7 @@ export default function AdminSeekerDetailPage() {
                                     }
                                   }}
                                 >返信</button>
-                                <button className={`hover:underline ${!m.annotationId ? 'opacity-40 cursor-not-allowed' : ''}`} onClick={(e) => { e.stopPropagation(); resolveAnnotation(m.annotationId); }} disabled={!m.annotationId}>解決</button>
+                                {/* 解決ボタンは非表示に変更 */}
                                 <button className={`hover:underline text-red-700 ${!m.annotationId ? 'opacity-40 cursor-not-allowed' : ''}`} onClick={(e) => { e.stopPropagation(); deleteAnnotation(m.annotationId); }} disabled={!m.annotationId}>削除</button>
                               </div>
                             </div>

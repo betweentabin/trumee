@@ -185,20 +185,20 @@ export default function ResumesPage() {
             </Link>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {resumes.map((resume) => (
               <div
                 key={resume.id}
                 className="bg-white rounded-lg shadow hover:shadow-md transition-shadow"
               >
-                <div className="p-6">
-                  <div className="flex items-start justify-between mb-4">
-                    <h3 className="text-lg font-semibold text-gray-900">
+                <div className="p-7 md:p-8">
+                  <div className="flex items-start justify-between mb-5">
+                    <h3 className="text-xl font-semibold text-gray-900">
                       {resume.title}
                     </h3>
                     {resume.is_active && (
                       <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">
-                        <FaCheckCircle className="mr-1" />
+                        <FaCheckCircle className="mr-2" />
                         有効
                       </span>
                     )}
@@ -219,37 +219,37 @@ export default function ResumesPage() {
                     </div>
                   )}
 
-                  <div className="flex items-center text-xs text-gray-500 mb-4">
-                    <FaClock className="mr-1" />
+                  <div className="flex items-center text-sm text-gray-500 mb-5">
+                    <FaClock className="mr-2" />
                     更新日: {formatDate(resume.updated_at)}
                   </div>
 
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center gap-3">
                     <Link
                       href={`/resumes/${resume.id}`}
-                      className="flex-1 inline-flex items-center justify-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                      className="flex-1 inline-flex items-center justify-center px-4 py-3 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
                     >
-                      <FaEye className="mr-1" />
+                      <FaEye className="mr-2" />
                       詳細
                     </Link>
                     <Link
                       href={`/career/edit/${resume.id}`}
-                      className="flex-1 inline-flex items-center justify-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                      className="flex-1 inline-flex items-center justify-center px-4 py-3 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
                     >
-                      <FaEdit className="mr-1" />
+                      <FaEdit className="mr-2" />
                       編集
                     </Link>
                     {!resume.is_active && (
                       <button
                         onClick={() => handleActivate(resume.id)}
-                        className="flex-1 inline-flex items-center justify-center px-3 py-2 bg-green-500 text-sm font-medium rounded-md text-white hover:bg-green-600"
+                        className="flex-1 inline-flex items-center justify-center px-4 py-3 bg-green-500 text-sm font-medium rounded-md text-white hover:bg-green-600"
                       >
                         有効化
                       </button>
                     )}
                     <button
                       onClick={() => handleDelete(resume.id)}
-                      className="inline-flex items-center justify-center px-3 py-2 text-sm font-medium rounded-md text-red-600 hover:bg-red-50"
+                      className="inline-flex items-center justify-center px-4 py-3 text-sm font-medium rounded-md text-red-600 hover:bg-red-50"
                     >
                       <FaTrash />
                     </button>
