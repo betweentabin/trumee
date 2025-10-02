@@ -156,7 +156,7 @@ export default function UserResumesByIdPage() {
               const skills = r.skills;
               const updated = r.updated_at || r.created_at;
               return (
-                <div key={r.id} className="bg-white rounded-lg shadow hover:shadow-md transition-shadow">
+                <div key={r.id} className="bg-white rounded-lg shadow hover:shadow-md transition-shadow overflow-hidden">
                   <div className="p-7 md:p-8">
                     <div className="flex items-start justify-between mb-5">
                       <div className="min-w-0">
@@ -190,17 +190,17 @@ export default function UserResumesByIdPage() {
                     <div className="flex items-center text-sm text-gray-500 mb-5">
                       <FaClock className="mr-2" /> 更新日: {formatDate(updated)}
                     </div>
-                    <div className="flex items-center gap-3">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                       <Link
                         href={to(`/career/print?id=${r.id}`)}
-                        className="flex-1 inline-flex items-center justify-center px-4 py-3 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                        className="w-full inline-flex items-center justify-center px-4 py-3 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 whitespace-nowrap"
                       >
                         <FaEye className="mr-2" /> 詳細
                       </Link>
                       {/* 添削チャット（文字ボタン） */}
                       <Link
                         href={to(`/resume-advice/review?resume_id=${r.id}${firstUnresolvedAnn[String(r.id)] ? `&annotation_id=${firstUnresolvedAnn[String(r.id)]}` : ''}`)}
-                        className="flex-1 inline-flex items-center justify-center px-4 py-3 border border-orange-300 text-sm font-medium rounded-md text-orange-700 bg-white hover:bg-orange-50"
+                        className="w-full inline-flex items-center justify-center px-4 py-3 border border-orange-300 text-sm font-medium rounded-md text-orange-700 bg-white hover:bg-orange-50 whitespace-nowrap"
                         title="添削チャットを開く"
                         aria-label="添削チャットを開く"
                       >
@@ -208,21 +208,21 @@ export default function UserResumesByIdPage() {
                       </Link>
                       <Link
                         href={to(`/career/edit/${r.id}`)}
-                        className="flex-1 inline-flex items-center justify-center px-4 py-3 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                        className="w-full inline-flex items-center justify-center px-4 py-3 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 whitespace-nowrap"
                       >
                         <FaEdit className="mr-2" /> 編集
                       </Link>
                       {!r.is_active && (
                         <button
                           onClick={() => handleActivate(r.id)}
-                          className="flex-1 inline-flex items-center justify-center px-4 py-3 bg-green-500 text-sm font-medium rounded-md text-white hover:bg-green-600"
+                          className="w-full inline-flex items-center justify-center px-4 py-3 bg-green-500 text-sm font-medium rounded-md text-white hover:bg-green-600 whitespace-nowrap"
                         >
                           有効化
                         </button>
                       )}
                       <button
                         onClick={() => handleDelete(r.id)}
-                        className="inline-flex items-center justify-center px-4 py-3 text-sm font-medium rounded-md text-red-600 hover:bg-red-50"
+                        className="w-full inline-flex items-center justify-center px-4 py-3 text-sm font-medium rounded-md text-red-600 hover:bg-red-50 whitespace-nowrap"
                       >
                         <FaTrash />
                       </button>

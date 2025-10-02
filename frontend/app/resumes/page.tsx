@@ -189,11 +189,11 @@ export default function ResumesPage() {
             {resumes.map((resume) => (
               <div
                 key={resume.id}
-                className="bg-white rounded-lg shadow hover:shadow-md transition-shadow"
+                className="bg-white rounded-lg shadow hover:shadow-md transition-shadow overflow-hidden"
               >
                 <div className="p-7 md:p-8">
                   <div className="flex items-start justify-between mb-5">
-                    <h3 className="text-xl font-semibold text-gray-900">
+                    <h3 className="text-xl font-semibold text-gray-900 truncate">
                       {resume.title}
                     </h3>
                     {resume.is_active && (
@@ -224,17 +224,17 @@ export default function ResumesPage() {
                     更新日: {formatDate(resume.updated_at)}
                   </div>
 
-                  <div className="flex items-center gap-3">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                     <Link
                       href={`/resumes/${resume.id}`}
-                      className="flex-1 inline-flex items-center justify-center px-4 py-3 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                      className="w-full inline-flex items-center justify-center px-4 py-3 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 whitespace-nowrap"
                     >
                       <FaEye className="mr-2" />
                       詳細
                     </Link>
                     <Link
                       href={`/career/edit/${resume.id}`}
-                      className="flex-1 inline-flex items-center justify-center px-4 py-3 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                      className="w-full inline-flex items-center justify-center px-4 py-3 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 whitespace-nowrap"
                     >
                       <FaEdit className="mr-2" />
                       編集
@@ -242,14 +242,14 @@ export default function ResumesPage() {
                     {!resume.is_active && (
                       <button
                         onClick={() => handleActivate(resume.id)}
-                        className="flex-1 inline-flex items-center justify-center px-4 py-3 bg-green-500 text-sm font-medium rounded-md text-white hover:bg-green-600"
+                        className="w-full inline-flex items-center justify-center px-4 py-3 bg-green-500 text-sm font-medium rounded-md text-white hover:bg-green-600 whitespace-nowrap"
                       >
                         有効化
                       </button>
                     )}
                     <button
                       onClick={() => handleDelete(resume.id)}
-                      className="inline-flex items-center justify-center px-4 py-3 text-sm font-medium rounded-md text-red-600 hover:bg-red-50"
+                      className="w-full inline-flex items-center justify-center px-4 py-3 text-sm font-medium rounded-md text-red-600 hover:bg-red-50 whitespace-nowrap"
                     >
                       <FaTrash />
                     </button>

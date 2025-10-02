@@ -2157,13 +2157,20 @@ def advice_messages(request):
     )
     parent_id = data.get('parent_id')
     if parent_id:
+        pid = str(parent_id)
         try:
-            # Validate UUID to avoid 500 on invalid input
-            uuid.UUID(str(parent_id))
-            parent_msg = Message.objects.get(id=parent_id)
+            # Try UUID parent id
+            uuid.UUID(pid)
+            parent_msg = Message.objects.get(id=pid)
             msg_kwargs['parent'] = parent_msg
         except (Message.DoesNotExist, ValueError):
-            pass
+            # Fallback: integer id
+            try:
+                pid_int = int(pid)
+                parent_msg = Message.objects.get(id=pid_int)
+                msg_kwargs['parent'] = parent_msg
+            except (Message.DoesNotExist, ValueError):
+                pass
     # Create message with safety guard to avoid 500 without details
     try:
         msg = Message.objects.create(**msg_kwargs)

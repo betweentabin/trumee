@@ -1030,7 +1030,11 @@ export default function AdminSeekerDetailPage() {
                     if (activeThread && threadMessages[activeThread]) {
                       msgs = threadMessages[activeThread] as any;
                     } else if (annotationFilter) {
-                      msgs = reviewMessages.filter((x) => String((x as any).annotationId || '') === String(annotationFilter));
+                      // Show messages linked to the selected annotation PLUS plain replies (annotationId absent)
+                      msgs = reviewMessages.filter((x: any) => {
+                        const aid = String(x?.annotationId || '');
+                        return !aid || aid === String(annotationFilter);
+                      });
                     } else {
                       msgs = reviewMessages;
                     }
