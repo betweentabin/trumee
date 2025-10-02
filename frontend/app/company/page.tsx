@@ -36,10 +36,6 @@ export default function Search() {
   // Bulk scout
   const [bulkMsg, setBulkMsg] = useState('');
   const [bulkSending, setBulkSending] = useState(false);
-  const [bulkSlot1, setBulkSlot1] = useState('');
-  const [bulkSlot2, setBulkSlot2] = useState('');
-  const [bulkSlot3, setBulkSlot3] = useState('');
-  const [bulkProposing, setBulkProposing] = useState(false);
   const [jobs, setJobs] = useState<JobPosting[]>([]);
   const [selectedJobId, setSelectedJobId] = useState<string>('');
   const [jobTickets, setJobTickets] = useState<JobTicketLedger | null>(null);
@@ -134,6 +130,9 @@ export default function Search() {
       }
     })();
   }, [selectedJobId]);
+
+  // Seeker ID helper（依存で使うため先に定義）
+  const getSeekerId = useCallback((s: any) => (s?.user || s?.seeker?.id || s?.id), []);
 
   // ページ内の求職者（結果）からセレクト用オプション生成
   const pageSeekerOptions = useMemo(() => {
@@ -251,8 +250,6 @@ export default function Search() {
   const onClearSearch = useCallback(() => {
     reset();
   }, [reset]);
-
-  const getSeekerId = useCallback((s: any) => (s?.user || s?.seeker?.id || s?.id), []);
 
   const onDetail = useCallback(async (_seeker: any) => {
     try {
@@ -781,55 +778,6 @@ export default function Search() {
             }}
           >
             {bulkSending ? '送信中…' : '一括送信'}
-          </button>
-        </div>
-      </div>
-
-      {/* Bulk interview slot proposal (to all seekers on this page) */}
-      <div className="mb-6 bg-white border rounded-lg p-4">
-        <div className="flex items-center justify-between mb-2">
-          <div className="text-sm text-gray-700">候補提案（ページ対象: <span className="font-medium text-gray-900">{results.length}</span> 名）</div>
-          <div className="text-xs text-gray-500">選択中の求人に対して、各候補者へ候補日を一括提案します</div>
-        </div>
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-2 items-start">
-          <select
-            className="w-full border rounded px-3 py-2 text-sm h-10 lg:col-span-1"
-            value={selectedJobId}
-            onChange={(e)=>setSelectedJobId(e.target.value)}
-          >
-            <option value="">求人を選択</option>
-            {(jobs || []).map((j) => (
-              <option key={String(j.id)} value={String(j.id)}>{j.title || String(j.id)}</option>
-            ))}
-          </select>
-          <input className="w-full border rounded px-3 py-2 text-sm h-10" placeholder="候補1（2025-01-15T10:00:00+09:00）" value={bulkSlot1} onChange={(e)=>setBulkSlot1(e.target.value)} />
-          <input className="w-full border rounded px-3 py-2 text-sm h-10" placeholder="候補2（任意）" value={bulkSlot2} onChange={(e)=>setBulkSlot2(e.target.value)} />
-          <input className="w-full border rounded px-3 py-2 text-sm h-10" placeholder="候補3（任意）" value={bulkSlot3} onChange={(e)=>setBulkSlot3(e.target.value)} />
-          <button
-            className={`w-full h-10 px-4 rounded text-white ${bulkProposing ? 'bg-gray-400' : 'bg-blue-600 hover:bg-blue-700'}`}
-            disabled={bulkProposing || !selectedJobId || results.length === 0}
-            onClick={async ()=>{
-              if (!selectedJobId) { toast.error('求人を選択してください'); return; }
-              const vals = [bulkSlot1, bulkSlot2, bulkSlot3].map(s=>s.trim()).filter(Boolean);
-              if (vals.length === 0) { toast.error('候補日を1件以上入力してください'); return; }
-              const ids: string[] = (results || []).map((r:any) => String(r.user || r.id)).filter(Boolean);
-              if (ids.length === 0) { toast.error('送信対象がありません'); return; }
-              setBulkProposing(true);
-              let ok = 0; let fail = 0;
-              const slots = vals.map(v => ({ start: v, end: v }));
-              for (const seekerId of ids) {
-                try {
-                  await apiV2Client.proposeInterviewSlots(selectedJobId, { seeker: seekerId, slots });
-                  ok += 1;
-                } catch {
-                  fail += 1;
-                }
-              }
-              toast.success(`候補提案完了（成功 ${ok} 件 / 失敗 ${fail} 件）`);
-              setBulkProposing(false);
-            }}
-          >
-            {bulkProposing ? '送信中…' : '候補提案'}
           </button>
         </div>
       </div>

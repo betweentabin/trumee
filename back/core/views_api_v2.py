@@ -689,6 +689,7 @@ def admin_user_overview(request, user_id):
             'is_staff': target.is_staff,
             'is_premium': target.is_premium,
             'plan_tier': target.plan_tier,
+            'premium_expiry': getattr(target, 'premium_expiry', None),
             'created_at': target.created_at,
             'date_joined': getattr(target, 'date_joined', None),
             'last_login': last_login,

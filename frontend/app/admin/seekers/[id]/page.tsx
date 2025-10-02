@@ -42,6 +42,12 @@ export default function AdminSeekerDetailPage() {
   const [resumeLoading, setResumeLoading] = useState(false);
   const [resumeError, setResumeError] = useState<string | null>(null);
   const [effectiveRegisteredAt, setEffectiveRegisteredAt] = useState<string | null>(null);
+  // Plan editor (admin)
+  const [planSaving, setPlanSaving] = useState(false);
+  const [planError, setPlanError] = useState<string | null>(null);
+  const [planTierInput, setPlanTierInput] = useState<string>('');
+  const [isPremiumInput, setIsPremiumInput] = useState<boolean>(false);
+  const [premiumExpiryInput, setPremiumExpiryInput] = useState<string>('');
   // Annotations + positions
   const [annotations, setAnnotations] = useState<any[]>([]);
   const [markTops, setMarkTops] = useState<Record<string, number>>({});
@@ -115,6 +121,29 @@ export default function AdminSeekerDetailPage() {
     if (typeof window === 'undefined') return null as any;
     try { return JSON.parse(localStorage.getItem('current_user_v2') || 'null'); } catch { return null as any; }
   }, []);
+
+  // sync plan inputs when overview arrives
+  useEffect(() => {
+    try {
+      const u = overview?.user;
+      if (u) {
+        setPlanTierInput(String(u.plan_tier || ''));
+        setIsPremiumInput(Boolean(u.is_premium));
+        setPremiumExpiryInput(u.premium_expiry ? new Date(u.premium_expiry).toISOString().slice(0,16) : '');
+      }
+    } catch {}
+  }, [overview]);
+
+  const reloadOverview = useCallback(async () => {
+    if (!id) return;
+    try {
+      const resOv = await fetch(buildApiUrl(`/admin/users/${id}/overview/`), { headers: getApiHeaders(token) });
+      if (resOv.ok) {
+        const ov = await resOv.json();
+        setOverview(ov);
+      }
+    } catch {}
+  }, [id, token]);
 
   const loadReviewMessages = useCallback(async () => {
     if (!id) return;
@@ -1019,6 +1048,73 @@ export default function AdminSeekerDetailPage() {
                     <span className="text-gray-500">date_joined</span>
                     <div className="font-medium">{overview?.user?.date_joined ? new Date(overview.user.date_joined).toLocaleDateString() : '—'}</div>
                   </div>
+                </div>
+              </div>
+
+              {/* プラン変更（管理者） */}
+              <div className="rounded-xl border p-6">
+                <div className="text-lg font-semibold mb-4">プラン変更（管理者）</div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                  <div className="flex items-center gap-3">
+                    <label className="w-28 text-gray-600">plan_tier</label>
+                    <select value={planTierInput} onChange={(e)=>setPlanTierInput(e.target.value)} className="border rounded px-2 py-1">
+                      <option value="">free</option>
+                      <option value="starter">starter</option>
+                      <option value="standard">standard</option>
+                      <option value="premium">premium</option>
+                    </select>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <label className="w-28 text-gray-600">is_premium</label>
+                    <input type="checkbox" checked={isPremiumInput} onChange={(e)=>setIsPremiumInput(e.target.checked)} />
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <label className="w-28 text-gray-600">premium_expiry</label>
+                    <input
+                      type="datetime-local"
+                      value={premiumExpiryInput}
+                      onChange={(e)=>setPremiumExpiryInput(e.target.value)}
+                      className="border rounded px-2 py-1"
+                    />
+                  </div>
+                </div>
+                <div className="mt-4 flex items-center gap-3">
+                  <button
+                    className="px-4 py-2 rounded-md bg-gray-800 text-white disabled:opacity-50"
+                    disabled={planSaving}
+                    onClick={async ()=>{
+                      if (!id) return;
+                      try {
+                        setPlanSaving(true);
+                        setPlanError(null);
+                        const payload: any = { plan_tier: planTierInput, is_premium: isPremiumInput };
+                        if (premiumExpiryInput) {
+                          const iso = new Date(premiumExpiryInput).toISOString();
+                          payload.premium_expiry = iso;
+                        } else {
+                          payload.premium_expiry = '';
+                        }
+                        const res = await fetch(buildApiUrl(`/admin/users/${id}/plan/`), {
+                          method: 'PATCH',
+                          headers: getApiHeaders(token),
+                          body: JSON.stringify(payload),
+                        });
+                        if (!res.ok) {
+                          const t = await res.text();
+                          setPlanError(`更新に失敗しました (${res.status})`);
+                          console.error('plan update failed', res.status, t);
+                          return;
+                        }
+                        toast.success('プランを更新しました');
+                        await reloadOverview();
+                      } catch (e) {
+                        setPlanError('更新に失敗しました');
+                      } finally {
+                        setPlanSaving(false);
+                      }
+                    }}
+                  >{planSaving ? '更新中…' : '更新する'}</button>
+                  {planError && <div className="text-red-600 text-sm">{planError}</div>}
                 </div>
               </div>
 
