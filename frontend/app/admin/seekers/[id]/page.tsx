@@ -316,17 +316,21 @@ export default function AdminSeekerDetailPage() {
           const data = await res.json();
           setThreads(data);
           if (Array.isArray(data) && data.length > 0) {
-            const tid = data[0]?.thread_id ? String(data[0].thread_id) : null;
-            if (tid) {
-              setActiveThread(tid);
-              setDidAutoSelectThread(true);
+            // Preserve current selection if it still exists; otherwise select the first.
+            const exists = activeThread && data.some((t: any) => String(t.thread_id) === String(activeThread));
+            if (!exists) {
+              const tid = data[0]?.thread_id ? String(data[0].thread_id) : null;
+              if (tid) {
+                setActiveThread(tid);
+                setDidAutoSelectThread(true);
+              }
             }
           }
         }
       } catch {}
     };
     run();
-  }, [annotationFilter, id, token]);
+  }, [annotationFilter, id, token, activeThread]);
 
   // Load thread messages on selection
   useEffect(() => {
@@ -510,6 +514,27 @@ export default function AdminSeekerDetailPage() {
       } catch {}
     } catch {}
   }, [token, resumePreview?.resumeId, loadReviewMessages]);
+
+  const deleteAnnotation = useCallback(async (annotationId?: string) => {
+    if (!annotationId) return;
+    try {
+      const res = await fetch(buildApiUrl(`/advice/annotations/${annotationId}/`), { method: 'DELETE', headers: getApiHeaders(token) });
+      if (!res.ok && res.status !== 204) return;
+      // remove from local annotations state
+      setAnnotations((prev) => (Array.isArray(prev) ? prev.filter((a: any) => String(a.id) !== String(annotationId)) : prev));
+      // clear threads (will be re-fetched on next render)
+      try {
+        const qs = new URLSearchParams();
+        qs.set('subject', 'resume_advice'); qs.set('mode', 'comment'); qs.set('user_id', String(id));
+        if (resumePreview?.resumeId) qs.set('resume_id', String(resumePreview?.resumeId));
+        const tr = await fetch(buildApiUrl(`/advice/threads/?${qs.toString()}`), { headers: getApiHeaders(token) });
+        if (tr.ok) setThreads(await tr.json());
+      } catch {}
+      // reset selection if current filter points to deleted one
+      setAnnotationFilter((f) => (String(f) === String(annotationId) ? '' : f));
+      setActiveThread((t) => (t ? t : null));
+    } catch {}
+  }, [token, id, resumePreview?.resumeId]);
 
   const handlePreviewMouseUp = () => {
     const container = previewWrapRef.current;
@@ -901,6 +926,7 @@ export default function AdminSeekerDetailPage() {
                                   }}
                                 >返信</button>
                                 <button className={`hover:underline ${!m.annotationId ? 'opacity-40 cursor-not-allowed' : ''}`} onClick={(e) => { e.stopPropagation(); resolveAnnotation(m.annotationId); }} disabled={!m.annotationId}>解決</button>
+                                <button className={`hover:underline text-red-700 ${!m.annotationId ? 'opacity-40 cursor-not-allowed' : ''}`} onClick={(e) => { e.stopPropagation(); deleteAnnotation(m.annotationId); }} disabled={!m.annotationId}>削除</button>
                               </div>
                             </div>
                           </div>
@@ -983,7 +1009,14 @@ export default function AdminSeekerDetailPage() {
                       const idx = annId ? (annotations.findIndex(a => String(a.id) === annId) + 1) : (i + 1);
                       const tid = String(t.thread_id || '');
                       return (
-                        <button key={tid || i} onClick={() => setActiveThread(tid)} title={t.annotation?.anchor_id || ''} className={`text-xs px-2 py-1 rounded border ${String(activeThread) === tid ? 'bg-gray-100 border-gray-400' : 'bg-white border-gray-300'}`}>#{idx} ({t.messages_count})</button>
+                        <button
+                          key={tid || i}
+                          onClick={() => { setActiveThread(tid); setDidAutoSelectThread(true); }}
+                          title={t.annotation?.anchor_id || ''}
+                          className={`text-xs px-2 py-1 rounded border ${String(activeThread) === tid ? 'bg-gray-100 border-gray-400' : 'bg-white border-gray-300'}`}
+                        >
+                          #{idx} ({t.messages_count})
+                        </button>
                       );
                     })}
                   </div>

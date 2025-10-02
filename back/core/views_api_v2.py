@@ -2401,7 +2401,7 @@ def advice_annotations(request):
     return Response(AnnotationSerializer(ann).data, status=status.HTTP_201_CREATED)
 
 
-@api_view(['PATCH'])
+@api_view(['PATCH', 'DELETE'])
 @permission_classes([IsAuthenticated])
 def advice_annotation_detail(request, annotation_id):
     """注釈の更新（主に解決/再オープン）"""
@@ -2412,6 +2412,37 @@ def advice_annotation_detail(request, annotation_id):
     if not (request.user.is_staff or str(ann.resume.user_id) == str(request.user.id)):
         return Response({'error': 'forbidden'}, status=status.HTTP_403_FORBIDDEN)
 
+    if request.method == 'DELETE':
+        # Delete annotation and let on_delete=SET_NULL detach messages
+        try:
+            # Also clear recently_changed_anchors for this anchor_id
+            try:
+                extra = ann.resume.extra_data or {}
+                anchors = list(extra.get('recently_changed_anchors') or [])
+                if anchors:
+                    target = str(ann.anchor_id)
+                    alias = target
+                    if target.startswith('work_content-exp_'):
+                        try:
+                            idx = int(target.split('work_content-exp_')[1]); alias = f'work_content-job{idx + 1}'
+                        except Exception:
+                            alias = target
+                    elif target.startswith('work_content-job'):
+                        try:
+                            n = int(target.split('work_content-job')[1]); alias = f'work_content-exp_{max(0, n - 1)}'
+                        except Exception:
+                            alias = target
+                    anchors = [a for a in anchors if str(a) not in {target, alias}]
+                    extra['recently_changed_anchors'] = anchors
+                    ann.resume.extra_data = extra
+                    ann.resume.save(update_fields=['extra_data'])
+            except Exception:
+                pass
+            ann.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except Exception as e:
+            return Response({'error': 'delete_failed', 'detail': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    # PATCH
     data = request.data or {}
     if 'is_resolved' in data:
         value = bool(data['is_resolved'])
