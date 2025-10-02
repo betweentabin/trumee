@@ -2066,11 +2066,17 @@ def advice_messages(request):
             ).order_by('created_at')
             # 片方でも不正なUUIDが来た場合に500を避ける
             if parent_id:
+                # Accept UUID or integer IDs (Message.id may be integer in some deployments)
+                pid = str(parent_id)
                 try:
-                    uuid.UUID(str(parent_id))
-                    qs = qs.filter(Q(id=parent_id) | Q(parent_id=parent_id))
+                    uuid.UUID(pid)
+                    qs = qs.filter(Q(id=pid) | Q(parent_id=pid))
                 except Exception:
-                    return Response({'error': 'invalid_parent_id'}, status=status.HTTP_400_BAD_REQUEST)
+                    try:
+                        pid_int = int(pid)
+                        qs = qs.filter(Q(id=pid_int) | Q(parent_id=pid_int))
+                    except Exception:
+                        return Response({'error': 'invalid_parent_id'}, status=status.HTTP_400_BAD_REQUEST)
             if annotation_id:
                 try:
                     uuid.UUID(str(annotation_id))
@@ -2086,11 +2092,16 @@ def advice_messages(request):
             Q(sender__is_staff=True) | Q(receiver__is_staff=True)
         ).filter(subject=SUBJECT).order_by('created_at')
         if parent_id:
+            pid = str(parent_id)
             try:
-                uuid.UUID(str(parent_id))
-                qs = qs.filter(Q(id=parent_id) | Q(parent_id=parent_id))
+                uuid.UUID(pid)
+                qs = qs.filter(Q(id=pid) | Q(parent_id=pid))
             except Exception:
-                return Response({'error': 'invalid_parent_id'}, status=status.HTTP_400_BAD_REQUEST)
+                try:
+                    pid_int = int(pid)
+                    qs = qs.filter(Q(id=pid_int) | Q(parent_id=pid_int))
+                except Exception:
+                    return Response({'error': 'invalid_parent_id'}, status=status.HTTP_400_BAD_REQUEST)
         if annotation_id:
             try:
                 uuid.UUID(str(annotation_id))

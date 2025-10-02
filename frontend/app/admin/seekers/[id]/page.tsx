@@ -328,7 +328,13 @@ export default function AdminSeekerDetailPage() {
         qs.set('user_id', String(id));
         qs.set('parent_id', parentId);
         const res = await fetch(buildApiUrl(`/advice/messages/?${qs.toString()}`), { headers: getApiHeaders(token) });
-        if (!res.ok) return;
+        if (!res.ok) {
+          // Avoid tight retry loop on 400 (e.g., ID format mismatch). Mark as empty so UI can proceed.
+          if (res.status === 400) {
+            setThreadMessages((prev) => ({ ...prev, [parentId]: [] }));
+          }
+          return;
+        }
         const data = await res.json();
         const mapped: ReviewMsg[] = (data || []).map((m: any) => ({
           id: String(m.id), sender: String(m.sender), content: m.content, body: m.content, created_at: m.created_at,
