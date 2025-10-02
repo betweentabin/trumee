@@ -812,22 +812,27 @@ export default function AdminSeekerDetailPage() {
                       setSelectedResumeId(rid);
                       const r = (userResumes || []).find((x: any) => String(x.id) === String(rid));
                       if (r) {
-                        // Build preview from this resume object
+                        // Build preview from this resume object (prefer v2 experiences; fallback to legacy extra_data.workExperiences)
                         const extra = r?.extra_data || {};
-                        const jobs = Array.isArray(extra.workExperiences) ? extra.workExperiences : [];
+                        const exps = Array.isArray((r as any).experiences) ? (r as any).experiences : [];
+                        const legacy = Array.isArray((extra as any).workExperiences) ? (extra as any).workExperiences : [];
+                        const jobs = (exps.length > 0 ? exps : legacy) as any[];
                         const jobhistoryList = jobs.map((_: any, i: number) => `job${i + 1}`);
                         const toYM = (v?: string) => (v ? String(v).replace(/-/g, '/').slice(0, 7) : '');
                         const formValues: any = {};
                         jobs.forEach((e: any, i: number) => {
+                          const since = e?.period_from ? toYM(e.period_from) : toYM(e?.startDate);
+                          const isCurrent = typeof e?.is_current === 'boolean' ? e.is_current : false;
+                          const to = e?.period_to ? toYM(e.period_to) : toYM(e?.endDate);
                           formValues[`job${i + 1}`] = {
-                            company: e.company,
-                            capital: '',
-                            work_content: e.description,
-                            since: toYM(e.startDate),
-                            to: toYM(e.endDate),
-                            people: '',
-                            duty: e.position,
-                            business: e.business,
+                            company: e?.company,
+                            capital: e?.capital || '',
+                            work_content: e?.tasks || e?.work_content || e?.description || '',
+                            since,
+                            to: isCurrent && !to ? '現在' : to,
+                            people: e?.team_size || e?.people || '',
+                            duty: e?.position || e?.duty || '',
+                            business: e?.business,
                           };
                         });
                         setResumePreview({

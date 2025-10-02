@@ -245,20 +245,27 @@ export default function ResumeReviewPage() {
     return (resume: any) => {
       if (!resume) return { userName: '', jobhistoryList: [], formValues: {} } as any;
       const extra = resume?.extra_data || {};
-      const jobs = Array.isArray(extra.workExperiences) ? extra.workExperiences : [];
+      // Prefer v2 serializer experiences; fallback to legacy extra_data.workExperiences
+      const exps = Array.isArray(resume?.experiences) ? resume.experiences : [];
+      const legacy = Array.isArray(extra?.workExperiences) ? extra.workExperiences : [];
+      const jobs = (exps.length > 0 ? exps : legacy) as any[];
       const jobhistoryList = jobs.map((_: any, i: number) => `job${i + 1}`);
       const formValues: any = {};
       const toYM = (v?: string) => (v ? String(v).replace(/-/g, '/').slice(0, 7) : '');
       jobs.forEach((e: any, i: number) => {
+        // Map fields for both shapes
+        const since = e?.period_from ? toYM(e.period_from) : toYM(e?.startDate);
+        const isCurrent = typeof e?.is_current === 'boolean' ? e.is_current : false;
+        const to = e?.period_to ? toYM(e.period_to) : toYM(e?.endDate);
         formValues[`job${i + 1}`] = {
-          company: e.company,
-          capital: '',
-          work_content: e.description,
-          since: toYM(e.startDate),
-          to: toYM(e.endDate),
-          people: '',
-          duty: e.position,
-          business: e.business,
+          company: e?.company,
+          capital: e?.capital || '',
+          work_content: e?.tasks || e?.work_content || e?.description || '',
+          since,
+          to: isCurrent && !to ? '現在' : to,
+          people: e?.team_size || e?.people || '',
+          duty: e?.position || e?.duty || '',
+          business: e?.business,
         };
       });
       return { userName: extra.fullName || '', jobhistoryList, formValues };
