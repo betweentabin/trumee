@@ -233,7 +233,7 @@ export default function ResumeAdvicePage() {
         <div className="flex flex-col md:flex-row h-full w-full">
           {/* Left: Resume preview */}
           <div className="flex-1 flex flex-col items-start justify-start bg-white p-4 md:p-8 border-b md:border-b-0 md:border-r border-black min-h-[500px] md:min-h-[900px] overflow-y-auto">
-            <div className="relative pr-[260px] w-full" ref={previewWrapRef} onMouseUp={handlePreviewMouseUp}>
+            <div className="relative md:pr-[260px] w-full" ref={previewWrapRef} onMouseUp={handlePreviewMouseUp}>
               <ResumePreview
                 userName={resumePreview.userName}
                 jobhistoryList={resumePreview.jobhistoryList}
@@ -247,7 +247,7 @@ export default function ResumeAdvicePage() {
                 className="w-full mb-8"
               />
               {/* overlays */}
-              <div className="absolute inset-0 pointer-events-none">
+              <div className="hidden md:block absolute inset-0 pointer-events-none">
                 {messages.filter(m => m.isAnnotation).map((m) => {
                   const topGuess = (m as any).annotationId && markTops[(m as any).annotationId] !== undefined ? markTops[(m as any).annotationId] : (m.anchor?.top || 0);
                   const annotationId = (m as any).annotationId as string | undefined;
@@ -258,15 +258,16 @@ export default function ResumeAdvicePage() {
                   const idx = annotationId ? (annotations.findIndex(a => String(a.id) === String(annotationId)) + 1) : undefined;
                   // connector line removed
                   return (
-                  <div key={m.id} className="absolute right-[-240px] w-[220px] pointer-events-auto" style={{ top: Math.max(0, topGuess - 8) }} onClick={() => {
-                    if (annotationId) {
-                      const el = previewWrapRef.current?.querySelector(`[data-annot-ref="ann-${annotationId}"]`) as HTMLElement | null;
-                      if (el && previewWrapRef.current) {
-                        previewWrapRef.current.scrollTo({ top: (markTops[annotationId] || 0) - 40, behavior: 'smooth' });
-                        el.classList.add('ring-2','ring-[#E5A6A6]');
-                        setTimeout(() => el.classList.remove('ring-2','ring-[#E5A6A6]'), 1200);
-                      }
+                  <div key={m.id} className="md:absolute md:right-[-240px] md:w-[220px] pointer-events-auto" style={{ top: Math.max(0, topGuess - 8) }} onClick={() => {
+                    if (!annotationId) return;
+                    const el = previewWrapRef.current?.querySelector(`[data-annot-ref=\"ann-${annotationId}\"]`) as HTMLElement | null;
+                    if (el && previewWrapRef.current) {
+                      previewWrapRef.current.scrollTo({ top: (markTops[annotationId] || 0) - 40, behavior: 'smooth' });
+                      el.classList.add('ring-2','ring-[#E5A6A6]');
+                      setTimeout(() => el.classList.remove('ring-2','ring-[#E5A6A6]'), 1200);
                     }
+                    // Select thread for this annotation to align view with admin
+                    selectThreadForAnnotation(annotationId);
                   }}>
                     {/* connector line removed */}
                     <div className="border bg-white rounded-md shadow-sm" style={{ borderColor: color }}>
@@ -328,10 +329,10 @@ export default function ResumeAdvicePage() {
 
             {/* Messages */}
             <div className="flex-1 overflow-y-auto px-3 md:px-4 py-3 md:py-4 flex flex-col gap-3 bg-white border-b border-black">
-              {messages.length === 0 && (
+              {(!activeThread ? messages : (threadMessages[activeThread] || [])).length === 0 && (
                 <div className="text-gray-400 text-sm text-center py-8">追加内容が記載されます。</div>
               )}
-              {messages.map((m) => {
+              {(activeThread ? (threadMessages[activeThread] || []) : messages).map((m) => {
                 const isMine = me && String(m.sender) === String(me.id);
                 const colorOf = (id: string) => { const palette = ['#E56B6F','#6C9BD2','#7FB069','#E6B31E','#A77BD1','#E58F6B']; let h=0; for (let i=0;i<id.length;i++) h=(h*31+id.charCodeAt(i))>>>0; return palette[h%palette.length]; };
                 const id = (m as any).annotationId as string | undefined;

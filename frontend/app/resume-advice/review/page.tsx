@@ -1196,7 +1196,7 @@ export default function ResumeReviewPage() {
                 )}
 
                 {/* Comment overlays (latest per thread via threads API) */}
-                <div className="absolute inset-0 pointer-events-none">
+                <div className="hidden md:block absolute inset-0 pointer-events-none">
                   {threadsFiltered.map((t: any, i: number) => {
                     const annId = String(t?.annotation?.id || '');
                     if (!annId) return null;
@@ -1215,7 +1215,7 @@ export default function ResumeReviewPage() {
                     return (
                       <div
                         key={String(t.thread_id || annId)}
-                        className="absolute right-[-240px] w-[220px] pointer-events-auto"
+                        className="md:absolute md:right-[-240px] md:w-[220px] pointer-events-auto"
                         style={{ top: Math.max(0, topGuess - 8), opacity: t.unresolved ? 1 : 0.6 }}
                         onClick={() => {
                           const sel = previewWrapRef.current?.querySelector(`[data-annot-ref=\"ann-${annId}\"]`) as HTMLElement | null;

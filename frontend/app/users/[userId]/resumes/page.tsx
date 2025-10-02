@@ -197,12 +197,14 @@ export default function UserResumesByIdPage() {
                       >
                         <FaEye className="mr-1" /> 詳細
                       </Link>
+                      {/* 添削チャット（絵文字ボタン） */}
                       <Link
                         href={to(`/resume-advice/review?resume_id=${r.id}${firstUnresolvedAnn[String(r.id)] ? `&annotation_id=${firstUnresolvedAnn[String(r.id)]}` : ''}`)}
-                        className="flex-1 inline-flex items-center justify-center px-3 py-2 border border-[#EE6C4D] text-sm font-medium rounded-md text-[#EE6C4D] bg-white hover:bg-orange-50"
-                        title="添削コメントを見る"
+                        className="inline-flex items-center justify-center px-3 py-2 text-2xl leading-none rounded-md hover:bg-orange-50"
+                        title="添削チャットを開く"
+                        aria-label="添削チャットを開く"
                       >
-                        添削を見る
+                        💬
                       </Link>
                       <Link
                         href={to(`/career/edit/${r.id}`)}

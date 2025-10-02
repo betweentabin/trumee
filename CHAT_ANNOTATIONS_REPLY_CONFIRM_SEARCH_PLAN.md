@@ -104,6 +104,14 @@ UI/挙動
 2. メッセージ送信 → `POST /advice/messages/ { annotation_id, parent_id? }` → スレッド末尾に反映
 3. ツールバーで「すべて」に戻す → 右ペインが全チャット表示に戻る、入力チップ解除
 
+実装メモ（反映済み）
+- Admin/Seeker のスレッド統一
+  - 注釈クリック時に双方とも `GET /advice/threads/?mode=comment&user_id=&annotation_id=` を呼び、
+    未解決優先→最新更新の順で thread_id を決定し、`GET /advice/messages/?parent_id=` でそのスレッドのみを表示するように統一。
+  - Seeker 画面: `frontend/app/users/[userId]/advice/resume/page.tsx` に `annotationFilter/activeThread/threadMessages` を追加し、
+    プレビューの色付きカードクリックで `selectThreadForAnnotation()` を実行してスレッド表示を切替。
+  - Admin 画面は既存の threads API の利用に加え、同等の採用規則で先頭スレッドを選ぶ実装（フロント側で並べ替え）。
+
 
 実装ステップ
 1) フロント: 返信ボタン（Admin/Seeker）

@@ -2191,6 +2191,7 @@ def advice_threads(request):
     user_id = request.GET.get('user_id')
     mode = request.GET.get('mode') or 'annotation'
     annotation_id = request.GET.get('annotation_id')
+    resume_id = request.GET.get('resume_id')
     # Optional free-text query. Client-sideでもフィルタしているが、API側でも軽く対応しておく
     q = (request.GET.get('q') or '').strip()
 
@@ -2224,6 +2225,13 @@ def advice_threads(request):
         ).filter(subject=SUBJECT)
 
     qs = qs.filter(annotation__isnull=False).select_related('annotation').order_by('created_at')
+    # Optional: filter by resume
+    if resume_id:
+        try:
+            uuid.UUID(str(resume_id))
+            qs = qs.filter(annotation__resume_id=resume_id)
+        except Exception:
+            pass
     if q:
         try:
             # アンカーIDと本文の簡易検索（前方一致ではなく部分一致）

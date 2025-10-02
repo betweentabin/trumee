@@ -42,6 +42,8 @@ export default function AdminSeekerDetailPage() {
   const [resumeLoading, setResumeLoading] = useState(false);
   const [resumeError, setResumeError] = useState<string | null>(null);
   const [effectiveRegisteredAt, setEffectiveRegisteredAt] = useState<string | null>(null);
+  const [userResumes, setUserResumes] = useState<any[]>([]);
+  const [selectedResumeId, setSelectedResumeId] = useState<string>('');
   // Plan editor (admin)
   const [planSaving, setPlanSaving] = useState(false);
   const [planError, setPlanError] = useState<string | null>(null);
@@ -206,6 +208,12 @@ export default function AdminSeekerDetailPage() {
             const res = await fetch(buildApiUrl(`/admin/users/${encodeURIComponent(String(id))}/resumes/`), { headers: getApiHeaders(token) });
             if (res.ok) {
               const list: any[] = await res.json();
+              setUserResumes(list || []);
+              // pick current preview id if available, otherwise latest
+              const currentId = data?.resumeId ? String(data.resumeId) : '';
+              let sel = currentId;
+              if (!sel && Array.isArray(list) && list.length > 0) sel = String(list[0].id);
+              setSelectedResumeId(sel);
               const latest = (list || [])
                 .map((r) => r?.created_at)
                 .filter(Boolean)
@@ -225,6 +233,7 @@ export default function AdminSeekerDetailPage() {
                 qs.set('subject', 'resume_advice');
                 qs.set('mode', 'comment');
                 qs.set('user_id', String(id));
+                if (data?.resumeId) qs.set('resume_id', String(data.resumeId));
                 const tr = await fetch(buildApiUrl(`/advice/threads/?${qs.toString()}`), { headers: getApiHeaders(token) });
                 if (tr.ok) setThreads(await tr.json());
               } catch {}
@@ -708,10 +717,66 @@ export default function AdminSeekerDetailPage() {
             <div className="flex flex-col md:flex-row">
               {/* left: resume preview mock */}
               <div className="flex-1 p-6 border-b md:border-b-0 md:border-r border-gray-200">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="text-lg font-semibold">職務経歴書</div>
-                  {resumeLoading && <span className="text-xs text-gray-500">読み込み中...</span>}
+              <div className="flex items-center justify-between mb-4 gap-2 flex-wrap">
+                <div className="text-lg font-semibold">職務経歴書</div>
+                {resumeLoading && <span className="text-xs text-gray-500">読み込み中...</span>}
+                {/* Resume selector */}
+                <div className="ml-auto flex items-center gap-2">
+                  <label className="text-xs text-gray-600">対象:</label>
+                  <select
+                    className="text-xs border rounded px-2 py-1"
+                    value={selectedResumeId}
+                    onChange={async (e) => {
+                      const rid = e.target.value;
+                      setSelectedResumeId(rid);
+                      const r = (userResumes || []).find((x: any) => String(x.id) === String(rid));
+                      if (r) {
+                        // Build preview from this resume object
+                        const extra = r?.extra_data || {};
+                        const jobs = Array.isArray(extra.workExperiences) ? extra.workExperiences : [];
+                        const jobhistoryList = jobs.map((_: any, i: number) => `job${i + 1}`);
+                        const toYM = (v?: string) => (v ? String(v).replace(/-/g, '/').slice(0, 7) : '');
+                        const formValues: any = {};
+                        jobs.forEach((e: any, i: number) => {
+                          formValues[`job${i + 1}`] = {
+                            company: e.company,
+                            capital: '',
+                            work_content: e.description,
+                            since: toYM(e.startDate),
+                            to: toYM(e.endDate),
+                            people: '',
+                            duty: e.position,
+                            business: e.business,
+                          };
+                        });
+                        setResumePreview({
+                          userName: extra.fullName || user?.full_name,
+                          jobhistoryList,
+                          formValues,
+                          resumeId: String(r.id),
+                          jobSummary: (extra as any)?.jobSummary || '',
+                          selfPR: r?.self_pr || '',
+                          skills: (r?.skills || '').split('\n').map((s: string) => s.trim()).filter(Boolean),
+                          education: Array.isArray((extra as any)?.education) ? (extra as any).education : [],
+                        });
+                        // reload annotations & threads for selected resume
+                        try {
+                          const a = await fetch(buildApiUrl(`/advice/annotations/?resume_id=${encodeURIComponent(String(r.id))}&subject=resume_advice`), { headers: getApiHeaders(token) });
+                          if (a.ok) setAnnotations(await a.json());
+                          const qs = new URLSearchParams();
+                          qs.set('subject', 'resume_advice'); qs.set('mode', 'comment'); qs.set('user_id', String(id)); qs.set('resume_id', String(r.id));
+                          const tr = await fetch(buildApiUrl(`/advice/threads/?${qs.toString()}`), { headers: getApiHeaders(token) });
+                          if (tr.ok) setThreads(await tr.json());
+                        } catch {}
+                      }
+                    }}
+                  >
+                    {(userResumes || []).map((r: any, i: number) => (
+                      <option key={String(r.id)} value={String(r.id)}>#{i + 1} {r?.extra_data?.title || r?.desired_job || '職務経歴書'}</option>
+                    ))}
+                  </select>
                 </div>
+              </div>
                 {resumeError && <div className="text-sm text-red-600 mb-3">{resumeError}</div>}
                 {resumePreview.jobhistoryList.length === 0 && !resumePreview.jobSummary && !resumePreview.selfPR ? (
                   <div className="h-[600px] rounded-md border bg-gray-50 p-4 text-gray-500 flex items-center justify-center text-center">
@@ -720,7 +785,7 @@ export default function AdminSeekerDetailPage() {
                 ) : (
                   <div className="max-h-[600px] overflow-y-auto">
                     <div
-                      className="relative pr-[260px] w-full"
+                      className="relative md:pr-[260px] w-full"
                       ref={previewWrapRef}
                       onMouseUp={handlePreviewMouseUp}
                       onClick={(e) => {
@@ -759,7 +824,7 @@ export default function AdminSeekerDetailPage() {
                         className="w-full"
                         changedAnchors={resumePreview.changedAnchors}
                       />
-                      <div className="absolute inset-0 pointer-events-none">
+                      <div className="hidden md:block absolute inset-0 pointer-events-none">
                         {reviewMessages.filter(m => m.isAnnotation).map((m) => {
                           const topGuess = m.annotationId && markTops[m.annotationId] !== undefined ? markTops[m.annotationId] : (m.anchor?.top || 0);
                           const markSelector = m.annotationId ? `[data-annot-ref="ann-${m.annotationId}"]` : '';
@@ -775,7 +840,7 @@ export default function AdminSeekerDetailPage() {
                           return (
                           <div
                             key={m.id}
-                            className="absolute right-[-240px] w-[220px] pointer-events-auto"
+                            className="md:absolute md:right-[-240px] md:w-[220px] pointer-events-auto"
                             style={{ top: Math.max(0, topGuess - 8) }}
                             onClick={() => {
                               if (m.annotationId) {
@@ -946,6 +1011,7 @@ export default function AdminSeekerDetailPage() {
                     }
                     return msgs.map((m) => {
                     const isAdmin = currentUser && String(m.sender) === String(currentUser.id);
+                    const fromUser = String(m.sender) === String(id); // 対象求職者からの返信
                     const colorOf = (id: string) => { const palette = ['#E56B6F','#6C9BD2','#7FB069','#E6B31E','#A77BD1','#E58F6B']; let h=0; for (let i=0;i<id.length;i++) h=(h*31+id.charCodeAt(i))>>>0; return palette[h%palette.length]; };
                     const id = (m as any).annotationId as string | undefined;
                     const color = id ? colorOf(id) : undefined;
@@ -962,7 +1028,16 @@ export default function AdminSeekerDetailPage() {
                     };
                     return (
                       <div key={m.id} className={`flex ${isAdmin ? 'justify-start' : 'justify-end'}`}>
-                        <div onClick={jump} className={`max-w-[85%] rounded-md p-3 text-sm cursor-pointer ${isAdmin ? 'bg-gray-200 text-gray-900 border' : 'bg-gray-800 text-white'}`} style={color ? { borderColor: color, boxShadow: isAdmin ? `inset 4px 0 0 ${color}` : undefined } : undefined}>
+                        <div onClick={jump} className={`max-w-[85%] rounded-md p-3 text-sm cursor-pointer ${isAdmin ? 'bg-gray-200 text-gray-900 border' : 'bg-gray-800 text-white'} ${fromUser ? 'ring-1 ring-blue-300' : ''}`} style={color ? { borderColor: color, boxShadow: isAdmin ? `inset 4px 0 0 ${color}` : undefined } : undefined}>
+                          <div className="mb-1 flex items-center gap-2">
+                            <span className={`text-[10px] px-1.5 py-[1px] rounded-full border ${fromUser ? 'bg-blue-100 text-blue-700 border-blue-200' : 'bg-gray-100 text-gray-700 border-gray-200'}`}>{fromUser ? 'ユーザー' : '管理者'}</span>
+                            {(m as any).parentId && (
+                              <span className="text-[10px] px-1.5 py-[1px] rounded-full bg-amber-50 text-amber-700 border border-amber-200">返信</span>
+                            )}
+                            {idx && (
+                              <span className="text-[10px] px-1.5 py-[1px] rounded-sm" style={ color ? { background: color + '22', color, border: `1px solid ${color}` } : undefined }># {idx}</span>
+                            )}
+                          </div>
                           {idx && (
                             <span className="inline-flex items-center justify-center text-[10px] leading-[10px] rounded-sm px-[4px] py-[1px] mr-2" style={ color ? { background: color + '22', color, border: `1px solid ${color}` } : undefined }>{idx}</span>
                           )}

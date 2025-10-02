@@ -37,37 +37,45 @@ const HighlightableText: React.FC<Props> = ({ text, ranges, className, colorMap 
 
   const pieces: React.ReactNode[] = [];
   let cursor = 0;
+  // NOTE: When ranges overlap, naive slicing duplicates text.
+  // To prevent that, clip each range to start at least from `cursor` and
+  // skip fully-covered ranges.
   safeRanges.forEach((r, idx) => {
-    if (r.start > cursor) {
-      pieces.push(<Fragment key={`t-${idx}-pre`}>{text.slice(cursor, r.start)}</Fragment>);
+    const start = Math.max(cursor, r.start);
+    const end = Math.max(start, r.end);
+
+    if (start > cursor) {
+      pieces.push(<Fragment key={`t-${idx}-pre`}>{text.slice(cursor, start)}</Fragment>);
     }
-    const marked = text.slice(r.start, r.end);
-    const baseColor = colorMap[r.id];
-    const underline = r.resolved ? toRGBA(baseColor, 0.35) : toRGBA(baseColor, 0.85);
-    const highlightBg = r.resolved ? toRGBA(baseColor, 0.14) : toRGBA(baseColor, 0.24);
-    const badgeIdx = indexMap[r.id];
-    pieces.push(
-      <mark
-        key={`m-${r.id}`}
-        data-annot-ref={`ann-${r.id}`}
-        className={`px-[1px]`}
-        style={marker
-          ? { backgroundColor: highlightBg }
-          : { backgroundColor: 'transparent', boxShadow: `inset 0 -2px 0 ${underline}` }
-        }
-      >
-        {marked}
-        {typeof badgeIdx === 'number' && (
-          <sup
-            className="ml-1 inline-flex items-center justify-center align-super text-[10px] leading-[10px] rounded-sm px-[4px] py-[1px]"
-            style={{ background: toRGBA(baseColor, 0.15), color: baseColor, border: `1px solid ${toRGBA(baseColor, 0.7)}` }}
-          >
-            {badgeIdx}
-          </sup>
-        )}
-      </mark>
-    );
-    cursor = r.end;
+    if (end > start) {
+      const marked = text.slice(start, end);
+      const baseColor = colorMap[r.id];
+      const underline = r.resolved ? toRGBA(baseColor, 0.35) : toRGBA(baseColor, 0.85);
+      const highlightBg = r.resolved ? toRGBA(baseColor, 0.14) : toRGBA(baseColor, 0.24);
+      const badgeIdx = indexMap[r.id];
+      pieces.push(
+        <mark
+          key={`m-${r.id}-${start}`}
+          data-annot-ref={`ann-${r.id}`}
+          className={`px-[1px]`}
+          style={marker
+            ? { backgroundColor: highlightBg }
+            : { backgroundColor: 'transparent', boxShadow: `inset 0 -2px 0 ${underline}` }
+          }
+        >
+          {marked}
+          {typeof badgeIdx === 'number' && (
+            <sup
+              className="ml-1 inline-flex items-center justify-center align-super text-[10px] leading-[10px] rounded-sm px-[4px] py-[1px]"
+              style={{ background: toRGBA(baseColor, 0.15), color: baseColor, border: `1px solid ${toRGBA(baseColor, 0.7)}` }}
+            >
+              {badgeIdx}
+            </sup>
+          )}
+        </mark>
+      );
+      cursor = end;
+    }
   });
   if (cursor < len) {
     pieces.push(<Fragment key={`t-tail`}>{text.slice(cursor)}</Fragment>);
