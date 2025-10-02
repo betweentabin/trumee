@@ -397,8 +397,8 @@ export default function Search() {
       <section className="w-full">
         {/* Job tickets summary */}
         <div className="mb-6 bg-white border rounded-lg p-4">
-          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-3">
-            <div className="flex-1">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
+            <div>
               <div className="text-sm text-gray-700 mb-1">求人チケット状況</div>
               <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
                 <select
@@ -419,23 +419,23 @@ export default function Search() {
                 )}
               </div>
             </div>
-            <div className="flex-1">
+            <div>
               <div className="text-sm text-gray-700 mb-1">面接確定（1チケット消費）</div>
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2">
                 <input
-                  className="flex-1 border rounded px-3 py-2 text-sm h-10"
+                  className="w-full border rounded px-3 py-2 text-sm h-10"
                   placeholder="求職者ID（UUID）"
                   value={consumeSeekerId}
                   onChange={(e)=>setConsumeSeekerId(e.target.value)}
                 />
                 <input
-                  className="flex-1 border rounded px-3 py-2 text-sm h-10"
+                  className="w-full border rounded px-3 py-2 text-sm h-10"
                   placeholder="面接日（任意：2025-01-15）"
                   value={consumeInterviewDate}
                   onChange={(e)=>setConsumeInterviewDate(e.target.value)}
                 />
                 <button
-                  className={`inline-flex items-center justify-center h-10 px-4 rounded text-white whitespace-nowrap shrink-0 ${consuming ? 'bg-gray-400' : 'bg-gray-800 hover:bg-gray-900'}`}
+                  className={`w-full h-10 px-4 rounded text-white ${consuming ? 'bg-gray-400' : 'bg-gray-800 hover:bg-gray-900'}`}
                   disabled={consuming || !selectedJobId}
                   onClick={async ()=>{
                     if (!selectedJobId) { toast.error('求人を選択してください'); return; }
@@ -468,12 +468,12 @@ export default function Search() {
                 </button>
               </div>
               <div className="mt-3 text-sm text-gray-700">候補日をまとめて提案（任意）</div>
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 mt-1">
-                <input className="flex-1 border rounded px-3 py-2 text-sm h-10" placeholder="候補1（2025-01-15T10:00:00+09:00）" value={slot1} onChange={(e)=>setSlot1(e.target.value)} />
-                <input className="flex-1 border rounded px-3 py-2 text-sm h-10" placeholder="候補2（任意）" value={slot2} onChange={(e)=>setSlot2(e.target.value)} />
-                <input className="flex-1 border rounded px-3 py-2 text-sm h-10" placeholder="候補3（任意）" value={slot3} onChange={(e)=>setSlot3(e.target.value)} />
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-2 mt-1">
+                <input className="w-full border rounded px-3 py-2 text-sm h-10" placeholder="候補1（2025-01-15T10:00:00+09:00）" value={slot1} onChange={(e)=>setSlot1(e.target.value)} />
+                <input className="w-full border rounded px-3 py-2 text-sm h-10" placeholder="候補2（任意）" value={slot2} onChange={(e)=>setSlot2(e.target.value)} />
+                <input className="w-full border rounded px-3 py-2 text-sm h-10" placeholder="候補3（任意）" value={slot3} onChange={(e)=>setSlot3(e.target.value)} />
                 <button
-                  className={`inline-flex items-center justify-center h-10 px-4 rounded text-white whitespace-nowrap shrink-0 ${proposing ? 'bg-gray-400' : 'bg-blue-600 hover:bg-blue-700'}`}
+                  className={`w-full h-10 px-4 rounded text-white ${proposing ? 'bg-gray-400' : 'bg-blue-600 hover:bg-blue-700'}`}
                   disabled={proposing || !selectedJobId}
                   onClick={async ()=>{
                     if (!selectedJobId) { toast.error('求人を選択してください'); return; }
