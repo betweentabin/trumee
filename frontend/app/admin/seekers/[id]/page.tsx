@@ -58,6 +58,7 @@ export default function AdminSeekerDetailPage() {
   const [threadSearch, setThreadSearch] = useState('');
   const [didAutoSelectThread, setDidAutoSelectThread] = useState(false);
   const [threadReplyInput, setThreadReplyInput] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'unresolved' | 'resolved'>('all');
 
   const token = useMemo(() => {
     if (typeof window === 'undefined') return '';
@@ -875,7 +876,11 @@ export default function AdminSeekerDetailPage() {
                     <option value="">注釈: すべて</option>
                     {annotations.map((a: any, i: number) => (<option key={String(a.id)} value={String(a.id)}>#{i+1} - {a.anchor_id}</option>))}
                   </select>
-                  {/* status filter removed */}
+                  <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as any)} className="rounded border px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-gray-700 ring-inset">
+                    <option value="all">全件</option>
+                    <option value="unresolved">未解決のみ</option>
+                    <option value="resolved">解決済みのみ</option>
+                  </select>
                   <input
                     value={threadSearch}
                     onChange={(e) => {
