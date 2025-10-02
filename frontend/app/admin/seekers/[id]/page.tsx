@@ -293,6 +293,18 @@ export default function AdminSeekerDetailPage() {
     return list;
   }, [threads, annotationFilter, threadSearch]);
 
+  // Canonical thread for current annotation (the oldest thread of that annotation)
+  const canonicalThreadId = useMemo(() => {
+    if (!annotationFilter) return null as string | null;
+    const list = (threads || []).filter((t: any) => String(t?.annotation?.id || '') === String(annotationFilter));
+    if (list.length === 0) return null as string | null;
+    try {
+      list.sort((a: any, b: any) => new Date(a.latest_message?.created_at || 0).getTime() - new Date(b.latest_message?.created_at || 0).getTime());
+    } catch {}
+    const tid = list[0]?.thread_id ? String(list[0].thread_id) : null;
+    return tid;
+  }, [threads, annotationFilter]);
+
   useEffect(() => {
     // Avoid auto-selecting a thread when user is filtering by annotation;
     // keep the list view to show all messages across threads.
@@ -362,26 +374,27 @@ export default function AdminSeekerDetailPage() {
     if (activeThread && !threadMessages[activeThread]) load(activeThread);
   }, [activeThread, id, token, threadMessages]);
 
-  const sendThreadReply = useCallback(async () => {
-    if (!activeThread || !threadReplyInput.trim()) return;
+  const sendThreadReply = useCallback(async (overrideThreadId?: string) => {
+    const targetThread = overrideThreadId || activeThread;
+    if (!targetThread || !threadReplyInput.trim()) return;
     try {
-      const list = threadMessages[activeThread] || [];
+      const list = threadMessages[targetThread] || [];
       const root = list.find((m) => !(m as any).parentId) || list[0];
-      const annotationId = (root as any)?.annotationId || (threads.find((t: any) => String(t.thread_id) === String(activeThread))?.annotation?.id);
-      const body: any = { user_id: id, subject: 'resume_advice', content: threadReplyInput.trim(), parent_id: activeThread };
+      const annotationId = (root as any)?.annotationId || (threads.find((t: any) => String(t.thread_id) === String(targetThread))?.annotation?.id);
+      const body: any = { user_id: id, subject: 'resume_advice', content: threadReplyInput.trim(), parent_id: targetThread };
       if (annotationId) body.annotation_id = String(annotationId);
       const res = await fetch(buildApiUrl('/advice/messages/'), { method: 'POST', headers: getApiHeaders(token), body: JSON.stringify(body) });
       if (!res.ok) throw new Error('failed');
       setThreadReplyInput('');
       // refresh thread
-      setThreadMessages((prev) => ({ ...prev, [activeThread]: undefined as any }));
+      setThreadMessages((prev) => ({ ...prev, [targetThread]: undefined as any }));
       const qs = new URLSearchParams();
-      qs.set('subject', 'resume_advice'); qs.set('user_id', String(id)); qs.set('parent_id', activeThread);
+      qs.set('subject', 'resume_advice'); qs.set('user_id', String(id)); qs.set('parent_id', targetThread);
       const next = await fetch(buildApiUrl(`/advice/messages/?${qs.toString()}`), { headers: getApiHeaders(token) });
       if (next.ok) {
         const data = await next.json();
         const mapped: ReviewMsg[] = (data || []).map((m: any) => ({ id: String(m.id), sender: String(m.sender), content: m.content, body: m.content, created_at: m.created_at, isAnnotation: !!m.annotation, annotationId: m.annotation ? String(m.annotation) : undefined, parentId: m.parent ? String(m.parent) : null }));
-        setThreadMessages((prev) => ({ ...prev, [activeThread]: mapped }));
+        setThreadMessages((prev) => ({ ...prev, [targetThread]: mapped }));
       }
       // Also refresh the flat list so「全件」表示にも即時反映
       try { await loadReviewMessages(); } catch {}
@@ -429,6 +442,37 @@ export default function AdminSeekerDetailPage() {
       setSendingReview(false);
     }
   }, [reviewInput, token, id]);
+
+  // 新規: 注釈選択中にまだスレッドがない場合、その注釈の親コメントとして投稿
+  const sendNewAnnotationComment = useCallback(async () => {
+    if (!annotationFilter || !reviewInput.trim()) return;
+    try {
+      setSendingReview(true);
+      setSendError(null);
+      const url = buildApiUrl('/advice/messages/');
+      const body: any = { content: reviewInput.trim(), user_id: id, subject: 'resume_advice', annotation_id: annotationFilter };
+      const res = await fetch(url, { method: 'POST', headers: getApiHeaders(token), body: JSON.stringify(body) });
+      if (!res.ok) {
+        const text = await res.text();
+        console.error('review send (annotation) failed', res.status, text);
+        setSendError(`送信に失敗しました (${res.status})`);
+        return;
+      }
+      setReviewInput('');
+      await loadReviewMessages();
+      // threads summary refresh
+      try {
+        const tqs = new URLSearchParams(); tqs.set('subject', 'resume_advice'); tqs.set('mode', 'comment'); tqs.set('user_id', String(id));
+        const tr = await fetch(buildApiUrl(`/advice/threads/?${tqs.toString()}`), { headers: getApiHeaders(token) });
+        if (tr.ok) setThreads(await tr.json());
+      } catch {}
+    } catch (e: any) {
+      console.error(e);
+      setSendError('送信に失敗しました');
+    } finally {
+      setSendingReview(false);
+    }
+  }, [annotationFilter, reviewInput, token, id, loadReviewMessages]);
 
   const sendAnnotation = useCallback(async () => {
     if (!pendingAnchor) return;
@@ -1006,24 +1050,30 @@ export default function AdminSeekerDetailPage() {
                 </div>
 
                 <div className="h-[460px] overflow-y-auto border rounded-md p-3 space-y-2 bg-gray-50">
-                  {/* Threads quick select */}
-                  <div className="flex flex-wrap gap-2">
-                    {threadsFiltered.map((t: any, i: number) => {
-                      const annId = String(t.annotation?.id || '');
-                      const idx = annId ? (annotations.findIndex(a => String(a.id) === annId) + 1) : (i + 1);
-                      const tid = String(t.thread_id || '');
-                      return (
-                        <button
-                          key={tid || i}
-                          onClick={() => { setActiveThread(tid); setDidAutoSelectThread(true); }}
-                          title={t.annotation?.anchor_id || ''}
-                          className={`text-xs px-2 py-1 rounded border ${String(activeThread) === tid ? 'bg-gray-100 border-gray-400' : 'bg-white border-gray-300'}`}
-                        >
-                          #{idx} ({t.messages_count})
-                        </button>
-                      );
-                    })}
-                  </div>
+                  {/* Threads quick select (hidden when an annotation is selected) */}
+                  {annotationFilter ? (
+                    <div className="text-xs text-gray-600 mb-2">
+                      注釈 #{annotations.findIndex(a => String(a.id) === String(annotationFilter)) + 1} の全メッセージを表示中
+                    </div>
+                  ) : (
+                    <div className="flex flex-wrap gap-2">
+                      {threadsFiltered.map((t: any, i: number) => {
+                        const annId = String(t.annotation?.id || '');
+                        const idx = annId ? (annotations.findIndex(a => String(a.id) === annId) + 1) : (i + 1);
+                        const tid = String(t.thread_id || '');
+                        return (
+                          <button
+                            key={tid || i}
+                            onClick={() => { setActiveThread(tid); setDidAutoSelectThread(true); }}
+                            title={t.annotation?.anchor_id || ''}
+                            className={`text-xs px-2 py-1 rounded border ${String(activeThread) === tid ? 'bg-gray-100 border-gray-400' : 'bg-white border-gray-300'}`}
+                          >
+                            #{idx} ({t.messages_count})
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
 
                   {reviewMessages.length === 0 && (
                     <div className="text-gray-400 text-sm text-center py-8">まだコメントがありません。</div>
@@ -1112,13 +1162,13 @@ export default function AdminSeekerDetailPage() {
                     );
                   }); })()}
                 </div>
-                {/* composer: thread reply when a thread is selected; otherwise, post as a new comment */}
-                {activeThread ? (
+                {/* composer: reply to active thread, or to canonical thread when an annotation is selected */}
+                {activeThread || (annotationFilter && canonicalThreadId) ? (
                   <div className="mt-4">
-                    <form onSubmit={(e) => { e.preventDefault(); sendThreadReply(); }} className="flex gap-2">
+                    <form onSubmit={(e) => { e.preventDefault(); activeThread ? sendThreadReply() : (canonicalThreadId && sendThreadReply(canonicalThreadId)); }} className="flex gap-2">
                       <input
                         className="flex-1 rounded-md border px-3 py-2"
-                        placeholder="このスレッドに返信..."
+                        placeholder={activeThread ? 'このスレッドに返信...' : `#${annotations.findIndex(a => String(a.id) === String(annotationFilter)) + 1} に返信...`}
                         value={threadReplyInput}
                         onChange={(e) => setThreadReplyInput(e.target.value)}
                       />
@@ -1129,10 +1179,10 @@ export default function AdminSeekerDetailPage() {
                   </div>
                 ) : (
                   <div className="mt-4">
-                    <form onSubmit={(e) => { e.preventDefault(); sendReviewMessage(); }} className="flex gap-2">
+                    <form onSubmit={(e) => { e.preventDefault(); annotationFilter ? sendNewAnnotationComment() : sendReviewMessage(); }} className="flex gap-2">
                       <input
                         className="flex-1 rounded-md border px-3 py-2"
-                        placeholder="入力してください。"
+                        placeholder={annotationFilter ? `注釈 #${annotations.findIndex(a => String(a.id) === String(annotationFilter)) + 1} の最初のコメントを投稿...` : '入力してください。'}
                         value={reviewInput}
                         onChange={(e) => setReviewInput(e.target.value)}
                       />
