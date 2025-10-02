@@ -57,10 +57,29 @@ async function run() {
   const userCtx = await browser.newContext();
   const user = await userCtx.newPage();
   await login(user, USER.email, USER.password);
+  // advice viewer (simple)
   await user.goto(`${BASE}/users/${TARGET_USER_ID}/advice/resume`);
   await user.waitForSelector('[data-annot-scope="resume-preview"] mark', { timeout: 15000 }).catch(() => {});
   const userMeasures = await measureMarks(user);
   await user.screenshot({ path: 'user_preview_check.png', fullPage: true });
+
+  // Try a light edit+publish on the owner's edit screen to produce a marker
+  // This may fail safely if the UI differs in production
+  try {
+    await user.goto(`${BASE}/resume-advice/review`);
+    // switch to 編集
+    const editBtn = await user.getByRole('button', { name: '編集' }).first();
+    await editBtn.click({ timeout: 5000 }).catch(() => {});
+    // type a tiny change into a textarea if present
+    const firstTextarea = user.locator('textarea').first();
+    const exists = await firstTextarea.count();
+    if (exists > 0) {
+      await firstTextarea.fill('（テスト編集 ' + new Date().toISOString() + '）');
+      // publish
+      await user.getByRole('button', { name: '公開反映（基準更新）' }).click({ timeout: 5000 }).catch(() => {});
+      await user.waitForLoadState('networkidle');
+    }
+  } catch {}
 
   await browser.close();
 
