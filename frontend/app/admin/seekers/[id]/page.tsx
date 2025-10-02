@@ -181,6 +181,7 @@ export default function AdminSeekerDetailPage() {
           isAnnotation: Boolean(meta) || Boolean(m.annotation),
           anchor: meta,
           annotationId: m.annotation ? String(m.annotation) : undefined,
+          parentId: m.parent ? String(m.parent) : null,
           created_at: m.created_at,
           kind,
         } as ReviewMsg;
