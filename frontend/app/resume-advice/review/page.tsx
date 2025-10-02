@@ -295,6 +295,18 @@ export default function ResumeReviewPage() {
     return s;
   };
 
+  // Ensure outgoing content is always a string (avoid sending objects)
+  const toSendContent = (v: any): string => {
+    if (typeof v === 'string') return v;
+    if (v == null) return '';
+    if (typeof v === 'object') {
+      const m = (v as any).message ?? (v as any).text;
+      if (typeof m === 'string') return m;
+      try { return JSON.stringify(v); } catch { return String(v); }
+    }
+    return String(v);
+  };
+
   // 本人のみ編集可: ルートに userId があれば一致を確認、なければ自身の一覧=本人
   const isOwner = useMemo(() => {
     try {
@@ -858,7 +870,7 @@ export default function ResumeReviewPage() {
     }
     setLoading(true);
     try {
-      const body: any = { content: text, subject: 'resume_advice' };
+      const body: any = { content: toSendContent(text), subject: 'resume_advice' };
       // 管理者のみ user_id を付与（対象ユーザー指定）
       try {
         const raw = typeof window !== 'undefined' ? localStorage.getItem('current_user_v2') : null;
@@ -911,7 +923,7 @@ export default function ResumeReviewPage() {
     if (!annotationIdResolved && annotationFilter) annotationIdResolved = String(annotationFilter);
     setLoading(true);
     try {
-      const body: any = { content: text, subject: 'resume_advice' };
+      const body: any = { content: toSendContent(text), subject: 'resume_advice' };
       if (parentId) {
         const n = String(parentId).match(/^\d+$/) ? parseInt(String(parentId), 10) : parentId;
         body.parent_id = n; // always tie to the selected thread root
@@ -1034,7 +1046,7 @@ export default function ResumeReviewPage() {
       }
 
       // 2) Post message that links to annotation
-      const body: any = { content: msg, subject: 'resume_advice' };
+      const body: any = { content: toSendContent(msg), subject: 'resume_advice' };
       // 管理者のみ user_id を付与（対象ユーザー指定）
       try {
         const raw = typeof window !== 'undefined' ? localStorage.getItem('current_user_v2') : null;

@@ -42,6 +42,17 @@ export default function ResumeAdvicePage() {
   }, []);
 
   // Helpers
+  // Ensure outgoing content is string (avoid sending objects → [object Object])
+  const toSendContent = useCallback((v: any): string => {
+    if (typeof v === 'string') return v;
+    if (v == null) return '';
+    if (typeof v === 'object') {
+      const m = (v as any).message ?? (v as any).text;
+      if (typeof m === 'string') return m;
+      try { return JSON.stringify(v); } catch { return String(v); }
+    }
+    return String(v);
+  }, []);
   // Load chat messages
   const loadMessages = useCallback(async () => {
     try {
@@ -164,7 +175,7 @@ export default function ResumeAdvicePage() {
     try {
       setSending(true);
       const userId = params?.userId ? String(params.userId) : "";
-      const body: any = { subject: "resume_advice", content: text, ...(userId ? { user_id: userId } : {}) };
+      const body: any = { subject: "resume_advice", content: toSendContent(text), ...(userId ? { user_id: userId } : {}) };
       // If a thread is active, post as a reply to that thread
       if (activeThread) {
         body.parent_id = (/^\d+$/.test(String(activeThread)) ? parseInt(String(activeThread), 10) : activeThread);
@@ -188,7 +199,7 @@ export default function ResumeAdvicePage() {
       const res = await fetch(buildApiUrl("/advice/messages/"), {
         method: "POST",
         headers: getApiHeaders(token),
-        body: JSON.stringify(body),
+        body: JSON.stringify({ ...body, content: toSendContent(body.content) }),
       });
       if (!res.ok) return;
       const created = await res.json();
@@ -320,6 +331,7 @@ export default function ResumeAdvicePage() {
         headers: getApiHeaders(token),
         body: JSON.stringify({ subject: "resume_advice", content: msg, ...(userId ? { user_id: userId } : {}), annotation_id: annotationId || undefined }),
       });
+      
       if (!res.ok) return;
       setComposerOpen(false);
       setComposerText('');
