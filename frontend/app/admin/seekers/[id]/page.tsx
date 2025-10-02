@@ -383,6 +383,8 @@ export default function AdminSeekerDetailPage() {
         const mapped: ReviewMsg[] = (data || []).map((m: any) => ({ id: String(m.id), sender: String(m.sender), content: m.content, body: m.content, created_at: m.created_at, isAnnotation: !!m.annotation, annotationId: m.annotation ? String(m.annotation) : undefined, parentId: m.parent ? String(m.parent) : null }));
         setThreadMessages((prev) => ({ ...prev, [activeThread]: mapped }));
       }
+      // Also refresh the flat list so「全件」表示にも即時反映
+      try { await loadReviewMessages(); } catch {}
       // refresh threads summary
       try {
         const tqs = new URLSearchParams(); tqs.set('subject', 'resume_advice'); tqs.set('mode', 'comment'); tqs.set('user_id', String(id));
@@ -390,7 +392,7 @@ export default function AdminSeekerDetailPage() {
         if (tr.ok) setThreads(await tr.json());
       } catch {}
     } catch {}
-  }, [activeThread, threadReplyInput, id, token, threadMessages, threads]);
+  }, [activeThread, threadReplyInput, id, token, threadMessages, threads, loadReviewMessages]);
 
   // Selection/annotation state for inline comments
   const previewWrapRef = useRef<HTMLDivElement | null>(null);
@@ -916,16 +918,15 @@ export default function AdminSeekerDetailPage() {
                                   className="hover:underline"
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    if ((m as any).annotationId) {
-                                      setAnnotationFilter(String((m as any).annotationId));
-                                      setActiveThread(null);
-                                      setDidAutoSelectThread(false);
-                                      // スレッドツールバーへ軽くスクロール
-                                      try {
-                                        const panel = document.querySelector('#admin-thread-toolbar');
-                                        panel && (panel as HTMLElement).scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                                      } catch {}
-                                    }
+                                    // Open the corresponding thread view and filter by the same annotation
+                                    const tid = String((m as any).parentId || m.id);
+                                    setActiveThread(tid);
+                                    setDidAutoSelectThread(true);
+                                    if ((m as any).annotationId) setAnnotationFilter(String((m as any).annotationId));
+                                    try {
+                                      const panel = document.querySelector('#admin-thread-toolbar');
+                                      panel && (panel as HTMLElement).scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                                    } catch {}
                                   }}
                                 >返信</button>
                                 {/* 解決ボタンは非表示に変更 */}
@@ -1030,8 +1031,10 @@ export default function AdminSeekerDetailPage() {
                   {(() => {
                     // Determine the message list to render
                     let msgs: ReviewMsg[] = [];
-                    if (activeThread && threadMessages[activeThread]) {
-                      msgs = threadMessages[activeThread] as any;
+                    const selectedThreadMsgs = activeThread ? threadMessages[activeThread] : undefined;
+                    if (activeThread) {
+                      // When a thread is selected, prefer its messages (may be undefined while loading)
+                      msgs = (selectedThreadMsgs || []) as any;
                     } else if (annotationFilter) {
                       // Show messages for this annotation:
                       // 1) 親メッセージ（annotationId が一致）
@@ -1056,6 +1059,14 @@ export default function AdminSeekerDetailPage() {
                       msgs = msgs.filter((x: any) => !x.annotationId || !annMap[String(x.annotationId)] || !annMap[String(x.annotationId)].is_resolved);
                     } else if (statusFilter === 'resolved') {
                       msgs = msgs.filter((x: any) => x.annotationId && annMap[String(x.annotationId)] && annMap[String(x.annotationId)].is_resolved);
+                    }
+                    // If a thread is selected but not loaded yet, show a lightweight loading indicator
+                    if (activeThread && selectedThreadMsgs === undefined) {
+                      return (
+                        <div key="__loading__" className="text-center text-xs text-gray-500 py-6">
+                          スレッドを読み込み中...
+                        </div>
+                      ) as any;
                     }
                     return msgs.map((m) => {
                     const isAdmin = currentUser && String(m.sender) === String(currentUser.id);
@@ -1101,19 +1112,35 @@ export default function AdminSeekerDetailPage() {
                     );
                   }); })()}
                 </div>
-                {/* message box */}
-                <div className="mt-4">
-                  <form onSubmit={(e) => { e.preventDefault(); sendReviewMessage(); }} className="flex gap-2">
-                    <input
-                      className="flex-1 rounded-md border px-3 py-2"
-                      placeholder="入力してください。"
-                      value={reviewInput}
-                      onChange={(e) => setReviewInput(e.target.value)}
-                    />
-                    <button type="submit" disabled={sendingReview} className="rounded-md bg-gray-800 text-white px-4 py-2 disabled:opacity-50">{sendingReview ? '送信中…' : '送信'}</button>
-                  </form>
-                  {sendError && <div className="text-red-600 text-sm mt-2">{sendError}</div>}
-                </div>
+                {/* composer: thread reply when a thread is selected; otherwise, post as a new comment */}
+                {activeThread ? (
+                  <div className="mt-4">
+                    <form onSubmit={(e) => { e.preventDefault(); sendThreadReply(); }} className="flex gap-2">
+                      <input
+                        className="flex-1 rounded-md border px-3 py-2"
+                        placeholder="このスレッドに返信..."
+                        value={threadReplyInput}
+                        onChange={(e) => setThreadReplyInput(e.target.value)}
+                      />
+                      <button type="submit" className="rounded-md bg-gray-800 text-white px-4 py-2 disabled:opacity-50" disabled={!threadReplyInput.trim()}>
+                        返信
+                      </button>
+                    </form>
+                  </div>
+                ) : (
+                  <div className="mt-4">
+                    <form onSubmit={(e) => { e.preventDefault(); sendReviewMessage(); }} className="flex gap-2">
+                      <input
+                        className="flex-1 rounded-md border px-3 py-2"
+                        placeholder="入力してください。"
+                        value={reviewInput}
+                        onChange={(e) => setReviewInput(e.target.value)}
+                      />
+                      <button type="submit" disabled={sendingReview} className="rounded-md bg-gray-800 text-white px-4 py-2 disabled:opacity-50">{sendingReview ? '送信中…' : '送信'}</button>
+                    </form>
+                    {sendError && <div className="text-red-600 text-sm mt-2">{sendError}</div>}
+                  </div>
+                )}
               </div>
             </div>
           )}
