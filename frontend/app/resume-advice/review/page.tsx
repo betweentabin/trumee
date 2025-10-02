@@ -1685,7 +1685,7 @@ export default function ResumeReviewPage() {
                   />
                   <button
                     disabled={loading}
-                    onClick={sendReply}
+                    onClick={() => sendReply()}
                     className="h-10 w-10 shrink-0 rounded-md bg-primary-600 text-white flex items-center justify-center hover:bg-primary-500"
                     aria-label="send reply"
                   >
