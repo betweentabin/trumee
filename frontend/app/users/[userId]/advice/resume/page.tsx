@@ -50,6 +50,20 @@ export default function ResumeAdvicePage() {
       const res = await fetch(url, { headers: getApiHeaders(token) });
       if (!res.ok) return;
       const list = await res.json();
+      const toDisplayText = (raw: string) => {
+        const s = String(raw ?? '');
+        try {
+          const obj = JSON.parse(s);
+          if (obj && typeof obj === 'object') {
+            const m: any = (obj as any).message;
+            if (typeof m === 'string') return m;
+            if (m && typeof m === 'object' && typeof m.text === 'string') return m.text;
+            if (typeof (obj as any).text === 'string') return (obj as any).text;
+            return JSON.stringify(obj);
+          }
+        } catch {}
+        return s;
+      };
       const parseAnnotation = (text: string): { meta?: AnchorMeta; rest: string } => {
         const m = (text || '').match(/^@@ANNOTATION:(\{[\s\S]*?\})@@\s*/);
         if (m) { try { return { meta: JSON.parse(m[1]) as AnchorMeta, rest: text.slice(m[0].length) }; } catch {} }
@@ -58,7 +72,8 @@ export default function ResumeAdvicePage() {
       const mapped = (list || []).map((m: any) => {
         const raw = String(m.content || '');
         const { meta, rest } = parseAnnotation(raw);
-        return { id: String(m.id), sender: String(m.sender), content: raw, body: rest, isAnnotation: Boolean(meta) || Boolean(m.annotation), anchor: meta, created_at: m.created_at, ...(m.annotation ? { annotationId: String(m.annotation) } : {}) } as Msg;
+        const body = toDisplayText(rest);
+        return { id: String(m.id), sender: String(m.sender), content: raw, body, isAnnotation: Boolean(meta) || Boolean(m.annotation), anchor: meta, created_at: m.created_at, ...(m.annotation ? { annotationId: String(m.annotation) } : {}) } as Msg;
       });
       setMessages(mapped);
       // mark as read
@@ -182,11 +197,16 @@ export default function ResumeAdvicePage() {
       if (activeThread) {
         // Optimistic: append the created message into this thread
         try {
+          const toDisplayText = (raw: string) => {
+            const s = String(raw ?? '');
+            try { const obj = JSON.parse(s); if (obj && typeof obj === 'object') { const m: any = (obj as any).message; if (typeof m === 'string') return m; if (m && typeof m === 'object' && typeof m.text === 'string') return m.text; if (typeof (obj as any).text === 'string') return (obj as any).text; return JSON.stringify(obj); } } catch {}
+            return s;
+          };
           const mapped: Msg = {
             id: String(created.id),
             sender: String(created.sender),
             content: String(created.content || ''),
-            body: String(created.content || ''),
+            body: toDisplayText(String(created.content || '')),
             created_at: created.created_at,
             isAnnotation: !!created.annotation,
             ...(created.annotation ? { annotationId: String(created.annotation) } : {}),
@@ -230,6 +250,11 @@ export default function ResumeAdvicePage() {
       setActiveThread(tid);
       // fetch thread messages
       try {
+        const toDisplayText = (raw: string) => {
+          const s = String(raw ?? '');
+          try { const obj = JSON.parse(s); if (obj && typeof obj === 'object') { const m: any = (obj as any).message; if (typeof m === 'string') return m; if (m && typeof m === 'object' && typeof m.text === 'string') return m.text; if (typeof (obj as any).text === 'string') return (obj as any).text; return JSON.stringify(obj); } } catch {}
+          return s;
+        };
         const mqs = new URLSearchParams();
         mqs.set('subject', 'resume_advice');
         if (userId) mqs.set('user_id', userId);
@@ -237,7 +262,7 @@ export default function ResumeAdvicePage() {
         const mr = await fetch(buildApiUrl(`/advice/messages/?${mqs.toString()}`), { headers: getApiHeaders(token) });
         if (mr.ok) {
           const data = await mr.json();
-          const mapped: Msg[] = (data || []).map((m: any) => ({ id: String(m.id), sender: String(m.sender), content: m.content, body: m.content, created_at: m.created_at, isAnnotation: !!m.annotation, annotationId: m.annotation ? String(m.annotation) : undefined, anchor: undefined }));
+          const mapped: Msg[] = (data || []).map((m: any) => ({ id: String(m.id), sender: String(m.sender), content: String(m.content ?? ''), body: toDisplayText(String(m.content ?? '')), created_at: m.created_at, isAnnotation: !!m.annotation, annotationId: m.annotation ? String(m.annotation) : undefined, anchor: undefined }));
           setThreadMessages((prev) => ({ ...prev, [tid]: mapped }));
         }
       } catch {}
