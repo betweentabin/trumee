@@ -2171,6 +2171,24 @@ def advice_messages(request):
                 msg_kwargs['parent'] = parent_msg
             except (Message.DoesNotExist, ValueError):
                 pass
+    # Extra safety: if parent is still unset but annotation is provided, try to
+    # attach to the existing thread (root message) for this annotation between
+    # the same counterpart pair. This keeps older clients from creating
+    # unthreaded replies when they forget parent_id.
+    if not msg_kwargs.get('parent') and annotation is not None:
+        from django.db.models import Q
+        try:
+            root = Message.objects.filter(
+                subject=SUBJECT,
+                annotation=annotation,
+                parent__isnull=True,
+            ).filter(
+                Q(sender=request.user, receiver=counterpart) | Q(sender=counterpart, receiver=request.user)
+            ).order_by('created_at').first()
+            if root:
+                msg_kwargs['parent'] = root
+        except Exception:
+            pass
     # Create message with safety guard to avoid 500 without details
     try:
         msg = Message.objects.create(**msg_kwargs)
