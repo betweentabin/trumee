@@ -1012,15 +1012,15 @@ export default function AdminSeekerDetailPage() {
                     return msgs.map((m) => {
                     const isAdmin = currentUser && String(m.sender) === String(currentUser.id);
                     const fromUser = String(m.sender) === String(id); // 対象求職者からの返信
-                    const colorOf = (id: string) => { const palette = ['#E56B6F','#6C9BD2','#7FB069','#E6B31E','#A77BD1','#E58F6B']; let h=0; for (let i=0;i<id.length;i++) h=(h*31+id.charCodeAt(i))>>>0; return palette[h%palette.length]; };
-                    const id = (m as any).annotationId as string | undefined;
-                    const color = id ? colorOf(id) : undefined;
-                    const idx = id ? (annotations.findIndex(a => String(a.id) === String(id)) + 1) : undefined;
+                    const colorOf = (annId: string) => { const palette = ['#E56B6F','#6C9BD2','#7FB069','#E6B31E','#A77BD1','#E58F6B']; let h=0; for (let i=0;i<annId.length;i++) h=(h*31+annId.charCodeAt(i))>>>0; return palette[h%palette.length]; };
+                    const annId = (m as any).annotationId as string | undefined;
+                    const color = annId ? colorOf(annId) : undefined;
+                    const idx = annId ? (annotations.findIndex(a => String(a.id) === String(annId)) + 1) : undefined;
                     const jump = () => {
-                      if (!id) return;
-                      const el = previewWrapRef.current?.querySelector(`[data-annot-ref=\\"ann-${id}\\"]`) as HTMLElement | null;
+                      if (!annId) return;
+                      const el = previewWrapRef.current?.querySelector(`[data-annot-ref=\\"ann-${annId}\\"]`) as HTMLElement | null;
                       if (el && previewWrapRef.current) {
-                        const top = markTops[id] ?? 0;
+                        const top = markTops[annId] ?? 0;
                         previewWrapRef.current.scrollTo({ top: Math.max(0, top - 40), behavior: 'smooth' });
                         el.classList.add('ring-2','ring-[#E5A6A6]');
                         setTimeout(() => el.classList.remove('ring-2','ring-[#E5A6A6]'), 1200);

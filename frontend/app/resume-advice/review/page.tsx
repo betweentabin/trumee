@@ -815,7 +815,8 @@ export default function ResumeReviewPage() {
     if (!text) return;
     const list = threadMessages[activeThread] || [];
     const root = list.find((m) => !m.parentId) || list[0];
-    const parentId = root ? root.id : undefined;
+    // Fallback: use activeThread itself as parent when messages not loaded yet
+    const parentId = root ? root.id : activeThread;
     // resolve annotation id for this thread (from threads summary)
     const threadMeta = (Array.isArray(threads) ? threads : []).find((t: any) => String(t?.thread_id || '') === String(activeThread));
     const annotationIdResolved = threadMeta?.annotation?.id ? String(threadMeta.annotation.id) : undefined;

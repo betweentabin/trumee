@@ -184,31 +184,48 @@ export const fetchResumePreview = async ({ userId, token, forAdmin, forOwner }: 
   }
 
   try {
-    const endpoint = forAdmin
-      ? `/admin/users/${encodeURIComponent(userId)}/resumes/`
-      : forOwner
-        ? `/seeker/resumes/`
-        : `/users/${encodeURIComponent(userId)}/resumes/`;
-    const res = await fetch(buildApiUrl(endpoint), { headers });
-    if (!res.ok) {
-      let message = `履歴書の取得に失敗しました (${res.status})`;
-      try {
-        const errorPayload = await res.json();
-        message = errorPayload?.detail || errorPayload?.error || message;
-      } catch {
-        try {
-          const text = await res.text();
-          if (text) message = text;
-        } catch {
-          /* noop */
-        }
+    // Try one or more endpoints depending on the context, with graceful fallback
+    const endpoints: string[] = (() => {
+      if (forAdmin) {
+        // Admin preferred, but fall back to public if forbidden
+        return [
+          `/admin/users/${encodeURIComponent(userId)}/resumes/`,
+          `/users/${encodeURIComponent(userId)}/resumes/`,
+        ];
       }
+      if (forOwner) return [`/seeker/resumes/`];
+      return [`/users/${encodeURIComponent(userId)}/resumes/`];
+    })();
+
+    let payload: any = null;
+    let lastError: any = null;
+    for (const ep of endpoints) {
+      try {
+        const r = await fetch(buildApiUrl(ep), { headers });
+        if (r.ok) {
+          payload = await r.json();
+          break;
+        }
+        lastError = { status: r.status, text: await r.text().catch(() => '') };
+        // If admin endpoint fails with 403/404, continue to fallback
+        if (!(forAdmin && (r.status === 403 || r.status === 404))) {
+          // otherwise stop trying further endpoints
+          break;
+        }
+      } catch (e) {
+        lastError = e;
+      }
+    }
+
+    if (!payload) {
+      const status = (lastError && (lastError.status || (lastError as any).status)) || 0;
+      let message = `履歴書の取得に失敗しました${status ? ` (${status})` : ''}`;
+      if (lastError && lastError.text) message = String(lastError.text || message);
       const error = new Error(message);
-      (error as any).status = res.status;
+      (error as any).status = status;
       throw error;
     }
 
-    const payload = await res.json();
     const list = Array.isArray(payload) ? payload : payload?.results || [];
     if (!Array.isArray(list) || list.length === 0) {
       return {
