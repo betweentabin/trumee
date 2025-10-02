@@ -1032,10 +1032,18 @@ export default function AdminSeekerDetailPage() {
                     if (activeThread && threadMessages[activeThread]) {
                       msgs = threadMessages[activeThread] as any;
                     } else if (annotationFilter) {
-                      // Show messages linked to the selected annotation PLUS plain replies (annotationId absent)
+                      // Show messages for this annotation:
+                      // 1) 親メッセージ（annotationId が一致）
+                      // 2) その親にぶら下がる返信（annotationId が null でも parent が一致）
+                      const parentIds = new Set<string>(
+                        (threads || [])
+                          .filter((t: any) => String(t?.annotation?.id || '') === String(annotationFilter))
+                          .map((t: any) => String(t.thread_id || ''))
+                      );
                       msgs = reviewMessages.filter((x: any) => {
                         const aid = String(x?.annotationId || '');
-                        return !aid || aid === String(annotationFilter);
+                        const pid = String((x as any)?.parentId || '');
+                        return aid === String(annotationFilter) || (pid && parentIds.has(pid));
                       });
                     } else {
                       msgs = reviewMessages;
