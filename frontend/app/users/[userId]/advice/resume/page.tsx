@@ -461,8 +461,13 @@ export default function ResumeAdvicePage() {
             </div>
 
             {/* Input header */}
-            <div className="bg-[#4B3A2F] text-white px-4 md:px-6 py-2 md:py-3 text-base md:text-lg font-bold border-b border-black">
-              メッセージ入力
+            <div className="bg-[#4B3A2F] text-white px-4 md:px-6 py-2 md:py-3 text-base md:text-lg font-bold border-b border-black flex items-center justify-between">
+              <span>{activeThread ? 'スレッドに返信' : 'メッセージ入力'}</span>
+              {activeThread && (
+                <button onClick={() => setActiveThread(null)} className="text-xs font-normal underline">
+                  全てに戻る
+                </button>
+              )}
             </div>
 
             {/* Input */}
@@ -477,7 +482,7 @@ export default function ResumeAdvicePage() {
                 <textarea
                   rows={3}
                   className="resize-none min-h-[80px] max-h-[150px] w-full px-3 py-2 text-base rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary-default"
-                  placeholder="入力してください。"
+                  placeholder={activeThread ? "返信内容を入力..." : "入力してください。"}
                   {...register("message")}
                 />
                 <div className="flex justify-end">

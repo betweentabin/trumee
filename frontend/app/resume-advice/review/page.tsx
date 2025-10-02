@@ -372,18 +372,17 @@ export default function ResumeReviewPage() {
       workExperiences: currentWorkExperiences,
       jobSummary: (extra as any)?.jobSummary || '',
     };
-    // Prefer baseline values (if already captured) so users see their last saved draft
-    setEditSelfPr((baseline as any)?.self_pr ?? selected.self_pr ?? '');
-    const baseWE = Array.isArray((baseline as any)?.workExperiences)
-      ? (baseline as any).workExperiences
-      : (Array.isArray(currentWorkExperiences) ? currentWorkExperiences : []);
-    const desc = baseWE.map((w: any) => String(w?.description || ''));
+    // Prefer CURRENT resume values; fall back to baseline only if empty
+    const currentSelfPr = String(selected.self_pr || '');
+    const baselineSelfPr = String((baseline as any)?.self_pr || '');
+    setEditSelfPr(currentSelfPr.trim() ? currentSelfPr : baselineSelfPr);
+
+    const desc = (Array.isArray(currentWorkExperiences) ? currentWorkExperiences : []).map((w: any) => String(w?.description || ''));
     setEditWorkDesc(desc);
-    const initialJobSummary =
-      typeof (baseline as any)?.jobSummary === 'string'
-        ? (baseline as any).jobSummary
-        : String((extra as any)?.jobSummary || '');
-    setEditJobSummary(initialJobSummary);
+
+    const curJobSummary = String((extra as any)?.jobSummary || '');
+    const baseJobSummary = typeof (baseline as any)?.jobSummary === 'string' ? String((baseline as any).jobSummary || '') : '';
+    setEditJobSummary(curJobSummary.trim() ? curJobSummary : baseJobSummary);
     setFormError(null);
   }, [mode, selected, currentWorkExperiences]);
 
