@@ -161,6 +161,13 @@ const buildPreviewFromExperiences = (experiences: any[]) => {
       work_content: toStringSafe(
         pickField(exp, ['tasks', 'work_content', 'workContent', 'description', 'workActivity', 'responsibilities', 'achievements'])
       ),
+      achievements: (() => {
+        const v = pickField(exp, ['achievements']);
+        if (Array.isArray(v)) return (v as any[]).map((s) => toStringSafe(s)).filter(Boolean);
+        const s = toStringSafe(v);
+        if (!s) return undefined;
+        return s; // keep as string; component will split if needed
+      })(),
     };
   });
 

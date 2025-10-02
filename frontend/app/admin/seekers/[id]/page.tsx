@@ -833,6 +833,7 @@ export default function AdminSeekerDetailPage() {
                             people: e?.team_size || e?.people || '',
                             duty: e?.position || e?.duty || '',
                             business: e?.business,
+                            achievements: Array.isArray(e?.achievements) ? e.achievements : (e?.achievements || ''),
                           };
                         });
                         setResumePreview({

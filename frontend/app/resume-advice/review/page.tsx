@@ -266,6 +266,7 @@ export default function ResumeReviewPage() {
           people: e?.team_size || e?.people || '',
           duty: e?.position || e?.duty || '',
           business: e?.business,
+          achievements: Array.isArray(e?.achievements) ? e.achievements : (e?.achievements || ''),
         };
       });
       return { userName: extra.fullName || '', jobhistoryList, formValues };
@@ -492,6 +493,7 @@ export default function ResumeReviewPage() {
         people: '',
         duty: e.position,
         business: e.business,
+        achievements: Array.isArray(e?.achievements) ? e.achievements : (e?.achievements || ''),
       };
     });
     return {

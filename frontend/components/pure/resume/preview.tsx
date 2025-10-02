@@ -116,6 +116,16 @@ const ResumePreview: React.FC<PreviewProps> = ({ userName, jobhistoryList, formV
             </div>
           );
 
+          const achList: string[] = (() => {
+            const v = (j as any)?.achievements;
+            if (!v) return [];
+            if (Array.isArray(v)) return v.map((s) => String(s)).map((s) => s.trim()).filter(Boolean);
+            const s = String(v || '').trim();
+            if (!s) return [];
+            // split by newline or punctuation commonly used for bullets
+            return s.split(/[\n\r,、，;；・]/).map((t) => t.trim()).filter(Boolean);
+          })();
+
           const table = (
             <table className="w-full border mt-3 text-sm" data-annot-section={`job-${key}`}>
               <thead>
@@ -137,6 +147,27 @@ const ResumePreview: React.FC<PreviewProps> = ({ userName, jobhistoryList, formV
                         className="font-sans text-[0.95rem]"
                         marker={changedSet.has(`work_content-${key}`)}
                       />
+                      {achList.length > 0 && (
+                        <div className="mt-3">
+                          <div className="font-semibold text-secondary-800 mb-1">実績</div>
+                          <ul className="list-disc pl-5 space-y-1">
+                            {achList.map((a, i) => (
+                              <li key={i} className="leading-relaxed text-[0.95rem]">
+                                <div className="relative" data-annot-id={`achievement-${key}-${i}`}>
+                                  <HighlightableText
+                                    text={a}
+                                    ranges={rangesFor(`achievement-${key}-${i}`)}
+                                    colorMap={colorMap}
+                                    indexMap={indexMap}
+                                    className="font-sans text-[0.95rem]"
+                                    marker={changedSet.has(`achievement-${key}-${i}`)}
+                                  />
+                                </div>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
                     </div>
                   }
                 />
