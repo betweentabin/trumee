@@ -279,6 +279,22 @@ export default function ResumeReviewPage() {
     return { rest: text };
   };
 
+  // Normalize content to a readable sentence
+  const toDisplayText = (raw: string): string => {
+    const s = String(raw ?? '');
+    try {
+      const obj = JSON.parse(s);
+      if (obj && typeof obj === 'object') {
+        const m: any = (obj as any).message;
+        if (typeof m === 'string') return m;
+        if (m && typeof m === 'object' && typeof m.text === 'string') return m.text;
+        if (typeof (obj as any).text === 'string') return (obj as any).text;
+        return JSON.stringify(obj);
+      }
+    } catch {}
+    return s;
+  };
+
   // 本人のみ編集可: ルートに userId があれば一致を確認、なければ自身の一覧=本人
   const isOwner = useMemo(() => {
     try {
@@ -672,14 +688,9 @@ export default function ResumeReviewPage() {
       // Map to local structure
       const mapped: AnnMessage[] = data.map((m: any) => {
         const role = uid && String(m.sender) === String(uid) ? 'seeker' : 'advisor';
-        const raw = m.content as string;
+        const raw = String(m.content ?? '');
         const { meta, rest } = parseAnnotation(raw);
-        // unwrap JSON payloads like { type: 'interview_hint', message: '...' }
-        let bodyText = rest;
-        try {
-          const obj = JSON.parse(rest);
-          if (obj && typeof obj === 'object') bodyText = obj.message || rest;
-        } catch {}
+        const bodyText = toDisplayText(rest);
         return {
           id: String(m.id),
           role,
@@ -725,13 +736,9 @@ export default function ResumeReviewPage() {
     const uid = getMeId();
       const mapped: AnnMessage[] = data.map((m: any) => {
         const role = uid && String(m.sender) === String(uid) ? 'seeker' : 'advisor';
-        const raw = m.content as string;
+        const raw = String(m.content ?? '');
         const { meta, rest } = parseAnnotation(raw);
-        let bodyText = rest;
-        try {
-          const obj = JSON.parse(rest);
-          if (obj && typeof obj === 'object') bodyText = obj.message || rest;
-        } catch {}
+        const bodyText = toDisplayText(rest);
         return {
           id: String(m.id),
           role,
@@ -938,8 +945,7 @@ export default function ResumeReviewPage() {
         const uid = getMeId();
         const mapOne = (m: any): AnnMessage => {
           const raw = String(m.content || '');
-          let bodyText = raw;
-          try { const obj = JSON.parse(raw); if (obj && typeof obj === 'object') bodyText = obj.message || raw; } catch {}
+          const bodyText = toDisplayText(raw);
           return {
             id: String(m.id),
             role: uid && String(m.sender) === String(uid) ? 'seeker' : 'advisor',
@@ -974,11 +980,7 @@ export default function ResumeReviewPage() {
         const uid = getMeId();
     const mapped: AnnMessage[] = data.map((m: any) => {
       const raw = String(m.content || '');
-      let bodyText = raw;
-      try {
-        const obj = JSON.parse(raw);
-        if (obj && typeof obj === 'object') bodyText = obj.message || raw;
-      } catch {}
+      const bodyText = toDisplayText(raw);
       return {
         id: String(m.id),
         role: uid && String(m.sender) === String(uid) ? 'seeker' : 'advisor',
