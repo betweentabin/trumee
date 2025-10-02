@@ -1403,7 +1403,7 @@ export default function ResumeReviewPage() {
             ) : (
             <div className="border-b px-3 py-2 bg-white/80 sticky top-0 z-[1] flex items-center gap-2">
               <button onClick={saveDraft} disabled={loading || !isOwner} className="text-xs px-2 py-1 rounded bg-primary-600 text-white hover:bg-primary-500 disabled:opacity-50">保存</button>
-              <button onClick={cancelToBaseline} disabled={loading || !isOwner} className="text-xs px-2 py-1 rounded border disabled:opacity-50">取消（基準へ復元）</button>
+              {/* 取消（基準へ復元）ボタンは非表示に変更 */}
               <button onClick={publishBaseline} disabled={loading || !isOwner} className="text-xs px-2 py-1 rounded border disabled:opacity-50">公開反映（基準更新）</button>
               {!isOwner && <span className="ml-2 text-xs text-secondary-600">編集は本人のみ</span>}
             </div>
