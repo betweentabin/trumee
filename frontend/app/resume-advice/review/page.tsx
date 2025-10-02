@@ -786,7 +786,7 @@ export default function ResumeReviewPage() {
     }
   }, [threadsFiltered, didAutoSelectThread, annotationFilter]);
 
-  // Refetch threads when annotationFilter changes (no auto-open: keep list view)
+  // Refetch threads when annotationFilter changes
   useEffect(() => {
     const loadThreads = async () => {
       try {
@@ -799,9 +799,18 @@ export default function ResumeReviewPage() {
         if (res.ok) {
           const data = await res.json();
           setThreads(data);
-          // Do not auto-select a thread; show all messages for this annotation
-          setActiveThread(null);
-          setDidAutoSelectThread(false);
+          // 注釈を選択したら代表スレッドを自動で開き、返信モードにする
+          if (annotationFilter && Array.isArray(data) && data.length > 0) {
+            const tid = data[0]?.thread_id ? String(data[0].thread_id) : '';
+            if (tid) {
+              setActiveThread(tid);
+              setDidAutoSelectThread(true);
+            }
+          } else {
+            // クリア時はスレッド選択もクリア
+            setActiveThread(null);
+            setDidAutoSelectThread(false);
+          }
         }
       } catch {}
     };
