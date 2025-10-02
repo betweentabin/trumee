@@ -293,14 +293,16 @@ export default function AdminSeekerDetailPage() {
   }, [threads, annotationFilter, threadSearch]);
 
   useEffect(() => {
-    if (didAutoSelectThread) return;
+    // Avoid auto-selecting a thread when user is filtering by annotation;
+    // keep the list view to show all messages across threads.
+    if (didAutoSelectThread || annotationFilter) return;
     const first = threadsFiltered && threadsFiltered[0];
     const tid = first?.thread_id ? String(first.thread_id) : null;
     if (tid) {
       setActiveThread(tid);
       setDidAutoSelectThread(true);
     }
-  }, [threadsFiltered, didAutoSelectThread]);
+  }, [threadsFiltered, didAutoSelectThread, annotationFilter]);
 
   // Refetch threads on annotation filter change
   useEffect(() => {

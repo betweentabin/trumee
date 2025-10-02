@@ -724,14 +724,16 @@ export default function ResumeReviewPage() {
 
   // Auto-select first thread so users immediately see a threaded view
   useEffect(() => {
-    if (didAutoSelectThread) return;
+    // On user view, when filtering by annotation we want to show list across
+    // threads (representative only). Do not auto-select a thread in that case.
+    if (didAutoSelectThread || annotationFilter) return;
     const first = (threadsFiltered && threadsFiltered[0]) || null;
     const tid = first?.thread_id ? String(first.thread_id) : null;
     if (tid) {
       setActiveThread(tid);
       setDidAutoSelectThread(true);
     }
-  }, [threadsFiltered, didAutoSelectThread]);
+  }, [threadsFiltered, didAutoSelectThread, annotationFilter]);
 
   // Refetch threads when annotationFilter changes and auto-open the first thread
   useEffect(() => {
