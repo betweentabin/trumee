@@ -469,6 +469,31 @@ class ApiV2Client {
     return res.data as any;
   }
 
+  // Interview slots
+  async getInterviewSlots(jobId: string, seekerId?: string): Promise<any[]> {
+    const url = `/api/v2/jobs/${jobId}/interview/slots/`;
+    const res = await this.client.get(seekerId ? `${url}?seeker=${seekerId}` : url);
+    return res.data as any[];
+  }
+
+  async proposeInterviewSlots(jobId: string, payload: { seeker: string; slots: { start: string; end: string }[] }): Promise<any[]> {
+    const url = `/api/v2/jobs/${jobId}/interview/slots/propose/`;
+    const res = await this.client.post(url, payload);
+    return res.data as any[];
+  }
+
+  async acceptInterviewSlot(jobId: string, slotId: string): Promise<any> {
+    const url = `/api/v2/jobs/${jobId}/interview/slots/${slotId}/accept/`;
+    const res = await this.client.post(url, {});
+    return res.data as any;
+  }
+
+  async declineInterviewSlot(jobId: string, slotId: string): Promise<any> {
+    const url = `/api/v2/jobs/${jobId}/interview/slots/${slotId}/decline/`;
+    const res = await this.client.post(url, {});
+    return res.data as any;
+  }
+
   async setJobCapPlan(jobId: string, payload: { cap_percent: 20 | 22 | 25; cap_amount_limit?: number | null }): Promise<import('@/types/api-v2').JobCapPlan> {
     const url = `/api/v2/jobs/${jobId}/cap_plan/set/`;
     const res = await this.client.post(url, payload);

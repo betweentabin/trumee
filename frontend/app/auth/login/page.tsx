@@ -174,26 +174,7 @@ export default function LoginPage() {
             </p>
           </div>
           <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-            {/* 🚨 デバッグ用テストアカウント */}
-            <div className="bg-[#FFF5F3] border border-[#FFD7D0] text-[#FF733E] px-4 py-3 rounded-md text-sm">
-              <p className="font-medium mb-2">🧪 デバッグ用テストアカウント:</p>
-              <div className="flex gap-2 mb-2">
-                <button
-                  type="button"
-                  onClick={() => setFormData({ email: 'test@example.com', password: 'testpassword123' })}
-                  className="px-3 py-1 bg-[#FFF5F3] hover:bg-[#FFE6E1] rounded text-xs"
-                >
-                  ユーザーアカウント
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setFormData({ email: 'company@example.com', password: 'testpassword123' })}
-                  className="px-3 py-1 bg-green-100 hover:bg-green-200 rounded text-xs"
-                >
-                  企業アカウント
-                </button>
-              </div>
-            </div>
+            {/* debug/test shortcuts removed */}
             {errors.general && (
               <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md text-sm">
                 {errors.general}
@@ -276,24 +257,7 @@ export default function LoginPage() {
               </button>
             </div>
 
-            {/* API v2 テスト切り替え */}
-            <div className="flex items-center justify-center space-x-2 py-2">
-              <span className="text-sm text-gray-600">API v1</span>
-              <button
-                type="button"
-                onClick={() => setUseV2API(!useV2API)}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                  useV2API ? 'bg-[#FF733E]' : 'bg-gray-300'
-                }`}
-              >
-                <span
-                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                    useV2API ? 'translate-x-6' : 'translate-x-1'
-                  }`}
-                />
-              </button>
-              <span className="text-sm text-gray-600">API v2</span>
-            </div>
+            {/* API version toggle removed */}
 
             <div className="text-center">
               <p className="text-sm text-gray-600 mb-4">または</p>
@@ -312,28 +276,7 @@ export default function LoginPage() {
                 </Link>
               </div>
               
-              {/* テストアカウント情報 */}
-              {useV2API && (
-                <div className="mt-4 p-3 bg-[#FFF5F3] border border-[#FFD7D0] rounded-md text-left">
-                  <p className="text-xs font-medium text-[#FF733E] mb-2">🧪 API v2 テストアカウント</p>
-                  <div className="text-xs text-[#FF733E] space-y-1">
-                    <p>Email: test_new_329d5794@example.com</p>
-                    <p>Password: testpass123</p>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setFormData({
-                          email: 'test_new_329d5794@example.com',
-                          password: 'testpass123'
-                        });
-                      }}
-                      className="text-[#FF733E] underline hover:text-[#FF8659]"
-                    >
-                      自動入力
-                    </button>
-                  </div>
-                </div>
-              )}
+              {/* test account info removed */}
             </div>
           </form>
         </div>

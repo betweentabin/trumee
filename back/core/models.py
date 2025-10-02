@@ -932,6 +932,42 @@ class TicketConsumption(models.Model):
         return f"Use 1 ticket on {self.consumed_at} for job {self.ledger.job_posting_id}"
 
 
+class InterviewSlot(models.Model):
+    """面接候補スロット（シンプル版）"""
+    STATUS_CHOICES = [
+        ('proposed', '候補'),
+        ('accepted', '確定'),
+        ('declined', '辞退'),
+        ('expired', '期限切れ'),
+    ]
+    PROPOSERS = [
+        ('company', '企業'),
+        ('seeker', '求職者'),
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    job_posting = models.ForeignKey(JobPosting, on_delete=models.CASCADE, related_name='interview_slots')
+    seeker = models.ForeignKey(User, on_delete=models.CASCADE, related_name='interview_slots')
+    proposed_by = models.CharField(max_length=10, choices=PROPOSERS)
+    start_time = models.DateTimeField()
+    end_time = models.DateTimeField()
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='proposed')
+    accepted_at = models.DateTimeField(null=True, blank=True)
+    ticket_consumption = models.ForeignKey(TicketConsumption, on_delete=models.SET_NULL, null=True, blank=True, related_name='interview_slots')
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'interview_slots'
+        indexes = [
+            models.Index(fields=['job_posting', 'seeker', 'status']),
+            models.Index(fields=['-created_at']),
+        ]
+
+    def __str__(self):
+        return f"{self.job_posting_id} {self.start_time}~{self.end_time} ({self.status})"
+
 # ============================================================
 # 面接・自己PR・履歴書関連の質問マスタ/テンプレート
 # ============================================================

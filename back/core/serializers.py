@@ -6,6 +6,7 @@ from .models import (
     ActivityLog, MLModel, MLPrediction, CompanyMonthlyPage, ResumeFile,
     InterviewQuestion, PromptTemplate, Annotation,
     JobCapPlan, JobTicketLedger, TicketConsumption,
+    InterviewSlot,
 )
 
 
@@ -569,6 +570,17 @@ class TicketConsumptionSerializer(serializers.ModelSerializer):
             'interview_date', 'notes', 'consumed_at'
         ]
         read_only_fields = ['consumed_at']
+
+
+class InterviewSlotSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = InterviewSlot
+        fields = [
+            'id', 'job_posting', 'seeker', 'proposed_by',
+            'start_time', 'end_time', 'status', 'accepted_at',
+            'ticket_consumption', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['status', 'accepted_at', 'ticket_consumption', 'created_at', 'updated_at']
 
 
 # 互換性のための旧シリアライザー（段階的に削除予定）

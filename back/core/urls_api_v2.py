@@ -89,6 +89,11 @@ urlpatterns = [
     path('jobs/<uuid:job_id>/cap_plan/set/', views_api_v2.job_cap_plan_upsert, name='job-cap-plan-upsert'),
     path('jobs/<uuid:job_id>/tickets/issue/', views_api_v2.job_ticket_issue, name='job-ticket-issue'),
     path('jobs/<uuid:job_id>/tickets/consume/', views_api_v2.job_ticket_consume, name='job-ticket-consume'),
+    # Jobs: Interview slots
+    path('jobs/<uuid:job_id>/interview/slots/', views_api_v2.interview_slots_list, name='interview-slots-list'),
+    path('jobs/<uuid:job_id>/interview/slots/propose/', views_api_v2.interview_slots_propose, name='interview-slots-propose'),
+    path('jobs/<uuid:job_id>/interview/slots/<uuid:slot_id>/accept/', views_api_v2.interview_slot_accept, name='interview-slot-accept'),
+    path('jobs/<uuid:job_id>/interview/slots/<uuid:slot_id>/decline/', views_api_v2.interview_slot_decline, name='interview-slot-decline'),
     
     # Resume PDF endpoints
     path('resumes/download-pdf/', views_api_v2.download_resume_pdf, name='download-resume-pdf'),

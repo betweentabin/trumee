@@ -37,7 +37,7 @@ from .models import (
     User, SeekerProfile, CompanyProfile, Resume, Experience, 
     Education, Certification, Application, Scout, Message, JobPosting,
     CompanyMonthlyPage, ResumeFile, InterviewQuestion, PromptTemplate, Annotation, Payment,
-    JobCapPlan, JobTicketLedger, TicketConsumption
+    JobCapPlan, JobTicketLedger, TicketConsumption, InterviewSlot
 )
 from .serializers import (
     UserSerializer, SeekerProfileSerializer, CompanyProfileSerializer,
@@ -1821,6 +1821,167 @@ def job_ticket_consume(request, job_id):
 
     from .serializers import JobTicketLedgerSerializer
     return Response(JobTicketLedgerSerializer(ledger).data, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def interview_slots_list(request, job_id):
+    """List interview slots for job (filter by seeker).
+
+    GET /api/v2/jobs/<uuid:job_id>/interview/slots/?seeker=<uuid>
+    - company owner may specify seeker (required)
+    - seeker role defaults seeker=current user
+    """
+    try:
+        job = JobPosting.objects.get(id=job_id)
+    except JobPosting.DoesNotExist:
+        return Response({'detail': 'job_not_found'}, status=status.HTTP_404_NOT_FOUND)
+
+    if request.user.role == 'company':
+        if job.company_id != request.user.id and not request.user.is_staff:
+            return Response({'detail': 'forbidden'}, status=status.HTTP_403_FORBIDDEN)
+        seeker_id = request.GET.get('seeker')
+        if not seeker_id:
+            return Response({'detail': 'seeker_required'}, status=status.HTTP_400_BAD_REQUEST)
+        qs = InterviewSlot.objects.filter(job_posting=job, seeker_id=seeker_id).order_by('start_time')
+    else:
+        # seeker
+        qs = InterviewSlot.objects.filter(job_posting=job, seeker=request.user).order_by('start_time')
+
+    from .serializers import InterviewSlotSerializer
+    return Response(InterviewSlotSerializer(qs, many=True).data, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def interview_slots_propose(request, job_id):
+    """Propose interview slots (company or seeker).
+
+    POST /api/v2/jobs/<uuid:job_id>/interview/slots/propose/
+    body: { seeker: uuid, slots: [{ start: ISO, end: ISO }, ...] }
+    """
+    try:
+        job = JobPosting.objects.get(id=job_id)
+    except JobPosting.DoesNotExist:
+        return Response({'detail': 'job_not_found'}, status=status.HTTP_404_NOT_FOUND)
+
+    data = request.data or {}
+    seeker_id = data.get('seeker') or data.get('seeker_id')
+    slots = data.get('slots') or []
+    if request.user.role == 'company':
+        if job.company_id != request.user.id and not request.user.is_staff:
+            return Response({'detail': 'forbidden'}, status=status.HTTP_403_FORBIDDEN)
+        if not seeker_id:
+            return Response({'detail': 'seeker_required'}, status=status.HTTP_400_BAD_REQUEST)
+        proposed_by = 'company'
+    else:
+        # seeker自身が提案する場合
+        if not seeker_id:
+            seeker_id = str(request.user.id)
+        if seeker_id != str(request.user.id):
+            return Response({'detail': 'forbidden'}, status=status.HTTP_403_FORBIDDEN)
+        proposed_by = 'seeker'
+
+    # Parse slots
+    import datetime as _dt
+    parsed = []
+    for s in slots:
+        try:
+            st = _dt.datetime.fromisoformat(str(s.get('start')).replace('Z', '+00:00'))
+            en = _dt.datetime.fromisoformat(str(s.get('end')).replace('Z', '+00:00'))
+            parsed.append((st, en))
+        except Exception:
+            continue
+    if not parsed:
+        return Response({'detail': 'invalid_slots'}, status=status.HTTP_400_BAD_REQUEST)
+
+    created_items = []
+    for st, en in parsed[:10]:
+        created = InterviewSlot.objects.create(
+            job_posting=job,
+            seeker_id=seeker_id,
+            proposed_by=proposed_by,
+            start_time=st,
+            end_time=en,
+            status='proposed'
+        )
+        created_items.append(created)
+
+    from .serializers import InterviewSlotSerializer
+    return Response(InterviewSlotSerializer(created_items, many=True).data, status=status.HTTP_201_CREATED)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def interview_slot_accept(request, job_id, slot_id):
+    """Accept a proposed slot; consumes one ticket if not yet consumed.
+
+    POST /api/v2/jobs/<uuid:job_id>/interview/slots/<uuid:slot_id>/accept/
+    """
+    try:
+        job = JobPosting.objects.get(id=job_id)
+    except JobPosting.DoesNotExist:
+        return Response({'detail': 'job_not_found'}, status=status.HTTP_404_NOT_FOUND)
+    try:
+        slot = InterviewSlot.objects.get(id=slot_id, job_posting=job)
+    except InterviewSlot.DoesNotExist:
+        return Response({'detail': 'slot_not_found'}, status=status.HTTP_404_NOT_FOUND)
+
+    # Only seeker can accept own slot (or staff)
+    if not (request.user.is_staff or (request.user.role == 'user' and slot.seeker_id == request.user.id)):
+        return Response({'detail': 'forbidden'}, status=status.HTTP_403_FORBIDDEN)
+
+    if slot.status == 'accepted' and slot.ticket_consumption_id:
+        from .serializers import InterviewSlotSerializer
+        return Response(InterviewSlotSerializer(slot).data, status=status.HTTP_200_OK)
+
+    # Consume ticket
+    ledger, _ = JobTicketLedger.objects.get_or_create(job_posting=job)
+    remaining = max(0, int(ledger.tickets_total or 0) - int(ledger.tickets_used or 0))
+    if remaining <= 0:
+        return Response({'error': 'no_tickets'}, status=status.HTTP_409_CONFLICT)
+    # Prevent duplicate per seeker
+    if TicketConsumption.objects.filter(ledger=ledger, seeker_id=slot.seeker_id).exists():
+        return Response({'error': 'already_consumed_for_seeker'}, status=status.HTTP_409_CONFLICT)
+
+    tc = TicketConsumption.objects.create(
+        ledger=ledger,
+        seeker_id=slot.seeker_id,
+        interview_date=slot.start_time,
+        notes='accepted_slot'
+    )
+    ledger.tickets_used = int(ledger.tickets_used or 0) + 1
+    ledger.save(update_fields=['tickets_used', 'updated_at'])
+    slot.status = 'accepted'
+    from django.utils import timezone as djtz
+    slot.accepted_at = djtz.now()
+    slot.ticket_consumption = tc
+    slot.save(update_fields=['status', 'accepted_at', 'ticket_consumption', 'updated_at'])
+
+    from .serializers import InterviewSlotSerializer
+    return Response(InterviewSlotSerializer(slot).data, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def interview_slot_decline(request, job_id, slot_id):
+    try:
+        job = JobPosting.objects.get(id=job_id)
+    except JobPosting.DoesNotExist:
+        return Response({'detail': 'job_not_found'}, status=status.HTTP_404_NOT_FOUND)
+    try:
+        slot = InterviewSlot.objects.get(id=slot_id, job_posting=job)
+    except InterviewSlot.DoesNotExist:
+        return Response({'detail': 'slot_not_found'}, status=status.HTTP_404_NOT_FOUND)
+
+    if not (request.user.is_staff or (request.user.role == 'user' and slot.seeker_id == request.user.id) or (request.user.role == 'company' and job.company_id == request.user.id)):
+        return Response({'detail': 'forbidden'}, status=status.HTTP_403_FORBIDDEN)
+    if slot.status != 'proposed':
+        return Response({'detail': 'invalid_state'}, status=status.HTTP_400_BAD_REQUEST)
+    slot.status = 'declined'
+    slot.save(update_fields=['status', 'updated_at'])
+    from .serializers import InterviewSlotSerializer
+    return Response(InterviewSlotSerializer(slot).data, status=status.HTTP_200_OK)
 
 
 # ============================================================================

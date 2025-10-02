@@ -38,6 +38,10 @@ export default function Search() {
   const [consumeSeekerId, setConsumeSeekerId] = useState('');
   const [consumeInterviewDate, setConsumeInterviewDate] = useState('');
   const [consuming, setConsuming] = useState(false);
+  const [slot1, setSlot1] = useState('');
+  const [slot2, setSlot2] = useState('');
+  const [slot3, setSlot3] = useState('');
+  const [proposing, setProposing] = useState(false);
   const [isScouting, setIsScouting] = useState<boolean>(false);
   const [isSearching, setIsSearching] = useState(false);
 
@@ -461,6 +465,35 @@ export default function Search() {
                   }}
                 >
                   {consuming ? '処理中…' : '面接確定（1消費）'}
+                </button>
+              </div>
+              <div className="mt-3 text-sm text-gray-700">候補日をまとめて提案（任意）</div>
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 mt-1">
+                <input className="flex-1 border rounded px-3 py-2 text-sm h-10" placeholder="候補1（2025-01-15T10:00:00+09:00）" value={slot1} onChange={(e)=>setSlot1(e.target.value)} />
+                <input className="flex-1 border rounded px-3 py-2 text-sm h-10" placeholder="候補2（任意）" value={slot2} onChange={(e)=>setSlot2(e.target.value)} />
+                <input className="flex-1 border rounded px-3 py-2 text-sm h-10" placeholder="候補3（任意）" value={slot3} onChange={(e)=>setSlot3(e.target.value)} />
+                <button
+                  className={`inline-flex items-center justify-center h-10 px-4 rounded text-white whitespace-nowrap shrink-0 ${proposing ? 'bg-gray-400' : 'bg-blue-600 hover:bg-blue-700'}`}
+                  disabled={proposing || !selectedJobId}
+                  onClick={async ()=>{
+                    if (!selectedJobId) { toast.error('求人を選択してください'); return; }
+                    if (!consumeSeekerId.trim()) { toast.error('求職者IDを入力してください'); return; }
+                    const vals = [slot1, slot2, slot3].map(s=>s.trim()).filter(Boolean);
+                    if (vals.length === 0) { toast.error('候補日を1件以上入力してください'); return; }
+                    setProposing(true);
+                    try {
+                      const slots = vals.map(v => ({ start: v, end: v }));
+                      await apiV2Client.proposeInterviewSlots(selectedJobId, { seeker: consumeSeekerId.trim(), slots });
+                      toast.success('候補日を提案しました');
+                      setSlot1(''); setSlot2(''); setSlot3('');
+                    } catch {
+                      toast.error('候補日の提案に失敗しました');
+                    } finally {
+                      setProposing(false);
+                    }
+                  }}
+                >
+                  {proposing ? '送信中…' : '候補日を提案'}
                 </button>
               </div>
             </div>
