@@ -36,6 +36,19 @@ type AnnMessage = Message & {
 
 export default function ResumeReviewPage() {
   const router = useRouter();
+  // Resolve current user id (DRF v2): prefer current_user_v2.id, fallback to utils/auth uid
+  const getMeId = () => {
+    if (typeof window === 'undefined') return '';
+    try {
+      const raw = localStorage.getItem('current_user_v2');
+      if (raw) {
+        const obj = JSON.parse(raw);
+        if (obj && obj.id) return String(obj.id);
+      }
+    } catch {}
+    const fallback = getUserInfo()?.uid;
+    return fallback ? String(fallback) : '';
+  };
   const searchParams = useSearchParams();
   const [sectionTitle] = useState('職務内容について');
   // All messages for "全て" view
@@ -115,7 +128,7 @@ export default function ResumeReviewPage() {
           } catch {}
           return;
         }
-        let uid: any = getUserInfo()?.uid;
+        let uid: any = getMeId();
         if ((!uid || uid === 'undefined') && typeof window !== 'undefined') {
           const raw = localStorage.getItem('current_user_v2');
           if (raw) {
@@ -269,7 +282,7 @@ export default function ResumeReviewPage() {
   // 本人のみ編集可: ルートに userId があれば一致を確認、なければ自身の一覧=本人
   const isOwner = useMemo(() => {
     try {
-      let uid = getUserInfo()?.uid ? String(getUserInfo()?.uid) : '';
+      let uid = getMeId();
       // v2 認証では current_user_v2 にユーザ情報が保存されるためフォールバック
       if ((!uid || uid === 'undefined') && typeof window !== 'undefined') {
         const raw = localStorage.getItem('current_user_v2');
@@ -382,7 +395,12 @@ export default function ResumeReviewPage() {
 
     const curJobSummary = String((extra as any)?.jobSummary || '');
     const baseJobSummary = typeof (baseline as any)?.jobSummary === 'string' ? String((baseline as any).jobSummary || '') : '';
-    setEditJobSummary(curJobSummary.trim() ? curJobSummary : baseJobSummary);
+    // If jobSummary is empty everywhere, fall back to selfPR so the field matches the preview
+    const jobSummaryFallbackFromPr = (baseline as any)?.self_pr || selected.self_pr || '';
+    const initialSummary = curJobSummary.trim()
+      ? curJobSummary
+      : (baseJobSummary.trim() ? baseJobSummary : String(jobSummaryFallbackFromPr || ''));
+    setEditJobSummary(initialSummary);
     setFormError(null);
   }, [mode, selected, currentWorkExperiences]);
 
@@ -614,7 +632,7 @@ export default function ResumeReviewPage() {
       });
       if (!res.ok) throw new Error('failed');
       const data = await res.json();
-      const uid = getUserInfo()?.uid;
+      const uid = getMeId();
       // admin のコメントがユーザー編集後に届いたら、編集マーカーをクリアする
       try {
         if (lastEditAt) {
@@ -683,7 +701,7 @@ export default function ResumeReviewPage() {
     const res = await fetch(`${apiUrl}/api/v2/advice/messages/?${qs.toString()}`, { headers: { ...getAuthHeaders() } });
     if (!res.ok) return;
     const data = await res.json();
-    const uid = getUserInfo()?.uid;
+    const uid = getMeId();
       const mapped: AnnMessage[] = data.map((m: any) => {
         const role = uid && String(m.sender) === String(uid) ? 'seeker' : 'advisor';
         const raw = m.content as string;
@@ -886,7 +904,7 @@ export default function ResumeReviewPage() {
       const next = await fetch(`${apiUrl}/api/v2/advice/messages/?${qs.toString()}`, { headers: { ...getAuthHeaders() } });
       if (next.ok) {
         const data = await next.json();
-        const uid = getUserInfo()?.uid;
+        const uid = getMeId();
     const mapped: AnnMessage[] = data.map((m: any) => {
       const raw = String(m.content || '');
       let bodyText = raw;
@@ -908,9 +926,9 @@ export default function ResumeReviewPage() {
     });
         setThreadMessages((prev) => ({ ...prev, [activeThread]: mapped }));
       }
-      // refresh threads summary to update counts
+      // refresh threads summary to update counts (keep mode=comment for thread_id availability)
       try {
-        const t = await fetch(`${apiUrl}/api/v2/advice/threads/?${userIdFromRoute ? `user_id=${encodeURIComponent(String(userIdFromRoute))}&` : ''}subject=resume_advice`, { headers: { ...getAuthHeaders() } });
+        const t = await fetch(`${apiUrl}/api/v2/advice/threads/?${userIdFromRoute ? `user_id=${encodeURIComponent(String(userIdFromRoute))}&` : ''}subject=resume_advice&mode=comment`, { headers: { ...getAuthHeaders() } });
         if (t.ok) setThreads(await t.json());
       } catch {}
     } catch (e) {
@@ -1238,7 +1256,7 @@ export default function ResumeReviewPage() {
                     const latest = t.latest_message || {};
                     const raw = latest.content || '';
                     const { rest } = parseAnnotation(raw);
-                    const uid = getUserInfo()?.uid;
+                    const uid = getMeId();
                     const role: 'seeker'|'advisor' = uid && String(latest.sender) === String(uid) ? 'seeker' : 'advisor';
                     const timestamp = latest.created_at ? new Date(latest.created_at).toLocaleString('ja-JP') : '';
                     return (
