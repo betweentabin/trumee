@@ -861,7 +861,7 @@ export default function AdminSeekerDetailPage() {
                     職務経歴書が登録されていません。
                   </div>
                 ) : (
-                  <div className="max-h-[600px] overflow-y-auto">
+                  <div className="max-h-[600px] overflow-y-auto" data-admin-annot="no-underline">
                     <div
                       className="relative md:pr-[260px] w-full"
                       ref={previewWrapRef}
@@ -902,6 +902,12 @@ export default function AdminSeekerDetailPage() {
                         className="w-full"
                         changedAnchors={resumePreview.changedAnchors}
                       />
+                      {/* Hide underline style for annotation marks in admin preview */}
+                      <style jsx>{`
+                        [data-admin-annot="no-underline"] [data-annot-scope="resume-preview"] mark {
+                          box-shadow: none !important;
+                        }
+                      `}</style>
                       <div className="hidden md:block absolute inset-0 pointer-events-none">
                         {reviewMessages.filter(m => m.isAnnotation).map((m) => {
                           const topGuess = m.annotationId && markTops[m.annotationId] !== undefined ? markTops[m.annotationId] : (m.anchor?.top || 0);
