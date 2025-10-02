@@ -330,7 +330,11 @@ export default function AdminSeekerDetailPage() {
         if (res.ok) {
           const data = await res.json();
           setThreads(data);
-          if (Array.isArray(data) && data.length > 0) {
+          // When an annotation is selected, keep list view (do not auto-select a thread)
+          if (annotationFilter) {
+            setActiveThread(null);
+            setDidAutoSelectThread(false);
+          } else if (Array.isArray(data) && data.length > 0) {
             // Preserve current selection if it still exists; otherwise select the first.
             const exists = activeThread && data.some((t: any) => String(t.thread_id) === String(activeThread));
             if (!exists) {
@@ -962,11 +966,10 @@ export default function AdminSeekerDetailPage() {
                                   className="hover:underline"
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    // Open the corresponding thread view and filter by the same annotation
+                                    // Open the corresponding thread view
                                     const tid = String((m as any).parentId || m.id);
                                     setActiveThread(tid);
                                     setDidAutoSelectThread(true);
-                                    if ((m as any).annotationId) setAnnotationFilter(String((m as any).annotationId));
                                     try {
                                       const panel = document.querySelector('#admin-thread-toolbar');
                                       panel && (panel as HTMLElement).scrollIntoView({ behavior: 'smooth', block: 'nearest' });

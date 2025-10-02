@@ -736,7 +736,7 @@ export default function ResumeReviewPage() {
     }
   }, [threadsFiltered, didAutoSelectThread, annotationFilter]);
 
-  // Refetch threads when annotationFilter changes and auto-open the first thread
+  // Refetch threads when annotationFilter changes (no auto-open: keep list view)
   useEffect(() => {
     const loadThreads = async () => {
       try {
@@ -749,17 +749,9 @@ export default function ResumeReviewPage() {
         if (res.ok) {
           const data = await res.json();
           setThreads(data);
-          // Auto pick and open first thread when filtering by annotation
-          if (Array.isArray(data) && data.length > 0) {
-            const tid = data[0]?.thread_id ? String(data[0].thread_id) : null;
-            if (tid) {
-              setActiveThread(tid);
-              await fetchThreadMessages(tid);
-              setDidAutoSelectThread(true);
-            }
-          } else {
-            setActiveThread(null);
-          }
+          // Do not auto-select a thread; show all messages for this annotation
+          setActiveThread(null);
+          setDidAutoSelectThread(false);
         }
       } catch {}
     };
@@ -767,9 +759,24 @@ export default function ResumeReviewPage() {
   }, [annotationFilter]);
 
   const visibleMessages = useMemo(() => {
-    if (!activeThread) return messagesAll;
-    return threadMessages[activeThread] || [];
-  }, [messagesAll, activeThread, threadMessages]);
+    // Threaded view
+    if (activeThread) return threadMessages[activeThread] || [];
+    // List view: when annotationFilter is set, show all parents + replies for that annotation
+    let list = messagesAll;
+    if (annotationFilter) {
+      const parentIds = new Set<string>(
+        (Array.isArray(threads) ? threads : [])
+          .filter((t: any) => String(t?.annotation?.id || '') === String(annotationFilter))
+          .map((t: any) => String(t.thread_id || ''))
+      );
+      list = list.filter((m: any) => {
+        const aid = String(m?.annotationId || '');
+        const pid = String(m?.parentId || '');
+        return aid === String(annotationFilter) || (pid && parentIds.has(pid));
+      });
+    }
+    return list;
+  }, [messagesAll, activeThread, threadMessages, annotationFilter, threads]);
 
   
 
