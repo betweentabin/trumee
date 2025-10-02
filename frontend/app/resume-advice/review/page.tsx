@@ -699,7 +699,8 @@ export default function ResumeReviewPage() {
   };
 
   useEffect(() => {
-    if (activeThread && !threadMessages[activeThread]) {
+    if (activeThread) {
+      // Always refetch on selection to ensure latest (and avoid partial cache)
       fetchThreadMessages(activeThread);
     }
     setReplyInput('');
