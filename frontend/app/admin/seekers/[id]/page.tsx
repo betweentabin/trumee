@@ -824,6 +824,12 @@ export default function AdminSeekerDetailPage() {
                           const since = e?.period_from ? toYM(e.period_from) : toYM(e?.startDate);
                           const isCurrent = typeof e?.is_current === 'boolean' ? e.is_current : false;
                           const to = e?.period_to ? toYM(e.period_to) : toYM(e?.endDate);
+                          // Overlay achievements from legacy when v2 experiences exist but achievements empty
+                          let ach: any = e?.achievements;
+                          if ((exps.length > 0) && (!ach || (Array.isArray(ach) && ach.length === 0))) {
+                            const legacyItem = legacy[i];
+                            if (legacyItem && legacyItem.achievements) ach = legacyItem.achievements;
+                          }
                           formValues[`job${i + 1}`] = {
                             company: e?.company,
                             capital: e?.capital || '',
@@ -833,7 +839,7 @@ export default function AdminSeekerDetailPage() {
                             people: e?.team_size || e?.people || '',
                             duty: e?.position || e?.duty || '',
                             business: e?.business,
-                            achievements: Array.isArray(e?.achievements) ? e.achievements : (e?.achievements || ''),
+                            achievements: Array.isArray(ach) ? ach : (ach || ''),
                           };
                         });
                         setResumePreview({

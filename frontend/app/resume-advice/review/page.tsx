@@ -258,6 +258,12 @@ export default function ResumeReviewPage() {
         const since = e?.period_from ? toYM(e.period_from) : toYM(e?.startDate);
         const isCurrent = typeof e?.is_current === 'boolean' ? e.is_current : false;
         const to = e?.period_to ? toYM(e.period_to) : toYM(e?.endDate);
+        // Overlay achievements from legacy when v2 experiences exist but achievements empty
+        let ach: any = e?.achievements;
+        if ((exps.length > 0) && (!ach || (Array.isArray(ach) && ach.length === 0))) {
+          const legacyItem = legacy[i];
+          if (legacyItem && legacyItem.achievements) ach = legacyItem.achievements;
+        }
         formValues[`job${i + 1}`] = {
           company: e?.company,
           capital: e?.capital || '',
@@ -267,7 +273,7 @@ export default function ResumeReviewPage() {
           people: e?.team_size || e?.people || '',
           duty: e?.position || e?.duty || '',
           business: e?.business,
-          achievements: Array.isArray(e?.achievements) ? e.achievements : (e?.achievements || ''),
+          achievements: Array.isArray(ach) ? ach : (ach || ''),
         };
       });
       return { userName: extra.fullName || '', jobhistoryList, formValues };
@@ -354,7 +360,22 @@ export default function ResumeReviewPage() {
 
   const currentWorkExperiences = useMemo(() => {
     const extra = selected?.extra_data || {};
-    return Array.isArray((extra as any).workExperiences) ? ((extra as any).workExperiences as any[]) : [];
+    const legacy = Array.isArray((extra as any).workExperiences) ? ((extra as any).workExperiences as any[]) : [];
+    if (legacy.length > 0) return legacy;
+    const exps = Array.isArray((selected as any)?.experiences) ? ((selected as any).experiences as any[]) : [];
+    if (!exps.length) return [];
+    // Map v2 experiences into legacy-like shape consumed by editor/preview
+    return exps.map((e: any) => ({
+      company: e?.company || '',
+      position: e?.position || '',
+      business: e?.business || '',
+      capital: e?.capital || '',
+      team_size: e?.team_size || '',
+      description: e?.tasks || e?.description || '',
+      achievements: Array.isArray(e?.achievements) ? e.achievements : (e?.achievements || ''),
+      startDate: e?.period_from || e?.start_date || '',
+      endDate: e?.period_to || e?.end_date || '',
+    }));
   }, [selected]);
 
   // Helper: compute changed anchors compared with baseline
