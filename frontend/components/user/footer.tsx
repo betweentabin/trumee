@@ -23,7 +23,9 @@ const Footer = () => {
     }, []);
 
     const base = uid ? `/users/${uid}/myinfo` : '/users/myinfo';
+    const resumeReviewHref = uid ? `/users/${uid}/resume-advice/review` : '/resume-advice/review';
     const scoutsHref = uid ? `/users/${uid}/scouts` : '/scouts';
+    const resumePrintHref = uid ? `/users/${uid}/resume-advice/print` : '/resume-advice/print';
     const applyingReasonsHref = uid ? `/users/${uid}/interview-advice/applying-reasons` : '/interview-advice/applying-reasons';
     // Deep-link to applying-reasons with focus parameters
     const resumeQuestionsHref = `${applyingReasonsHref}?focus=resume`;
@@ -58,8 +60,8 @@ const Footer = () => {
                             <div className="space-y-2">
                                 <p className="font-bold">職務経歴書に関するアドバイス</p>
                                 <ul className="ml-4 space-y-1">
-                                <li><Link href="/career" className="hover:text-[#FF733E] transition-colors">職務経歴書の添削</Link></li>
-                                <li><Link href="/career/print" className="hover:text-[#FF733E] transition-colors">印刷</Link></li>
+                                <li><Link href={resumeReviewHref} className="hover:text-[#FF733E] transition-colors">職務経歴書の添削</Link></li>
+                                <li><Link href={resumePrintHref} className="hover:text-[#FF733E] transition-colors">印刷</Link></li>
                                 </ul>
                             </div>
 

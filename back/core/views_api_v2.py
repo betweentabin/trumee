@@ -2112,7 +2112,29 @@ def advice_messages(request):
         return Response(MessageSerializer(qs, many=True).data)
 
     # POST
-    content = (request.data or {}).get('content', '').strip()
+    # Normalize content to a clean string (avoid "[object Object]")
+    body_data = request.data or {}
+    raw_content = body_data.get('content', '')
+    if isinstance(raw_content, str):
+        content = raw_content.strip()
+    else:
+        try:
+            import json as _json
+            # If payload is an object, prefer its 'message' or 'text' field; otherwise JSON-encode
+            if isinstance(raw_content, dict):
+                if 'message' in raw_content and isinstance(raw_content['message'], str):
+                    content = raw_content['message'].strip()
+                elif 'text' in raw_content and isinstance(raw_content['text'], str):
+                    content = raw_content['text'].strip()
+                else:
+                    content = _json.dumps(raw_content, ensure_ascii=False)
+            elif isinstance(raw_content, (list, tuple)):
+                content = _json.dumps(raw_content, ensure_ascii=False)
+            else:
+                content = str(raw_content)
+        except Exception:
+            content = str(raw_content)
+        content = content.strip()
     user_id = (request.data or {}).get('user_id')
     if not content:
         return Response({'error': 'content_required'}, status=status.HTTP_400_BAD_REQUEST)
