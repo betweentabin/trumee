@@ -378,31 +378,52 @@ export default function ResumeReviewPage() {
 
   // Prepare edit buffers when entering edit mode
   useEffect(() => {
-    if (mode !== 'edit' || !selected) return;
-    const extra = selected.extra_data || {};
-    const baseline = (extra as any).baseline || {
-      self_pr: selected.self_pr || '',
-      workExperiences: currentWorkExperiences,
-      jobSummary: (extra as any)?.jobSummary || '',
-    };
-    // Prefer CURRENT resume values; fall back to baseline only if empty
-    const currentSelfPr = String(selected.self_pr || '');
-    const baselineSelfPr = String((baseline as any)?.self_pr || '');
-    setEditSelfPr(currentSelfPr.trim() ? currentSelfPr : baselineSelfPr);
+    if (mode !== 'edit') return;
+    // Case 1: current user context with full resume object
+    if (selected) {
+      const extra = selected.extra_data || {};
+      const baseline = (extra as any).baseline || {
+        self_pr: selected.self_pr || '',
+        workExperiences: currentWorkExperiences,
+        jobSummary: (extra as any)?.jobSummary || '',
+      };
+      // Prefer CURRENT resume values; fall back to baseline only if empty
+      const currentSelfPr = String(selected.self_pr || '');
+      const baselineSelfPr = String((baseline as any)?.self_pr || '');
+      setEditSelfPr(currentSelfPr.trim() ? currentSelfPr : baselineSelfPr);
 
-    const desc = (Array.isArray(currentWorkExperiences) ? currentWorkExperiences : []).map((w: any) => String(w?.description || ''));
-    setEditWorkDesc(desc);
+      const desc = (Array.isArray(currentWorkExperiences) ? currentWorkExperiences : []).map((w: any) => String(w?.description || ''));
+      setEditWorkDesc(desc);
 
-    const curJobSummary = String((extra as any)?.jobSummary || '');
-    const baseJobSummary = typeof (baseline as any)?.jobSummary === 'string' ? String((baseline as any).jobSummary || '') : '';
-    // If jobSummary is empty everywhere, fall back to selfPR so the field matches the preview
-    const jobSummaryFallbackFromPr = (baseline as any)?.self_pr || selected.self_pr || '';
-    const initialSummary = curJobSummary.trim()
-      ? curJobSummary
-      : (baseJobSummary.trim() ? baseJobSummary : String(jobSummaryFallbackFromPr || ''));
-    setEditJobSummary(initialSummary);
-    setFormError(null);
-  }, [mode, selected, currentWorkExperiences]);
+      const curJobSummary = String((extra as any)?.jobSummary || '');
+      const baseJobSummary = typeof (baseline as any)?.jobSummary === 'string' ? String((baseline as any).jobSummary || '') : '';
+      // If jobSummary is empty everywhere, fall back to selfPR so the field matches the preview
+      const jobSummaryFallbackFromPr = (baseline as any)?.self_pr || selected.self_pr || '';
+      const initialSummary = curJobSummary.trim()
+        ? curJobSummary
+        : (baseJobSummary.trim() ? baseJobSummary : String(jobSummaryFallbackFromPr || ''));
+      setEditJobSummary(initialSummary);
+      setFormError(null);
+      return;
+    }
+    // Case 2: viewing other user's resume (overridePreview only)
+    if (overridePreview) {
+      const pr = String(overridePreview.selfPR || '');
+      setEditSelfPr(pr);
+      // Extract work descriptions from preview formValues
+      try {
+        const keys = Array.isArray(overridePreview.jobhistoryList) ? overridePreview.jobhistoryList : [];
+        const values = overridePreview.formValues || {};
+        const d = keys.map((k: string) => String(values?.[k]?.work_content || ''));
+        setEditWorkDesc(d);
+      } catch {
+        setEditWorkDesc([]);
+      }
+      const js = String(overridePreview.jobSummary || '') || pr;
+      setEditJobSummary(js);
+      setFormError(null);
+    }
+  }, [mode, selected, currentWorkExperiences, overridePreview]);
 
   // Lightweight validation for edit fields
   const limits = { selfPr: 4000, jobSummary: 1200, workDesc: 4000 } as const;
@@ -865,11 +886,17 @@ export default function ResumeReviewPage() {
     const parentId = root ? root.id : activeThread;
     // resolve annotation id for this thread (from threads summary)
     const threadMeta = (Array.isArray(threads) ? threads : []).find((t: any) => String(t?.thread_id || '') === String(activeThread));
-    const annotationIdResolved = threadMeta?.annotation?.id ? String(threadMeta.annotation.id) : undefined;
+    let annotationIdResolved: string | undefined = threadMeta?.annotation?.id ? String(threadMeta.annotation.id) : undefined;
+    // Fallbacks: infer from loaded messages or current filter
+    if (!annotationIdResolved) {
+      const candidate = (root && root.annotationId) || (list.find((m) => !!m.annotationId)?.annotationId);
+      if (candidate) annotationIdResolved = String(candidate);
+    }
+    if (!annotationIdResolved && annotationFilter) annotationIdResolved = String(annotationFilter);
     setLoading(true);
     try {
       const body: any = { content: text, subject: 'resume_advice' };
-      if (parentId) body.parent_id = parentId;
+      if (parentId) body.parent_id = parentId; // always tie to the selected thread root
       if (annotationIdResolved) body.annotation_id = annotationIdResolved;
       // 管理者のみ user_id を付与（対象ユーザー指定）
       try {

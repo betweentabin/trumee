@@ -153,13 +153,20 @@ export default function ResumeAdvicePage() {
       // If a thread is active, post as a reply to that thread
       if (activeThread) {
         body.parent_id = activeThread;
-        // Prefer current annotation filter; fall back to thread meta
+        // Always attach annotation id if possible
         let annIdForReply = annotationFilter;
         if (!annIdForReply) {
           try {
             const tm = (threads || []).find((t: any) => String(t?.thread_id || '') === String(activeThread));
             if (tm?.annotation?.id) annIdForReply = String(tm.annotation.id);
           } catch {}
+        }
+        // Fallback: if thread messages are loaded, infer from root
+        if (!annIdForReply) {
+          const list = threadMessages[activeThread] || [];
+          const root = list.find((m) => !(m as any).parentId) || list[0];
+          const cand = (root as any)?.annotationId || (list.find((m) => (m as any).annotationId) as any)?.annotationId;
+          if (cand) annIdForReply = String(cand);
         }
         if (annIdForReply) body.annotation_id = annIdForReply;
       }
