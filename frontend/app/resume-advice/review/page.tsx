@@ -878,7 +878,7 @@ export default function ResumeReviewPage() {
   // Send reply within a selected thread
   const sendReply = async (textOverride?: string) => {
     if (!activeThread) return;
-    const text = (textOverride ?? replyInput).trim();
+    const text = String(textOverride ?? replyInput ?? '').trim();
     if (!text) return;
     const list = threadMessages[activeThread] || [];
     const root = list.find((m) => !m.parentId) || list[0];
