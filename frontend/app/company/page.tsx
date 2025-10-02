@@ -24,6 +24,7 @@ import type { JobPosting, JobTicketLedger } from '@/types/api-v2';
 import search from "../api/api";
 import { getPrefectureName } from '@/components/content/common/prefectures';
 import { getIndustryNames, getFirstJobTypeName } from '@/components/helpers/jobTypeHelper';
+import { anonymizeUserLabel } from '@/utils/anonymize';
 
 export default function Search() {
   const router = useRouter();
@@ -32,10 +33,17 @@ export default function Search() {
   const authState = useAppSelector(state => state.authV2);
   
   const [results, setResults] = useState<any[]>([]);
+  // Bulk scout
+  const [bulkMsg, setBulkMsg] = useState('');
+  const [bulkSending, setBulkSending] = useState(false);
+  const [bulkSlot1, setBulkSlot1] = useState('');
+  const [bulkSlot2, setBulkSlot2] = useState('');
+  const [bulkSlot3, setBulkSlot3] = useState('');
+  const [bulkProposing, setBulkProposing] = useState(false);
   const [jobs, setJobs] = useState<JobPosting[]>([]);
   const [selectedJobId, setSelectedJobId] = useState<string>('');
   const [jobTickets, setJobTickets] = useState<JobTicketLedger | null>(null);
-  const [consumeSeekerId, setConsumeSeekerId] = useState('');
+  const [selectedSeekerId, setSelectedSeekerId] = useState<string>('');
   const [consumeInterviewDate, setConsumeInterviewDate] = useState('');
   const [consuming, setConsuming] = useState(false);
   const [slot1, setSlot1] = useState('');
@@ -126,6 +134,26 @@ export default function Search() {
       }
     })();
   }, [selectedJobId]);
+
+  // ページ内の求職者（結果）からセレクト用オプション生成
+  const pageSeekerOptions = useMemo(() => {
+    const seen = new Set<string>();
+    const opts: { value: string; label: string }[] = [];
+    (results || []).forEach((s: any) => {
+      const sid = String(getSeekerId(s) || '');
+      if (!sid || seen.has(sid)) return;
+      seen.add(sid);
+      // 匿名ラベル（IDベース）
+      const anon = anonymizeUserLabel(sid);
+      // 付加情報（職種/勤務地）
+      const extra: string[] = [];
+      if (s?.desired_job) extra.push(String(s.desired_job));
+      if (s?.prefecture) extra.push(String(s.prefecture));
+      const label = extra.length > 0 ? `${anon}（${extra.join(' / ')}）` : anon;
+      opts.push({ value: sid, label });
+    });
+    return opts;
+  }, [results, getSeekerId]);
 
   // 認証復元中はローディング表示
   const restoring = typeof window !== 'undefined' && !!localStorage.getItem('drf_token_v2') && isAuthenticated === false;
@@ -422,12 +450,16 @@ export default function Search() {
             <div>
               <div className="text-sm text-gray-700 mb-1">面接確定（1チケット消費）</div>
               <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2">
-                <input
+                <select
                   className="w-full border rounded px-3 py-2 text-sm h-10"
-                  placeholder="求職者ID（UUID）"
-                  value={consumeSeekerId}
-                  onChange={(e)=>setConsumeSeekerId(e.target.value)}
-                />
+                  value={selectedSeekerId}
+                  onChange={(e)=>setSelectedSeekerId(e.target.value)}
+                >
+                  <option value="">候補者を選択</option>
+                  {pageSeekerOptions.map(o => (
+                    <option key={o.value} value={o.value}>{o.label}</option>
+                  ))}
+                </select>
                 <input
                   className="w-full border rounded px-3 py-2 text-sm h-10"
                   placeholder="面接日（任意：2025-01-15）"
@@ -436,18 +468,18 @@ export default function Search() {
                 />
                 <button
                   className={`w-full h-10 px-4 rounded text-white ${consuming ? 'bg-gray-400' : 'bg-gray-800 hover:bg-gray-900'}`}
-                  disabled={consuming || !selectedJobId}
+                  disabled={consuming || !selectedJobId || !selectedSeekerId}
                   onClick={async ()=>{
                     if (!selectedJobId) { toast.error('求人を選択してください'); return; }
-                    if (!consumeSeekerId.trim()) { toast.error('求職者IDを入力してください'); return; }
+                    if (!selectedSeekerId) { toast.error('候補者を選択してください'); return; }
                     setConsuming(true);
                     try {
-                      const payload: any = { seeker: consumeSeekerId.trim() };
+                      const payload: any = { seeker: selectedSeekerId };
                       if (consumeInterviewDate.trim()) payload.interview_date = consumeInterviewDate.trim();
                       const updated = await apiV2Client.consumeJobTicket(selectedJobId, payload);
                       setJobTickets(updated as any);
                       toast.success('面接確定としてチケットを1消費しました');
-                      setConsumeSeekerId('');
+                      setSelectedSeekerId('');
                       setConsumeInterviewDate('');
                     } catch (e: any) {
                       const status = e?.response?.status;
@@ -474,16 +506,16 @@ export default function Search() {
                 <input className="w-full border rounded px-3 py-2 text-sm h-10" placeholder="候補3（任意）" value={slot3} onChange={(e)=>setSlot3(e.target.value)} />
                 <button
                   className={`w-full h-10 px-4 rounded text-white ${proposing ? 'bg-gray-400' : 'bg-blue-600 hover:bg-blue-700'}`}
-                  disabled={proposing || !selectedJobId}
+                  disabled={proposing || !selectedJobId || !selectedSeekerId}
                   onClick={async ()=>{
                     if (!selectedJobId) { toast.error('求人を選択してください'); return; }
-                    if (!consumeSeekerId.trim()) { toast.error('求職者IDを入力してください'); return; }
+                    if (!selectedSeekerId) { toast.error('候補者を選択してください'); return; }
                     const vals = [slot1, slot2, slot3].map(s=>s.trim()).filter(Boolean);
                     if (vals.length === 0) { toast.error('候補日を1件以上入力してください'); return; }
                     setProposing(true);
                     try {
                       const slots = vals.map(v => ({ start: v, end: v }));
-                      await apiV2Client.proposeInterviewSlots(selectedJobId, { seeker: consumeSeekerId.trim(), slots });
+                      await apiV2Client.proposeInterviewSlots(selectedJobId, { seeker: selectedSeekerId, slots });
                       toast.success('候補日を提案しました');
                       setSlot1(''); setSlot2(''); setSlot3('');
                     } catch {
@@ -700,6 +732,105 @@ export default function Search() {
               setSortKey(opt?.value);
             }}
           />
+        </div>
+      </div>
+      {/* Bulk scout to all seekers on this page */}
+      <div className="mb-6 bg-white border rounded-lg p-4">
+        <div className="flex items-center justify-between mb-2">
+          <div className="text-sm text-gray-700">このページの対象: <span className="font-medium text-gray-900">{results.length}</span> 名</div>
+          <div className="text-xs text-gray-500">既にスカウト済みの方は自動的に除外されます</div>
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-2 items-start">
+          <textarea
+            className="lg:col-span-2 w-full border rounded px-3 py-2 text-sm min-h-[70px]"
+            placeholder="一括スカウトのメッセージを入力"
+            value={bulkMsg}
+            onChange={(e)=>setBulkMsg(e.target.value)}
+          />
+          <button
+            className={`w-full h-10 px-4 rounded text-white ${bulkSending ? 'bg-gray-400' : 'bg-primary-600 hover:bg-primary-700'}`}
+            disabled={bulkSending || results.length === 0}
+            onClick={async ()=>{
+              const msg = (bulkMsg || '').trim();
+              if (!msg) { toast.error('メッセージを入力してください'); return; }
+              const ids: string[] = (results || []).map((r:any) => String(r.user || r.id)).filter(Boolean);
+              const targets = ids.filter(id => !appliedCompanies.includes(id));
+              if (targets.length === 0) { toast.error('送信対象がありません（全員スカウト済み）'); return; }
+              setBulkSending(true);
+              let ok = 0; let fail = 0; let stopped = false;
+              for (const seekerId of targets) {
+                try {
+                  await apiV2Client.createScout({ seeker: seekerId, scout_message: msg });
+                  ok += 1;
+                  setAppliedCompanies(prev => [...new Set([...prev, seekerId])]);
+                } catch (e:any) {
+                  fail += 1;
+                  const status = e?.response?.status;
+                  const data = e?.response?.data || {};
+                  if (status === 402 && data?.error === 'insufficient_credits') {
+                    toast.error(`スカウト上限に達しました（成功 ${ok} 件）`);
+                    stopped = true;
+                    break;
+                  }
+                }
+              }
+              if (!stopped) {
+                toast.success(`一括スカウト完了（成功 ${ok} 件 / 失敗 ${fail} 件）`);
+              }
+              setBulkSending(false);
+            }}
+          >
+            {bulkSending ? '送信中…' : '一括送信'}
+          </button>
+        </div>
+      </div>
+
+      {/* Bulk interview slot proposal (to all seekers on this page) */}
+      <div className="mb-6 bg-white border rounded-lg p-4">
+        <div className="flex items-center justify-between mb-2">
+          <div className="text-sm text-gray-700">候補提案（ページ対象: <span className="font-medium text-gray-900">{results.length}</span> 名）</div>
+          <div className="text-xs text-gray-500">選択中の求人に対して、各候補者へ候補日を一括提案します</div>
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-2 items-start">
+          <select
+            className="w-full border rounded px-3 py-2 text-sm h-10 lg:col-span-1"
+            value={selectedJobId}
+            onChange={(e)=>setSelectedJobId(e.target.value)}
+          >
+            <option value="">求人を選択</option>
+            {(jobs || []).map((j) => (
+              <option key={String(j.id)} value={String(j.id)}>{j.title || String(j.id)}</option>
+            ))}
+          </select>
+          <input className="w-full border rounded px-3 py-2 text-sm h-10" placeholder="候補1（2025-01-15T10:00:00+09:00）" value={bulkSlot1} onChange={(e)=>setBulkSlot1(e.target.value)} />
+          <input className="w-full border rounded px-3 py-2 text-sm h-10" placeholder="候補2（任意）" value={bulkSlot2} onChange={(e)=>setBulkSlot2(e.target.value)} />
+          <input className="w-full border rounded px-3 py-2 text-sm h-10" placeholder="候補3（任意）" value={bulkSlot3} onChange={(e)=>setBulkSlot3(e.target.value)} />
+          <button
+            className={`w-full h-10 px-4 rounded text-white ${bulkProposing ? 'bg-gray-400' : 'bg-blue-600 hover:bg-blue-700'}`}
+            disabled={bulkProposing || !selectedJobId || results.length === 0}
+            onClick={async ()=>{
+              if (!selectedJobId) { toast.error('求人を選択してください'); return; }
+              const vals = [bulkSlot1, bulkSlot2, bulkSlot3].map(s=>s.trim()).filter(Boolean);
+              if (vals.length === 0) { toast.error('候補日を1件以上入力してください'); return; }
+              const ids: string[] = (results || []).map((r:any) => String(r.user || r.id)).filter(Boolean);
+              if (ids.length === 0) { toast.error('送信対象がありません'); return; }
+              setBulkProposing(true);
+              let ok = 0; let fail = 0;
+              const slots = vals.map(v => ({ start: v, end: v }));
+              for (const seekerId of ids) {
+                try {
+                  await apiV2Client.proposeInterviewSlots(selectedJobId, { seeker: seekerId, slots });
+                  ok += 1;
+                } catch {
+                  fail += 1;
+                }
+              }
+              toast.success(`候補提案完了（成功 ${ok} 件 / 失敗 ${fail} 件）`);
+              setBulkProposing(false);
+            }}
+          >
+            {bulkProposing ? '送信中…' : '候補提案'}
+          </button>
         </div>
       </div>
       {results && results.length > 0
