@@ -231,7 +231,7 @@ export default function EditResumePage() {
 
       if (response.ok) {
         toast.success('職務経歴書を更新しました');
-        router.push(to('/career'));
+        router.push(to('/resumes'));
       } else {
         // Try to surface backend error for easier debugging
         try {
