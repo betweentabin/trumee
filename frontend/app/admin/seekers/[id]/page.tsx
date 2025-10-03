@@ -974,7 +974,7 @@ export default function AdminSeekerDetailPage() {
                 ) : (
                   <div className="max-h-[600px] overflow-y-auto" data-admin-annot="no-underline" data-admin-annot-delete={deleteMode ? 'on' : 'off'}>
                     <div
-                      className="relative md:pr-[260px] w-full"
+                      className={`relative w-full ${composerOpen ? 'md:pr-[260px]' : ''}`}
                       ref={previewWrapRef}
                       onMouseUp={handlePreviewMouseUp}
                       onClick={(e) => {
