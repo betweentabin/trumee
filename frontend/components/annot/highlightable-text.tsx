@@ -12,6 +12,8 @@ type Props = {
   indexMap?: Record<string, number>; // annotationId -> 1-based index
   // When true, render ranges with a marker-like background instead of underline
   marker?: boolean;
+  // When provided, only ranges whose id is in this set render as markers
+  markerIds?: Array<string> | Set<string>;
 };
 
 // Render text with <mark> around the specified ranges. Assumes ranges are within bounds.
@@ -26,7 +28,7 @@ const toRGBA = (c?: string, alpha = 1) => {
   return `rgba(${r},${g},${b},${alpha})`;
 };
 
-const HighlightableText: React.FC<Props> = ({ text, ranges, className, colorMap = {}, indexMap = {}, marker = false }) => {
+const HighlightableText: React.FC<Props> = ({ text, ranges, className, colorMap = {}, indexMap = {}, marker = false, markerIds }) => {
   const len = text?.length ?? 0;
   const safeRanges = Array.isArray(ranges)
     ? [...ranges]
@@ -37,6 +39,10 @@ const HighlightableText: React.FC<Props> = ({ text, ranges, className, colorMap 
 
   const pieces: React.ReactNode[] = [];
   let cursor = 0;
+  const markerIdSet: Set<string> | null = (() => {
+    if (!markerIds) return null;
+    return markerIds instanceof Set ? markerIds : new Set(markerIds);
+  })();
   // NOTE: When ranges overlap, naive slicing duplicates text.
   // To prevent that, clip each range to start at least from `cursor` and
   // skip fully-covered ranges.
@@ -53,12 +59,13 @@ const HighlightableText: React.FC<Props> = ({ text, ranges, className, colorMap 
       const underline = r.resolved ? toRGBA(baseColor, 0.35) : toRGBA(baseColor, 0.85);
       const highlightBg = r.resolved ? toRGBA(baseColor, 0.14) : toRGBA(baseColor, 0.24);
       const badgeIdx = indexMap[r.id];
+      const isMarked = markerIdSet ? markerIdSet.has(String(r.id)) : marker;
       pieces.push(
         <mark
           key={`m-${r.id}-${start}`}
           data-annot-ref={`ann-${r.id}`}
           className={`px-[1px]`}
-          style={marker
+          style={isMarked
             ? { backgroundColor: highlightBg }
             : { backgroundColor: 'transparent', boxShadow: `inset 0 -2px 0 ${underline}` }
           }

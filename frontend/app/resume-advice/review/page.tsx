@@ -94,6 +94,62 @@ export default function ResumeReviewPage() {
   const [markTops, setMarkTops] = useState<Record<string, number>>({});
   const recalcTimerRef = useRef<number | null>(null);
 
+  // Helper: compute changed range ids from a ResumePreview-like object and annotations via quote comparison
+  const computeChangedRangeIdsFromPreview = useMemo(() => {
+    return (preview: ResumePreviewData | null | undefined, anns: any[]): Set<string> => {
+      try {
+        if (!preview) return new Set<string>();
+        const values = (preview.formValues || {}) as any;
+        const getAnchorText = (anchorId: string): string => {
+          if (!anchorId) return '';
+          if (anchorId === 'job_summary') return String((preview.jobSummary || preview.selfPR || ''));
+          if (anchorId === 'self_pr') return String(preview.selfPR || '');
+          if (anchorId.startsWith('work_content-')) {
+            const key = anchorId.replace('work_content-', '');
+            return String(values?.[key]?.work_content || '');
+          }
+          if (anchorId.startsWith('achievement-')) {
+            const rest = anchorId.replace('achievement-', '');
+            const m = rest.match(/^(.*)-(\d+)$/);
+            if (!m) return '';
+            const key = m[1];
+            const idx = parseInt(m[2], 10);
+            const v = values?.[key]?.achievements as any;
+            let list: string[] = [];
+            if (Array.isArray(v)) list = v.map((s: any) => String(s)).filter(Boolean);
+            else {
+              const s = String(v || '').trim();
+              if (s) list = s.split(/[\n\r,、，;；・]/).map((t) => t.trim()).filter(Boolean);
+            }
+            return String(list[idx] || '');
+          }
+          return '';
+        };
+        const setIds = new Set<string>();
+        const MIN_Q = 4;
+        (Array.isArray(anns) ? anns : []).forEach((a: any) => {
+          try {
+            const text = getAnchorText(String(a.anchor_id || ''));
+            const q = String(a.quote || '');
+            const start = Number(a.start_offset || 0);
+            const end = Number(a.end_offset || 0);
+            let changed = false;
+            if (q && q.trim().length >= MIN_Q) {
+              changed = !text.includes(q);
+            } else if (end > start && text) {
+              const sub = text.slice(Math.max(0, start), Math.max(start, end));
+              changed = q ? (sub !== q) : false;
+            }
+            if (changed) setIds.add(String(a.id));
+          } catch {}
+        });
+        return setIds;
+      } catch {
+        return new Set<string>();
+      }
+    };
+  }, []);
+
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messagesAll.length]);
@@ -1373,6 +1429,7 @@ export default function ResumeReviewPage() {
                         return recentlyChangedAnchors;
                       }
                     })()}
+                    changedRangeIds={computeChangedRangeIdsFromPreview(overridePreview, annotations)}
                     className="w-full"
                   />
                 ) : (
@@ -1402,6 +1459,16 @@ export default function ResumeReviewPage() {
                             return recentlyChangedAnchors;
                           }
                         })()}
+                        changedRangeIds={computeChangedRangeIdsFromPreview({
+                          userName: d.userName,
+                          jobhistoryList: d.jobhistoryList,
+                          formValues: d.formValues,
+                          resumeId: String(selected?.id || ''),
+                          jobSummary: (extra as any)?.jobSummary || '',
+                          selfPR: String(selected?.self_pr || ''),
+                          skills: Array.isArray(selected?.skills) ? (selected as any).skills : undefined,
+                          education: Array.isArray((extra as any)?.education) ? (extra as any).education : undefined,
+                        } as any, annotations)}
                         className="w-full"
                       />
                     );

@@ -58,6 +58,63 @@ export default function AdminSeekerDetailPage() {
   const [threadMessages, setThreadMessages] = useState<Record<string, ReviewMsg[]>>({});
   const [annotationFilter, setAnnotationFilter] = useState<string>('');
   const [threadSearch, setThreadSearch] = useState('');
+
+  // Compute fine-grained changed ranges (annotation ids) by comparing quotes against current preview text
+  const changedRangeIds = useMemo<Set<string>>(() => {
+    try {
+      const preview = resumePreview;
+      const anns = Array.isArray(annotations) ? annotations : [];
+      const jobKeys = Array.isArray(preview.jobhistoryList) ? preview.jobhistoryList : [];
+      const values = (preview.formValues || {}) as any;
+      const getAnchorText = (anchorId: string): string => {
+        if (!anchorId) return '';
+        if (anchorId === 'job_summary') return String((preview.jobSummary || preview.selfPR || ''));
+        if (anchorId === 'self_pr') return String(preview.selfPR || '');
+        if (anchorId.startsWith('work_content-')) {
+          const key = anchorId.replace('work_content-', '');
+          return String(values?.[key]?.work_content || '');
+        }
+        if (anchorId.startsWith('achievement-')) {
+          // achievement-<key>-<index>
+          const rest = anchorId.replace('achievement-', '');
+          const m = rest.match(/^(.*)-(\d+)$/);
+          if (!m) return '';
+          const key = m[1];
+          const idx = parseInt(m[2], 10);
+          const v = values?.[key]?.achievements as any;
+          let list: string[] = [];
+          if (Array.isArray(v)) list = v.map((s: any) => String(s)).filter(Boolean);
+          else {
+            const s = String(v || '').trim();
+            if (s) list = s.split(/[\n\r,、，;；・]/).map((t) => t.trim()).filter(Boolean);
+          }
+          return String(list[idx] || '');
+        }
+        return '';
+      };
+      const setIds = new Set<string>();
+      const MIN_Q = 4;
+      anns.forEach((a: any) => {
+        try {
+          const text = getAnchorText(String(a.anchor_id || ''));
+          const q = String(a.quote || '');
+          const start = Number(a.start_offset || 0);
+          const end = Number(a.end_offset || 0);
+          let changed = false;
+          if (q && q.trim().length >= MIN_Q) {
+            changed = !text.includes(q);
+          } else if (end > start && text) {
+            const sub = text.slice(Math.max(0, start), Math.max(start, end));
+            changed = q ? (sub !== q) : false;
+          }
+          if (changed) setIds.add(String(a.id));
+        } catch {}
+      });
+      return setIds;
+    } catch {
+      return new Set<string>();
+    }
+  }, [resumePreview, annotations]);
   const [didAutoSelectThread, setDidAutoSelectThread] = useState(false);
   const [threadReplyInput, setThreadReplyInput] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'unresolved' | 'resolved'>('all');
@@ -932,6 +989,7 @@ export default function AdminSeekerDetailPage() {
                         annotations={annotations}
                         className="w-full"
                         changedAnchors={resumePreview.changedAnchors}
+                        changedRangeIds={changedRangeIds}
                       />
                       {/* Hide underline style for annotation marks in admin preview */}
                       <style jsx>{`

@@ -29,6 +29,8 @@ type PreviewProps = {
   }>;
   // Anchors whose ranges should render with a marker-style background (instead of underline)
   changedAnchors?: Array<string> | Set<string>;
+  // Annotation ids (ranges) that should render as marker-style
+  changedRangeIds?: Array<string> | Set<string>;
 };
 
 const PreviewRow: React.FC<{ left: React.ReactNode; right: React.ReactNode }>
@@ -39,13 +41,17 @@ const PreviewRow: React.FC<{ left: React.ReactNode; right: React.ReactNode }>
   </tr>
 );
 
-const ResumePreview: React.FC<PreviewProps> = ({ userName, jobhistoryList, formValues, className, jobSummary, selfPR, skills, education, showHeader = true, showFrame = true, annotations = [], changedAnchors }) => {
+const ResumePreview: React.FC<PreviewProps> = ({ userName, jobhistoryList, formValues, className, jobSummary, selfPR, skills, education, showHeader = true, showFrame = true, annotations = [], changedAnchors, changedRangeIds }) => {
   const today = new Date();
   const ymd = `${today.getFullYear()}年${String(today.getMonth()+1).padStart(2,'0')}月${String(today.getDate()).padStart(2,'0')}日現在`;
 
   const changedSet: Set<string> = (() => {
     if (!changedAnchors) return new Set();
     return changedAnchors instanceof Set ? changedAnchors : new Set(changedAnchors);
+  })();
+  const changedRangeSet: Set<string> | null = (() => {
+    if (!changedRangeIds) return null;
+    return changedRangeIds instanceof Set ? changedRangeIds : new Set(changedRangeIds.map(String));
   })();
 
   const palette = ['#E56B6F','#6C9BD2','#7FB069','#E6B31E','#A77BD1','#E58F6B'];
@@ -63,6 +69,20 @@ const ResumePreview: React.FC<PreviewProps> = ({ userName, jobhistoryList, formV
   const rangesFor = (anchorId: string) => (annotations||[])
       .filter((a) => a.anchor_id === anchorId)
       .map((a) => ({ id: a.id, start: a.start_offset || 0, end: a.end_offset || 0, resolved: a.is_resolved }));
+  const markerIdsFor = (anchorId: string): string[] => {
+    if (!changedRangeSet) return [];
+    const ids = (annotations || [])
+      .filter((a) => a.anchor_id === anchorId && changedRangeSet.has(String(a.id)))
+      .map((a) => String(a.id));
+    return ids;
+  };
+  const markerPropFor = (anchorId: string) => {
+    if (changedRangeSet) {
+      const ids = markerIdsFor(anchorId);
+      return { markerIds: ids } as const;
+    }
+    return { marker: changedSet.has(anchorId) } as const;
+  };
 
   return (
     <div className={`bg-white ${showFrame ? 'border border-black' : ''} ${className || ''}`} data-annot-scope="resume-preview">
@@ -89,7 +109,7 @@ const ResumePreview: React.FC<PreviewProps> = ({ userName, jobhistoryList, formV
                 colorMap={colorMap}
                 indexMap={indexMap}
                 className="text-sm text-gray-800"
-                marker={changedSet.has('job_summary')}
+                {...markerPropFor('job_summary')}
               />
             </div>
           </div>
@@ -145,7 +165,7 @@ const ResumePreview: React.FC<PreviewProps> = ({ userName, jobhistoryList, formV
                         colorMap={colorMap}
                         indexMap={indexMap}
                         className="font-sans text-[0.95rem]"
-                        marker={changedSet.has(`work_content-${key}`)}
+                        {...markerPropFor(`work_content-${key}`)}
                       />
                       {achList.length > 0 && (
                         <div className="mt-3">
@@ -160,7 +180,7 @@ const ResumePreview: React.FC<PreviewProps> = ({ userName, jobhistoryList, formV
                                     colorMap={colorMap}
                                     indexMap={indexMap}
                                     className="font-sans text-[0.95rem]"
-                                    marker={changedSet.has(`achievement-${key}-${i}`)}
+                                    {...markerPropFor(`achievement-${key}-${i}`)}
                                   />
                                 </div>
                               </li>
@@ -194,7 +214,7 @@ const ResumePreview: React.FC<PreviewProps> = ({ userName, jobhistoryList, formV
               colorMap={colorMap}
               indexMap={indexMap}
               className="text-sm text-gray-800"
-              marker={changedSet.has('self_pr')}
+              {...markerPropFor('self_pr')}
             />
             </div>
           </div>
