@@ -69,9 +69,13 @@ export default function InterviewTopPage() {
 
   const questionsFromAdmins = useMemo(() => messages.filter(m => meId && String(m.sender) !== meId), [messages, meId]);
 
+  // Use full width within user pages; otherwise keep a comfortable max width
+  const containerWidth = userIdFromPath ? 'w-full' : 'max-w-6xl mx-auto';
+
   return (
     <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6">
+      {/* Expand to full available width inside user layout to avoid right-side whitespace */}
+      <div className={`${containerWidth} grid grid-cols-1 md:grid-cols-3 gap-6`}>
         {/* Left: received questions */}
         <aside className="bg-white rounded-lg shadow border p-4 md:col-span-1">
           <h2 className="text-lg font-semibold mb-3">受信した質問</h2>
