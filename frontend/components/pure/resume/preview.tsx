@@ -115,6 +115,39 @@ const ResumePreview: React.FC<PreviewProps> = ({ userName, jobhistoryList, formV
           </div>
         )}
 
+        {/* スキル */}
+        {(() => {
+          const list: string[] = (() => {
+            if (!skills) return [];
+            if (Array.isArray(skills)) return skills.map((s) => String(s)).map((s) => s.trim()).filter(Boolean);
+            const raw = String(skills || '').trim();
+            if (!raw) return [];
+            return raw.split(/[\n\r,、，;；・]/).map((s) => s.trim()).filter(Boolean);
+          })();
+          if (list.length === 0) return null;
+          return (
+            <div className="mb-6">
+              <h3 className="text-lg font-semibold mb-2">スキル</h3>
+              <ul className="list-disc pl-6 space-y-1">
+                {list.map((text, i) => (
+                  <li key={i} className="text-sm text-gray-800">
+                    <div className="relative" data-annot-id={`skill-${i}`}>
+                      <HighlightableText
+                        text={text}
+                        ranges={rangesFor(`skill-${i}`)}
+                        colorMap={colorMap}
+                        indexMap={indexMap}
+                        className="font-sans text-[0.95rem]"
+                        marker={changedSet.has(`skill-${i}`)}
+                      />
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          );
+        })()}
+
         <h3 className="text-lg font-semibold mb-4">会社の経歴・実績</h3>
 
         {jobhistoryList.length === 0 && (
