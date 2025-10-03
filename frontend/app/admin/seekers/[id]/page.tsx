@@ -589,7 +589,21 @@ export default function AdminSeekerDetailPage() {
             const t = await resInterview.text();
             console.error('interview duplicate send failed', resInterview.status, t);
           } else {
-            try { await loadInterview(); } catch {}
+            // Refresh interview messages inline to avoid dependency ordering issues
+            try {
+              const url = `${buildApiUrl('/advice/messages/')}?user_id=${id}&subject=interview`;
+              const resList = await fetch(url, { headers: getApiHeaders(token) });
+              if (resList.ok) {
+                const list = await resList.json();
+                const mapped = (list || []).map((m: any) => ({
+                  id: String(m.id),
+                  senderId: String(m.sender),
+                  content: (() => { try { const o = JSON.parse(m.content); return o && typeof o === 'object' ? o : { message: String(m.content ?? '') }; } catch { return { message: String(m.content ?? '') }; } })(),
+                  created_at: m.created_at,
+                }));
+                setInterviewMessages(mapped);
+              }
+            } catch {}
           }
         } catch (e) {
           console.error('interview duplicate send failed', e);
@@ -627,7 +641,7 @@ export default function AdminSeekerDetailPage() {
     } finally {
       setSendingReview(false);
     }
-  }, [pendingAnchor, composerText, composerAsInterview, token, id, loadReviewMessages, loadInterview]);
+  }, [pendingAnchor, composerText, composerAsInterview, token, id, loadReviewMessages]);
 
   const resolveAnnotation = useCallback(async (annotationId?: string) => {
     if (!annotationId) return;
