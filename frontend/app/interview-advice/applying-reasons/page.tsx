@@ -27,12 +27,15 @@ export default function ApplyingReasonsPage() {
   const [reasons, setReasons] = useState('');
   const [generatedReason, setGeneratedReason] = useState('');
   const [loading, setLoading] = useState(false);
-  const [openReason, setOpenReason] = useState(true);
+  // Collapsible hint sections on the right panel
+  // Start closed by default so content appears only after a click
+  const [openReason, setOpenReason] = useState(false);
   const [openRetire, setOpenRetire] = useState(false);
-  const [openFuture, setOpenFuture] = useState(true);
+  const [openFuture, setOpenFuture] = useState(false);
   // Active editor (controls the right-hand cards)
-  type EditorMode = 'applying' | 'resignation' | 'future';
-  const [editorMode, setEditorMode] = useState<EditorMode>('applying');
+  // Which editor to show on the right; null means nothing selected yet
+  type EditorMode = 'applying' | 'resignation' | 'future' | null;
+  const [editorMode, setEditorMode] = useState<EditorMode>(null);
   // Resignation inputs
   const [resignIssue, setResignIssue] = useState('');
   const [resignWhat, setResignWhat] = useState('');
@@ -70,6 +73,22 @@ export default function ApplyingReasonsPage() {
   type TopicKey = typeof topics[number]['key'];
   const [selectedTopic, setSelectedTopic] = useState<TopicKey | null>(null);
   const topicLabel = (k: TopicKey | null) => (k ? topics.find(t => t.key === k)?.label || '' : '');
+
+  // Unified handler when user selects a topic from the left list
+  const handleSelectTopic = (k: TopicKey) => {
+    setSelectedTopic(k);
+    // Sync right side visible section and its hints
+    if (k === 'applying' || k === 'aspiration') {
+      setEditorMode('applying');
+      setOpenReason(true); setOpenRetire(false); setOpenFuture(false);
+    } else if (k === 'retire') {
+      setEditorMode('resignation');
+      setOpenReason(false); setOpenRetire(true); setOpenFuture(false);
+    } else if (k === 'future') {
+      setEditorMode('future');
+      setOpenReason(false); setOpenRetire(false); setOpenFuture(true);
+    }
+  };
 
   // Support both /interview-advice/... and /users/:id/interview-advice/...
   const userIdFromPath = useMemo(() => {
@@ -408,25 +427,18 @@ export default function ApplyingReasonsPage() {
           <aside className="lg:col-span-3">
             <div className="bg-white rounded-lg border shadow-sm overflow-hidden">
               {topics.map((t) => (
-                <div key={t.key} className={`px-4 py-3 border-b last:border-b-0 text-sm flex items-center justify-between ${selectedTopic===t.key ? 'bg-orange-50' : 'hover:bg-gray-50'}`}>
+                <div
+                  key={t.key}
+                  className={`px-4 py-3 border-b last:border-b-0 text-sm flex items-center justify-between cursor-pointer ${selectedTopic===t.key ? 'bg-orange-50' : 'hover:bg-gray-50'}`}
+                  onClick={() => handleSelectTopic(t.key)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleSelectTopic(t.key); }}
+                >
                   <span>{t.label}</span>
-                  <button
-                    aria-label="Open chat"
-                    onClick={() => {
-                      setSelectedTopic(t.key);
-                      // Sync editor on right with topic selection
-                      if (t.key === 'applying' || t.key === 'aspiration') {
-                        setEditorMode('applying'); setOpenReason(true); setOpenRetire(false); setOpenFuture(false);
-                      } else if (t.key === 'retire') {
-                        setEditorMode('resignation'); setOpenReason(false); setOpenRetire(true); setOpenFuture(false);
-                      } else if (t.key === 'future') {
-                        setEditorMode('future'); setOpenReason(false); setOpenRetire(false); setOpenFuture(true);
-                      }
-                    }}
-                    className="p-1 rounded hover:bg-gray-200"
-                  >
-                    <FaPlus />
-                  </button>
+                  <span className="p-1 rounded">
+                    {selectedTopic===t.key ? <FaMinus /> : <FaPlus />}
+                  </span>
                 </div>
               ))}
             </div>
@@ -436,7 +448,7 @@ export default function ApplyingReasonsPage() {
           <main className="lg:col-span-9 space-y-6">
             {/* Collapsible sections */}
             <div className="bg-white rounded-lg shadow-sm border">
-              <button onClick={() => { const next = !openReason; setEditorMode('applying'); setOpenReason(next); if (next) { setOpenRetire(false); setOpenFuture(false); } }} className="w-full flex items-center justify-between px-4 py-3 font-semibold">
+              <button onClick={() => { const next = !openReason; setEditorMode('applying'); setOpenReason(next); if (next) { setOpenRetire(false); setOpenFuture(false); setSelectedTopic('applying'); } }} className="w-full flex items-center justify-between px-4 py-3 font-semibold">
                 転職理由(志望理由)
                 {openReason ? <FaMinus /> : <FaPlus />}
               </button>
@@ -451,7 +463,7 @@ export default function ApplyingReasonsPage() {
             </div>
 
             <div className="bg-white rounded-lg shadow-sm border">
-              <button onClick={() => { const next = !openRetire; setEditorMode('resignation'); setOpenRetire(next); if (next) { setOpenReason(false); setOpenFuture(false); } }} className="w-full flex items-center justify-between px-4 py-3 font-semibold">
+              <button onClick={() => { const next = !openRetire; setEditorMode('resignation'); setOpenRetire(next); if (next) { setOpenReason(false); setOpenFuture(false); setSelectedTopic('retire'); } }} className="w-full flex items-center justify-between px-4 py-3 font-semibold">
                 退職理由
                 {openRetire ? <FaMinus /> : <FaPlus />}
               </button>
@@ -463,7 +475,7 @@ export default function ApplyingReasonsPage() {
             </div>
 
             <div className="bg-white rounded-lg shadow-sm border">
-              <button onClick={() => { const next = !openFuture; setEditorMode('future'); setOpenFuture(next); if (next) { setOpenReason(false); setOpenRetire(false); } }} className="w-full flex items-center justify-between px-4 py-3 font-semibold">
+              <button onClick={() => { const next = !openFuture; setEditorMode('future'); setOpenFuture(next); if (next) { setOpenReason(false); setOpenRetire(false); setSelectedTopic('future'); } }} className="w-full flex items-center justify-between px-4 py-3 font-semibold">
                 将来やりたいこと
                 {openFuture ? <FaMinus /> : <FaPlus />}
               </button>

@@ -576,6 +576,25 @@ export default function AdminSeekerDetailPage() {
         setSendError(`送信に失敗しました (${res.status})`);
         return;
       }
+      // If marked as interview point, also post the same message to subject 'interview'.
+      if (composerAsInterview) {
+        try {
+          const interviewBody = { user_id: id, subject: 'interview', content: JSON.stringify({ message: msg }) };
+          const resInterview = await fetch(buildApiUrl('/advice/messages/'), {
+            method: 'POST',
+            headers: getApiHeaders(token),
+            body: JSON.stringify(interviewBody),
+          });
+          if (!resInterview.ok) {
+            const t = await resInterview.text();
+            console.error('interview duplicate send failed', resInterview.status, t);
+          } else {
+            try { await loadInterview(); } catch {}
+          }
+        } catch (e) {
+          console.error('interview duplicate send failed', e);
+        }
+      }
       setComposerOpen(false);
       setComposerText('');
       setComposerAsInterview(false);
@@ -608,7 +627,7 @@ export default function AdminSeekerDetailPage() {
     } finally {
       setSendingReview(false);
     }
-  }, [pendingAnchor, composerText, composerAsInterview, token, id, loadReviewMessages]);
+  }, [pendingAnchor, composerText, composerAsInterview, token, id, loadReviewMessages, loadInterview]);
 
   const resolveAnnotation = useCallback(async (annotationId?: string) => {
     if (!annotationId) return;
