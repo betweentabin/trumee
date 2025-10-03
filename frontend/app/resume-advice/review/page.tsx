@@ -77,6 +77,7 @@ export default function ResumeReviewPage() {
   // Layout split (left preview | right editor)
   const [split, setSplit] = useState<'leftWide' | 'balanced' | 'rightWide'>('balanced');
   const [editSelfPr, setEditSelfPr] = useState('');
+  const [editSkills, setEditSkills] = useState(''); // mirrors resume.skills (newline separated)
   const [editWorkDesc, setEditWorkDesc] = useState<string[]>([]); // mirrors extra_data.workExperiences[].description
   const [editAchievements, setEditAchievements] = useState<string[]>([]); // mirrors extra_data.workExperiences[].achievements (as multiline string)
   const [editJobSummary, setEditJobSummary] = useState('');
@@ -543,6 +544,13 @@ export default function ResumeReviewPage() {
         ? curJobSummary
         : (baseJobSummary.trim() ? baseJobSummary : String(jobSummaryFallbackFromPr || ''));
       setEditJobSummary(initialSummary);
+      // skills (text, newline separated). Prefer resume.skills; fallback to extra.skills array
+      try {
+        const s = String(selected?.skills || '');
+        if (s.trim()) setEditSkills(s);
+        else if (Array.isArray((extra as any)?.skills)) setEditSkills(((extra as any).skills as any[]).join('\n'));
+        else setEditSkills('');
+      } catch { setEditSkills(''); }
       setFormError(null);
       return;
     }
@@ -568,12 +576,16 @@ export default function ResumeReviewPage() {
       }
       const js = String(overridePreview.jobSummary || '') || pr;
       setEditJobSummary(js);
+      try {
+        const arr = Array.isArray(overridePreview.skills) ? overridePreview.skills as any[] : [];
+        setEditSkills(arr.join('\n'));
+      } catch { setEditSkills(''); }
       setFormError(null);
     }
   }, [mode, selected, currentWorkExperiences, overridePreview]);
 
   // Lightweight validation for edit fields
-  const limits = { selfPr: 4000, jobSummary: 1200, workDesc: 4000, achievements: 2000 } as const;
+  const limits = { selfPr: 4000, jobSummary: 1200, workDesc: 4000, achievements: 2000, skills: 2000 } as const;
   const validateEdit = (): string | null => {
     if (editSelfPr.length > limits.selfPr) return `自己PRは${limits.selfPr}文字以内にしてください`;
     if (editJobSummary.length > limits.jobSummary) return `職務要約は${limits.jobSummary}文字以内にしてください`;
@@ -583,6 +595,7 @@ export default function ResumeReviewPage() {
     for (let i = 0; i < editAchievements.length; i++) {
       if ((editAchievements[i] || '').length > limits.achievements) return `実績(${i + 1})は${limits.achievements}文字以内にしてください`;
     }
+    if (editSkills.length > limits.skills) return `スキルは${limits.skills}文字以内にしてください`;
     return null;
   };
 
@@ -640,6 +653,7 @@ export default function ResumeReviewPage() {
       }));
       const payload: any = {
         self_pr: editSelfPr,
+        skills: editSkills,
         extra_data: { ...(extra || {}), workExperiences, jobSummary: editJobSummary },
       };
       const res = await fetch(`${apiUrl}/api/v2/resumes/${encodeURIComponent(rid)}/`, {
@@ -745,6 +759,7 @@ export default function ResumeReviewPage() {
         headers: { ...getAuthHeaders() },
         body: JSON.stringify({
           self_pr: editSelfPr,
+          skills: editSkills,
           extra_data: {
             ...(extra || {}),
             workExperiences,
@@ -1796,6 +1811,16 @@ export default function ResumeReviewPage() {
                   placeholder="職務要約（短いサマリ）を入力"
                 />
                 <div className="text-[11px] text-secondary-500 text-right">{editJobSummary.length} / {limits.jobSummary}</div>
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-secondary-800 mb-1">スキル</label>
+                <textarea
+                  value={editSkills}
+                  onChange={(e) => setEditSkills(e.target.value)}
+                  className="w-full min-h-24 rounded border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-600 bg-white"
+                  placeholder={`例:\nExcel：関数・ピボット・グラフ\nWord：ビジネス文書作成\nその他：メール・ファイル管理`}
+                />
+                <div className="text-[11px] text-secondary-500 text-right">{editSkills.length} / {limits.skills}</div>
               </div>
               {currentWorkExperiences.map((w: any, i: number) => (
                 <div key={i} className="border rounded bg-white p-2">
