@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { buildApiUrl, getApiHeaders, API_CONFIG } from '@/config/api';
+import toast from 'react-hot-toast';
 
 type AdminCompany = {
   id: string;
@@ -36,6 +37,8 @@ export default function AdminCompaniesPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<Paginated<AdminCompany>>({ count: 0, next: null, previous: null, results: [] });
+  const [topupDelta, setTopupDelta] = useState<number>(100);
+  const [topupLoading, setTopupLoading] = useState(false);
 
   const token = useMemo(() => {
     if (typeof window === 'undefined') return '';
@@ -96,6 +99,48 @@ export default function AdminCompaniesPage() {
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">企業一覧</h1>
+        </div>
+
+        {/* Bulk top-up */}
+        <div className="bg-white rounded-xl shadow border p-6 mb-6">
+          <div className="flex flex-col md:flex-row gap-4 md:items-end">
+            <div>
+              <label className="block text-sm text-gray-600 mb-1">一括付与数（スカウトクレジット）</label>
+              <input
+                type="number"
+                value={topupDelta}
+                min={1}
+                onChange={(e)=>setTopupDelta(Math.max(1, parseInt(e.target.value || '1', 10)))}
+                className="w-40 rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-300"
+              />
+            </div>
+            <div>
+              <button
+                disabled={topupLoading}
+                onClick={async ()=>{
+                  try {
+                    setTopupLoading(true);
+                    const res = await fetch(buildApiUrl('/admin/companies/credits/topup/'), {
+                      method: 'POST',
+                      headers: getApiHeaders(token),
+                      body: JSON.stringify({ delta: Number.isFinite(topupDelta) ? topupDelta : 1 }),
+                    });
+                    if (!res.ok) {
+                      const t = await res.text();
+                      throw new Error(`付与に失敗しました (${res.status}) ${t}`);
+                    }
+                    toast.success('全企業に付与しました');
+                    await fetchCompanies();
+                  } catch (e:any) {
+                    toast.error(e?.message || '付与に失敗しました');
+                  } finally {
+                    setTopupLoading(false);
+                  }
+                }}
+                className="px-4 py-2 rounded-md bg-[#1F2937] text-white hover:bg-[#111827] disabled:opacity-50"
+              >{topupLoading ? '適用中…' : '一括付与する'}</button>
+            </div>
+          </div>
         </div>
 
         {/* Filters */}

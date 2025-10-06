@@ -482,6 +482,9 @@ def create_stripe_checkout_session(request):
         interval = request.data.get('interval')
         mode = request.data.get('mode')
         role = request.data.get('role')
+        # Additional metadata for job tickets and other flows
+        job_id = request.data.get('job_id')
+        tickets_add = request.data.get('tickets_add')
 
         metadata = {
             'user_id': str(request.user.id),
@@ -489,6 +492,13 @@ def create_stripe_checkout_session(request):
         }
         if role:
             metadata['role'] = role
+        if job_id:
+            metadata['job_id'] = str(job_id)
+        if tickets_add is not None:
+            try:
+                metadata['tickets_add'] = int(tickets_add)
+            except Exception:
+                pass
 
         if price_id:
             session = stripe.checkout.Session.create(
