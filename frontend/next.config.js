@@ -5,7 +5,7 @@ const path = require("path");
 const nextConfig = {
   // Image optimization settings
   images: {
-    domains: ['localhost', 'trumeee.vercel.app', 'trumee-production.up.railway.app'],
+    domains: ['localhost', 'truemee.jp', 'www.truemee.jp', 'trumeee.vercel.app', 'trumee-production.up.railway.app'],
     unoptimized: true, // Vercel compatibility; we use plain <img> too
     loader: 'default',
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],

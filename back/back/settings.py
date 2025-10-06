@@ -37,6 +37,9 @@ FIREBASE_CONFIG = {
 # ====== Allowed Hosts ======
 ALLOWED_HOSTS = [
     "85.131.248.214",
+    "truemee.jp",
+    "www.truemee.jp",
+    "api.truemee.jp",
     "localhost",
     "127.0.0.1",
     "0.0.0.0",
@@ -54,6 +57,8 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:3001",
     "http://127.0.0.1:3000",
     "http://127.0.0.1:3001",
+    "https://truemee.jp",  # 本番ドメイン
+    "https://www.truemee.jp",  # www付きドメイン
     "https://trumee-h7ygmkzis-taiga1226s-projects.vercel.app",  # 旧URL1
     "https://trumee-3msjm6bnn-taiga1226s-projects.vercel.app",  # 旧URL2
     "https://trumee-3jps5yj06-taiga1226s-projects.vercel.app",  # 旧URL3
@@ -348,6 +353,8 @@ if (os.getenv('ENABLE_PROD_SECURITY', 'false').lower() == 'true') or (not DEBUG)
 
 # CSRFで信頼するオリジン（フォームPOST等のため）
 CSRF_TRUSTED_ORIGINS = [
+    'https://truemee.jp',
+    'https://www.truemee.jp',
     'https://*.vercel.app',
     'https://*.railway.app',
     'http://localhost:3000',

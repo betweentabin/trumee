@@ -17,9 +17,9 @@
 ```
 DJANGO_SECRET_KEY=your_secret_key_here
 DATABASE_URL=postgresql://... (Railwayが自動設定)
-ALLOWED_HOSTS=your-railway-app.railway.app
-CORS_ALLOWED_ORIGINS=https://your-vercel-app.vercel.app
-CSRF_TRUSTED_ORIGINS=https://your-vercel-app.vercel.app
+ALLOWED_HOSTS=truemee.jp,www.truemee.jp,api.truemee.jp,your-railway-app.railway.app
+CORS_ALLOWED_ORIGINS=https://truemee.jp,https://www.truemee.jp,https://your-vercel-app.vercel.app
+CSRF_TRUSTED_ORIGINS=https://truemee.jp,https://www.truemee.jp,https://your-vercel-app.vercel.app
 ```
 
 ### デプロイ手順
@@ -41,7 +41,7 @@ CSRF_TRUSTED_ORIGINS=https://your-vercel-app.vercel.app
 
 ### 必要な環境変数
 ```
-NEXT_PUBLIC_API_URL=https://your-railway-app.railway.app
+NEXT_PUBLIC_API_URL=https://api.truemee.jp
 NEXT_PUBLIC_API_TIMEOUT=30000
 NEXT_PUBLIC_ENV=production
 

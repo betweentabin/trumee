@@ -1,7 +1,7 @@
 # ====== Django設定 ======
 DJANGO_SECRET_KEY=your-secret-key-here
 DEBUG=True
-ALLOWED_HOSTS=localhost,127.0.0.1,0.0.0.0
+ALLOWED_HOSTS=localhost,127.0.0.1,0.0.0.0,truemee.jp,www.truemee.jp,api.truemee.jp
 ENABLE_PROD_SECURITY=false  # 本番相当のセキュリティ設定を強制する場合はtrue
 
 # ====== データベース設定 ======
