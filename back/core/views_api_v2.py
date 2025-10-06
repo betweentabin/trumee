@@ -938,6 +938,14 @@ def update_user_info(request, user_id):
             'phone': user.phone,
             'message': 'ユーザー情報を更新しました'
         }, status=status.HTTP_200_OK)
+    except Exception as e:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error("update_user_info failed: %s", e)
+        return Response({
+            'error': 'ユーザー情報の更新に失敗しました',
+            'detail': str(e) if settings.DEBUG else None,
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view(['GET'])
@@ -1037,12 +1045,6 @@ def admin_analytics_summary(request):
     }
 
     return Response(data, status=status.HTTP_200_OK)
-    except Exception as e:
-        logger.error(f"User update error: {str(e)}")
-        return Response({
-            'error': 'ユーザー情報の更新に失敗しました',
-            'detail': str(e) if settings.DEBUG else None
-        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 # ============================================================================

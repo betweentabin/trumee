@@ -113,6 +113,10 @@ const AdminMenuOptions = [
     url: "/admin/seekers",
   },
   {
+    label: "企業一覧",
+    url: "/admin/companies",
+  },
+  {
     label: "分析",
     url: "/admin/analytics",
   },
