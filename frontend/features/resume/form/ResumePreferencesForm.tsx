@@ -162,7 +162,7 @@ const ResumePreferencesForm = forwardRef<ResumePreferencesFormHandle, Props>(({ 
             type="month"
             value={form.availableDate || ''}
             onChange={(e) => handleChange('availableDate', e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-default focus:border-transparent"
+            className="input-date"
           />
         </div>
       </div>

@@ -468,7 +468,7 @@ export default function EditResumePage() {
                       <label className="block text-sm font-medium text-gray-700 mb-2">卒業年月</label>
                       <input
                         type="date"
-                        className="w-full p-2 border rounded-lg"
+                        className="input-date"
                         value={edu.graduationDate}
                         onChange={(e) => {
                           const updated = [...resumeData.education];

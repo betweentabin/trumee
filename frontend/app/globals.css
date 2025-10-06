@@ -130,7 +130,10 @@ body {
 
 /* Stylish native date/month inputs shared across the app */
 @layer components {
-  .input-date {
+  /* Apply to both the .input-date class and all date/month inputs for consistency */
+  .input-date,
+  input[type="date"],
+  input[type="month"] {
     /* Base */
     @apply w-full h-11 px-4 pr-11 rounded-xl border border-secondary-300 bg-white text-secondary-900 shadow-sm transition-all duration-150 ease-out;
     @apply focus:outline-none focus:ring-2 focus:ring-primary-600 focus:border-transparent hover:border-secondary-400;
@@ -142,27 +145,20 @@ body {
     background-repeat: no-repeat;
     background-position: right 12px center;
     background-size: 20px;
-    appearance: none;
-    -webkit-appearance: none;
   }
 
   /* Hide default clear/spinners while keeping calendar area clickable */
-  input[type="date"].input-date::-webkit-clear-button,
-  input[type="date"].input-date::-webkit-inner-spin-button,
-  input[type="month"].input-date::-webkit-clear-button,
-  input[type="month"].input-date::-webkit-inner-spin-button {
+  input[type="date"]::-webkit-clear-button,
+  input[type="date"]::-webkit-inner-spin-button,
+  input[type="month"]::-webkit-clear-button,
+  input[type="month"]::-webkit-inner-spin-button {
     display: none;
   }
 
   /* Keep native picker clickable but invisible so our icon shows */
-  input[type="date"].input-date::-webkit-calendar-picker-indicator,
-  input[type="month"].input-date::-webkit-calendar-picker-indicator {
-    opacity: 0;
-    width: 36px;
-    height: 100%;
-    margin: 0;
-    position: absolute;
-    right: 6px;
+  input[type="date"]::-webkit-calendar-picker-indicator,
+  input[type="month"]::-webkit-calendar-picker-indicator {
+    opacity: 0; /* hide native icon but keep it clickable */
     cursor: pointer;
   }
 }

@@ -172,9 +172,7 @@ export default function Step1ProfilePage() {
                 name="birthDate"
                 value={formData.birthDate}
                 onChange={handleChange}
-                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-[#FF6B35] focus:border-[#FF6B35] ${
-                  errors.birthDate ? 'border-red-300' : 'border-gray-300'
-                }`}
+                className={`input-date ${errors.birthDate ? 'border-red-300' : ''}`}
               />
               {errors.birthDate && (
                 <p className="mt-1 text-xs text-red-600">{errors.birthDate}</p>

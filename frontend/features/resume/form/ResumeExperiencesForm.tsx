@@ -166,9 +166,7 @@ const ResumeExperiencesForm = forwardRef<ResumeExperiencesFormHandle, Props>(({ 
                   type="month"
                   value={exp.periodFrom}
                   onChange={(e) => handleChange(index, 'periodFrom', e.target.value)}
-                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary-default focus:border-transparent ${
-                    errors[index]?.periodFrom ? 'border-red-300' : 'border-gray-300'
-                  }`}
+                  className={`input-date ${errors[index]?.periodFrom ? 'border-red-300' : ''}`}
                 />
                 {errors[index]?.periodFrom && <p className="mt-1 text-sm text-red-600">{errors[index]?.periodFrom}</p>}
               </div>
@@ -178,9 +176,7 @@ const ResumeExperiencesForm = forwardRef<ResumeExperiencesFormHandle, Props>(({ 
                   type="month"
                   value={exp.periodTo}
                   onChange={(e) => handleChange(index, 'periodTo', e.target.value)}
-                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary-default focus:border-transparent ${
-                    errors[index]?.periodTo ? 'border-red-300' : 'border-gray-300'
-                  }`}
+                  className={`input-date ${errors[index]?.periodTo ? 'border-red-300' : ''}`}
                 />
                 {errors[index]?.periodTo && <p className="mt-1 text-sm text-red-600">{errors[index]?.periodTo}</p>}
               </div>
