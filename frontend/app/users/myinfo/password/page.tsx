@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import useAuthV2 from '@/hooks/useAuthV2';
 import { getAccessToken } from '@/utils/auth';
+import apiV2Client from '@/lib/api-v2-client';
 // Left nav is provided by users/layout; do not render it here
 
 export default function UserPasswordPage() {
@@ -12,6 +13,7 @@ export default function UserPasswordPage() {
   const { isAuthenticated, initializeAuth } = useAuthV2();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
+    currentPassword: '',
     newPassword: '',
     confirmPassword: ''
   });
@@ -40,15 +42,18 @@ export default function UserPasswordPage() {
 
     setLoading(true);
     try {
-      // TODO: パスワード更新APIと接続
-      setTimeout(() => {
-        setLoading(false);
-        toast.success('パスワードを保存しました');
-        setFormData({ newPassword: '', confirmPassword: '' });
-      }, 800);
-    } catch (error) {
+      await apiV2Client.changePassword({
+        current_password: formData.currentPassword,
+        new_password: formData.newPassword,
+        confirm_password: formData.confirmPassword,
+      });
       setLoading(false);
-      toast.error('パスワードの変更に失敗しました');
+      toast.success('パスワードを保存しました');
+      setFormData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+    } catch (error: any) {
+      setLoading(false);
+      const msg = error?.response?.data?.detail || 'パスワードの変更に失敗しました';
+      toast.error(msg);
     }
   };
 
@@ -73,6 +78,15 @@ export default function UserPasswordPage() {
 
             <form onSubmit={handleSubmit} className="bg-white rounded-xl border p-6">
               <div className="space-y-5">
+                <div>
+                  <label className="block text-sm text-gray-700 mb-1">現在のパスワード</label>
+                  <input
+                    type="password"
+                    value={formData.currentPassword}
+                    onChange={(e) => setFormData({ ...formData, currentPassword: e.target.value })}
+                    className="w-full px-3 py-2 border rounded-md"
+                  />
+                </div>
                 <div>
                   <label className="block text-sm text-gray-700 mb-1">新規パスワード（8文字以上）</label>
                   <input

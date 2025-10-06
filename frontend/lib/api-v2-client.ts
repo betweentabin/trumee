@@ -155,6 +155,11 @@ class ApiV2Client {
     return response.data;
   }
 
+  async changePassword(payload: { current_password: string; new_password: string; confirm_password?: string }): Promise<{ message: string }> {
+    const res = await this.client.post(API_ENDPOINTS.CHANGE_PASSWORD, payload);
+    return res.data as any;
+  }
+
   async logout(): Promise<void> {
     this.clearToken();
   }

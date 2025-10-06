@@ -30,6 +30,8 @@ urlpatterns = [
     path('auth/register-user/', views_api_v2.register_user_v2, name='register-user-v2'),
     path('auth/register-company/', views_api_v2.register_company_v2, name='register-company-v2'),
     path('auth/login/', views_api_v2.login_v2, name='login-v2'),
+    # パスワード変更
+    path('auth/password/change/', views_api_v2.change_password_v2, name='change-password-v2'),
     
     # 検索・マッチング
     path('search/seekers/', views_api_v2.search_seekers_v2, name='search-seekers-v2'),

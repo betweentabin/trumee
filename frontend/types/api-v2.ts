@@ -531,6 +531,7 @@ export const API_ENDPOINTS = {
   LOGIN: '/api/v2/auth/login/',
   REGISTER_USER: '/api/v2/auth/register-user/',
   REGISTER_COMPANY: '/api/v2/auth/register-company/',
+  CHANGE_PASSWORD: '/api/v2/auth/password/change/',
   
   // プロフィール
   USER_PROFILE: '/api/v2/profile/me/',

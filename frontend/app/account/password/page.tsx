@@ -6,6 +6,7 @@ import { FaLock, FaEye, FaEyeSlash, FaCheckCircle } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 import useAuthV2 from '@/hooks/useAuthV2';
 import { getAccessToken } from '@/utils/auth';
+import apiV2Client from '@/lib/api-v2-client';
 
 export default function PasswordChangePage() {
   const router = useRouter();
@@ -60,19 +61,22 @@ export default function PasswordChangePage() {
 
     setLoading(true);
     try {
-      // API呼び出しのシミュレーション
-      setTimeout(() => {
-        setLoading(false);
-        toast.success('パスワードを変更しました');
-        setFormData({
-          currentPassword: '',
-          newPassword: '',
-          confirmPassword: ''
-        });
-      }, 1000);
-    } catch (error) {
+      await apiV2Client.changePassword({
+        current_password: formData.currentPassword,
+        new_password: formData.newPassword,
+        confirm_password: formData.confirmPassword,
+      });
       setLoading(false);
-      toast.error('パスワードの変更に失敗しました');
+      toast.success('パスワードを変更しました');
+      setFormData({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+      });
+    } catch (error: any) {
+      setLoading(false);
+      const msg = error?.response?.data?.detail || 'パスワードの変更に失敗しました';
+      toast.error(msg);
     }
   };
 

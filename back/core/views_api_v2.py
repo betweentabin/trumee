@@ -32,6 +32,8 @@ import jwt
 import datetime
 import os
 from django.core.cache import cache
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError as DjangoValidationError
 
 from .models import (
     User, SeekerProfile, CompanyProfile, Resume, Experience, 
@@ -944,6 +946,57 @@ def login_v2(request):
         }, status=status.HTTP_200_OK)
     
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def change_password_v2(request):
+    """認証済みユーザーのパスワード変更（v2）
+    入力: current_password, new_password（または camelCase 対応）
+    """
+    try:
+        # 入力取得（snake_case / camelCase 両方受容）
+        current_password = (
+            request.data.get('current_password')
+            or request.data.get('currentPassword')
+        )
+        new_password = (
+            request.data.get('new_password')
+            or request.data.get('newPassword')
+        )
+        confirm_password = (
+            request.data.get('confirm_password')
+            or request.data.get('confirmPassword')
+        )
+
+        if not current_password:
+            return Response({'detail': '現在のパスワードを入力してください'}, status=status.HTTP_400_BAD_REQUEST)
+        if not new_password:
+            return Response({'detail': '新しいパスワードを入力してください'}, status=status.HTTP_400_BAD_REQUEST)
+        if confirm_password is not None and new_password != confirm_password:
+            return Response({'detail': '確認用パスワードが一致しません'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # 現在のパスワード確認
+        if not request.user.check_password(current_password):
+            return Response({'detail': '現在のパスワードが正しくありません'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # 強度バリデーション（settingsのAUTH_PASSWORD_VALIDATORSに準拠）
+        try:
+            validate_password(new_password, user=request.user)
+        except DjangoValidationError as e:
+            return Response({'detail': 'パスワード要件を満たしていません', 'errors': e.messages}, status=status.HTTP_400_BAD_REQUEST)
+
+        # 更新
+        user = request.user
+        user.set_password(new_password)
+        user.save(update_fields=['password'])
+
+        # 追加のセキュリティ対策（任意）: ログイン中のDRFトークンはそのまま維持
+        # 必要であればTokenをローテーションする実装に変更可能
+
+        return Response({'message': 'パスワードを変更しました'}, status=status.HTTP_200_OK)
+    except Exception as e:
+        return Response({'detail': str(e) if settings.DEBUG else 'サーバーエラーが発生しました'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 # ============================================================================
