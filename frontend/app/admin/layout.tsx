@@ -112,4 +112,8 @@ const AdminMenuOptions = [
     label: "求職者一覧",
     url: "/admin/seekers",
   },
+  {
+    label: "分析",
+    url: "/admin/analytics",
+  },
 ];

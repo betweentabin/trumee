@@ -43,6 +43,8 @@ urlpatterns = [
     path('admin/users/<uuid:user_id>/overview/', views_api_v2.admin_user_overview, name='admin-user-overview'),
     path('admin/users/<uuid:user_id>/resumes/', views_api_v2.admin_user_resumes, name='admin-user-resumes'),
     path('admin/users/<uuid:user_id>/plan/', views_api_v2.admin_update_user_plan, name='admin-user-update-plan'),
+    # 管理者分析
+    path('admin/analytics/summary/', views_api_v2.admin_analytics_summary, name='admin-analytics-summary'),
     
     # プロフィール
     path('profile/me/', views_api_v2.user_profile_v2, name='user-profile-v2'),

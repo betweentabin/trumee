@@ -872,7 +872,28 @@ def login_v2(request):
     
     if serializer.is_valid():
         user = serializer.validated_data['user']
-        
+        # last_login を明示更新（トークン認証でも最終ログインが可視化されるように）
+        try:
+            user.last_login = timezone.now()
+            user.save(update_fields=['last_login'])
+        except Exception:
+            pass
+
+        # 活動ログを記録（失敗しても全体のレスポンスには影響させない）
+        try:
+            from .models import ActivityLog
+            ip = request.META.get('HTTP_X_FORWARDED_FOR', '').split(',')[0].strip() or request.META.get('REMOTE_ADDR') or None
+            ua = request.META.get('HTTP_USER_AGENT', '')
+            ActivityLog.objects.create(
+                user=user,
+                action='login',
+                details={'via': 'api_v2'},
+                ip_address=ip,
+                user_agent=ua,
+            )
+        except Exception:
+            pass
+
         # DRFトークン取得または作成
         drf_token, created = Token.objects.get_or_create(user=user)
         
@@ -917,7 +938,105 @@ def update_user_info(request, user_id):
             'phone': user.phone,
             'message': 'ユーザー情報を更新しました'
         }, status=status.HTTP_200_OK)
-        
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def admin_analytics_summary(request):
+    """管理者向け: ユーザー属性・活動の簡易集計サマリ
+
+    GET /api/v2/admin/analytics/summary/
+    返却: totals/plan_distribution/login_recency/registrations_trend/age_buckets/payments_recent
+    """
+    if not request.user.is_staff:
+        return Response({'detail': '管理者権限が必要です'}, status=status.HTTP_403_FORBIDDEN)
+
+    from django.db.models import Count, Q
+    from django.db.models.functions import TruncDate
+    from .models import User, SeekerProfile, Payment
+
+    now = timezone.now()
+    today = now.date()
+    d7 = now - datetime.timedelta(days=7)
+    d30 = now - datetime.timedelta(days=30)
+    d90 = now - datetime.timedelta(days=90)
+
+    # Totals
+    totals = {
+        'users': User.objects.count(),
+        'seekers': User.objects.filter(role='user').count(),
+        'companies': User.objects.filter(role='company').count(),
+        'active': User.objects.filter(is_active=True).count(),
+        'premium': User.objects.filter(is_premium=True).count(),
+    }
+
+    # Plan distribution
+    plan_distribution = {
+        'none': User.objects.filter(plan_tier='').count(),
+        'starter': User.objects.filter(plan_tier='starter').count(),
+        'standard': User.objects.filter(plan_tier='standard').count(),
+        'premium': User.objects.filter(plan_tier='premium').count(),
+    }
+
+    # Login recency
+    login_recency = {
+        'within_7d': User.objects.filter(last_login__gte=d7).count(),
+        'within_30d': User.objects.filter(last_login__gte=d30).count(),
+        'within_90d': User.objects.filter(last_login__gte=d90).count(),
+        'none': User.objects.filter(last_login__isnull=True).count(),
+        'older_90d': User.objects.filter(last_login__lt=d90, last_login__isnull=False).count(),
+    }
+
+    # Registrations trend (last 30 days, daily)
+    since = today - datetime.timedelta(days=29)
+    trend_qs = (
+        User.objects.filter(created_at__date__gte=since)
+        .annotate(d=TruncDate('created_at'))
+        .values('d')
+        .annotate(count=Count('id'))
+        .order_by('d')
+    )
+    trend_map = {row['d']: row['count'] for row in trend_qs}
+    registrations_trend = []
+    for i in range(30):
+        day = since + datetime.timedelta(days=i)
+        registrations_trend.append({'date': day.isoformat(), 'count': int(trend_map.get(day, 0))})
+
+    # Age buckets (seekers only)
+    total_seekers = User.objects.filter(role='user').count()
+    birthdays = list(SeekerProfile.objects.filter(birthday__isnull=False).values_list('birthday', flat=True))
+    def _age(bday):
+        try:
+            return today.year - bday.year - ((today.month, today.day) < (bday.month, bday.day))
+        except Exception:
+            return None
+    ages = [a for a in (_age(b) for b in birthdays) if a is not None]
+    age_buckets = {
+        'under20': sum(1 for a in ages if a < 20),
+        '20s': sum(1 for a in ages if 20 <= a <= 29),
+        '30s': sum(1 for a in ages if 30 <= a <= 39),
+        '40s': sum(1 for a in ages if 40 <= a <= 49),
+        '50_plus': sum(1 for a in ages if a >= 50),
+        'unknown': max(0, total_seekers - len(ages)),
+    }
+
+    # Payments recent
+    payments_recent = {
+        'last_30d': Payment.objects.filter(created_at__gte=d30).count(),
+        'last_90d': Payment.objects.filter(created_at__gte=d90).count(),
+    }
+
+    data = {
+        'totals': totals,
+        'plan_distribution': plan_distribution,
+        'login_recency': login_recency,
+        'registrations_trend': registrations_trend,
+        'age_buckets': age_buckets,
+        'payments_recent': payments_recent,
+        'generated_at': now,
+    }
+
+    return Response(data, status=status.HTTP_200_OK)
     except Exception as e:
         logger.error(f"User update error: {str(e)}")
         return Response({
