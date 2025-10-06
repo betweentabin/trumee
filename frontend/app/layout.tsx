@@ -22,9 +22,9 @@ export const metadata: Metadata = {
   title: "TruMee - 転職支援プラットフォーム",
   description: "TruMeeは求職者と企業をつなぐ転職支援プラットフォームです",
   icons: {
-    icon: "/logo/Group%207.png",
-    shortcut: "/logo/Group%207.png",
-    apple: "/logo/Group%207.png",
+    icon: "/logo/logo_mix_fabicon.png",
+    shortcut: "/logo/logo_mix_fabicon.png",
+    apple: "/logo/logo_mix_fabicon.png",
   },
   openGraph: {
     title: "TruMee - 転職支援プラットフォーム",
