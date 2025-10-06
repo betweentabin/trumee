@@ -162,28 +162,50 @@ const ResumeExperiencesForm = forwardRef<ResumeExperiencesFormHandle, Props>(({ 
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   入社年月 <span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="month"
-                  value={exp.periodFrom}
-                  onChange={(e) => handleChange(index, 'periodFrom', e.target.value)}
-                  className={`w-full h-11 px-4 pr-10 rounded-xl border shadow-sm bg-white text-gray-900 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-default focus:border-transparent ${
-                    errors[index]?.periodFrom ? 'border-red-300' : 'border-gray-300 hover:border-gray-400'
-                  }`}
-                  style={{ fontVariantNumeric: 'tabular-nums' }}
-                />
+                <div className="relative group">
+                  <input
+                    type="month"
+                    value={exp.periodFrom}
+                    onChange={(e) => handleChange(index, 'periodFrom', e.target.value)}
+                    className={`w-full h-11 px-4 pr-12 rounded-xl border shadow-sm bg-white text-gray-900 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-default focus:border-transparent hover:bg-[#FF733E]/5 ${
+                      errors[index]?.periodFrom ? 'border-red-300' : 'border-gray-300'
+                    }`}
+                    style={{ fontVariantNumeric: 'tabular-nums' }}
+                  />
+                  <svg
+                    className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-primary-default transition-colors"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <rect x="3" y="4.5" width="18" height="16" rx="3" stroke="currentColor" strokeWidth="1.5" />
+                    <path d="M8 2.5V6M16 2.5V6M3 9h18" stroke="currentColor" strokeWidth="1.5" />
+                  </svg>
+                </div>
                 {errors[index]?.periodFrom && <p className="mt-1 text-sm text-red-600">{errors[index]?.periodFrom}</p>}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">退社年月</label>
-                <input
-                  type="month"
-                  value={exp.periodTo}
-                  onChange={(e) => handleChange(index, 'periodTo', e.target.value)}
-                  className={`w-full h-11 px-4 pr-10 rounded-xl border shadow-sm bg-white text-gray-900 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-default focus:border-transparent ${
-                    errors[index]?.periodTo ? 'border-red-300' : 'border-gray-300 hover:border-gray-400'
-                  }`}
-                  style={{ fontVariantNumeric: 'tabular-nums' }}
-                />
+                <div className="relative group">
+                  <input
+                    type="month"
+                    value={exp.periodTo}
+                    onChange={(e) => handleChange(index, 'periodTo', e.target.value)}
+                    className={`w-full h-11 px-4 pr-12 rounded-xl border shadow-sm bg-white text-gray-900 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-default focus:border-transparent hover:bg-[#FF733E]/5 ${
+                      errors[index]?.periodTo ? 'border-red-300' : 'border-gray-300'
+                    }`}
+                    style={{ fontVariantNumeric: 'tabular-nums' }}
+                  />
+                  <svg
+                    className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-primary-default transition-colors"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <rect x="3" y="4.5" width="18" height="16" rx="3" stroke="currentColor" strokeWidth="1.5" />
+                    <path d="M8 2.5V6M16 2.5V6M3 9h18" stroke="currentColor" strokeWidth="1.5" />
+                  </svg>
+                </div>
                 {errors[index]?.periodTo && <p className="mt-1 text-sm text-red-600">{errors[index]?.periodTo}</p>}
               </div>
             </div>
