@@ -144,7 +144,7 @@ export default function AccountPage() {
                 name="birthDate"
                 value={formData.birthDate}
                 onChange={handleChange}
-                className="input-date"
+                className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF733E]"
                 required
               />
             </div>

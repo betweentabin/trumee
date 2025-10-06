@@ -370,7 +370,7 @@ export default function EditResumePage() {
                 </label>
                 <input
                   type="date"
-                  className="input-date"
+                  className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-[#FF733E] focus:border-transparent"
                   value={resumeData.birthDate}
                   onChange={(e) => setResumeData(prev => ({ ...prev, birthDate: e.target.value }))}
                 />
@@ -468,7 +468,7 @@ export default function EditResumePage() {
                       <label className="block text-sm font-medium text-gray-700 mb-2">卒業年月</label>
                       <input
                         type="date"
-                        className="input-date"
+                        className="w-full p-2 border rounded-lg"
                         value={edu.graduationDate}
                         onChange={(e) => {
                           const updated = [...resumeData.education];
@@ -601,7 +601,7 @@ export default function EditResumePage() {
                     <label className="block text-sm font-medium text-gray-700 mb-2">開始日</label>
                     <input
                       type="month"
-                      className="input-date"
+                      className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent"
                       value={exp.startDate}
                       onChange={(e) => {
                         const updated = [...resumeData.workExperiences];
@@ -614,7 +614,7 @@ export default function EditResumePage() {
                     <label className="block text-sm font-medium text-gray-700 mb-2">終了日</label>
                     <input
                       type="month"
-                      className="input-date"
+                      className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent"
                       value={exp.endDate}
                       onChange={(e) => {
                         const updated = [...resumeData.workExperiences];

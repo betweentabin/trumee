@@ -493,7 +493,7 @@ export default function NewResumePage() {
                           type="date"
                           value={education.graduation_date || ''}
                           onChange={(e) => updateEducation(index, 'graduation_date', e.target.value)}
-                          className="input-date"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-[#FF733E] focus:border-[#FF733E]"
                         />
                       </div>
                     </div>
@@ -563,7 +563,7 @@ export default function NewResumePage() {
                           type="date"
                           value={certification.obtained_date || ''}
                           onChange={(e) => updateCertification(index, 'obtained_date', e.target.value)}
-                          className="input-date"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-[#FF733E] focus:border-[#FF733E]"
                         />
                       </div>
                       
@@ -575,7 +575,7 @@ export default function NewResumePage() {
                           type="date"
                           value={certification.expiry_date || ''}
                           onChange={(e) => updateCertification(index, 'expiry_date', e.target.value)}
-                          className="input-date"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-[#FF733E] focus:border-[#FF733E]"
                         />
                       </div>
                     </div>

@@ -400,7 +400,7 @@ export default function CreateResumePage() {
                 <label className="block text-sm font-medium mb-2">生年月日</label>
                 <input
                   type="date"
-                  className="input-date"
+                  className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-[#FF733E] focus:border-transparent"
                   value={resumeData.birthDate}
                   onChange={(e) => handleInputChange('birthDate', e.target.value)}
                 />
@@ -474,7 +474,7 @@ export default function CreateResumePage() {
                       <label className="block text-sm font-medium mb-2">卒業年月</label>
                       <input
                         type="date"
-                        className="input-date"
+                        className="w-full p-2 border rounded-lg"
                         value={edu.graduationDate}
                         onChange={(e) => handleEducationChange(index, 'graduationDate', e.target.value)}
                       />
@@ -532,7 +532,7 @@ export default function CreateResumePage() {
                     <label className="block text-sm font-medium mb-2">開始</label>
                     <input
                       type="month"
-                      className="input-date"
+                      className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent"
                       value={exp.startDate}
                       onChange={(e) => handleWorkExperienceChange(index, 'startDate', e.target.value)}
                     />
@@ -541,7 +541,7 @@ export default function CreateResumePage() {
                     <label className="block text-sm font-medium mb-2">終了</label>
                     <input
                       type="month"
-                      className="input-date"
+                      className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent"
                       value={exp.endDate}
                       onChange={(e) => handleWorkExperienceChange(index, 'endDate', e.target.value)}
                     />

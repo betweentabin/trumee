@@ -172,7 +172,7 @@ export default function Step2EducationPage() {
                     type="month"
                     value={entry.startDate}
                     onChange={(e) => handleChange(entry.id, 'startDate', e.target.value)}
-                    className="input-date"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#FF6B35] focus:border-[#FF6B35]"
                   />
                 </div>
 
@@ -184,7 +184,7 @@ export default function Step2EducationPage() {
                     type="month"
                     value={entry.endDate}
                     onChange={(e) => handleChange(entry.id, 'endDate', e.target.value)}
-                    className="input-date"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#FF6B35] focus:border-[#FF6B35]"
                   />
                 </div>
               </div>
