@@ -1086,6 +1086,31 @@ def admin_analytics_summary(request):
     return Response(data, status=status.HTTP_200_OK)
 
 
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def admin_companies_credits_topup(request):
+    """管理者用: すべての企業アカウントにスカウトクレジットを一括付与
+
+    POST /api/v2/admin/companies/credits/topup/
+    body: { delta: number>0 }
+    """
+    if not request.user.is_staff:
+        return Response({'detail': '管理者権限が必要です'}, status=status.HTTP_403_FORBIDDEN)
+    body = request.data or {}
+    try:
+        delta = int(body.get('delta'))
+    except Exception:
+        return Response({'delta': ['invalid']}, status=status.HTTP_400_BAD_REQUEST)
+    if delta <= 0:
+        return Response({'delta': ['must_be_positive']}, status=status.HTTP_400_BAD_REQUEST)
+
+    from django.db.models import F
+    try:
+        updated = User.objects.filter(role='company').update(scout_credits_total=F('scout_credits_total') + delta)
+        return Response({'updated': updated, 'delta': delta}, status=status.HTTP_200_OK)
+    except Exception as e:
+        return Response({'detail': 'update_failed', 'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 # ============================================================================
 # プロフィール関連エンドポイント
 # ============================================================================
@@ -3586,17 +3611,18 @@ def stripe_webhook(request):
     except Exception:
         pass
 
-    # 追加クレジットの処理
+    # 追加クレジット/プラン/求人チケットの処理
     if ev_type == 'checkout.session.completed' and isinstance(data_object, dict):
         metadata = data_object.get('metadata') or {}
         plan_type = str(metadata.get('plan_type') or '')
         target_user_id = metadata.get('user_id')
+
+        # 1) 固定: credits100 -> スカウトクレジット+100
         if plan_type == 'credits100' and target_user_id:
             try:
                 user = User.objects.get(id=target_user_id)
                 user.scout_credits_total = int(user.scout_credits_total) + 100
                 user.save(update_fields=['scout_credits_total', 'updated_at'])
-                # ログ（冪等用）
                 try:
                     from .models import ActivityLog
                     ActivityLog.objects.create(
@@ -3610,5 +3636,64 @@ def stripe_webhook(request):
                 return Response({'detail': 'user_not_found'}, status=status.HTTP_200_OK)
             except Exception:
                 return Response({'detail': 'update_failed'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        # 2) プラン（standard/premium）: 求職者・企業共通で当月末+30日などに設定
+        if plan_type in ('standard', 'premium') and target_user_id:
+            try:
+                user = User.objects.get(id=target_user_id)
+                user.plan_tier = plan_type
+                user.is_premium = True
+                user.premium_expiry = timezone.now() + datetime.timedelta(days=30)
+                user.save(update_fields=['plan_tier', 'is_premium', 'premium_expiry', 'updated_at'])
+                try:
+                    from .models import ActivityLog
+                    ActivityLog.objects.create(
+                        user=user,
+                        action='message',
+                        details={'stripe_event_id': ev_id or '', 'plan_type': plan_type}
+                    )
+                except Exception:
+                    pass
+            except User.DoesNotExist:
+                return Response({'detail': 'user_not_found'}, status=status.HTTP_200_OK)
+            except Exception:
+                return Response({'detail': 'update_failed'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        # 3) 求人チケット購入（metadata: job_id, tickets_add）
+        if plan_type == 'job_tickets':
+            job_id = metadata.get('job_id')
+            tickets_add = metadata.get('tickets_add')
+            try:
+                tickets_add = int(tickets_add)
+                if tickets_add <= 0:
+                    tickets_add = None
+            except Exception:
+                tickets_add = None
+            if job_id and tickets_add:
+                try:
+                    job = JobPosting.objects.get(id=job_id)
+                except JobPosting.DoesNotExist:
+                    job = None
+                try:
+                    user = User.objects.get(id=target_user_id) if target_user_id else None
+                except User.DoesNotExist:
+                    user = None
+                # 所有者チェック（ベストエフォート）
+                if job is not None and user is not None and str(job.company_id) == str(user.id):
+                    try:
+                        ledger, _ = JobTicketLedger.objects.get_or_create(job_posting=job)
+                        ledger.tickets_total = int(ledger.tickets_total or 0) + int(tickets_add)
+                        ledger.save(update_fields=['tickets_total', 'updated_at'])
+                        try:
+                            from .models import ActivityLog
+                            ActivityLog.objects.create(
+                                user=user,
+                                action='message',
+                                details={'stripe_event_id': ev_id or '', 'plan_type': plan_type, 'job_id': str(job.id), 'delta': tickets_add}
+                            )
+                        except Exception:
+                            pass
+                    except Exception:
+                        return Response({'detail': 'update_failed'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     return Response({'status': 'ok'}, status=status.HTTP_200_OK)

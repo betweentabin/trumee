@@ -43,6 +43,8 @@ urlpatterns = [
     path('admin/users/<uuid:user_id>/overview/', views_api_v2.admin_user_overview, name='admin-user-overview'),
     path('admin/users/<uuid:user_id>/resumes/', views_api_v2.admin_user_resumes, name='admin-user-resumes'),
     path('admin/users/<uuid:user_id>/plan/', views_api_v2.admin_update_user_plan, name='admin-user-update-plan'),
+    # 管理者: 企業向けスカウトクレジット一括付与
+    path('admin/companies/credits/topup/', views_api_v2.admin_companies_credits_topup, name='admin-companies-credits-topup'),
     # 管理者分析
     path('admin/analytics/summary/', views_api_v2.admin_analytics_summary, name='admin-analytics-summary'),
     
