@@ -678,6 +678,30 @@ def admin_user_overview(request, user_id):
         last_reviewed_by_name = getattr(ann_user, 'full_name', '') or getattr(ann_user, 'email', '')
         last_reviewed_at = ann_time
 
+    # スカウトクレジット（企業向け）
+    scout_credits_total = getattr(target, 'scout_credits_total', 0)
+    scout_credits_used = getattr(target, 'scout_credits_used', 0)
+    try:
+        scout_credits_remaining = target.scout_credits_remaining
+    except Exception:
+        scout_credits_remaining = max(0, int(scout_credits_total) - int(scout_credits_used))
+
+    # 求人チケット（全求人の合算）
+    job_tickets_total = 0
+    job_tickets_used = 0
+    try:
+        from django.db.models import Sum
+        from .models import JobTicketLedger
+        agg = JobTicketLedger.objects.filter(job_posting__company=target).aggregate(
+            total=Sum('tickets_total'), used=Sum('tickets_used')
+        )
+        job_tickets_total = int(agg.get('total') or 0)
+        job_tickets_used = int(agg.get('used') or 0)
+    except Exception:
+        job_tickets_total = 0
+        job_tickets_used = 0
+    job_tickets_remaining = max(0, job_tickets_total - job_tickets_used)
+
     data = {
         'user': {
             'id': str(target.id),
@@ -693,6 +717,9 @@ def admin_user_overview(request, user_id):
             'created_at': target.created_at,
             'date_joined': getattr(target, 'date_joined', None),
             'last_login': last_login,
+            'scout_credits_total': scout_credits_total,
+            'scout_credits_used': scout_credits_used,
+            'scout_credits_remaining': scout_credits_remaining,
         },
         'counts': {
             'resumes': resumes_count,
@@ -709,6 +736,18 @@ def admin_user_overview(request, user_id):
             'registered_at': target.created_at,
             'last_login_at': last_login,
             'last_payment_at': last_payment_at,
+        },
+        'resources': {
+            'scout_credits': {
+                'total': scout_credits_total,
+                'used': scout_credits_used,
+                'remaining': scout_credits_remaining,
+            },
+            'job_tickets': {
+                'total': job_tickets_total,
+                'used': job_tickets_used,
+                'remaining': job_tickets_remaining,
+            },
         },
         'review': {
             'last_reviewed_by': last_reviewed_by,

@@ -15,6 +15,9 @@ type AdminCompany = {
   plan_tier?: string;
   created_at?: string;
   updated_at?: string;
+  scout_credits_total?: number;
+  scout_credits_used?: number;
+  scout_credits_remaining?: number;
 };
 
 type Paginated<T> = {
@@ -137,6 +140,7 @@ export default function AdminCompaniesPage() {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">会社名</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">メール</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">登録日</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">残チケット</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">状態</th>
                 </tr>
               </thead>
@@ -152,6 +156,7 @@ export default function AdminCompaniesPage() {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{u.company_name || u.username || '—'}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{u.email}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{u.created_at ? new Date(u.created_at).toLocaleDateString('ja-JP') : '—'}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{u.scout_credits_remaining ?? 0}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
                       {(() => {
                         const tier = (u.plan_tier || '').toLowerCase();
@@ -198,4 +203,3 @@ export default function AdminCompaniesPage() {
     </div>
   );
 }
-

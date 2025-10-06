@@ -89,6 +89,38 @@ export default function AdminCompanyDetailPage() {
             </div>
 
             <div className="rounded-xl border p-6 bg-white">
+              <div className="text-lg font-semibold mb-4">スカウトチケット</div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                <div>
+                  <span className="text-gray-500">クレジット総数</span>
+                  <div className="font-medium">{overview?.user?.scout_credits_total ?? 0}</div>
+                </div>
+                <div>
+                  <span className="text-gray-500">使用済み</span>
+                  <div className="font-medium">{overview?.user?.scout_credits_used ?? 0}</div>
+                </div>
+                <div>
+                  <span className="text-gray-500">残り</span>
+                  <div className="font-medium">{overview?.user?.scout_credits_remaining ?? 0}</div>
+                </div>
+              </div>
+              <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                <div>
+                  <span className="text-gray-500">求人チケット（合算）</span>
+                  <div className="font-medium">{overview?.resources?.job_tickets?.total ?? 0}</div>
+                </div>
+                <div>
+                  <span className="text-gray-500">使用済み（合算）</span>
+                  <div className="font-medium">{overview?.resources?.job_tickets?.used ?? 0}</div>
+                </div>
+                <div>
+                  <span className="text-gray-500">残り（合算）</span>
+                  <div className="font-medium">{overview?.resources?.job_tickets?.remaining ?? 0}</div>
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-xl border p-6 bg-white">
               <div className="text-lg font-semibold mb-4">プラン管理</div>
               <div className="flex flex-col md:flex-row gap-3 md:items-end">
                 <div>
@@ -168,4 +200,3 @@ export default function AdminCompanyDetailPage() {
     </div>
   );
 }
-
