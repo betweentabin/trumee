@@ -145,3 +145,9 @@ firebase_key.json
 *.bak
 *.backup
 .vercel
+
+# SSH keys
+truemee_kuwata-taiga
+truemee_kuwata-taiga.pub
+truemeekuwatataiga
+truemeekuwatataiga_
